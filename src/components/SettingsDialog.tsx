@@ -124,6 +124,33 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                 <Moon size={16} className={theme === 'dark' ? 'text-foreground' : 'text-muted-foreground'} />
               </div>
             </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="grid-toggle">Show Grid</Label>
+                <div className="text-sm text-muted-foreground">
+                  Display background grid on canvas
+                </div>
+              </div>
+              <Switch
+                id="grid-toggle"
+                checked={settings?.showGrid ?? true}
+                onCheckedChange={(checked) => setSettings((current) => ({ ...current!, showGrid: checked }))}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="snap-toggle">Snap to Grid</Label>
+                <div className="text-sm text-muted-foreground">
+                  {settings?.showGrid ? 'Align nodes to grid when dragging' : 'Enable grid to use this feature'}
+                </div>
+              </div>
+              <Switch
+                id="snap-toggle"
+                checked={settings?.snapToGrid ?? false}
+                disabled={!settings?.showGrid}
+                onCheckedChange={(checked) => setSettings((current) => ({ ...current!, snapToGrid: checked }))}
+              />
+            </div>
           </div>
 
           <Separator />
