@@ -1,5 +1,6 @@
 export type FrameColor = 'red' | 'green' | 'orange' | 'white'
 export type GroupColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'teal' | 'indigo' | 'rose' | 'emerald' | 'amber' | 'cyan'
+export type ConnectionSide = 'top' | 'right' | 'bottom' | 'left'
 
 export interface Person {
   id: string
@@ -20,6 +21,8 @@ export interface Connection {
   id: string
   fromPersonId: string
   toPersonId: string
+  fromSide?: ConnectionSide
+  toSide?: ConnectionSide
 }
 
 export interface Group {
