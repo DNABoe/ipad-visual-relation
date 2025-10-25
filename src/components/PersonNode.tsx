@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import type { Person } from '@/lib/types'
@@ -52,6 +52,7 @@ export function PersonNode({
     >
       <div className="p-3 flex items-center gap-3">
         <Avatar className="h-12 w-12 flex-shrink-0">
+          {person.photo && <AvatarImage src={person.photo} alt={person.name} />}
           <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
             {getInitials(person.name)}
           </AvatarFallback>
