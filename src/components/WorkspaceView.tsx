@@ -140,10 +140,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     e.preventDefault()
     e.stopPropagation()
     
-    if (!selectedConnections.includes(connectionId)) {
-      setSelectedConnections([connectionId])
-    }
-  }, [selectedConnections])
+    setSelectedConnections([connectionId])
+  }, [])
 
   const handlePersonClick = useCallback((personId: string, e: React.MouseEvent) => {
     if (connectMode) {
