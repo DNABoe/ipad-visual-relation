@@ -49,9 +49,9 @@ export function PersonNode({
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >
-        <div className="p-2.5 flex items-center gap-2.5 pointer-events-none">
+        <div className="p-1.5 flex items-center gap-2.5 pointer-events-none">
           <div 
-            className="flex flex-col items-center gap-1.5 pointer-events-auto"
+            className="flex flex-col items-center gap-1 pointer-events-auto"
             onDoubleClick={(e) => {
               if (person.photo && onPhotoDoubleClick) {
                 e.stopPropagation()
