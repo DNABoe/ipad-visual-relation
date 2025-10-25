@@ -1038,8 +1038,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     <TooltipProvider>
       <div className="h-screen flex flex-col bg-background">
         <div className="border-b bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <h1 className="text-xl font-semibold tracking-tight">Visual Relationship Network</h1>
+            <Separator orientation="vertical" className="h-6" />
+            <span className="text-sm text-muted-foreground font-medium">{fileName}</span>
             {workspace.persons.length === 0 && (
               <Button variant="outline" size="sm" onClick={handleLoadSample}>
                 Load Sample Data
