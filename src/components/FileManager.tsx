@@ -150,17 +150,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
-          <p className="text-sm text-muted-foreground">
-            All data is stored locally and encrypted with AES-256
-          </p>
-          <div className="pt-2 px-4 py-3 bg-accent/20 border border-accent/30 rounded-lg">
-            <p className="text-xs font-medium text-accent-foreground">
-              💾 You control where files are saved on your computer
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              When creating or saving, you'll choose the exact folder and filename
-            </p>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -182,11 +171,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
             <FolderOpen size={24} className="mr-3" />
             Load Existing Network
           </Button>
-        </div>
-
-        <div className="text-center text-xs text-muted-foreground space-y-1">
-          <p>Your network data never leaves your computer.</p>
-          <p>All encryption and decryption happens locally in your browser.</p>
         </div>
       </div>
 
@@ -212,13 +196,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium">
-                  File will be saved as: {newFileName.trim() || 'filename'}.enc.json
-                </p>
-                <p className="text-xs">
-                  📁 You'll be prompted to choose where to save this file on your computer.
-                </p>
+              <div className="text-xs text-muted-foreground">
+                File will be saved as: {newFileName.trim() || 'filename'}.enc.json
               </div>
             </div>
             <div className="space-y-2">
