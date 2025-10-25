@@ -584,11 +584,12 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       p.y = centerY + Math.sin(angle) * radius
     })
 
-    const iterations = 250
-    const repulsionForce = 18000
+    const iterations = 300
+    const repulsionForce = 25000
     const attractionForce = 0.03
     const centeringForce = 0.015
     const dampening = 0.82
+    const minDistance = NODE_WIDTH + 40
 
     const velocities = new Map<string, { vx: number; vy: number }>()
     persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
@@ -608,7 +609,12 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           const dist = Math.sqrt(distSq)
           
           if (dist > 0) {
-            const repulsion = repulsionForce / distSq
+            let repulsion = repulsionForce / distSq
+            
+            if (dist < minDistance) {
+              repulsion *= 3
+            }
+            
             const fx = (dx / dist) * repulsion
             const fy = (dy / dist) * repulsion
             
@@ -679,6 +685,33 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         p.x += vel.vx
         p.y += vel.vy
       })
+    }
+
+    for (let overlapIter = 0; overlapIter < 50; overlapIter++) {
+      let hadOverlap = false
+      for (let i = 0; i < persons.length; i++) {
+        for (let j = i + 1; j < persons.length; j++) {
+          const p1 = persons[i]
+          const p2 = persons[j]
+          
+          const dx = (p2.x + NODE_WIDTH / 2) - (p1.x + NODE_WIDTH / 2)
+          const dy = (p2.y + NODE_HEIGHT / 2) - (p1.y + NODE_HEIGHT / 2)
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          if (dist < minDistance && dist > 0) {
+            hadOverlap = true
+            const overlap = minDistance - dist
+            const pushX = (dx / dist) * overlap * 0.5
+            const pushY = (dy / dist) * overlap * 0.5
+            
+            p1.x -= pushX
+            p1.y -= pushY
+            p2.x += pushX
+            p2.y += pushY
+          }
+        }
+      }
+      if (!hadOverlap) break
     }
 
     const minX = Math.min(...persons.map(p => p.x))
