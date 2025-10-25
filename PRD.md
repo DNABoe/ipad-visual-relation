@@ -1,29 +1,36 @@
 # Visual Relationship Network App
 
-A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups.
+A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored locally and encrypted with AES-256 for maximum security and privacy.
 
 **Experience Qualities**:
 1. **Intuitive** - Direct manipulation feels natural; drag nodes, connect people, and organize groups with immediate visual feedback
 2. **Powerful** - Advanced features like multi-select, grouping, zoom/pan, and bulk operations accessible without overwhelming the interface
-3. **Elegant** - Clean, modern design with smooth animations and thoughtful micro-interactions that make complex data feel approachable
+3. **Secure** - Military-grade AES-256 encryption ensures all network data remains private and never leaves your computer
 
-**Complexity Level**: Complex Application (advanced functionality, accounts)
-This is a full-featured network visualization tool with authentication, persistent state, canvas manipulation, and sophisticated interaction patterns requiring careful state management and performance optimization.
+**Complexity Level**: Complex Application (advanced functionality, local encryption)
+This is a full-featured network visualization tool with encrypted local file storage, persistent state, canvas manipulation, and sophisticated interaction patterns requiring careful state management and performance optimization. All operations run entirely client-side with no server communication.
 
 ## Essential Features
 
-### Authentication & Settings
-- **Functionality**: Secure login system with customizable credentials
-- **Purpose**: Protect user data and allow personalized workspaces
-- **Trigger**: App launch or logout action
-- **Progression**: Login screen → Validate credentials → Main workspace (or Settings badge if default password unchanged)
-- **Success criteria**: User can login, change password in Settings, and credentials persist securely
+### Encrypted File Management
+- **Functionality**: Create and load encrypted network database files with password protection
+- **Purpose**: Ensure data privacy and security - all data stays on the user's computer, never transmitted online
+- **Trigger**: App launch shows "New Network" or "Load Network" options
+- **Progression**: New Network → Enter filename and password → Empty encrypted file created and downloaded → Workspace opens | Load Network → Select .enc.json file → Enter password → Workspace loads with data
+- **Success criteria**: Files are encrypted with AES-256-GCM using PBKDF2 (100,000 iterations) for key derivation; wrong password fails gracefully; file can be saved/loaded across sessions
+
+### Save Network
+- **Functionality**: Save current network state to encrypted file
+- **Purpose**: Persist work and create backups with full encryption
+- **Trigger**: Click "Save Network" button in toolbar
+- **Progression**: Click Save → Encrypt current workspace → Download .enc.json file → Confirmation toast
+- **Success criteria**: File contains all persons, connections, and groups in encrypted format; can be re-loaded with correct password
 
 ### Interactive Canvas with Pan/Zoom
 - **Functionality**: Infinite canvas with mouse/touch pan and zoom controls
 - **Purpose**: Navigate large networks comfortably and focus on specific areas
 - **Trigger**: Mouse wheel scroll (zoom), middle-click drag or two-finger pan
-- **Progression**: User scrolls → Canvas zooms around cursor → Node positions update → Minimap reflects view
+- **Progression**: User scrolls → Canvas zooms around cursor → Node positions update
 - **Success criteria**: Smooth 60fps pan/zoom with 100+ nodes; "Zoom to Fit" centers all nodes in view
 
 ### Person Nodes
@@ -61,26 +68,27 @@ This is a full-featured network visualization tool with authentication, persiste
 - **Progression**: Open list → Choose sort (name, position, score, created) → Apply filter (group, color, score) → Click person → Canvas pans to node
 - **Success criteria**: Sort/filter updates instantly; clicking list item focuses canvas on that person
 
-### Import/Export
-- **Functionality**: Save/load entire workspace as JSON file
-- **Purpose**: Backup data, share networks, or migrate between devices
-- **Trigger**: Click Export/Import in Settings
-- **Progression**: Export → Generate JSON → Download file | Import → Select file → Parse and restore workspace
-- **Success criteria**: Exported JSON preserves all data; import restores positions, connections, and colors
+### Legacy Import/Export
+- **Functionality**: Import unencrypted JSON workspace files from Settings dialog
+- **Purpose**: Migrate from older versions or share data in unencrypted format if needed
+- **Trigger**: Click Import in Settings
+- **Progression**: Import → Select JSON file → Parse and restore workspace → All data loaded
+- **Success criteria**: Unencrypted JSON import works for backward compatibility; users are reminded to save as encrypted file
 
 ## Edge Case Handling
 
 - **Orphaned Connections**: When a person is deleted, all their connections are automatically removed
-- **Invalid Login**: Show clear error message; allow retry without reload
+- **Wrong Password**: Show clear error message when decryption fails; allow retry without losing file selection
 - **Missing Photos**: Display default avatar icon with person's initials
 - **Overlapping Nodes**: Z-index based on selection state; selected nodes appear on top
 - **Large Networks**: Canvas virtualization and edge batching for 200+ nodes
-- **Concurrent Edits**: Last-write-wins with optimistic UI updates
-- **Import Conflicts**: Preserve existing IDs; generate new UUIDs for duplicates and relink connections
+- **Lost Password**: No password recovery possible - encryption keys are derived from password only; user must remember password or lose access to file
+- **File Corruption**: Validate JSON structure before attempting decryption; show helpful error messages
+- **Browser Compatibility**: Web Crypto API required; gracefully detect and warn on unsupported browsers
 
 ## Design Direction
 
-The design should feel like a professional data visualization tool—clean, sophisticated, and powerful. It should balance the complexity of a network graph with the approachability of consumer software, using subtle depth, generous whitespace, and purposeful color to create visual hierarchy without overwhelming users.
+The design should feel like a professional, secure data visualization tool—clean, sophisticated, and trustworthy. Privacy and security are paramount, communicated through clear messaging about local-only storage and encryption. The interface should balance the complexity of a network graph with the approachability of consumer software, using subtle depth, generous whitespace, and purposeful color to create visual hierarchy without overwhelming users.
 
 ## Color Selection
 
@@ -154,14 +162,19 @@ Animations should feel responsive and physics-based, reinforcing the spatial nat
   - Groups: default (subtle fill)/hover (border highlight)/selected (accent border)
 
 - **Icon Selection**:
+  - FilePlus (new network)
+  - FloppyDisk (save network)
+  - FolderOpen (load network)
   - Plus (add person/group)
   - Link (connection mode)
   - MagnifyingGlassPlus/Minus (zoom in/out)
   - ArrowsOut (zoom to fit)
+  - TreeStructure (auto arrange)
+  - Target (arrange by score)
   - GridFour (toggle grid)
   - List (toggle list panel)
   - Gear (settings)
-  - Download/Upload (export/import)
+  - Upload (import unencrypted)
   - Trash (delete)
   - DotsThree (context menu)
 

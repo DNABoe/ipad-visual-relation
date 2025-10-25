@@ -1,13 +1,65 @@
+import { useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { WorkspaceView } from './components/WorkspaceView'
+import { FileManager } from './components/FileManager'
 import { useTheme } from './hooks/use-theme'
+import type { Workspace } from './lib/types'
 
 function App() {
   useTheme()
 
+  const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [fileName, setFileName] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+
+  const handleLoad = (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
+    setWorkspace(loadedWorkspace)
+    setFileName(loadedFileName)
+    setPassword(loadedPassword)
+  }
+
+  const handleNewNetwork = () => {
+    setWorkspace(null)
+    setFileName('')
+    setPassword('')
+  }
+
+  const handleLoadNetwork = () => {
+    setWorkspace(null)
+    setFileName('')
+    setPassword('')
+  }
+
+  const handleSetWorkspace = (update: Workspace | ((current: Workspace) => Workspace)) => {
+    if (typeof update === 'function') {
+      setWorkspace((current) => {
+        if (!current) return current
+        return update(current)
+      })
+    } else {
+      setWorkspace(update)
+    }
+  }
+
+  if (!workspace) {
+    return (
+      <>
+        <FileManager onLoad={handleLoad} />
+        <Toaster />
+      </>
+    )
+  }
+
   return (
     <>
-      <WorkspaceView />
+      <WorkspaceView
+        workspace={workspace}
+        setWorkspace={handleSetWorkspace}
+        fileName={fileName}
+        password={password}
+        onNewNetwork={handleNewNetwork}
+        onLoadNetwork={handleLoadNetwork}
+      />
       <Toaster />
     </>
   )

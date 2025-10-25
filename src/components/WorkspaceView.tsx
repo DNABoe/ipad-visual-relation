@@ -24,21 +24,28 @@ import {
   GridFour, 
   List, 
   Gear,
-  SignOut,
   Trash,
   X,
   TreeStructure,
-  Target
+  Target,
+  FilePlus,
+  FloppyDisk,
+  FolderOpen
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
+import { encryptData } from '@/lib/encryption'
 
 interface WorkspaceViewProps {
-  onLogout?: () => void
+  workspace: Workspace
+  setWorkspace: (update: Workspace | ((current: Workspace) => Workspace)) => void
+  fileName: string
+  password: string
+  onNewNetwork: () => void
+  onLoadNetwork: () => void
 }
 
-export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
-  const [workspace, setWorkspace] = useKV<Workspace>('workspace', { persons: [], connections: [], groups: [] })
+export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork }: WorkspaceViewProps) {
   const [settings] = useKV<{ showGrid: boolean; snapToGrid: boolean; showMinimap: boolean }>('app-settings', {
     showGrid: true,
     snapToGrid: false,
@@ -74,10 +81,10 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handleAddPerson = useCallback((person: Person) => {
     setWorkspace((current) => ({
-      ...current!,
+      ...current,
       persons: editPerson
-        ? current!.persons.map(p => p.id === person.id ? person : p)
-        : [...current!.persons, person],
+        ? current.persons.map(p => p.id === person.id ? person : p)
+        : [...current.persons, person],
     }))
     setEditPerson(undefined)
     toast.success(editPerson ? 'Person updated' : 'Person added')
@@ -85,8 +92,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handleAddGroup = useCallback((group: Group) => {
     setWorkspace((current) => ({
-      ...current!,
-      groups: [...current!.groups, group],
+      ...current,
+      groups: [...current.groups, group],
     }))
     toast.success('Group created')
   }, [setWorkspace])
@@ -95,9 +102,9 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     if (selectedPersons.length === 0) return
     
     setWorkspace((current) => ({
-      ...current!,
-      persons: current!.persons.filter(p => !selectedPersons.includes(p.id)),
-      connections: current!.connections.filter(
+      ...current,
+      persons: current.persons.filter(p => !selectedPersons.includes(p.id)),
+      connections: current.connections.filter(
         c => !selectedPersons.includes(c.fromPersonId) && !selectedPersons.includes(c.toPersonId)
       ),
     }))
@@ -120,8 +127,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     e.preventDefault()
     e.stopPropagation()
     setWorkspace((current) => ({
-      ...current!,
-      connections: current!.connections.filter(c => c.id !== connectionId),
+      ...current,
+      connections: current.connections.filter(c => c.id !== connectionId),
     }))
     setSelectedConnections(prev => prev.filter(id => id !== connectionId))
     toast.success('Connection removed')
@@ -140,8 +147,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           toPersonId: personId,
         }
         setWorkspace((current) => ({
-          ...current!,
-          connections: [...current!.connections, newConnection],
+          ...current,
+          connections: [...current.connections, newConnection],
         }))
         setConnectMode(false)
         setConnectFrom(null)
@@ -164,7 +171,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     e.stopPropagation()
     
     if (e.ctrlKey || e.metaKey) {
-      const person = workspace?.persons.find(p => p.id === personId)
+      const person = workspace.persons.find(p => p.id === personId)
       if (person) {
         setEditPerson(person)
         setShowPersonDialog(true)
@@ -187,7 +194,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handlePersonDoubleClick = useCallback((personId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    const person = workspace?.persons.find(p => p.id === personId)
+    const person = workspace.persons.find(p => p.id === personId)
     if (person) {
       setEditPerson(person)
       setShowPersonDialog(true)
@@ -196,7 +203,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handlePhotoDoubleClick = useCallback((personId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    const person = workspace?.persons.find(p => p.id === personId)
+    const person = workspace.persons.find(p => p.id === personId)
     if (person && person.photo) {
       setPhotoViewerData({ url: person.photo, name: person.name })
       setShowPhotoViewer(true)
@@ -220,26 +227,23 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       setSelectedGroups([groupId])
     }
     
-    if (workspace) {
-      const group = workspace.groups.find(g => g.id === groupId)
-      if (group) {
-        const personsInGroup = workspace.persons.filter(person => {
-          const personCenterX = person.x + NODE_WIDTH / 2
-          const personCenterY = person.y + NODE_HEIGHT / 2
-          return (
-            personCenterX >= group.x &&
-            personCenterX <= group.x + group.width &&
-            personCenterY >= group.y &&
-            personCenterY <= group.y + group.height
-          )
-        })
-        setDraggingGroupPersons(personsInGroup.map(p => p.id))
-      }
+    const group = workspace.groups.find(g => g.id === groupId)
+    if (group) {
+      const personsInGroup = workspace.persons.filter(person => {
+        const personCenterX = person.x + NODE_WIDTH / 2
+        const personCenterY = person.y + NODE_HEIGHT / 2
+        return (
+          personCenterX >= group.x &&
+          personCenterX <= group.x + group.width &&
+          personCenterY >= group.y &&
+          personCenterY <= group.y + group.height
+        )
+      })
+      setDraggingGroupPersons(personsInGroup.map(p => p.id))
     }
   }, [selectedGroups, workspace])
   
   const getPersonsInGroup = useCallback((groupId: string) => {
-    if (!workspace) return []
     const group = workspace.groups.find(g => g.id === groupId)
     if (!group) return []
     
@@ -256,7 +260,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [workspace])
 
   const handleGroupResizeStart = useCallback((groupId: string, handle: string, e: React.MouseEvent) => {
-    const group = workspace?.groups.find(g => g.id === groupId)
+    const group = workspace.groups.find(g => g.id === groupId)
     if (!group) return
     
     const rect = canvasRef.current?.getBoundingClientRect()
@@ -276,15 +280,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handleGroupUpdate = useCallback((groupId: string, updates: Partial<Group>) => {
     setWorkspace((current) => ({
-      ...current!,
-      groups: current!.groups.map(g => g.id === groupId ? { ...g, ...updates } : g),
+      ...current,
+      groups: current.groups.map(g => g.id === groupId ? { ...g, ...updates } : g),
     }))
   }, [setWorkspace])
 
   const handleGroupRemove = useCallback((groupId: string) => {
     setWorkspace((current) => ({
-      ...current!,
-      groups: current!.groups.filter(g => g.id !== groupId),
+      ...current,
+      groups: current.groups.filter(g => g.id !== groupId),
     }))
     setSelectedGroups(prev => prev.filter(id => id !== groupId))
     toast.success('Group removed')
@@ -320,8 +324,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             const moveY = gridStepsY * GRID_SIZE
             
             setWorkspace((current) => ({
-              ...current!,
-              persons: current!.persons.map(p => {
+              ...current,
+              persons: current.persons.map(p => {
                 if (selectedPersons.includes(p.id)) {
                   return { ...p, x: p.x + moveX, y: p.y + moveY }
                 }
@@ -336,8 +340,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         })
       } else {
         setWorkspace((current) => ({
-          ...current!,
-          persons: current!.persons.map(p => {
+          ...current,
+          persons: current.persons.map(p => {
             if (selectedPersons.includes(p.id)) {
               return { ...p, x: p.x + dx, y: p.y + dy }
             }
@@ -345,7 +349,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           }),
         }))
       }
-    } else if (draggingGroup && workspace) {
+    } else if (draggingGroup) {
       const dx = e.movementX / transform.scale
       const dy = e.movementY / transform.scale
       
@@ -362,14 +366,14 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             const moveY = gridStepsY * GRID_SIZE
             
             setWorkspace((current) => ({
-              ...current!,
-              groups: current!.groups.map(g => {
+              ...current,
+              groups: current.groups.map(g => {
                 if (g.id === draggingGroup) {
                   return { ...g, x: g.x + moveX, y: g.y + moveY }
                 }
                 return g
               }),
-              persons: current!.persons.map(p => {
+              persons: current.persons.map(p => {
                 if (draggingGroupPersons.includes(p.id)) {
                   return { ...p, x: p.x + moveX, y: p.y + moveY }
                 }
@@ -384,14 +388,14 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         })
       } else {
         setWorkspace((current) => ({
-          ...current!,
-          groups: current!.groups.map(g => {
+          ...current,
+          groups: current.groups.map(g => {
             if (g.id === draggingGroup) {
               return { ...g, x: g.x + dx, y: g.y + dy }
             }
             return g
           }),
-          persons: current!.persons.map(p => {
+          persons: current.persons.map(p => {
             if (draggingGroupPersons.includes(p.id)) {
               return { ...p, x: p.x + dx, y: p.y + dy }
             }
@@ -399,13 +403,13 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           }),
         }))
       }
-    } else if (resizingGroup && workspace) {
+    } else if (resizingGroup) {
       const dx = (e.clientX - resizingGroup.startX) / transform.scale
       const dy = (e.clientY - resizingGroup.startY) / transform.scale
       
       setWorkspace((current) => ({
-        ...current!,
-        groups: current!.groups.map(g => {
+        ...current,
+        groups: current.groups.map(g => {
           if (g.id === resizingGroup.id) {
             const handle = resizingGroup.handle
             let newX = g.x
@@ -456,7 +460,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [draggingConnection, draggingPerson, draggingGroup, draggingGroupPersons, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (draggingConnection && workspace) {
+    if (draggingConnection) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) {
         setDraggingConnection(null)
@@ -487,8 +491,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             toPersonId: targetPerson.id,
           }
           setWorkspace((current) => ({
-            ...current!,
-            connections: [...current!.connections, newConnection],
+            ...current,
+            connections: [...current.connections, newConnection],
           }))
           toast.success('Connection created')
         } else {
@@ -497,7 +501,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       }
       
       setDraggingConnection(null)
-    } else if (selectionRect && workspace) {
+    } else if (selectionRect) {
       const selected = workspace.persons.filter(p => {
         const px = p.x + NODE_WIDTH / 2
         const py = p.y + NODE_HEIGHT / 2
@@ -576,7 +580,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [])
 
   const handleZoomToFit = useCallback(() => {
-    if (!workspace || workspace.persons.length === 0) return
+    if (workspace.persons.length === 0) return
     
     const bounds = getBounds(workspace.persons)
     if (!bounds) return
@@ -603,7 +607,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [workspace])
 
   const handleAutoArrange = useCallback(() => {
-    if (!workspace || workspace.persons.length === 0) return
+    if (workspace.persons.length === 0) return
 
     const persons = [...workspace.persons]
     const connections = workspace.connections
@@ -801,7 +805,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [workspace, settings, setWorkspace, handleZoomToFit])
 
   const handleArrangeByScore = useCallback(() => {
-    if (!workspace || workspace.persons.length === 0) return
+    if (workspace.persons.length === 0) return
 
     const persons = [...workspace.persons]
 
@@ -949,12 +953,30 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const handleLoadSample = useCallback(() => {
     const sample = generateSampleData()
     setWorkspace((current) => ({
-      persons: [...(current?.persons || []), ...sample.persons],
-      connections: [...(current?.connections || []), ...sample.connections],
-      groups: [...(current?.groups || []), ...sample.groups],
+      persons: [...current.persons, ...sample.persons],
+      connections: [...current.connections, ...sample.connections],
+      groups: [...current.groups, ...sample.groups],
     }))
     toast.success('Sample data loaded')
   }, [setWorkspace])
+
+  const handleSaveNetwork = useCallback(async () => {
+    try {
+      const encrypted = await encryptData(JSON.stringify(workspace), password)
+      const fileData = JSON.stringify(encrypted, null, 2)
+      const blob = new Blob([fileData], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${fileName}.enc.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Network saved successfully')
+    } catch (error) {
+      toast.error('Failed to save network')
+      console.error(error)
+    }
+  }, [workspace, password, fileName])
 
   const handleImport = useCallback((imported: Workspace) => {
     setWorkspace(imported)
@@ -969,16 +991,16 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         } else if (selectedGroups.length > 0) {
           e.preventDefault()
           setWorkspace((current) => ({
-            ...current!,
-            groups: current!.groups.filter(g => !selectedGroups.includes(g.id)),
+            ...current,
+            groups: current.groups.filter(g => !selectedGroups.includes(g.id)),
           }))
           setSelectedGroups([])
           toast.success('Deleted selected groups')
         } else if (selectedConnections.length > 0) {
           e.preventDefault()
           setWorkspace((current) => ({
-            ...current!,
-            connections: current!.connections.filter(c => !selectedConnections.includes(c.id)),
+            ...current,
+            connections: current.connections.filter(c => !selectedConnections.includes(c.id)),
           }))
           setSelectedConnections([])
           toast.success('Deleted selected connections')
@@ -1011,10 +1033,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       window.removeEventListener('mouseup', handleGlobalMouseUp)
     }
   }, [selectedPersons, selectedGroups, selectedConnections, handleDeleteSelected, setWorkspace])
-
-  if (!workspace) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>
-  }
 
   return (
     <TooltipProvider>
@@ -1216,21 +1234,39 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
               <TooltipContent>Settings</TooltipContent>
             </Tooltip>
 
-            {onLogout && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={onLogout}>
-                    <SignOut size={16} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Logout</TooltipContent>
-              </Tooltip>
-            )}
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={onNewNetwork}>
+                  <FilePlus size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>New Network</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleSaveNetwork}>
+                  <FloppyDisk size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Save Network</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={onLoadNetwork}>
+                  <FolderOpen size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Load Network</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          {showListPanel && workspace && (
+          {showListPanel && (
             <ListPanel
               persons={workspace.persons}
               groups={workspace.groups}
@@ -1310,7 +1346,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                 />
               )}
 
-              {draggingConnection && workspace && (
+              {draggingConnection && (
                 <svg
                   className="absolute inset-0 pointer-events-none"
                   style={{
