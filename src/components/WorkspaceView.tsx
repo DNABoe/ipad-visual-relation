@@ -31,7 +31,7 @@ import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
 
 interface WorkspaceViewProps {
-  onLogout: () => void
+  onLogout?: () => void
 }
 
 export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
@@ -440,14 +440,16 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
               <TooltipContent>Settings</TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={onLogout}>
-                  <SignOut size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Logout</TooltipContent>
-            </Tooltip>
+            {onLogout && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onLogout}>
+                    <SignOut size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Logout</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
 
