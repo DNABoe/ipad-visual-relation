@@ -13,7 +13,7 @@ import { ListPanel } from './ListPanel'
 import { PhotoViewerDialog } from './PhotoViewerDialog'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
-import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT, GRID_SIZE } from '@/lib/constants'
 import { 
   Plus, 
   UsersThree, 
@@ -63,6 +63,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const [draggingGroupPersons, setDraggingGroupPersons] = useState<string[]>([])
   const [resizingGroup, setResizingGroup] = useState<{ id: string; handle: string; startX: number; startY: number; startWidth: number; startHeight: number; startGroupX: number; startGroupY: number } | null>(null)
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
+  const [dragAccumulator, setDragAccumulator] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
   const [draggingConnection, setDraggingConnection] = useState<{ fromPersonId: string; mouseX: number; mouseY: number } | null>(null)
@@ -306,52 +307,98 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       const dx = e.movementX / transform.scale
       const dy = e.movementY / transform.scale
       
-      setWorkspace((current) => ({
-        ...current!,
-        persons: current!.persons.map(p => {
-          if (selectedPersons.includes(p.id)) {
-            let newX = p.x + dx
-            let newY = p.y + dy
-            if (settings?.snapToGrid) {
-              newX = snapValue(newX)
-              newY = snapValue(newY)
-            }
-            return { ...p, x: newX, y: newY }
+      if (settings?.snapToGrid) {
+        setDragAccumulator((acc) => {
+          const newAccX = acc.x + dx
+          const newAccY = acc.y + dy
+          
+          const gridStepsX = Math.floor(newAccX / GRID_SIZE)
+          const gridStepsY = Math.floor(newAccY / GRID_SIZE)
+          
+          if (gridStepsX !== 0 || gridStepsY !== 0) {
+            const moveX = gridStepsX * GRID_SIZE
+            const moveY = gridStepsY * GRID_SIZE
+            
+            setWorkspace((current) => ({
+              ...current!,
+              persons: current!.persons.map(p => {
+                if (selectedPersons.includes(p.id)) {
+                  return { ...p, x: p.x + moveX, y: p.y + moveY }
+                }
+                return p
+              }),
+            }))
+            
+            return { x: newAccX - moveX, y: newAccY - moveY }
           }
-          return p
-        }),
-      }))
+          
+          return { x: newAccX, y: newAccY }
+        })
+      } else {
+        setWorkspace((current) => ({
+          ...current!,
+          persons: current!.persons.map(p => {
+            if (selectedPersons.includes(p.id)) {
+              return { ...p, x: p.x + dx, y: p.y + dy }
+            }
+            return p
+          }),
+        }))
+      }
     } else if (draggingGroup && workspace) {
       const dx = e.movementX / transform.scale
       const dy = e.movementY / transform.scale
       
-      setWorkspace((current) => ({
-        ...current!,
-        groups: current!.groups.map(g => {
-          if (g.id === draggingGroup) {
-            let newX = g.x + dx
-            let newY = g.y + dy
-            if (settings?.snapToGrid) {
-              newX = snapValue(newX)
-              newY = snapValue(newY)
-            }
-            return { ...g, x: newX, y: newY }
+      if (settings?.snapToGrid) {
+        setDragAccumulator((acc) => {
+          const newAccX = acc.x + dx
+          const newAccY = acc.y + dy
+          
+          const gridStepsX = Math.floor(newAccX / GRID_SIZE)
+          const gridStepsY = Math.floor(newAccY / GRID_SIZE)
+          
+          if (gridStepsX !== 0 || gridStepsY !== 0) {
+            const moveX = gridStepsX * GRID_SIZE
+            const moveY = gridStepsY * GRID_SIZE
+            
+            setWorkspace((current) => ({
+              ...current!,
+              groups: current!.groups.map(g => {
+                if (g.id === draggingGroup) {
+                  return { ...g, x: g.x + moveX, y: g.y + moveY }
+                }
+                return g
+              }),
+              persons: current!.persons.map(p => {
+                if (draggingGroupPersons.includes(p.id)) {
+                  return { ...p, x: p.x + moveX, y: p.y + moveY }
+                }
+                return p
+              }),
+            }))
+            
+            return { x: newAccX - moveX, y: newAccY - moveY }
           }
-          return g
-        }),
-        persons: current!.persons.map(p => {
-          if (draggingGroupPersons.includes(p.id)) {
-            let newX = p.x + dx
-            let newY = p.y + dy
-            if (settings?.snapToGrid) {
-              newX = snapValue(newX)
-              newY = snapValue(newY)
+          
+          return { x: newAccX, y: newAccY }
+        })
+      } else {
+        setWorkspace((current) => ({
+          ...current!,
+          groups: current!.groups.map(g => {
+            if (g.id === draggingGroup) {
+              return { ...g, x: g.x + dx, y: g.y + dy }
             }
-            return { ...p, x: newX, y: newY }
-          }
-          return p
-        }),
-      }))
+            return g
+          }),
+          persons: current!.persons.map(p => {
+            if (draggingGroupPersons.includes(p.id)) {
+              return { ...p, x: p.x + dx, y: p.y + dy }
+            }
+            return p
+          }),
+        }))
+      }
     } else if (resizingGroup && workspace) {
       const dx = (e.clientX - resizingGroup.startX) / transform.scale
       const dy = (e.clientY - resizingGroup.startY) / transform.scale
@@ -471,6 +518,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     setResizingGroup(null)
     setDragStart(null)
     setSelectionRect(null)
+    setDragAccumulator({ x: 0, y: 0 })
     isPanning.current = false
   }, [draggingConnection, selectionRect, workspace, transform, setWorkspace])
 
@@ -952,6 +1000,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       setDragStart(null)
       setSelectionRect(null)
       setDraggingConnection(null)
+      setDragAccumulator({ x: 0, y: 0 })
       isPanning.current = false
     }
     
