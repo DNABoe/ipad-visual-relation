@@ -1,0 +1,574 @@
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { PersonNode } from './PersonNode'
+import { GroupFrame } from './GroupFrame'
+import { CanvasEdges } from './CanvasEdges'
+import { PersonDialog } from './PersonDialog'
+import { GroupDialog } from './GroupDialog'
+import { SettingsDialog } from './SettingsDialog'
+import { ListPanel } from './ListPanel'
+import type { Person, Connection, Group, Workspace } from '@/lib/types'
+import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
+import { 
+  Plus, 
+  UsersThree, 
+  Link, 
+  MagnifyingGlassPlus, 
+  MagnifyingGlassMinus, 
+  ArrowsOut, 
+  GridFour, 
+  List, 
+  Gear,
+  SignOut,
+  Trash,
+  X
+} from '@phosphor-icons/react'
+import { toast } from 'sonner'
+import { generateSampleData } from '@/lib/sampleData'
+
+interface WorkspaceViewProps {
+  onLogout: () => void
+}
+
+export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
+  const [workspace, setWorkspace] = useKV<Workspace>('workspace', { persons: [], connections: [], groups: [] })
+  const [settings] = useKV<{ showGrid: boolean; snapToGrid: boolean; showMinimap: boolean }>('app-settings', {
+    showGrid: true,
+    snapToGrid: false,
+    showMinimap: true,
+  })
+
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 })
+  const [selectedPersons, setSelectedPersons] = useState<string[]>([])
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([])
+  const [showPersonDialog, setShowPersonDialog] = useState(false)
+  const [showGroupDialog, setShowGroupDialog] = useState(false)
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false)
+  const [showListPanel, setShowListPanel] = useState(false)
+  const [editPerson, setEditPerson] = useState<Person | undefined>()
+  const [connectMode, setConnectMode] = useState(false)
+  const [connectFrom, setConnectFrom] = useState<string | null>(null)
+  const [draggingPerson, setDraggingPerson] = useState<string | null>(null)
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
+  const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
+  
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const isPanning = useRef(false)
+  const lastPanPos = useRef({ x: 0, y: 0 })
+
+  const handleAddPerson = useCallback((person: Person) => {
+    setWorkspace((current) => ({
+      ...current!,
+      persons: editPerson
+        ? current!.persons.map(p => p.id === person.id ? person : p)
+        : [...current!.persons, person],
+    }))
+    setEditPerson(undefined)
+    toast.success(editPerson ? 'Person updated' : 'Person added')
+  }, [editPerson, setWorkspace])
+
+  const handleAddGroup = useCallback((group: Group) => {
+    setWorkspace((current) => ({
+      ...current!,
+      groups: [...current!.groups, group],
+    }))
+    toast.success('Group created')
+  }, [setWorkspace])
+
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedPersons.length === 0) return
+    
+    setWorkspace((current) => ({
+      ...current!,
+      persons: current!.persons.filter(p => !selectedPersons.includes(p.id)),
+      connections: current!.connections.filter(
+        c => !selectedPersons.includes(c.fromPersonId) && !selectedPersons.includes(c.toPersonId)
+      ),
+    }))
+    setSelectedPersons([])
+    toast.success('Deleted selected persons')
+  }, [selectedPersons, setWorkspace])
+
+  const handlePersonClick = useCallback((personId: string, e: React.MouseEvent) => {
+    if (connectMode) {
+      if (!connectFrom) {
+        setConnectFrom(personId)
+        toast.info('Click another person to connect')
+      } else if (connectFrom !== personId) {
+        const newConnection: Connection = {
+          id: generateId(),
+          fromPersonId: connectFrom,
+          toPersonId: personId,
+        }
+        setWorkspace((current) => ({
+          ...current!,
+          connections: [...current!.connections, newConnection],
+        }))
+        setConnectMode(false)
+        setConnectFrom(null)
+        toast.success('Connection created')
+      }
+    } else {
+      if (e.shiftKey) {
+        setSelectedPersons(prev =>
+          prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
+        )
+      } else {
+        setSelectedPersons([personId])
+      }
+    }
+  }, [connectMode, connectFrom, setWorkspace])
+
+  const handlePersonDragStart = useCallback((personId: string, e: React.MouseEvent) => {
+    if (connectMode) return
+    e.stopPropagation()
+    setDraggingPerson(personId)
+    if (!selectedPersons.includes(personId)) {
+      setSelectedPersons([personId])
+    }
+  }, [connectMode, selectedPersons])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (draggingPerson && workspace) {
+      const dx = e.movementX / transform.scale
+      const dy = e.movementY / transform.scale
+      
+      setWorkspace((current) => ({
+        ...current!,
+        persons: current!.persons.map(p => {
+          if (selectedPersons.includes(p.id)) {
+            const newX = settings?.snapToGrid ? snapValue(p.x + dx) : p.x + dx
+            const newY = settings?.snapToGrid ? snapValue(p.y + dy) : p.y + dy
+            return { ...p, x: newX, y: newY }
+          }
+          return p
+        }),
+      }))
+    } else if (isPanning.current) {
+      setTransform(prev => ({
+        ...prev,
+        x: prev.x + e.movementX,
+        y: prev.y + e.movementY,
+      }))
+    } else if (dragStart) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      
+      const currentX = (e.clientX - rect.left - transform.x) / transform.scale
+      const currentY = (e.clientY - rect.top - transform.y) / transform.scale
+      
+      setSelectionRect({
+        x: Math.min(dragStart.x, currentX),
+        y: Math.min(dragStart.y, currentY),
+        width: Math.abs(currentX - dragStart.x),
+        height: Math.abs(currentY - dragStart.y),
+      })
+    }
+  }, [draggingPerson, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
+
+  const handleMouseUp = useCallback(() => {
+    if (selectionRect && workspace) {
+      const selected = workspace.persons.filter(p => {
+        const px = p.x + NODE_WIDTH / 2
+        const py = p.y + NODE_HEIGHT / 2
+        return (
+          px >= selectionRect.x &&
+          px <= selectionRect.x + selectionRect.width &&
+          py >= selectionRect.y &&
+          py <= selectionRect.y + selectionRect.height
+        )
+      }).map(p => p.id)
+      
+      setSelectedPersons(selected)
+    }
+    
+    setDraggingPerson(null)
+    setDragStart(null)
+    setSelectionRect(null)
+    isPanning.current = false
+  }, [selectionRect, workspace])
+
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+      e.preventDefault()
+      isPanning.current = true
+      lastPanPos.current = { x: e.clientX, y: e.clientY }
+    } else if (e.button === 0 && !connectMode) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      
+      const x = (e.clientX - rect.left - transform.x) / transform.scale
+      const y = (e.clientY - rect.top - transform.y) / transform.scale
+      
+      setDragStart({ x, y })
+      setSelectedPersons([])
+    }
+  }, [connectMode, transform])
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+    
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
+    const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, transform.scale + delta))
+    
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    const mouseX = e.clientX - rect.left
+    const mouseY = e.clientY - rect.top
+    
+    const scaleRatio = newScale / transform.scale
+    
+    setTransform({
+      x: mouseX - (mouseX - transform.x) * scaleRatio,
+      y: mouseY - (mouseY - transform.y) * scaleRatio,
+      scale: newScale,
+    })
+  }, [transform])
+
+  const handleZoomIn = useCallback(() => {
+    setTransform(prev => ({
+      ...prev,
+      scale: Math.min(MAX_ZOOM, prev.scale + ZOOM_STEP),
+    }))
+  }, [])
+
+  const handleZoomOut = useCallback(() => {
+    setTransform(prev => ({
+      ...prev,
+      scale: Math.max(MIN_ZOOM, prev.scale - ZOOM_STEP),
+    }))
+  }, [])
+
+  const handleZoomToFit = useCallback(() => {
+    if (!workspace || workspace.persons.length === 0) return
+    
+    const bounds = getBounds(workspace.persons)
+    if (!bounds) return
+    
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    const padding = 100
+    const contentWidth = bounds.maxX - bounds.minX + NODE_WIDTH + padding * 2
+    const contentHeight = bounds.maxY - bounds.minY + NODE_HEIGHT + padding * 2
+    
+    const scaleX = rect.width / contentWidth
+    const scaleY = rect.height / contentHeight
+    const scale = Math.min(scaleX, scaleY, MAX_ZOOM)
+    
+    const centerX = (bounds.minX + bounds.maxX) / 2 + NODE_WIDTH / 2
+    const centerY = (bounds.minY + bounds.maxY) / 2 + NODE_HEIGHT / 2
+    
+    setTransform({
+      x: rect.width / 2 - centerX * scale,
+      y: rect.height / 2 - centerY * scale,
+      scale,
+    })
+  }, [workspace])
+
+  const handleLoadSample = useCallback(() => {
+    const sample = generateSampleData()
+    setWorkspace((current) => ({
+      persons: [...(current?.persons || []), ...sample.persons],
+      connections: [...(current?.connections || []), ...sample.connections],
+      groups: [...(current?.groups || []), ...sample.groups],
+    }))
+    toast.success('Sample data loaded')
+  }, [setWorkspace])
+
+  const handleImport = useCallback((imported: Workspace) => {
+    setWorkspace(imported)
+  }, [setWorkspace])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedPersons.length > 0) {
+          e.preventDefault()
+          handleDeleteSelected()
+        }
+      } else if (e.key === 'Escape') {
+        setConnectMode(false)
+        setConnectFrom(null)
+        setSelectedPersons([])
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedPersons, handleDeleteSelected])
+
+  if (!workspace) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="h-screen flex flex-col bg-background">
+        <div className="border-b bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-tight">Visual Relationship Network</h1>
+            {workspace.persons.length === 0 && (
+              <Button variant="outline" size="sm" onClick={handleLoadSample}>
+                Load Sample Data
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={connectMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setConnectMode(!connectMode)
+                    setConnectFrom(null)
+                  }}
+                >
+                  {connectMode ? <X size={16} /> : <Link size={16} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{connectMode ? 'Cancel Connect' : 'Connect Mode'}</TooltipContent>
+            </Tooltip>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => setShowPersonDialog(true)}>
+                  <Plus size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add Person</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => setShowGroupDialog(true)}>
+                  <UsersThree size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add Group</TooltipContent>
+            </Tooltip>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleZoomIn}>
+                  <MagnifyingGlassPlus size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Zoom In</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleZoomOut}>
+                  <MagnifyingGlassMinus size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Zoom Out</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleZoomToFit}>
+                  <ArrowsOut size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Zoom to Fit</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={showGrid ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowGrid(!showGrid)}
+                >
+                  <GridFour size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle Grid</TooltipContent>
+            </Tooltip>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={showListPanel ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowListPanel(!showListPanel)}
+                >
+                  <List size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle List</TooltipContent>
+            </Tooltip>
+
+            {selectedPersons.length > 0 && (
+              <>
+                <Separator orientation="vertical" className="h-6" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
+                      <Trash size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Selected</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => setShowSettingsDialog(true)}>
+                  <Gear size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Settings</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={onLogout}>
+                  <SignOut size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Logout</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        <div className="flex-1 flex overflow-hidden">
+          {showListPanel && workspace && (
+            <ListPanel
+              persons={workspace.persons}
+              groups={workspace.groups}
+              selectedPersons={selectedPersons}
+              onPersonClick={(id) => {
+                setSelectedPersons([id])
+                const person = workspace.persons.find(p => p.id === id)
+                if (person && canvasRef.current) {
+                  const rect = canvasRef.current.getBoundingClientRect()
+                  setTransform({
+                    x: rect.width / 2 - (person.x + NODE_WIDTH / 2) * transform.scale,
+                    y: rect.height / 2 - (person.y + NODE_HEIGHT / 2) * transform.scale,
+                    scale: transform.scale,
+                  })
+                }
+              }}
+            />
+          )}
+
+          <div
+            ref={canvasRef}
+            className={`flex-1 relative overflow-hidden ${showGrid ? 'canvas-grid' : ''}`}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onWheel={handleWheel}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+                transformOrigin: '0 0',
+              }}
+            >
+              {workspace.groups.map(group => (
+                <GroupFrame
+                  key={group.id}
+                  group={group}
+                  isSelected={selectedGroups.includes(group.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedGroups([group.id])
+                  }}
+                />
+              ))}
+
+              {workspace.persons.map(person => (
+                <PersonNode
+                  key={person.id}
+                  person={person}
+                  isSelected={selectedPersons.includes(person.id)}
+                  isDragging={draggingPerson === person.id}
+                  onMouseDown={(e) => handlePersonDragStart(person.id, e)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handlePersonClick(person.id, e)
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    setEditPerson(person)
+                    setShowPersonDialog(true)
+                  }}
+                />
+              ))}
+
+              {selectionRect && (
+                <div
+                  className="selection-rect absolute"
+                  style={{
+                    left: selectionRect.x,
+                    top: selectionRect.y,
+                    width: selectionRect.width,
+                    height: selectionRect.height,
+                  }}
+                />
+              )}
+            </div>
+
+            <CanvasEdges
+              persons={workspace.persons}
+              connections={workspace.connections}
+              transform={transform}
+              selectedConnections={[]}
+            />
+
+            {connectMode && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-lg shadow-lg">
+                {connectFrom ? 'Click target person to connect' : 'Click first person to start'}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <PersonDialog
+          open={showPersonDialog}
+          onOpenChange={(open) => {
+            setShowPersonDialog(open)
+            if (!open) setEditPerson(undefined)
+          }}
+          onSave={handleAddPerson}
+          editPerson={editPerson}
+        />
+
+        <GroupDialog
+          open={showGroupDialog}
+          onOpenChange={setShowGroupDialog}
+          onSave={handleAddGroup}
+        />
+
+        <SettingsDialog
+          open={showSettingsDialog}
+          onOpenChange={setShowSettingsDialog}
+          workspace={workspace}
+          onImport={handleImport}
+        />
+      </div>
+    </TooltipProvider>
+  )
+}

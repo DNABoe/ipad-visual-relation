@@ -1,0 +1,52 @@
+export type FrameColor = 'red' | 'green' | 'orange' | 'white'
+export type GroupColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'teal' | 'indigo' | 'rose' | 'emerald' | 'amber' | 'cyan'
+
+export interface Person {
+  id: string
+  name: string
+  position: string
+  photo?: string
+  score: number
+  frameColor: FrameColor
+  x: number
+  y: number
+  groupId?: string
+  createdAt: number
+}
+
+export interface Connection {
+  id: string
+  fromPersonId: string
+  toPersonId: string
+}
+
+export interface Group {
+  id: string
+  name: string
+  color: GroupColor
+  x: number
+  y: number
+  width: number
+  height: number
+  createdAt: number
+}
+
+export interface AppSettings {
+  username: string
+  passwordHash: string
+  showGrid: boolean
+  snapToGrid: boolean
+  showMinimap: boolean
+}
+
+export interface Workspace {
+  persons: Person[]
+  connections: Connection[]
+  groups: Group[]
+}
+
+export interface ViewTransform {
+  x: number
+  y: number
+  scale: number
+}
