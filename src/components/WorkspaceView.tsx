@@ -27,7 +27,7 @@ import {
   SignOut,
   Trash,
   X,
-  GridNine
+  TreeStructure
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
@@ -547,16 +547,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     const persons = [...workspace.persons]
     const connections = workspace.connections
 
-    const iterations = 200
-    const repulsionForce = 15000
-    const attractionForce = 0.02
-    const dampening = 0.85
-    const minDistance = 300
-    const idealDistance = 400
-
-    const velocities = new Map<string, { vx: number; vy: number }>()
-    persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
-
     const connectionMap = new Map<string, Set<string>>()
     connections.forEach(conn => {
       if (!connectionMap.has(conn.fromPersonId)) {
@@ -568,6 +558,40 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       connectionMap.get(conn.fromPersonId)!.add(conn.toPersonId)
       connectionMap.get(conn.toPersonId)!.add(conn.fromPersonId)
     })
+
+    const connectionCounts = new Map<string, number>()
+    persons.forEach(p => {
+      connectionCounts.set(p.id, connectionMap.get(p.id)?.size || 0)
+    })
+
+    const maxConnections = Math.max(...Array.from(connectionCounts.values()), 1)
+
+    const canvasWidth = 3000
+    const canvasHeight = 3000
+    const centerX = canvasWidth / 2
+    const centerY = canvasHeight / 2
+
+    persons.forEach(p => {
+      const angle = Math.random() * Math.PI * 2
+      const connectionCount = connectionCounts.get(p.id) || 0
+      const normalizedConnectivity = connectionCount / maxConnections
+      
+      const maxRadius = 1200
+      const minRadius = 200
+      const radius = maxRadius - (normalizedConnectivity * (maxRadius - minRadius))
+      
+      p.x = centerX + Math.cos(angle) * radius
+      p.y = centerY + Math.sin(angle) * radius
+    })
+
+    const iterations = 250
+    const repulsionForce = 18000
+    const attractionForce = 0.03
+    const centeringForce = 0.015
+    const dampening = 0.82
+
+    const velocities = new Map<string, { vx: number; vy: number }>()
+    persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
 
     for (let iter = 0; iter < iterations; iter++) {
       const forces = new Map<string, { fx: number; fy: number }>()
@@ -608,6 +632,12 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           const dist = Math.sqrt(dx * dx + dy * dy)
           
           if (dist > 0) {
+            const p1Connections = connectionCounts.get(p1.id) || 0
+            const p2Connections = connectionCounts.get(p2.id) || 0
+            const avgConnections = (p1Connections + p2Connections) / 2
+            const connectivityFactor = 1 + (avgConnections / maxConnections) * 0.5
+            
+            const idealDistance = 350 / connectivityFactor
             const displacement = dist - idealDistance
             const attraction = displacement * attractionForce
             const fx = (dx / dist) * attraction
@@ -620,6 +650,22 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             f2.fx -= fx
             f2.fy -= fy
           }
+        }
+      })
+
+      persons.forEach(p => {
+        const connectionCount = connectionCounts.get(p.id) || 0
+        const normalizedConnectivity = connectionCount / maxConnections
+        
+        const dx = centerX - (p.x + NODE_WIDTH / 2)
+        const dy = centerY - (p.y + NODE_HEIGHT / 2)
+        const distToCenter = Math.sqrt(dx * dx + dy * dy)
+        
+        if (distToCenter > 0) {
+          const centerPull = centeringForce * normalizedConnectivity * distToCenter
+          const force = forces.get(p.id)!
+          force.fx += (dx / distToCenter) * centerPull
+          force.fy += (dy / distToCenter) * centerPull
         }
       })
 
@@ -811,7 +857,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleAutoArrange}>
-                  <GridNine size={16} />
+                  <TreeStructure size={16} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Auto Arrange</TooltipContent>
