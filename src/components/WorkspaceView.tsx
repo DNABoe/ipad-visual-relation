@@ -63,6 +63,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
+  const [draggingConnection, setDraggingConnection] = useState<{ fromPersonId: string; mouseX: number; mouseY: number } | null>(null)
   
   const canvasRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -155,6 +156,32 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     }
   }, [connectMode, connectFrom, setWorkspace])
 
+  const handlePersonContextMenu = useCallback((personId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (e.ctrlKey || e.metaKey) {
+      const person = workspace?.persons.find(p => p.id === personId)
+      if (person) {
+        setEditPerson(person)
+        setShowPersonDialog(true)
+      }
+    } else {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      
+      const mouseX = (e.clientX - rect.left - transform.x) / transform.scale
+      const mouseY = (e.clientY - rect.top - transform.y) / transform.scale
+      
+      setDraggingConnection({
+        fromPersonId: personId,
+        mouseX,
+        mouseY,
+      })
+      toast.info('Drag to another person to connect')
+    }
+  }, [workspace, transform])
+
   const handlePersonDoubleClick = useCallback((personId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const person = workspace?.persons.find(p => p.id === personId)
@@ -175,12 +202,12 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handlePersonDragStart = useCallback((personId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (connectMode) return
+    if (connectMode || draggingConnection) return
     setDraggingPerson(personId)
     if (!selectedPersons.includes(personId)) {
       setSelectedPersons([personId])
     }
-  }, [connectMode, selectedPersons])
+  }, [connectMode, draggingConnection, selectedPersons])
 
   const handleGroupDragStart = useCallback((groupId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -251,7 +278,19 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [setWorkspace])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (draggingPerson && workspace) {
+    if (draggingConnection) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      
+      const mouseX = (e.clientX - rect.left - transform.x) / transform.scale
+      const mouseY = (e.clientY - rect.top - transform.y) / transform.scale
+      
+      setDraggingConnection({
+        ...draggingConnection,
+        mouseX,
+        mouseY,
+      })
+    } else if (draggingPerson && workspace) {
       const dx = e.movementX / transform.scale
       const dy = e.movementY / transform.scale
       
@@ -343,10 +382,51 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         height: Math.abs(currentY - dragStart.y),
       })
     }
-  }, [draggingPerson, draggingGroup, draggingGroupPersons, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
+  }, [draggingConnection, draggingPerson, draggingGroup, draggingGroupPersons, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (selectionRect && workspace) {
+    if (draggingConnection && workspace) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) {
+        setDraggingConnection(null)
+        return
+      }
+      
+      const mouseX = (e.clientX - rect.left - transform.x) / transform.scale
+      const mouseY = (e.clientY - rect.top - transform.y) / transform.scale
+      
+      const targetPerson = workspace.persons.find(p => {
+        return (
+          mouseX >= p.x &&
+          mouseX <= p.x + NODE_WIDTH &&
+          mouseY >= p.y &&
+          mouseY <= p.y + NODE_HEIGHT
+        )
+      })
+      
+      if (targetPerson && targetPerson.id !== draggingConnection.fromPersonId) {
+        const existingConnection = workspace.connections.find(
+          c => c.fromPersonId === draggingConnection.fromPersonId && c.toPersonId === targetPerson.id
+        )
+        
+        if (!existingConnection) {
+          const newConnection: Connection = {
+            id: generateId(),
+            fromPersonId: draggingConnection.fromPersonId,
+            toPersonId: targetPerson.id,
+          }
+          setWorkspace((current) => ({
+            ...current!,
+            connections: [...current!.connections, newConnection],
+          }))
+          toast.success('Connection created')
+        } else {
+          toast.info('Connection already exists')
+        }
+      }
+      
+      setDraggingConnection(null)
+    } else if (selectionRect && workspace) {
       const selected = workspace.persons.filter(p => {
         const px = p.x + NODE_WIDTH / 2
         const py = p.y + NODE_HEIGHT / 2
@@ -368,7 +448,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     setDragStart(null)
     setSelectionRect(null)
     isPanning.current = false
-  }, [selectionRect, workspace, setWorkspace])
+  }, [draggingConnection, selectionRect, workspace, transform, setWorkspace])
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -503,6 +583,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       setResizingGroup(null)
       setDragStart(null)
       setSelectionRect(null)
+      setDraggingConnection(null)
       isPanning.current = false
     }
     
@@ -776,12 +857,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                   onClick={(e) => handlePersonClick(person.id, e)}
                   onDoubleClick={(e) => handlePersonDoubleClick(person.id, e)}
                   onPhotoDoubleClick={(e) => handlePhotoDoubleClick(person.id, e)}
-                  onContextMenu={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setEditPerson(person)
-                    setShowPersonDialog(true)
-                  }}
+                  onContextMenu={(e) => handlePersonContextMenu(person.id, e)}
                   style={{ pointerEvents: 'auto' }}
                 />
               ))}
@@ -796,6 +872,49 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                     height: selectionRect.height,
                   }}
                 />
+              )}
+
+              {draggingConnection && workspace && (
+                <svg
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%',
+                    overflow: 'visible',
+                  }}
+                >
+                  {(() => {
+                    const fromPerson = workspace.persons.find(p => p.id === draggingConnection.fromPersonId)
+                    if (!fromPerson) return null
+                    
+                    const fromX = fromPerson.x + NODE_WIDTH / 2
+                    const fromY = fromPerson.y + NODE_HEIGHT / 2
+                    const toX = draggingConnection.mouseX
+                    const toY = draggingConnection.mouseY
+                    
+                    return (
+                      <>
+                        <line
+                          x1={fromX}
+                          y1={fromY}
+                          x2={toX}
+                          y2={toY}
+                          stroke="oklch(0.65 0.15 200)"
+                          strokeWidth="3"
+                          strokeDasharray="5,5"
+                        />
+                        <circle
+                          cx={toX}
+                          cy={toY}
+                          r="6"
+                          fill="oklch(0.65 0.15 200)"
+                        />
+                      </>
+                    )
+                  })()}
+                </svg>
               )}
             </div>
 
