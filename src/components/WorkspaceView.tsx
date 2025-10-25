@@ -26,7 +26,8 @@ import {
   Gear,
   SignOut,
   Trash,
-  X
+  X,
+  GridNine
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
@@ -539,6 +540,125 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     })
   }, [workspace])
 
+  const handleAutoArrange = useCallback(() => {
+    if (!workspace || workspace.persons.length === 0) return
+
+    const persons = [...workspace.persons]
+    const connections = workspace.connections
+
+    const iterations = 200
+    const repulsionForce = 15000
+    const attractionForce = 0.02
+    const dampening = 0.85
+    const minDistance = 300
+    const idealDistance = 400
+
+    const velocities = new Map<string, { vx: number; vy: number }>()
+    persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
+
+    const connectionMap = new Map<string, Set<string>>()
+    connections.forEach(conn => {
+      if (!connectionMap.has(conn.fromPersonId)) {
+        connectionMap.set(conn.fromPersonId, new Set())
+      }
+      if (!connectionMap.has(conn.toPersonId)) {
+        connectionMap.set(conn.toPersonId, new Set())
+      }
+      connectionMap.get(conn.fromPersonId)!.add(conn.toPersonId)
+      connectionMap.get(conn.toPersonId)!.add(conn.fromPersonId)
+    })
+
+    for (let iter = 0; iter < iterations; iter++) {
+      const forces = new Map<string, { fx: number; fy: number }>()
+      persons.forEach(p => forces.set(p.id, { fx: 0, fy: 0 }))
+
+      for (let i = 0; i < persons.length; i++) {
+        for (let j = i + 1; j < persons.length; j++) {
+          const p1 = persons[i]
+          const p2 = persons[j]
+          
+          const dx = (p2.x + NODE_WIDTH / 2) - (p1.x + NODE_WIDTH / 2)
+          const dy = (p2.y + NODE_HEIGHT / 2) - (p1.y + NODE_HEIGHT / 2)
+          const distSq = dx * dx + dy * dy
+          const dist = Math.sqrt(distSq)
+          
+          if (dist > 0) {
+            const repulsion = repulsionForce / distSq
+            const fx = (dx / dist) * repulsion
+            const fy = (dy / dist) * repulsion
+            
+            const f1 = forces.get(p1.id)!
+            const f2 = forces.get(p2.id)!
+            f1.fx -= fx
+            f1.fy -= fy
+            f2.fx += fx
+            f2.fy += fy
+          }
+        }
+      }
+
+      connections.forEach(conn => {
+        const p1 = persons.find(p => p.id === conn.fromPersonId)
+        const p2 = persons.find(p => p.id === conn.toPersonId)
+        
+        if (p1 && p2) {
+          const dx = (p2.x + NODE_WIDTH / 2) - (p1.x + NODE_WIDTH / 2)
+          const dy = (p2.y + NODE_HEIGHT / 2) - (p1.y + NODE_HEIGHT / 2)
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          if (dist > 0) {
+            const displacement = dist - idealDistance
+            const attraction = displacement * attractionForce
+            const fx = (dx / dist) * attraction
+            const fy = (dy / dist) * attraction
+            
+            const f1 = forces.get(p1.id)!
+            const f2 = forces.get(p2.id)!
+            f1.fx += fx
+            f1.fy += fy
+            f2.fx -= fx
+            f2.fy -= fy
+          }
+        }
+      })
+
+      persons.forEach(p => {
+        const force = forces.get(p.id)!
+        const vel = velocities.get(p.id)!
+        
+        vel.vx = (vel.vx + force.fx) * dampening
+        vel.vy = (vel.vy + force.fy) * dampening
+        
+        p.x += vel.vx
+        p.y += vel.vy
+      })
+    }
+
+    const minX = Math.min(...persons.map(p => p.x))
+    const minY = Math.min(...persons.map(p => p.y))
+    
+    persons.forEach(p => {
+      p.x = Math.round(p.x - minX + 100)
+      p.y = Math.round(p.y - minY + 100)
+      
+      if (settings?.snapToGrid) {
+        p.x = snapValue(p.x)
+        p.y = snapValue(p.y)
+      }
+    })
+
+    setWorkspace((current) => ({
+      ...current!,
+      persons,
+    }))
+
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+
+    toast.success('Layout optimized')
+  }, [workspace, settings, setWorkspace, handleZoomToFit])
+
   const handleLoadSample = useCallback(() => {
     const sample = generateSampleData()
     setWorkspace((current) => ({
@@ -685,6 +805,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Zoom to Fit</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleAutoArrange}>
+                  <GridNine size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Auto Arrange</TooltipContent>
             </Tooltip>
 
             <Tooltip>
