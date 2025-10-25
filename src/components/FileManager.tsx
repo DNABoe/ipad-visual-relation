@@ -47,7 +47,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
       if ('showSaveFilePicker' in window) {
         try {
-          const fileHandle = await (window as Window).showSaveFilePicker({
+          const fileHandle = await (window as any).showSaveFilePicker({
             suggestedName: `${newFileName.trim()}.enc.json`,
             types: [{
               description: 'Encrypted Network File',
@@ -64,9 +64,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
           setNewFileName('')
           setNewPassword('')
           setNewPasswordConfirm('')
-          toast.success('New encrypted network created')
+          toast.success('New encrypted network created and saved')
         } catch (error) {
           if ((error as Error).name === 'AbortError') {
+            toast.info('File save cancelled')
             return
           }
           throw error
@@ -77,7 +78,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
         const a = document.createElement('a')
         a.href = url
         a.download = `${newFileName.trim()}.enc.json`
+        document.body.appendChild(a)
         a.click()
+        document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
         onLoad(emptyWorkspace, newFileName.trim(), newPassword)
@@ -85,7 +88,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         setNewFileName('')
         setNewPassword('')
         setNewPasswordConfirm('')
-        toast.success('New encrypted network created')
+        toast.success('New encrypted network created and downloaded')
       }
     } catch (error) {
       toast.error('Failed to create encrypted file')
@@ -178,7 +181,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Create a new encrypted network database. After entering your details, you'll choose where to save the file on your computer.
+              Enter a name and password for your new network. You'll then choose where to save the encrypted file on your computer.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

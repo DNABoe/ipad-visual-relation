@@ -964,14 +964,41 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     try {
       const encrypted = await encryptData(JSON.stringify(workspace), password)
       const fileData = JSON.stringify(encrypted, null, 2)
-      const blob = new Blob([fileData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${fileName}.enc.json`
-      a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Network saved successfully')
+
+      if ('showSaveFilePicker' in window) {
+        try {
+          const fileHandle = await (window as any).showSaveFilePicker({
+            suggestedName: `${fileName}.enc.json`,
+            types: [{
+              description: 'Encrypted Network File',
+              accept: { 'application/json': ['.enc.json', '.json'] }
+            }]
+          })
+
+          const writable = await fileHandle.createWritable()
+          await writable.write(fileData)
+          await writable.close()
+
+          toast.success('Network saved successfully')
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            toast.info('Save cancelled')
+            return
+          }
+          throw error
+        }
+      } else {
+        const blob = new Blob([fileData], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${fileName}.enc.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        toast.success('Network saved successfully')
+      }
     } catch (error) {
       toast.error('Failed to save network')
       console.error(error)
