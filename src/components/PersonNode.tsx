@@ -49,9 +49,9 @@ export function PersonNode({
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >
-        <div className="p-3 flex items-center gap-3 pointer-events-none">
+        <div className="p-2.5 flex items-center gap-2.5 pointer-events-none">
           <div 
-            className="flex flex-col items-center gap-2 pointer-events-auto"
+            className="flex flex-col items-center gap-1.5 pointer-events-auto"
             onDoubleClick={(e) => {
               if (person.photo && onPhotoDoubleClick) {
                 e.stopPropagation()
@@ -60,22 +60,22 @@ export function PersonNode({
             }}
           >
             <Avatar 
-              className="h-24 w-24 flex-shrink-0"
+              className="h-16 w-16 flex-shrink-0"
             >
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
-                <span className="text-2xl font-bold">{getInitials(person.name)}</span>
+                <span className="text-lg font-bold">{getInitials(person.name)}</span>
               </AvatarFallback>
             </Avatar>
-            <Badge variant="secondary" className="flex-shrink-0 font-bold text-sm">
+            <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs px-1.5 py-0">
               {person.score}
             </Badge>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base leading-tight break-words">{person.name}</h3>
-            {person.position && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position}</p>}
-            {person.position2 && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position2}</p>}
-            {person.position3 && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position3}</p>}
+            <h3 className="font-semibold text-sm leading-tight break-words">{person.name}</h3>
+            {person.position && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position}</p>}
+            {person.position2 && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position2}</p>}
+            {person.position3 && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position3}</p>}
           </div>
         </div>
       </Card>
