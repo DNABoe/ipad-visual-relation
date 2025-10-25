@@ -41,64 +41,51 @@ export function FileManager({ onLoad }: FileManagerProps) {
       groups: []
     }
 
-    try {
-      const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
-      const fileData = JSON.stringify(encrypted, null, 2)
-      const fileName = newFileName.trim()
+    const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
+    const fileData = JSON.stringify(encrypted, null, 2)
+    const fileName = newFileName.trim()
 
-      if ('showSaveFilePicker' in window) {
-        try {
-          const handle = await (window as any).showSaveFilePicker({
-            suggestedName: `${fileName}.enc.json`,
-            types: [{
-              description: 'Encrypted Network File',
-              accept: { 'application/json': ['.enc.json', '.json'] }
-            }]
-          })
-          
-          const writable = await handle.createWritable()
-          await writable.write(fileData)
-          await writable.close()
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: `${fileName}.enc.json`,
+          types: [{
+            description: 'Encrypted Network File',
+            accept: { 'application/json': ['.enc.json', '.json'] }
+          }]
+        })
+        
+        const writable = await handle.createWritable()
+        await writable.write(fileData)
+        await writable.close()
 
-          toast.success('Network created and saved')
-          onLoad(emptyWorkspace, fileName, newPassword)
-          setShowNewDialog(false)
-          setNewFileName('')
-          setNewPassword('')
-          setNewPasswordConfirm('')
-        } catch (error) {
-          if ((error as Error).name === 'AbortError') {
-            toast.info('Save cancelled - you can save later')
-            onLoad(emptyWorkspace, fileName, newPassword)
-            setShowNewDialog(false)
-            setNewFileName('')
-            setNewPassword('')
-            setNewPasswordConfirm('')
-          } else {
-            throw error
-          }
-        }
-      } else {
-        const blob = new Blob([fileData], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${fileName}.enc.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-
-        toast.success('Network created - check your Downloads folder')
         onLoad(emptyWorkspace, fileName, newPassword)
         setShowNewDialog(false)
         setNewFileName('')
         setNewPassword('')
         setNewPasswordConfirm('')
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          return
+        }
+        console.error(error)
       }
-    } catch (error) {
-      toast.error('Failed to create file')
-      console.error(error)
+    } else {
+      const blob = new Blob([fileData], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${fileName}.enc.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      onLoad(emptyWorkspace, fileName, newPassword)
+      setShowNewDialog(false)
+      setNewFileName('')
+      setNewPassword('')
+      setNewPasswordConfirm('')
     }
   }
 
@@ -124,9 +111,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
       setShowLoadDialog(false)
       setLoadingFile(null)
       setLoadPassword('')
-      toast.success('Network loaded successfully')
     } catch (error) {
-      toast.error('Failed to decrypt file. Check your password.')
+      toast.error('Incorrect password')
       console.error(error)
     }
   }
@@ -182,7 +168,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Choose a name and password. You'll select where to save the file next.
+              Enter a name and password, then choose where to save the file.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -235,7 +221,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             }}>
               Cancel
             </Button>
-            <Button onClick={handleNewNetwork}>Choose Location & Create</Button>
+            <Button onClick={handleNewNetwork}>Create & Choose Location</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
