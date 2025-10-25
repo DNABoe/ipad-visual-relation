@@ -124,8 +124,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [setWorkspace])
 
   const handlePersonClick = useCallback((personId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
     if (connectMode) {
+      e.stopPropagation()
       if (!connectFrom) {
         setConnectFrom(personId)
         toast.info('Click another person to connect')
@@ -144,6 +144,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         toast.success('Connection created')
       }
     } else {
+      e.stopPropagation()
       if (e.shiftKey) {
         setSelectedPersons(prev =>
           prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
@@ -173,6 +174,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [workspace])
 
   const handlePersonDragStart = useCallback((personId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (connectMode) return
     setDraggingPerson(personId)
     if (!selectedPersons.includes(personId)) {
@@ -181,6 +183,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [connectMode, selectedPersons])
 
   const handleGroupDragStart = useCallback((groupId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     setDraggingGroup(groupId)
     if (!selectedGroups.includes(groupId)) {
       setSelectedGroups([groupId])
@@ -740,10 +743,11 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             onWheel={handleWheel}
           >
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 z-10"
               style={{
                 transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
                 transformOrigin: '0 0',
+                pointerEvents: 'none',
               }}
             >
               {workspace.groups.map(group => (
@@ -752,11 +756,13 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                   group={group}
                   isSelected={selectedGroups.includes(group.id)}
                   onClick={(e) => {
+                    e.stopPropagation()
                     setSelectedGroups([group.id])
                   }}
                   onUpdate={(updates) => handleGroupUpdate(group.id, updates)}
                   onDragStart={(e) => handleGroupDragStart(group.id, e)}
                   onResizeStart={(e, handle) => handleGroupResizeStart(group.id, handle, e)}
+                  style={{ pointerEvents: 'auto' }}
                 />
               ))}
 
@@ -772,15 +778,17 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                   onPhotoDoubleClick={(e) => handlePhotoDoubleClick(person.id, e)}
                   onContextMenu={(e) => {
                     e.preventDefault()
+                    e.stopPropagation()
                     setEditPerson(person)
                     setShowPersonDialog(true)
                   }}
+                  style={{ pointerEvents: 'auto' }}
                 />
               ))}
 
               {selectionRect && (
                 <div
-                  className="selection-rect absolute"
+                  className="selection-rect absolute pointer-events-none"
                   style={{
                     left: selectionRect.x,
                     top: selectionRect.y,
@@ -791,14 +799,16 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
               )}
             </div>
 
-            <CanvasEdges
-              persons={workspace.persons}
-              connections={workspace.connections}
-              transform={transform}
-              selectedConnections={selectedConnections}
-              onConnectionClick={handleConnectionClick}
-              onConnectionContextMenu={handleConnectionContextMenu}
-            />
+            <div className="absolute inset-0 z-0">
+              <CanvasEdges
+                persons={workspace.persons}
+                connections={workspace.connections}
+                transform={transform}
+                selectedConnections={selectedConnections}
+                onConnectionClick={handleConnectionClick}
+                onConnectionContextMenu={handleConnectionContextMenu}
+              />
+            </div>
 
             {connectMode && (
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-lg shadow-lg">

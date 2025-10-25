@@ -131,6 +131,7 @@ export function CanvasEdges({
     
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
     if (connectionId) {
+      e.stopPropagation()
       onConnectionClick(connectionId, e)
     }
   }
@@ -146,6 +147,13 @@ export function CanvasEdges({
     }
   }
 
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
+    if (connectionId) {
+      e.stopPropagation()
+    }
+  }
+
   return (
     <>
       <canvas
@@ -156,7 +164,8 @@ export function CanvasEdges({
       <canvas
         ref={hitCanvasRef}
         className="absolute inset-0 opacity-0"
-        style={{ width: '100%', height: '100%', cursor: 'pointer' }}
+        style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
+        onMouseDown={handleCanvasMouseDown}
         onClick={handleCanvasClick}
         onContextMenu={handleCanvasContextMenu}
       />

@@ -41,26 +41,14 @@ export function PersonNode({
           isDragging && 'node-dragging shadow-2xl'
         )}
         style={style}
-        onMouseDown={(e) => {
-          e.stopPropagation()
-          onMouseDown(e)
-        }}
-        onClick={(e) => {
-          e.stopPropagation()
-          onClick(e)
-        }}
-        onDoubleClick={(e) => {
-          e.stopPropagation()
-          onDoubleClick(e)
-        }}
-        onContextMenu={(e) => {
-          e.stopPropagation()
-          onContextMenu(e)
-        }}
+        onMouseDown={onMouseDown}
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        onContextMenu={onContextMenu}
       >
-        <div className="p-3 flex items-center gap-3">
+        <div className="p-3 flex items-center gap-3 pointer-events-none">
           <div 
-            className="flex flex-col items-center gap-2"
+            className="flex flex-col items-center gap-2 pointer-events-auto"
             onDoubleClick={(e) => {
               if (person.photo && onPhotoDoubleClick) {
                 e.stopPropagation()

@@ -83,13 +83,9 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
         backgroundColor: group.solidBackground ? groupColor : `${groupColor}15`,
         ...style,
       }}
-      onClick={(e) => {
-        e.stopPropagation()
-        onClick(e)
-      }}
+      onClick={onClick}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && onDragStart) {
-          e.stopPropagation()
           onDragStart(e)
         }
       }}
