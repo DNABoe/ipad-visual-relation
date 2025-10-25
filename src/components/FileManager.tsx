@@ -50,8 +50,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         }
       }
     } else {
-      setSelectedPath(`${newFileName.trim()}.enc.json`)
-      toast.success('File will be downloaded to your default downloads folder')
+      toast.error('File picker is not supported in your browser. Please use a modern browser like Chrome or Edge.')
     }
   }
 
@@ -68,7 +67,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       toast.error('Passwords do not match')
       return
     }
-    if (!selectedPath && 'showSaveFilePicker' in window) {
+    if (!selectedPath) {
       toast.error('Please select a file location first')
       return
     }
@@ -83,7 +82,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
       const fileData = JSON.stringify(encrypted, null, 2)
 
-      if ('showSaveFilePicker' in window && fileHandle) {
+      if (fileHandle) {
         try {
           const writable = await fileHandle.createWritable()
           await writable.write(fileData)
@@ -102,23 +101,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           console.error(error)
         }
       } else {
-        const blob = new Blob([fileData], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = selectedPath || `${newFileName.trim()}.enc.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-
-        onLoad(emptyWorkspace, newFileName.trim(), newPassword)
-        setShowNewDialog(false)
-        setNewFileName('')
-        setNewPassword('')
-        setNewPasswordConfirm('')
-        setSelectedPath('')
-        toast.success('New encrypted network created and downloaded')
+        toast.error('No file location selected')
       }
     } catch (error) {
       toast.error('Failed to create encrypted file')
@@ -242,11 +225,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 disabled={!newFileName.trim()}
               >
                 <FolderOpen size={16} className="mr-2" />
-                {selectedPath ? selectedPath : 'Choose location...'}
+                {selectedPath ? selectedPath : 'Click to choose location...'}
               </Button>
               {selectedPath && (
                 <p className="text-xs text-green-600">
-                  ✓ Location selected
+                  ✓ Location selected: {selectedPath}
+                </p>
+              )}
+              {!selectedPath && (
+                <p className="text-xs text-muted-foreground">
+                  Click the button above to open the file save dialog
                 </p>
               )}
             </div>
