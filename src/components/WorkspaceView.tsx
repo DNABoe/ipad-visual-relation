@@ -54,6 +54,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [draggingPerson, setDraggingPerson] = useState<string | null>(null)
   const [draggingGroup, setDraggingGroup] = useState<string | null>(null)
+  const [draggingGroupPersons, setDraggingGroupPersons] = useState<string[]>([])
   const [resizingGroup, setResizingGroup] = useState<{ id: string; handle: string; startX: number; startY: number; startWidth: number; startHeight: number; startGroupX: number; startGroupY: number } | null>(null)
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
@@ -141,7 +142,41 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     if (!selectedGroups.includes(groupId)) {
       setSelectedGroups([groupId])
     }
-  }, [selectedGroups])
+    
+    if (workspace) {
+      const group = workspace.groups.find(g => g.id === groupId)
+      if (group) {
+        const personsInGroup = workspace.persons.filter(person => {
+          const personCenterX = person.x + NODE_WIDTH / 2
+          const personCenterY = person.y + NODE_HEIGHT / 2
+          return (
+            personCenterX >= group.x &&
+            personCenterX <= group.x + group.width &&
+            personCenterY >= group.y &&
+            personCenterY <= group.y + group.height
+          )
+        })
+        setDraggingGroupPersons(personsInGroup.map(p => p.id))
+      }
+    }
+  }, [selectedGroups, workspace])
+  
+  const getPersonsInGroup = useCallback((groupId: string) => {
+    if (!workspace) return []
+    const group = workspace.groups.find(g => g.id === groupId)
+    if (!group) return []
+    
+    return workspace.persons.filter(person => {
+      const personCenterX = person.x + NODE_WIDTH / 2
+      const personCenterY = person.y + NODE_HEIGHT / 2
+      return (
+        personCenterX >= group.x &&
+        personCenterX <= group.x + group.width &&
+        personCenterY >= group.y &&
+        personCenterY <= group.y + group.height
+      )
+    })
+  }, [workspace])
 
   const handleGroupResizeStart = useCallback((groupId: string, handle: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -200,6 +235,14 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           }
           return g
         }),
+        persons: current!.persons.map(p => {
+          if (draggingGroupPersons.includes(p.id)) {
+            const newX = settings?.snapToGrid ? snapValue(p.x + dx) : p.x + dx
+            const newY = settings?.snapToGrid ? snapValue(p.y + dy) : p.y + dy
+            return { ...p, x: newX, y: newY }
+          }
+          return p
+        }),
       }))
     } else if (resizingGroup && workspace) {
       const dx = (e.clientX - resizingGroup.startX) / transform.scale
@@ -255,7 +298,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         height: Math.abs(currentY - dragStart.y),
       })
     }
-  }, [draggingPerson, draggingGroup, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
+  }, [draggingPerson, draggingGroup, draggingGroupPersons, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
 
   const handleMouseUp = useCallback(() => {
     if (selectionRect && workspace) {
@@ -275,6 +318,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     
     setDraggingPerson(null)
     setDraggingGroup(null)
+    setDraggingGroupPersons([])
     setResizingGroup(null)
     setDragStart(null)
     setSelectionRect(null)
