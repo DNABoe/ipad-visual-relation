@@ -203,6 +203,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handlePersonDragStart = useCallback((personId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    if (e.button !== 0) return
     if (connectMode || draggingConnection) return
     setDraggingPerson(personId)
     if (!selectedPersons.includes(personId)) {
