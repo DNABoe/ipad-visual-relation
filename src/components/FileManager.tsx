@@ -148,12 +148,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
   return (
     <div className="h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 p-8">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Your files are stored locally on your computer and are protected with strong AES-256-GCM encryption. 
             Only you have access to your data.
           </p>
+          <div className="bg-muted/50 border border-border rounded-lg p-4 text-xs text-muted-foreground space-y-2">
+            <p className="font-medium text-foreground">Where are my files stored?</p>
+            <p>
+              When you create or save a network, you'll be prompted to choose where to save the encrypted .enc.json file on your computer. 
+              You can save it anywhere - your Documents folder, Desktop, or a dedicated folder for your networks.
+            </p>
+            <p className="text-accent-foreground font-medium">
+              Remember the location you choose and keep your password safe!
+            </p>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -183,9 +193,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Enter a name and password for your new encrypted network. You'll choose where to save it on your computer.
+              Enter a name and password for your new encrypted network.
             </DialogDescription>
           </DialogHeader>
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-xs text-foreground">
+            <p className="font-medium mb-1">💾 File Location</p>
+            <p className="text-muted-foreground">
+              After clicking Create, you'll be prompted to choose where on your computer to save the encrypted file. 
+              Pick a memorable location like your Documents or Desktop folder.
+            </p>
+          </div>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="new-filename">File Name</Label>

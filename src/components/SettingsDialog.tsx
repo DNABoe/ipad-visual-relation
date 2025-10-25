@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { hashPassword } from '@/lib/helpers'
-import { Download, Upload, Moon, Sun } from '@phosphor-icons/react'
+import { Download, Upload, Moon, Sun, Info } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
 import { useTheme } from '@/hooks/use-theme'
@@ -67,10 +67,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `network-${Date.now()}.json`
+    a.download = `network-backup-${Date.now()}.json`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Workspace exported')
+    toast.success('Unencrypted backup exported - remember to save as encrypted file!')
   }
 
   const handleImport = () => {
@@ -168,14 +168,32 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
           <div className="space-y-4">
             <h3 className="font-medium">Data Management</h3>
+            <div className="bg-muted/50 border border-border rounded-lg p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <Info size={16} className="text-accent mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p className="font-medium text-foreground">About File Storage</p>
+                  <p>
+                    Your encrypted .enc.json files are saved wherever you choose on your computer. 
+                    They never leave your device and are protected with AES-256-GCM encryption.
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Export</span> creates an unencrypted backup for migration or sharing.
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Import</span> loads unencrypted JSON files (remember to save as encrypted after!).
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleExport} className="flex-1">
                 <Download size={16} className="mr-2" />
-                Export
+                Export (Unencrypted)
               </Button>
               <Button variant="outline" onClick={handleImport} className="flex-1">
                 <Upload size={16} className="mr-2" />
-                Import
+                Import JSON
               </Button>
             </div>
           </div>

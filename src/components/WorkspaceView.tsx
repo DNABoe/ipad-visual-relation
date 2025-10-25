@@ -1280,7 +1280,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                   <FloppyDisk size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Save Network - Choose Location</TooltipContent>
+              <TooltipContent>Save Network - Choose where to save on your computer</TooltipContent>
             </Tooltip>
 
             <Tooltip>
