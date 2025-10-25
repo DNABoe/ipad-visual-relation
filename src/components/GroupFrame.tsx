@@ -29,6 +29,7 @@ interface GroupFrameProps {
 
 export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, onResizeStart, style }: GroupFrameProps) {
   const groupColor = GROUP_COLORS[group.color]
+  const isSolid = group.solidBackground ?? false
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(group.name)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -71,7 +72,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
       className={cn(
         'absolute rounded-lg border-2 pointer-events-auto group/frame',
         'transition-all',
-        group.solidBackground ? 'border-solid' : 'border-dashed',
+        isSolid ? 'border-solid' : 'border-dashed',
         isSelected && 'ring-2 ring-accent'
       )}
       style={{
@@ -80,7 +81,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
         width: group.width,
         height: group.height,
         borderColor: groupColor,
-        backgroundColor: group.solidBackground ? groupColor : `${groupColor}15`,
+        backgroundColor: isSolid ? groupColor : `${groupColor}15`,
         ...style,
       }}
       onClick={onClick}
@@ -160,7 +161,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 <DropdownMenuItem onClick={handleBackgroundToggle}>
-                  {group.solidBackground ? 'Transparent Background' : 'Solid Background'}
+                  {isSolid ? 'Transparent Background' : 'Solid Background'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
