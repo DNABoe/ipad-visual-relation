@@ -5,10 +5,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 import { hashPassword } from '@/lib/helpers'
-import { Download, Upload } from '@phosphor-icons/react'
+import { Download, Upload, Moon, Sun } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
+import { useTheme } from '@/hooks/use-theme'
 
 interface SettingsDialogProps {
   open: boolean
@@ -31,6 +33,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     snapToGrid: false,
     showMinimap: true,
   })
+
+  const { theme, setTheme } = useTheme()
 
   const [username, setUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
@@ -101,6 +105,29 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
+          <div className="space-y-4">
+            <h3 className="font-medium">Appearance</h3>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="theme-toggle">Theme</Label>
+                <div className="text-sm text-muted-foreground">
+                  {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sun size={16} className={theme === 'light' ? 'text-foreground' : 'text-muted-foreground'} />
+                <Switch
+                  id="theme-toggle"
+                  checked={theme === 'dark'}
+                  onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                />
+                <Moon size={16} className={theme === 'dark' ? 'text-foreground' : 'text-muted-foreground'} />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="space-y-4">
             <h3 className="font-medium">Account</h3>
             <div className="space-y-2">
