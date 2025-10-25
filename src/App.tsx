@@ -11,23 +11,27 @@ function App() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
+  const [showFileManager, setShowFileManager] = useState(true)
 
   const handleLoad = (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     setWorkspace(loadedWorkspace)
     setFileName(loadedFileName)
     setPassword(loadedPassword)
+    setShowFileManager(false)
   }
 
   const handleNewNetwork = () => {
     setWorkspace(null)
     setFileName('')
     setPassword('')
+    setShowFileManager(true)
   }
 
   const handleLoadNetwork = () => {
     setWorkspace(null)
     setFileName('')
     setPassword('')
+    setShowFileManager(true)
   }
 
   const handleSetWorkspace = (update: Workspace | ((current: Workspace) => Workspace)) => {
@@ -41,7 +45,7 @@ function App() {
     }
   }
 
-  if (!workspace) {
+  if (showFileManager || !workspace) {
     return (
       <>
         <FileManager onLoad={handleLoad} />
