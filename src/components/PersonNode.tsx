@@ -6,8 +6,6 @@ import { getInitials } from '@/lib/helpers'
 import { FRAME_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
-export type ConnectionSide = 'top' | 'right' | 'bottom' | 'left'
-
 interface PersonNodeProps {
   person: Person
   isSelected: boolean

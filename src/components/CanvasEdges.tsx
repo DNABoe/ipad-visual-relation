@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { Person, Connection } from '@/lib/types'
-import { getHubPosition, getBestConnectionSides, createRoutedPath } from '@/lib/connectionRouting'
+import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 
 interface CanvasEdgesProps {
   persons: Person[]
@@ -9,7 +9,6 @@ interface CanvasEdgesProps {
   selectedConnections: string[]
   onConnectionClick?: (connectionId: string, e: React.MouseEvent) => void
   onConnectionContextMenu?: (connectionId: string, e: React.MouseEvent) => void
-  draggingConnection?: { x: number; y: number; fromPersonId: string; fromSide: string } | null
 }
 
 export function CanvasEdges({ 
@@ -19,7 +18,6 @@ export function CanvasEdges({
   selectedConnections,
   onConnectionClick,
   onConnectionContextMenu,
-  draggingConnection
 }: CanvasEdgesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const hitCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -64,50 +62,34 @@ export function CanvasEdges({
 
       if (!from || !to) return
 
-      const sides = conn.fromSide && conn.toSide 
-        ? { fromSide: conn.fromSide, toSide: conn.toSide }
-        : getBestConnectionSides(from, to)
-
-      const fromPos = getHubPosition(from, sides.fromSide)
-      const toPos = getHubPosition(to, sides.toSide)
-
-      const { path } = createRoutedPath(
-        fromPos,
-        toPos,
-        sides.fromSide,
-        sides.toSide,
-        persons,
-        [from, to]
-      )
+      const fromX = from.x + NODE_WIDTH / 2
+      const fromY = from.y + NODE_HEIGHT / 2
+      const toX = to.x + NODE_WIDTH / 2
+      const toY = to.y + NODE_HEIGHT / 2
 
       const isSelected = selectedConnections.includes(conn.id)
 
-      const pathObj = new Path2D(path)
-      
+      ctx.beginPath()
+      ctx.moveTo(fromX, fromY)
+      ctx.lineTo(toX, toY)
       ctx.strokeStyle = isSelected ? 'oklch(0.65 0.15 200)' : 'oklch(0.70 0.02 250)'
       ctx.lineWidth = isSelected ? 3 : 2
-      ctx.stroke(pathObj)
+      ctx.stroke()
 
       const arrowSize = 8
-      const dx = toPos.x - fromPos.x
-      const dy = toPos.y - fromPos.y
+      const dx = toX - fromX
+      const dy = toY - fromY
       const angle = Math.atan2(dy, dx)
-      
-      let arrowAngle = angle
-      if (sides.toSide === 'right') arrowAngle = 0
-      else if (sides.toSide === 'left') arrowAngle = Math.PI
-      else if (sides.toSide === 'bottom') arrowAngle = Math.PI / 2
-      else if (sides.toSide === 'top') arrowAngle = -Math.PI / 2
 
       ctx.beginPath()
-      ctx.moveTo(toPos.x, toPos.y)
+      ctx.moveTo(toX, toY)
       ctx.lineTo(
-        toPos.x - arrowSize * Math.cos(arrowAngle - Math.PI / 6),
-        toPos.y - arrowSize * Math.sin(arrowAngle - Math.PI / 6)
+        toX - arrowSize * Math.cos(angle - Math.PI / 6),
+        toY - arrowSize * Math.sin(angle - Math.PI / 6)
       )
       ctx.lineTo(
-        toPos.x - arrowSize * Math.cos(arrowAngle + Math.PI / 6),
-        toPos.y - arrowSize * Math.sin(arrowAngle + Math.PI / 6)
+        toX - arrowSize * Math.cos(angle + Math.PI / 6),
+        toY - arrowSize * Math.sin(angle + Math.PI / 6)
       )
       ctx.closePath()
       ctx.fillStyle = ctx.strokeStyle
@@ -116,31 +98,17 @@ export function CanvasEdges({
       const hitColor = `rgb(${(conn.id.charCodeAt(0) * 7) % 256}, ${(conn.id.charCodeAt(1) * 13) % 256}, ${(conn.id.charCodeAt(2) * 17) % 256})`
       connectionColorMap.current.set(hitColor, conn.id)
       
+      hitCtx.beginPath()
+      hitCtx.moveTo(fromX, fromY)
+      hitCtx.lineTo(toX, toY)
       hitCtx.strokeStyle = hitColor
       hitCtx.lineWidth = 10
-      hitCtx.stroke(pathObj)
+      hitCtx.stroke()
     })
-
-    if (draggingConnection) {
-      const from = personMap.get(draggingConnection.fromPersonId)
-      if (from) {
-        const fromSide = draggingConnection.fromSide as any
-        const fromPos = getHubPosition(from, fromSide)
-        
-        ctx.beginPath()
-        ctx.moveTo(fromPos.x, fromPos.y)
-        ctx.lineTo(draggingConnection.x, draggingConnection.y)
-        ctx.strokeStyle = 'oklch(0.65 0.15 200)'
-        ctx.lineWidth = 2
-        ctx.setLineDash([5, 5])
-        ctx.stroke()
-        ctx.setLineDash([])
-      }
-    }
 
     ctx.restore()
     hitCtx.restore()
-  }, [persons, connections, transform, selectedConnections, draggingConnection])
+  }, [persons, connections, transform, selectedConnections])
 
   const getConnectionIdAtPosition = (clientX: number, clientY: number): string | null => {
     if (!hitCanvasRef.current) return null
