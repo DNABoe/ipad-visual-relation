@@ -35,7 +35,7 @@ export function PersonNode({
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
 
-  const hubClass = "absolute w-3 h-3 bg-accent border-2 border-accent-foreground rounded-full cursor-crosshair hover:scale-150 transition-transform z-10 pointer-events-auto"
+  const hubClass = "absolute w-3 h-3 bg-accent border-2 border-accent-foreground rounded-full cursor-crosshair hover:scale-150 transition-transform z-10"
 
   const handleHubMouseDown = (e: React.MouseEvent, side: ConnectionSide) => {
     e.preventDefault()
@@ -46,7 +46,7 @@ export function PersonNode({
   }
 
   return (
-    <div className="absolute pointer-events-none" style={{ left: person.x, top: person.y, width: 260 }}>
+    <div className="absolute" style={{ left: person.x, top: person.y, width: 260, pointerEvents: 'auto' }}>
       {onHubMouseDown && (
         <>
           <div
@@ -73,7 +73,7 @@ export function PersonNode({
       )}
       <Card
         className={cn(
-          'cursor-grab select-none transition-shadow pointer-events-auto',
+          'cursor-grab select-none transition-shadow',
           'hover:shadow-lg',
           isSelected && 'ring-2 ring-accent shadow-xl',
           isDragging && 'node-dragging shadow-2xl'

@@ -69,7 +69,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
   return (
     <div
       className={cn(
-        'absolute rounded-lg border-2 pointer-events-none group/frame',
+        'absolute rounded-lg border-2 group/frame',
         'transition-all',
         group.solidBackground ? 'border-solid' : 'border-dashed',
         isSelected && 'ring-2 ring-accent'
@@ -81,11 +81,12 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
         height: group.height,
         borderColor: groupColor,
         backgroundColor: group.solidBackground ? groupColor : `${groupColor}15`,
+        pointerEvents: 'auto',
         ...style,
       }}
     >
       <div 
-        className="absolute inset-0 pointer-events-auto"
+        className="absolute inset-0 cursor-move"
         onClick={onClick}
         onMouseDown={(e) => {
           if (e.target === e.currentTarget && onDragStart) {
@@ -94,7 +95,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
         }}
       />
       <div
-        className="absolute -top-8 left-0 flex items-center gap-1 pointer-events-auto"
+        className="absolute -top-8 left-0 flex items-center gap-1"
         onClick={(e) => e.stopPropagation()}
       >
         {isEditingName ? (
@@ -174,7 +175,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
       {isSelected && onResizeStart && resizeHandles.map((handle) => (
         <div
           key={handle.position}
-          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity pointer-events-auto"
+          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity"
           style={{
             ...handle.style,
             cursor: handle.cursor,
