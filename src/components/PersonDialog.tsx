@@ -155,25 +155,31 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
               <div className="w-full space-y-2">
                 <Label htmlFor="frameColor">Status</Label>
                 <div className="grid grid-cols-4 gap-3 justify-items-center px-4">
-                  {FRAME_COLOR_NAMES.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setFrameColor(color as FrameColor)}
-                      className={`w-12 h-12 rounded-lg border-2 transition-all ${
-                        frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110 shadow-lg' : 'hover:scale-105 border-border'
-                      }`}
-                      style={{ 
-                        backgroundColor: FRAME_COLORS[color],
-                        borderColor: frameColor === color ? FRAME_COLORS[color] : undefined
-                      }}
-                      title={color.charAt(0).toUpperCase() + color.slice(1)}
-                    />
-                  ))}
-                </div>
-                <div className="text-xs text-muted-foreground text-center space-y-0.5">
-                  <p>Red - Negative, Green - Positive</p>
-                  <p>Orange - Neutral, White - Uncategorized</p>
+                  {FRAME_COLOR_NAMES.map(color => {
+                    const labels: Record<string, string> = {
+                      red: 'Negative',
+                      green: 'Positive',
+                      orange: 'Neutral',
+                      white: 'Uncategorized'
+                    }
+                    return (
+                      <div key={color} className="flex flex-col items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setFrameColor(color as FrameColor)}
+                          className={`w-12 h-12 rounded-lg border-2 transition-all ${
+                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110 shadow-lg' : 'hover:scale-105 border-border'
+                          }`}
+                          style={{ 
+                            backgroundColor: FRAME_COLORS[color],
+                            borderColor: frameColor === color ? FRAME_COLORS[color] : undefined
+                          }}
+                          title={labels[color]}
+                        />
+                        <span className="text-xs text-muted-foreground text-center">{labels[color]}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
