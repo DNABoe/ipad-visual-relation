@@ -187,14 +187,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
         <div className="space-y-4">
           <Button
-            onClick={async () => {
-              setShowNewDialog(true)
-              await new Promise(resolve => setTimeout(resolve, 100))
-              const locationSelected = await handleSelectLocation()
-              if (!locationSelected) {
-                setShowNewDialog(false)
-              }
-            }}
+            onClick={() => setShowNewDialog(true)}
             className="w-full h-24 text-lg"
             size="lg"
           >
