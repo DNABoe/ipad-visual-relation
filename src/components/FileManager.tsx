@@ -20,6 +20,40 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
   const [loadPassword, setLoadPassword] = useState('')
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
+  const [fileHandle, setFileHandle] = useState<any>(null)
+  const [selectedPath, setSelectedPath] = useState<string>('')
+
+  const handleSelectLocation = async () => {
+    if (!newFileName.trim()) {
+      toast.error('Please enter a file name')
+      return
+    }
+
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: `${newFileName.trim()}.enc.json`,
+          types: [{
+            description: 'Encrypted Network File',
+            accept: { 'application/json': ['.enc.json', '.json'] }
+          }]
+        })
+        setFileHandle(handle)
+        setSelectedPath(handle.name)
+        toast.success('File location selected')
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          toast.info('File selection cancelled')
+        } else {
+          toast.error('Failed to select file location')
+          console.error(error)
+        }
+      }
+    } else {
+      setSelectedPath(`${newFileName.trim()}.enc.json`)
+      toast.success('File will be downloaded to your default downloads folder')
+    }
+  }
 
   const handleNewNetwork = async () => {
     if (!newFileName.trim()) {
@@ -34,6 +68,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
       toast.error('Passwords do not match')
       return
     }
+    if (!selectedPath && 'showSaveFilePicker' in window) {
+      toast.error('Please select a file location first')
+      return
+    }
 
     const emptyWorkspace: Workspace = {
       persons: [],
@@ -45,16 +83,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
       const fileData = JSON.stringify(encrypted, null, 2)
 
-      if ('showSaveFilePicker' in window) {
+      if ('showSaveFilePicker' in window && fileHandle) {
         try {
-          const fileHandle = await (window as any).showSaveFilePicker({
-            suggestedName: `${newFileName.trim()}.enc.json`,
-            types: [{
-              description: 'Encrypted Network File',
-              accept: { 'application/json': ['.enc.json', '.json'] }
-            }]
-          })
-
           const writable = await fileHandle.createWritable()
           await writable.write(fileData)
           await writable.close()
@@ -64,20 +94,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
           setNewFileName('')
           setNewPassword('')
           setNewPasswordConfirm('')
+          setFileHandle(null)
+          setSelectedPath('')
           toast.success('New encrypted network created and saved')
         } catch (error) {
-          if ((error as Error).name === 'AbortError') {
-            toast.info('File save cancelled')
-            return
-          }
-          throw error
+          toast.error('Failed to save file')
+          console.error(error)
         }
       } else {
         const blob = new Blob([fileData], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${newFileName.trim()}.enc.json`
+        a.download = selectedPath || `${newFileName.trim()}.enc.json`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -88,6 +117,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         setNewFileName('')
         setNewPassword('')
         setNewPasswordConfirm('')
+        setSelectedPath('')
         toast.success('New encrypted network created and downloaded')
       }
     } catch (error) {
@@ -181,7 +211,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Enter a name and password for your new network. You'll then choose where to save the encrypted file on your computer.
+              Enter a name and password for your new network, then choose where to save the encrypted file.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -201,6 +231,24 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <p className="text-xs text-muted-foreground">
                 File will be saved as: {newFileName.trim() || 'filename'}.enc.json
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label>File Location</Label>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleSelectLocation}
+                disabled={!newFileName.trim()}
+              >
+                <FolderOpen size={16} className="mr-2" />
+                {selectedPath ? selectedPath : 'Choose location...'}
+              </Button>
+              {selectedPath && (
+                <p className="text-xs text-green-600">
+                  ✓ Location selected
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">Password</Label>
@@ -232,7 +280,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewDialog(false)}>
+            <Button variant="outline" onClick={() => {
+              setShowNewDialog(false)
+              setFileHandle(null)
+              setSelectedPath('')
+            }}>
               Cancel
             </Button>
             <Button onClick={handleNewNetwork}>Create Network</Button>
