@@ -277,6 +277,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     }))
   }, [setWorkspace])
 
+  const handleGroupRemove = useCallback((groupId: string) => {
+    setWorkspace((current) => ({
+      ...current!,
+      groups: current!.groups.filter(g => g.id !== groupId),
+    }))
+    setSelectedGroups(prev => prev.filter(id => id !== groupId))
+    toast.success('Group removed')
+  }, [setWorkspace])
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (draggingConnection) {
       const rect = canvasRef.current?.getBoundingClientRect()
@@ -841,6 +850,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                     setSelectedGroups([group.id])
                   }}
                   onUpdate={(updates) => handleGroupUpdate(group.id, updates)}
+                  onRemove={handleGroupRemove}
                   onDragStart={(e) => handleGroupDragStart(group.id, e)}
                   onResizeStart={(e, handle) => handleGroupResizeStart(group.id, handle, e)}
                   style={{ pointerEvents: 'auto' }}

@@ -22,12 +22,13 @@ interface GroupFrameProps {
   isSelected: boolean
   onClick: (e: React.MouseEvent) => void
   onUpdate: (updates: Partial<Group>) => void
+  onRemove?: (groupId: string) => void
   onDragStart?: (e: React.MouseEvent) => void
   onResizeStart?: (e: React.MouseEvent, handle: string) => void
   style?: React.CSSProperties
 }
 
-export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, onResizeStart, style }: GroupFrameProps) {
+export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onDragStart, onResizeStart, style }: GroupFrameProps) {
   const groupColor = GROUP_COLORS[group.color]
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(group.name)
@@ -168,6 +169,13 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
                 </DropdownMenuSub>
                 <DropdownMenuItem onClick={handleBackgroundToggle}>
                   {group.solidBackground ? 'Transparent Background' : 'Solid Background'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onRemove?.(group.id)}
+                >
+                  Remove Group
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

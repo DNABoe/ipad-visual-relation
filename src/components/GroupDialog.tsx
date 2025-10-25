@@ -12,10 +12,11 @@ interface GroupDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (group: Group) => void
+  onRemove?: (groupId: string) => void
   editGroup?: Group
 }
 
-export function GroupDialog({ open, onOpenChange, onSave, editGroup }: GroupDialogProps) {
+export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }: GroupDialogProps) {
   const [name, setName] = useState(editGroup?.name || '')
   const [color, setColor] = useState<GroupColor>(editGroup?.color || 'blue')
 
@@ -39,6 +40,13 @@ export function GroupDialog({ open, onOpenChange, onSave, editGroup }: GroupDial
     if (!editGroup) {
       setName('')
       setColor('blue')
+    }
+  }
+
+  const handleRemove = () => {
+    if (editGroup && onRemove) {
+      onRemove(editGroup.id)
+      onOpenChange(false)
     }
   }
 
@@ -78,6 +86,11 @@ export function GroupDialog({ open, onOpenChange, onSave, editGroup }: GroupDial
           </div>
         </div>
         <DialogFooter>
+          {editGroup && onRemove && (
+            <Button variant="destructive" onClick={handleRemove} className="mr-auto">
+              Remove Group
+            </Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={!name.trim()}>
             {editGroup ? 'Update' : 'Create'} Group
