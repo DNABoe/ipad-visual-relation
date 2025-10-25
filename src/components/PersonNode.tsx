@@ -56,7 +56,14 @@ export function PersonNode({
               }
             }}
           >
-            <Avatar className="h-24 w-24 flex-shrink-0 ring-4" style={{ '--tw-ring-color': frameColor } as React.CSSProperties}>
+            <Avatar 
+              className="h-24 w-24 flex-shrink-0 ring-4" 
+              style={{ 
+                borderColor: frameColor,
+                borderWidth: '4px',
+                borderStyle: 'solid'
+              }}
+            >
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
                 <span className="text-2xl font-bold">{getInitials(person.name)}</span>
