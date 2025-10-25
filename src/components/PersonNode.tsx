@@ -68,10 +68,10 @@ export function PersonNode({
           </Avatar>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base leading-tight truncate">{person.name}</h3>
-          {person.position && <p className="text-sm text-muted-foreground truncate">{person.position}</p>}
-          {person.position2 && <p className="text-sm text-muted-foreground truncate">{person.position2}</p>}
-          {person.position3 && <p className="text-sm text-muted-foreground truncate">{person.position3}</p>}
+          <h3 className="font-semibold text-base leading-tight break-words">{person.name}</h3>
+          {person.position && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position}</p>}
+          {person.position2 && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position2}</p>}
+          {person.position3 && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position3}</p>}
         </div>
         <Badge variant="secondary" className="flex-shrink-0 font-bold text-sm">
           {person.score}
