@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,15 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
   const [position, setPosition] = useState(editPerson?.position || '')
   const [score, setScore] = useState(editPerson?.score || 3)
   const [frameColor, setFrameColor] = useState<FrameColor>(editPerson?.frameColor || 'white')
+
+  useEffect(() => {
+    if (open) {
+      setName(editPerson?.name || '')
+      setPosition(editPerson?.position || '')
+      setScore(editPerson?.score || 3)
+      setFrameColor(editPerson?.frameColor || 'white')
+    }
+  }, [open, editPerson])
 
   const handleSave = () => {
     if (!name.trim()) return

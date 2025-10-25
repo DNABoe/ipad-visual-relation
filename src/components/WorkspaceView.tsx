@@ -127,6 +127,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     }
   }, [connectMode, connectFrom, setWorkspace])
 
+  const handlePersonDoubleClick = useCallback((personId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const person = workspace?.persons.find(p => p.id === personId)
+    if (person) {
+      setEditPerson(person)
+      setShowPersonDialog(true)
+    }
+  }, [workspace])
+
   const handlePersonDragStart = useCallback((personId: string, e: React.MouseEvent) => {
     if (connectMode) return
     e.stopPropagation()
@@ -681,6 +690,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                     e.stopPropagation()
                     handlePersonClick(person.id, e)
                   }}
+                  onDoubleClick={(e) => handlePersonDoubleClick(person.id, e)}
                   onContextMenu={(e) => {
                     e.preventDefault()
                     setEditPerson(person)

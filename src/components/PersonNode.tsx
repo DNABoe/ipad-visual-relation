@@ -12,6 +12,7 @@ interface PersonNodeProps {
   isDragging: boolean
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
+  onDoubleClick: (e: React.MouseEvent) => void
   onContextMenu: (e: React.MouseEvent) => void
   style?: React.CSSProperties
 }
@@ -22,6 +23,7 @@ export function PersonNode({
   isDragging,
   onMouseDown,
   onClick,
+  onDoubleClick,
   onContextMenu,
   style,
 }: PersonNodeProps) {
@@ -45,6 +47,7 @@ export function PersonNode({
       }}
       onMouseDown={onMouseDown}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
       <div className="p-3 flex items-center gap-3">
