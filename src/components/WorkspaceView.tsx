@@ -980,22 +980,13 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           await writable.write(fileData)
           await writable.close()
 
-          toast.success('Network saved successfully')
+          toast.success(`Network saved to: ${fileName}.enc.json`)
         } catch (error) {
           if ((error as Error).name === 'AbortError') {
             toast.info('Save cancelled')
             return
           }
-          
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `${fileName}.enc.json`
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-          URL.revokeObjectURL(url)
-          toast.success('Network downloaded successfully')
+          throw error
         }
       } else {
         const url = URL.createObjectURL(blob)
@@ -1006,7 +997,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        toast.success('Network downloaded successfully')
+        toast.success(`Network downloaded as: ${fileName}.enc.json`)
       }
     } catch (error) {
       toast.error('Failed to save network')
@@ -1289,7 +1280,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                   <FloppyDisk size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Save Network</TooltipContent>
+              <TooltipContent>Save Network - Choose Location</TooltipContent>
             </Tooltip>
 
             <Tooltip>

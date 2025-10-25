@@ -47,9 +47,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const blob = new Blob([fileData], { type: 'application/json' })
       const fileName = newFileName.trim()
 
-      let saveSuccessful = false
-      let saveError = null
-
       if ('showSaveFilePicker' in window) {
         try {
           const handle = await (window as any).showSaveFilePicker({
@@ -64,25 +61,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
           await writable.write(fileData)
           await writable.close()
 
-          saveSuccessful = true
-          toast.success('New encrypted network created and saved')
+          toast.success(`Network created and saved to: ${fileName}.enc.json`)
+          onLoad(emptyWorkspace, fileName, newPassword)
+          setShowNewDialog(false)
+          setNewFileName('')
+          setNewPassword('')
+          setNewPasswordConfirm('')
         } catch (error) {
-          saveError = error
           if ((error as Error).name === 'AbortError') {
-            toast.info('File save cancelled - you can save later from the workspace')
-            saveSuccessful = true
+            toast.info('Save cancelled - you can save later from the workspace')
+            onLoad(emptyWorkspace, fileName, newPassword)
+            setShowNewDialog(false)
+            setNewFileName('')
+            setNewPassword('')
+            setNewPasswordConfirm('')
           } else {
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `${fileName}.enc.json`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-            
-            saveSuccessful = true
-            toast.success('New encrypted network created - file downloaded')
+            throw error
           }
         }
       } else {
@@ -95,11 +89,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
-        saveSuccessful = true
-        toast.success('New encrypted network created - file downloaded')
-      }
-
-      if (saveSuccessful) {
+        toast.success(`Network created - file will download as: ${fileName}.enc.json`)
         onLoad(emptyWorkspace, fileName, newPassword)
         setShowNewDialog(false)
         setNewFileName('')
@@ -163,6 +153,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <p className="text-sm text-muted-foreground">
             All data is stored locally and encrypted with AES-256
           </p>
+          <div className="pt-2 px-4 py-3 bg-accent/20 border border-accent/30 rounded-lg">
+            <p className="text-xs font-medium text-accent-foreground">
+              💾 You control where files are saved on your computer
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              When creating or saving, you'll choose the exact folder and filename
+            </p>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -197,7 +195,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Enter a name and password for your new encrypted network.
+              Enter a name and password for your new encrypted network. You'll choose where to save it on your computer.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -214,9 +212,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                File will be saved as: {newFileName.trim() || 'filename'}.enc.json
-              </p>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-medium">
+                  File will be saved as: {newFileName.trim() || 'filename'}.enc.json
+                </p>
+                <p className="text-xs">
+                  📁 You'll be prompted to choose where to save this file on your computer.
+                </p>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">Password</Label>
