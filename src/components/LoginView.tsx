@@ -13,7 +13,7 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [settings, setSettings] = useKV<{
+  const [settings] = useKV<{
     username: string
     passwordHash: string
     showGrid: boolean
@@ -31,27 +31,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    const currentSettings = await window.spark.kv.get<{
-      username: string
-      passwordHash: string
-      showGrid: boolean
-      snapToGrid: boolean
-      showMinimap: boolean
-    }>('app-settings')
+    const storedUsername = settings?.username || DEFAULT_USERNAME
+    const storedPasswordHash = settings?.passwordHash || hashPassword(DEFAULT_PASSWORD)
 
-    const settingsToUse = currentSettings || {
-      username: DEFAULT_USERNAME,
-      passwordHash: hashPassword(DEFAULT_PASSWORD),
-      showGrid: true,
-      snapToGrid: false,
-      showMinimap: true,
-    }
-
-    if (username === settingsToUse.username && verifyPassword(password, settingsToUse.passwordHash)) {
+    if (username === storedUsername && verifyPassword(password, storedPasswordHash)) {
       onLogin()
     } else {
       setError('Invalid username or password')
