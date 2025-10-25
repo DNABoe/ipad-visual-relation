@@ -8,16 +8,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import type { Person, FrameColor } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
-import { Upload, X } from '@phosphor-icons/react'
+import { Upload, X, Trash } from '@phosphor-icons/react'
 
 interface PersonDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (person: Person) => void
+  onDelete?: (personId: string) => void
   editPerson?: Person
 }
 
-export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonDialogProps) {
+export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson }: PersonDialogProps) {
   const [name, setName] = useState(editPerson?.name || '')
   const [position, setPosition] = useState(() => {
     if (editPerson) {
@@ -89,6 +90,13 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
       setScore(3)
       setFrameColor('white')
       setPhoto(undefined)
+    }
+  }
+
+  const handleDelete = () => {
+    if (editPerson && onDelete) {
+      onDelete(editPerson.id)
+      onOpenChange(false)
     }
   }
 
@@ -232,6 +240,12 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
           </div>
         </div>
         <DialogFooter>
+          {editPerson && onDelete && (
+            <Button variant="destructive" onClick={handleDelete} className="mr-auto">
+              <Trash className="mr-2" />
+              Delete Person
+            </Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={!name.trim()}>
             {editPerson ? 'Update' : 'Add'} Person

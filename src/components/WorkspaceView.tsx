@@ -90,6 +90,19 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     toast.success(editPerson ? 'Person updated' : 'Person added')
   }, [editPerson, setWorkspace])
 
+  const handleDeletePerson = useCallback((personId: string) => {
+    setWorkspace((current) => ({
+      ...current,
+      persons: current.persons.filter(p => p.id !== personId),
+      connections: current.connections.filter(
+        c => c.fromPersonId !== personId && c.toPersonId !== personId
+      ),
+    }))
+    setSelectedPersons([])
+    setEditPerson(undefined)
+    toast.success('Person deleted')
+  }, [setWorkspace])
+
   const handleAddGroup = useCallback((group: Group) => {
     setWorkspace((current) => ({
       ...current,
@@ -1445,6 +1458,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             if (!open) setEditPerson(undefined)
           }}
           onSave={handleAddPerson}
+          onDelete={handleDeletePerson}
           editPerson={editPerson}
         />
 
