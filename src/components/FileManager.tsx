@@ -44,7 +44,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
     try {
       const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
       const fileData = JSON.stringify(encrypted, null, 2)
-      const blob = new Blob([fileData], { type: 'application/json' })
       const fileName = newFileName.trim()
 
       if ('showSaveFilePicker' in window) {
@@ -61,7 +60,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           await writable.write(fileData)
           await writable.close()
 
-          toast.success(`Network created and saved to: ${fileName}.enc.json`)
+          toast.success('Network created and saved')
           onLoad(emptyWorkspace, fileName, newPassword)
           setShowNewDialog(false)
           setNewFileName('')
@@ -69,7 +68,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           setNewPasswordConfirm('')
         } catch (error) {
           if ((error as Error).name === 'AbortError') {
-            toast.info('Save cancelled - you can save later from the workspace')
+            toast.info('Save cancelled - you can save later')
             onLoad(emptyWorkspace, fileName, newPassword)
             setShowNewDialog(false)
             setNewFileName('')
@@ -80,6 +79,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           }
         }
       } else {
+        const blob = new Blob([fileData], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -89,7 +89,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
-        toast.success(`Network created - file will download as: ${fileName}.enc.json`)
+        toast.success('Network created - check your Downloads folder')
         onLoad(emptyWorkspace, fileName, newPassword)
         setShowNewDialog(false)
         setNewFileName('')
@@ -97,7 +97,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         setNewPasswordConfirm('')
       }
     } catch (error) {
-      toast.error('Failed to create encrypted file')
+      toast.error('Failed to create file')
       console.error(error)
     }
   }
@@ -151,19 +151,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your files are stored locally on your computer and are protected with strong AES-256-GCM encryption. 
-            Only you have access to your data.
+            AES-256-GCM encrypted. Stored locally on your computer.
           </p>
-          <div className="bg-muted/50 border border-border rounded-lg p-4 text-xs text-muted-foreground space-y-2">
-            <p className="font-medium text-foreground">Where are my files stored?</p>
-            <p>
-              When you create or save a network, you'll be prompted to choose where to save the encrypted .enc.json file on your computer. 
-              You can save it anywhere - your Documents folder, Desktop, or a dedicated folder for your networks.
-            </p>
-            <p className="text-accent-foreground font-medium">
-              Remember the location you choose and keep your password safe!
-            </p>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -193,16 +182,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Enter a name and password for your new encrypted network.
+              Choose a name and password. You'll select where to save the file next.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-xs text-foreground">
-            <p className="font-medium mb-1">💾 File Location</p>
-            <p className="text-muted-foreground">
-              After clicking Create, you'll be prompted to choose where on your computer to save the encrypted file. 
-              Pick a memorable location like your Documents or Desktop folder.
-            </p>
-          </div>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="new-filename">File Name</Label>
@@ -217,9 +199,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <div className="text-xs text-muted-foreground">
-                File will be saved as: {newFileName.trim() || 'filename'}.enc.json
-              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">Password</Label>
@@ -256,7 +235,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             }}>
               Cancel
             </Button>
-            <Button onClick={handleNewNetwork}>Create Network</Button>
+            <Button onClick={handleNewNetwork}>Choose Location & Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
