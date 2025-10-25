@@ -24,15 +24,12 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [selectedPath, setSelectedPath] = useState<string>('')
 
   const handleSelectLocation = async () => {
-    if (!newFileName.trim()) {
-      toast.error('Please enter a file name')
-      return
-    }
-
+    const fileName = newFileName.trim() || 'network'
+    
     if ('showSaveFilePicker' in window) {
       try {
         const handle = await (window as any).showSaveFilePicker({
-          suggestedName: `${newFileName.trim()}.enc.json`,
+          suggestedName: `${fileName}.enc.json`,
           types: [{
             description: 'Encrypted Network File',
             accept: { 'application/json': ['.enc.json', '.json'] }
@@ -40,6 +37,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
         })
         setFileHandle(handle)
         setSelectedPath(handle.name)
+        const baseName = handle.name.replace('.enc.json', '').replace('.json', '')
+        setNewFileName(baseName)
         toast.success('File location selected')
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
@@ -50,7 +49,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
         }
       }
     } else {
-      setSelectedPath(`${newFileName.trim()}.enc.json`)
+      setSelectedPath(`${fileName}.enc.json`)
+      if (!newFileName.trim()) {
+        setNewFileName(fileName)
+      }
       toast.success('Ready to save - you will choose location when creating the network')
     }
   }
@@ -182,7 +184,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
         <div className="space-y-4">
           <Button
-            onClick={() => setShowNewDialog(true)}
+            onClick={async () => {
+              setShowNewDialog(true)
+              await new Promise(resolve => setTimeout(resolve, 100))
+              await handleSelectLocation()
+            }}
             className="w-full h-24 text-lg"
             size="lg"
           >
@@ -240,7 +246,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 variant="outline"
                 className="w-full justify-start"
                 onClick={handleSelectLocation}
-                disabled={!newFileName.trim()}
               >
                 <FolderOpen size={16} className="mr-2" />
                 {selectedPath ? selectedPath : 'Click to choose location...'}
