@@ -93,17 +93,26 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Photo</Label>
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                {photo ? (
-                  <AvatarImage src={photo} alt={name || 'Person'} />
-                ) : (
-                  <AvatarFallback style={{ backgroundColor: FRAME_COLORS[frameColor], color: frameColor === 'white' ? '#000' : '#fff' }}>
-                    {name ? getInitials(name) : '?'}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col items-center gap-3">
+              <div 
+                className="relative cursor-pointer group"
+                onDoubleClick={() => fileInputRef.current?.click()}
+                title="Double-click to upload photo"
+              >
+                <Avatar className="h-32 w-32 border-4 transition-all group-hover:border-accent" style={{ borderColor: FRAME_COLORS[frameColor] }}>
+                  {photo ? (
+                    <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
+                  ) : (
+                    <AvatarFallback style={{ backgroundColor: FRAME_COLORS[frameColor], color: frameColor === 'white' ? '#000' : '#fff' }}>
+                      <span className="text-3xl font-bold">{name ? getInitials(name) : '?'}</span>
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Upload className="text-white" size={32} />
+                </div>
+              </div>
+              <div className="flex gap-2">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -129,9 +138,26 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
                     onClick={handleRemovePhoto}
                   >
                     <X className="mr-2" />
-                    Remove Photo
+                    Remove
                   </Button>
                 )}
+              </div>
+              <div className="w-full space-y-2">
+                <Label htmlFor="frameColor">Frame Color</Label>
+                <div className="flex gap-2 justify-center">
+                  {FRAME_COLOR_NAMES.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setFrameColor(color as FrameColor)}
+                      className={`w-10 h-10 rounded-full border-4 transition-all ${
+                        frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110' : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: FRAME_COLORS[color] }}
+                      title={color.charAt(0).toUpperCase() + color.slice(1)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -163,21 +189,6 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
               value={score}
               onChange={(e) => setScore(Number(e.target.value))}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="frameColor">Frame Color</Label>
-            <Select value={frameColor} onValueChange={(v) => setFrameColor(v as FrameColor)}>
-              <SelectTrigger id="frameColor">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FRAME_COLOR_NAMES.map(color => (
-                  <SelectItem key={color} value={color}>
-                    <span className="capitalize">{color}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
         <DialogFooter>

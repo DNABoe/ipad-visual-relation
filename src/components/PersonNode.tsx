@@ -51,10 +51,10 @@ export function PersonNode({
       onContextMenu={onContextMenu}
     >
       <div className="p-3 flex items-center gap-3">
-        <Avatar className="h-12 w-12 flex-shrink-0">
-          {person.photo && <AvatarImage src={person.photo} alt={person.name} />}
+        <Avatar className="h-16 w-16 flex-shrink-0 border-2" style={{ borderColor: frameColor }}>
+          {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
           <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
-            {getInitials(person.name)}
+            <span className="text-xl font-bold">{getInitials(person.name)}</span>
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
