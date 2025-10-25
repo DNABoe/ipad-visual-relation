@@ -32,7 +32,7 @@ export function PersonNode({
   const frameColor = FRAME_COLORS[person.frameColor]
 
   return (
-    <div className="absolute" style={{ left: person.x, top: person.y, width: 260, pointerEvents: 'auto' }}>
+    <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
           'cursor-grab select-none transition-shadow',
@@ -58,9 +58,9 @@ export function PersonNode({
           onContextMenu(e)
         }}
       >
-        <div className="p-3 flex items-center gap-3 pointer-events-none">
+        <div className="p-3 flex items-center gap-3">
           <div 
-            className="flex flex-col items-center gap-2 pointer-events-auto"
+            className="flex flex-col items-center gap-2"
             onDoubleClick={(e) => {
               if (person.photo && onPhotoDoubleClick) {
                 e.stopPropagation()

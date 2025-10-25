@@ -81,7 +81,6 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
         height: group.height,
         borderColor: groupColor,
         backgroundColor: group.solidBackground ? groupColor : `${groupColor}15`,
-        pointerEvents: 'auto',
         ...style,
       }}
       onClick={(e) => {
@@ -96,7 +95,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
       }}
     >
       <div
-        className="absolute -top-8 left-0 flex items-center gap-1 pointer-events-auto"
+        className="absolute -top-8 left-0 flex items-center gap-1"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -183,7 +182,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
       {isSelected && onResizeStart && resizeHandles.map((handle) => (
         <div
           key={handle.position}
-          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity pointer-events-auto z-10"
+          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity z-10"
           style={{
             ...handle.style,
             cursor: handle.cursor,
