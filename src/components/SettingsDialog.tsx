@@ -58,6 +58,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     toast.success('Settings saved')
     setCurrentPassword('')
     setNewPassword('')
+    onOpenChange(false)
   }
 
   const handleExport = () => {
