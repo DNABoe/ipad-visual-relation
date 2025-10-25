@@ -28,6 +28,7 @@ export interface Group {
   y: number
   width: number
   height: number
+  solidBackground?: boolean
   createdAt: number
 }
 

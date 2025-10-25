@@ -53,6 +53,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const [connectMode, setConnectMode] = useState(false)
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [draggingPerson, setDraggingPerson] = useState<string | null>(null)
+  const [draggingGroup, setDraggingGroup] = useState<string | null>(null)
+  const [resizingGroup, setResizingGroup] = useState<{ id: string; handle: string; startX: number; startY: number; startWidth: number; startHeight: number; startGroupX: number; startGroupY: number } | null>(null)
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
@@ -133,6 +135,41 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     }
   }, [connectMode, selectedPersons])
 
+  const handleGroupDragStart = useCallback((groupId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDraggingGroup(groupId)
+    if (!selectedGroups.includes(groupId)) {
+      setSelectedGroups([groupId])
+    }
+  }, [selectedGroups])
+
+  const handleGroupResizeStart = useCallback((groupId: string, handle: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const group = workspace?.groups.find(g => g.id === groupId)
+    if (!group) return
+    
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    setResizingGroup({
+      id: groupId,
+      handle,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: group.width,
+      startHeight: group.height,
+      startGroupX: group.x,
+      startGroupY: group.y,
+    })
+  }, [workspace])
+
+  const handleGroupUpdate = useCallback((groupId: string, updates: Partial<Group>) => {
+    setWorkspace((current) => ({
+      ...current!,
+      groups: current!.groups.map(g => g.id === groupId ? { ...g, ...updates } : g),
+    }))
+  }, [setWorkspace])
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (draggingPerson && workspace) {
       const dx = e.movementX / transform.scale
@@ -147,6 +184,55 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             return { ...p, x: newX, y: newY }
           }
           return p
+        }),
+      }))
+    } else if (draggingGroup && workspace) {
+      const dx = e.movementX / transform.scale
+      const dy = e.movementY / transform.scale
+      
+      setWorkspace((current) => ({
+        ...current!,
+        groups: current!.groups.map(g => {
+          if (g.id === draggingGroup) {
+            const newX = settings?.snapToGrid ? snapValue(g.x + dx) : g.x + dx
+            const newY = settings?.snapToGrid ? snapValue(g.y + dy) : g.y + dy
+            return { ...g, x: newX, y: newY }
+          }
+          return g
+        }),
+      }))
+    } else if (resizingGroup && workspace) {
+      const dx = (e.clientX - resizingGroup.startX) / transform.scale
+      const dy = (e.clientY - resizingGroup.startY) / transform.scale
+      
+      setWorkspace((current) => ({
+        ...current!,
+        groups: current!.groups.map(g => {
+          if (g.id === resizingGroup.id) {
+            const handle = resizingGroup.handle
+            let newX = g.x
+            let newY = g.y
+            let newWidth = g.width
+            let newHeight = g.height
+            
+            if (handle.includes('w')) {
+              newX = resizingGroup.startGroupX + dx
+              newWidth = Math.max(100, resizingGroup.startWidth - dx)
+            }
+            if (handle.includes('e')) {
+              newWidth = Math.max(100, resizingGroup.startWidth + dx)
+            }
+            if (handle.includes('n')) {
+              newY = resizingGroup.startGroupY + dy
+              newHeight = Math.max(100, resizingGroup.startHeight - dy)
+            }
+            if (handle.includes('s')) {
+              newHeight = Math.max(100, resizingGroup.startHeight + dy)
+            }
+            
+            return { ...g, x: newX, y: newY, width: newWidth, height: newHeight }
+          }
+          return g
         }),
       }))
     } else if (isPanning.current) {
@@ -169,7 +255,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         height: Math.abs(currentY - dragStart.y),
       })
     }
-  }, [draggingPerson, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
+  }, [draggingPerson, draggingGroup, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
 
   const handleMouseUp = useCallback(() => {
     if (selectionRect && workspace) {
@@ -188,6 +274,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     }
     
     setDraggingPerson(null)
+    setDraggingGroup(null)
+    setResizingGroup(null)
     setDragStart(null)
     setSelectionRect(null)
     isPanning.current = false
@@ -292,17 +380,26 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         if (selectedPersons.length > 0) {
           e.preventDefault()
           handleDeleteSelected()
+        } else if (selectedGroups.length > 0) {
+          e.preventDefault()
+          setWorkspace((current) => ({
+            ...current!,
+            groups: current!.groups.filter(g => !selectedGroups.includes(g.id)),
+          }))
+          setSelectedGroups([])
+          toast.success('Deleted selected groups')
         }
       } else if (e.key === 'Escape') {
         setConnectMode(false)
         setConnectFrom(null)
         setSelectedPersons([])
+        setSelectedGroups([])
       }
     }
     
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedPersons, handleDeleteSelected])
+  }, [selectedPersons, selectedGroups, handleDeleteSelected, setWorkspace])
 
   if (!workspace) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>
@@ -424,7 +521,32 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                       <Trash size={16} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Delete Selected</TooltipContent>
+                  <TooltipContent>Delete Selected Persons</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+
+            {selectedGroups.length > 0 && (
+              <>
+                <Separator orientation="vertical" className="h-6" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => {
+                        setWorkspace((current) => ({
+                          ...current!,
+                          groups: current!.groups.filter(g => !selectedGroups.includes(g.id)),
+                        }))
+                        setSelectedGroups([])
+                        toast.success('Deleted selected groups')
+                      }}
+                    >
+                      <Trash size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Selected Groups</TooltipContent>
                 </Tooltip>
               </>
             )}
@@ -498,6 +620,9 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                     e.stopPropagation()
                     setSelectedGroups([group.id])
                   }}
+                  onUpdate={(updates) => handleGroupUpdate(group.id, updates)}
+                  onDragStart={(e) => handleGroupDragStart(group.id, e)}
+                  onResizeStart={(e, handle) => handleGroupResizeStart(group.id, handle, e)}
                 />
               ))}
 
