@@ -52,7 +52,7 @@ export function PersonNode({
     >
       <div className="p-3 flex items-center gap-3">
         <div 
-          className="relative"
+          className="flex flex-col items-center gap-2"
           onDoubleClick={(e) => {
             if (person.photo && onPhotoDoubleClick) {
               e.stopPropagation()
@@ -66,6 +66,9 @@ export function PersonNode({
               <span className="text-2xl font-bold">{getInitials(person.name)}</span>
             </AvatarFallback>
           </Avatar>
+          <Badge variant="secondary" className="flex-shrink-0 font-bold text-sm">
+            {person.score}
+          </Badge>
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-base leading-tight break-words">{person.name}</h3>
@@ -73,9 +76,6 @@ export function PersonNode({
           {person.position2 && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position2}</p>}
           {person.position3 && <p className="text-sm text-muted-foreground leading-tight break-words">{person.position3}</p>}
         </div>
-        <Badge variant="secondary" className="flex-shrink-0 font-bold text-sm">
-          {person.score}
-        </Badge>
       </div>
     </Card>
   )
