@@ -60,11 +60,11 @@ export function PersonNode({
             }}
           >
             <Avatar 
-              className="h-16 w-16 flex-shrink-0"
+              className="h-20 w-20 flex-shrink-0"
             >
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
-                <span className="text-lg font-bold">{getInitials(person.name)}</span>
+                <span className="text-xl font-bold">{getInitials(person.name)}</span>
               </AvatarFallback>
             </Avatar>
             <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs px-1.5 py-0">
