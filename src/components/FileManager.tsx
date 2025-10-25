@@ -178,7 +178,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Create a new encrypted network database. You'll be prompted to choose where to save the file.
+              Create a new encrypted network database. After entering your details, you'll choose where to save the file on your computer.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
