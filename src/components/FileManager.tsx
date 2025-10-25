@@ -150,6 +150,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
+          <p className="text-sm text-muted-foreground">
+            Your files are stored locally on your computer and are protected with strong AES-256-GCM encryption. 
+            Only you have access to your data.
+          </p>
         </div>
 
         <div className="space-y-4">
