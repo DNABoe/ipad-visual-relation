@@ -10,6 +10,7 @@ import { PersonDialog } from './PersonDialog'
 import { GroupDialog } from './GroupDialog'
 import { SettingsDialog } from './SettingsDialog'
 import { ListPanel } from './ListPanel'
+import { PhotoViewerDialog } from './PhotoViewerDialog'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
@@ -49,6 +50,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
   const [showListPanel, setShowListPanel] = useState(false)
+  const [showPhotoViewer, setShowPhotoViewer] = useState(false)
+  const [photoViewerData, setPhotoViewerData] = useState<{ url: string; name: string } | null>(null)
   const [editPerson, setEditPerson] = useState<Person | undefined>()
   const [connectMode, setConnectMode] = useState(false)
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
@@ -133,6 +136,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     if (person) {
       setEditPerson(person)
       setShowPersonDialog(true)
+    }
+  }, [workspace])
+
+  const handlePhotoDoubleClick = useCallback((personId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const person = workspace?.persons.find(p => p.id === personId)
+    if (person && person.photo) {
+      setPhotoViewerData({ url: person.photo, name: person.name })
+      setShowPhotoViewer(true)
     }
   }, [workspace])
 
@@ -691,6 +703,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                     handlePersonClick(person.id, e)
                   }}
                   onDoubleClick={(e) => handlePersonDoubleClick(person.id, e)}
+                  onPhotoDoubleClick={(e) => handlePhotoDoubleClick(person.id, e)}
                   onContextMenu={(e) => {
                     e.preventDefault()
                     setEditPerson(person)
@@ -749,6 +762,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
           workspace={workspace}
           onImport={handleImport}
         />
+
+        {photoViewerData && (
+          <PhotoViewerDialog
+            open={showPhotoViewer}
+            onOpenChange={setShowPhotoViewer}
+            photoUrl={photoViewerData.url}
+            personName={photoViewerData.name}
+          />
+        )}
       </div>
     </TooltipProvider>
   )

@@ -99,7 +99,7 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
                 onDoubleClick={() => fileInputRef.current?.click()}
                 title="Double-click to upload photo"
               >
-                <Avatar className="h-32 w-32 border-4 transition-all group-hover:border-accent" style={{ borderColor: FRAME_COLORS[frameColor] }}>
+                <Avatar className="h-32 w-32 ring-2 ring-border transition-all group-hover:ring-accent">
                   {photo ? (
                     <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
                   ) : (

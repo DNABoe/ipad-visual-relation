@@ -13,6 +13,7 @@ interface PersonNodeProps {
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
+  onPhotoDoubleClick?: (e: React.MouseEvent) => void
   onContextMenu: (e: React.MouseEvent) => void
   style?: React.CSSProperties
 }
@@ -24,6 +25,7 @@ export function PersonNode({
   onMouseDown,
   onClick,
   onDoubleClick,
+  onPhotoDoubleClick,
   onContextMenu,
   style,
 }: PersonNodeProps) {
@@ -40,9 +42,7 @@ export function PersonNode({
       style={{
         left: person.x,
         top: person.y,
-        width: 240,
-        borderColor: frameColor,
-        borderWidth: 3,
+        width: 260,
         ...style,
       }}
       onMouseDown={onMouseDown}
@@ -51,17 +51,27 @@ export function PersonNode({
       onContextMenu={onContextMenu}
     >
       <div className="p-3 flex items-center gap-3">
-        <Avatar className="h-16 w-16 flex-shrink-0 border-2" style={{ borderColor: frameColor }}>
-          {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
-          <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
-            <span className="text-xl font-bold">{getInitials(person.name)}</span>
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm leading-tight truncate">{person.name}</h3>
-          <p className="text-xs text-muted-foreground truncate">{person.position}</p>
+        <div 
+          className="relative"
+          onDoubleClick={(e) => {
+            if (person.photo && onPhotoDoubleClick) {
+              e.stopPropagation()
+              onPhotoDoubleClick(e)
+            }
+          }}
+        >
+          <Avatar className="h-24 w-24 flex-shrink-0 ring-2 ring-border">
+            {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
+            <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
+              <span className="text-2xl font-bold">{getInitials(person.name)}</span>
+            </AvatarFallback>
+          </Avatar>
         </div>
-        <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-base leading-tight truncate">{person.name}</h3>
+          <p className="text-sm text-muted-foreground truncate">{person.position}</p>
+        </div>
+        <Badge variant="secondary" className="flex-shrink-0 font-bold text-sm">
           {person.score}
         </Badge>
       </div>
