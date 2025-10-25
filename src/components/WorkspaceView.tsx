@@ -14,7 +14,6 @@ import { PhotoViewerDialog } from './PhotoViewerDialog'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
-import { getHubPosition } from '@/lib/connectionRouting'
 import { 
   Plus, 
   UsersThree, 
@@ -64,14 +63,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
-  const [draggingConnection, setDraggingConnection] = useState<{ 
-    x: number
-    y: number
-    fromPersonId: string
-    fromSide: ConnectionSide
-    mode: 'create' | 'break'
-    connectionId?: string
-  } | null>(null)
   
   const canvasRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -109,26 +100,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     setSelectedPersons([])
     toast.success('Deleted selected persons')
   }, [selectedPersons, setWorkspace])
-
-  const handleHubMouseDown = useCallback((personId: string, side: ConnectionSide, e: React.MouseEvent) => {
-    e.stopPropagation()
-    const person = workspace?.persons.find(p => p.id === personId)
-    if (!person) return
-
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return
-
-    const canvasX = (e.clientX - rect.left - transform.x) / transform.scale
-    const canvasY = (e.clientY - rect.top - transform.y) / transform.scale
-
-    setDraggingConnection({
-      x: canvasX,
-      y: canvasY,
-      fromPersonId: personId,
-      fromSide: side,
-      mode: 'create'
-    })
-  }, [workspace, transform])
 
   const handleConnectionClick = useCallback((connectionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -279,15 +250,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [setWorkspace])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (draggingConnection) {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-
-      const canvasX = (e.clientX - rect.left - transform.x) / transform.scale
-      const canvasY = (e.clientY - rect.top - transform.y) / transform.scale
-
-      setDraggingConnection(prev => prev ? { ...prev, x: canvasX, y: canvasY } : null)
-    } else if (draggingPerson && workspace) {
+    if (draggingPerson && workspace) {
       const dx = e.movementX / transform.scale
       const dy = e.movementY / transform.scale
       
@@ -379,68 +342,10 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         height: Math.abs(currentY - dragStart.y),
       })
     }
-  }, [draggingConnection, draggingPerson, draggingGroup, draggingGroupPersons, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
-
-  const findPersonAtPosition = useCallback((x: number, y: number): { person: Person; side: ConnectionSide } | null => {
-    if (!workspace) return null
-
-    for (const person of workspace.persons) {
-      const hubPositions: Array<{ side: ConnectionSide; pos: { x: number; y: number } }> = [
-        { side: 'top', pos: getHubPosition(person, 'top') },
-        { side: 'right', pos: getHubPosition(person, 'right') },
-        { side: 'bottom', pos: getHubPosition(person, 'bottom') },
-        { side: 'left', pos: getHubPosition(person, 'left') },
-      ]
-
-      for (const { side, pos } of hubPositions) {
-        const distance = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2)
-        if (distance < 15) {
-          return { person, side }
-        }
-      }
-    }
-
-    return null
-  }, [workspace])
+  }, [draggingPerson, draggingGroup, draggingGroupPersons, resizingGroup, dragStart, selectedPersons, transform, workspace, settings, setWorkspace])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (draggingConnection && workspace) {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) {
-        setDraggingConnection(null)
-        return
-      }
-
-      const canvasX = (e.clientX - rect.left - transform.x) / transform.scale
-      const canvasY = (e.clientY - rect.top - transform.y) / transform.scale
-
-      const target = findPersonAtPosition(canvasX, canvasY)
-
-      if (target && target.person.id !== draggingConnection.fromPersonId) {
-        if (draggingConnection.mode === 'create') {
-          const newConnection: Connection = {
-            id: generateId(),
-            fromPersonId: draggingConnection.fromPersonId,
-            toPersonId: target.person.id,
-            fromSide: draggingConnection.fromSide,
-            toSide: target.side,
-          }
-          setWorkspace((current) => ({
-            ...current!,
-            connections: [...current!.connections, newConnection],
-          }))
-          toast.success('Connection created')
-        }
-      } else if (target && draggingConnection.connectionId && draggingConnection.mode === 'break') {
-        setWorkspace((current) => ({
-          ...current!,
-          connections: current!.connections.filter(c => c.id !== draggingConnection.connectionId),
-        }))
-        toast.success('Connection broken')
-      }
-
-      setDraggingConnection(null)
-    } else if (selectionRect && workspace) {
+    if (selectionRect && workspace) {
       const selected = workspace.persons.filter(p => {
         const px = p.x + NODE_WIDTH / 2
         const py = p.y + NODE_HEIGHT / 2
@@ -462,7 +367,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     setDragStart(null)
     setSelectionRect(null)
     isPanning.current = false
-  }, [draggingConnection, selectionRect, workspace, transform, findPersonAtPosition, setWorkspace])
+  }, [selectionRect, workspace, setWorkspace])
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -587,7 +492,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         setSelectedPersons([])
         setSelectedGroups([])
         setSelectedConnections([])
-        setDraggingConnection(null)
       }
     }
     
@@ -598,7 +502,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       setResizingGroup(null)
       setDragStart(null)
       setSelectionRect(null)
-      setDraggingConnection(null)
       isPanning.current = false
     }
     
@@ -878,7 +781,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                     setEditPerson(person)
                     setShowPersonDialog(true)
                   }}
-                  onHubMouseDown={(e, side) => handleHubMouseDown(person.id, side, e)}
                 />
               ))}
 
@@ -902,7 +804,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
               selectedConnections={selectedConnections}
               onConnectionClick={handleConnectionClick}
               onConnectionContextMenu={handleConnectionContextMenu}
-              draggingConnection={draggingConnection}
             />
 
             {connectMode && (

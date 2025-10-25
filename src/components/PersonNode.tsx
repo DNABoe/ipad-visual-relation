@@ -17,7 +17,6 @@ interface PersonNodeProps {
   onDoubleClick: (e: React.MouseEvent) => void
   onPhotoDoubleClick?: (e: React.MouseEvent) => void
   onContextMenu: (e: React.MouseEvent) => void
-  onHubMouseDown?: (e: React.MouseEvent, side: ConnectionSide) => void
   style?: React.CSSProperties
 }
 
@@ -30,47 +29,12 @@ export function PersonNode({
   onDoubleClick,
   onPhotoDoubleClick,
   onContextMenu,
-  onHubMouseDown,
   style,
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
 
-  const hubClass = "absolute w-3 h-3 bg-accent border-2 border-accent-foreground rounded-full cursor-crosshair hover:scale-150 transition-transform z-10"
-
-  const handleHubMouseDown = (e: React.MouseEvent, side: ConnectionSide) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (onHubMouseDown) {
-      onHubMouseDown(e, side)
-    }
-  }
-
   return (
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260, pointerEvents: 'auto' }}>
-      {onHubMouseDown && (
-        <>
-          <div
-            className={hubClass}
-            style={{ top: -6, left: '50%', transform: 'translateX(-50%)' }}
-            onMouseDown={(e) => handleHubMouseDown(e, 'top')}
-          />
-          <div
-            className={hubClass}
-            style={{ top: '50%', right: -6, transform: 'translateY(-50%)' }}
-            onMouseDown={(e) => handleHubMouseDown(e, 'right')}
-          />
-          <div
-            className={hubClass}
-            style={{ bottom: -6, left: '50%', transform: 'translateX(-50%)' }}
-            onMouseDown={(e) => handleHubMouseDown(e, 'bottom')}
-          />
-          <div
-            className={hubClass}
-            style={{ top: '50%', left: -6, transform: 'translateY(-50%)' }}
-            onMouseDown={(e) => handleHubMouseDown(e, 'left')}
-          />
-        </>
-      )}
       <Card
         className={cn(
           'cursor-grab select-none transition-shadow',
