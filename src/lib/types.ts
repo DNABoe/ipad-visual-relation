@@ -5,6 +5,8 @@ export interface Person {
   id: string
   name: string
   position: string
+  position2?: string
+  position3?: string
   photo?: string
   score: number
   frameColor: FrameColor

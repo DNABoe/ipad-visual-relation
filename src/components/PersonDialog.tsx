@@ -20,6 +20,8 @@ interface PersonDialogProps {
 export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonDialogProps) {
   const [name, setName] = useState(editPerson?.name || '')
   const [position, setPosition] = useState(editPerson?.position || '')
+  const [position2, setPosition2] = useState(editPerson?.position2 || '')
+  const [position3, setPosition3] = useState(editPerson?.position3 || '')
   const [score, setScore] = useState(editPerson?.score || 3)
   const [frameColor, setFrameColor] = useState<FrameColor>(editPerson?.frameColor || 'white')
   const [photo, setPhoto] = useState<string | undefined>(editPerson?.photo)
@@ -29,6 +31,8 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
     if (open) {
       setName(editPerson?.name || '')
       setPosition(editPerson?.position || '')
+      setPosition2(editPerson?.position2 || '')
+      setPosition3(editPerson?.position3 || '')
       setScore(editPerson?.score || 3)
       setFrameColor(editPerson?.frameColor || 'white')
       setPhoto(editPerson?.photo)
@@ -60,6 +64,8 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
       id: editPerson?.id || generateId(),
       name: name.trim(),
       position: position.trim(),
+      position2: position2.trim() || undefined,
+      position3: position3.trim() || undefined,
       score,
       frameColor,
       photo,
@@ -75,6 +81,8 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
     if (!editPerson) {
       setName('')
       setPosition('')
+      setPosition2('')
+      setPosition3('')
       setScore(3)
       setFrameColor('white')
       setPhoto(undefined)
@@ -177,6 +185,24 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
               value={position}
               onChange={(e) => setPosition(e.target.value)}
               placeholder="Enter position"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="position2">Position (Line 2)</Label>
+            <Input
+              id="position2"
+              value={position2}
+              onChange={(e) => setPosition2(e.target.value)}
+              placeholder="Enter position (line 2)"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="position3">Position (Line 3)</Label>
+            <Input
+              id="position3"
+              value={position3}
+              onChange={(e) => setPosition3(e.target.value)}
+              placeholder="Enter position (line 3)"
             />
           </div>
           <div className="space-y-2">

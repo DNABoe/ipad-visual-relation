@@ -120,7 +120,9 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
                   </Avatar>
                   <div className="flex-1 min-w-0 text-left">
                     <div className="font-medium text-sm truncate">{person.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{person.position}</div>
+                    {person.position && <div className="text-xs text-muted-foreground truncate">{person.position}</div>}
+                    {person.position2 && <div className="text-xs text-muted-foreground truncate">{person.position2}</div>}
+                    {person.position3 && <div className="text-xs text-muted-foreground truncate">{person.position3}</div>}
                   </div>
                   <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs">
                     {person.score}
