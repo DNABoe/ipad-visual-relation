@@ -13,7 +13,7 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [settings] = useKV<{
+  const [settings, setSettings] = useKV<{
     username: string
     passwordHash: string
     showGrid: boolean
@@ -35,7 +35,15 @@ export function LoginView({ onLogin }: LoginViewProps) {
     e.preventDefault()
     setError('')
 
-    if (settings && username === settings.username && verifyPassword(password, settings.passwordHash)) {
+    const currentSettings = settings || {
+      username: DEFAULT_USERNAME,
+      passwordHash: hashPassword(DEFAULT_PASSWORD),
+      showGrid: true,
+      snapToGrid: false,
+      showMinimap: true,
+    }
+
+    if (username === currentSettings.username && verifyPassword(password, currentSettings.passwordHash)) {
       onLogin()
     } else {
       setError('Invalid username or password')
