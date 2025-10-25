@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
-import { CanvasEdges } from './CanvasEdges'
+import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
 import { PersonDialog } from './PersonDialog'
 import { GroupDialog } from './GroupDialog'
 import { SettingsDialog } from './SettingsDialog'
@@ -515,7 +515,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       
       setDraggingConnection(null)
     } else if (selectionRect) {
-      const selected = workspace.persons.filter(p => {
+      const selectedPersons = workspace.persons.filter(p => {
         const px = p.x + NODE_WIDTH / 2
         const py = p.y + NODE_HEIGHT / 2
         return (
@@ -526,7 +526,17 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         )
       }).map(p => p.id)
       
-      setSelectedPersons(selected)
+      const selectedConnectionIds = getConnectionsInRect(
+        workspace.persons,
+        workspace.connections,
+        selectionRect.x,
+        selectionRect.y,
+        selectionRect.width,
+        selectionRect.height
+      )
+      
+      setSelectedPersons(selectedPersons)
+      setSelectedConnections(selectedConnectionIds)
     }
     
     setDraggingPerson(null)
@@ -1438,6 +1448,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                 connections={workspace.connections}
                 transform={transform}
                 selectedConnections={selectedConnections}
+                selectionRect={selectionRect}
                 onConnectionClick={handleConnectionClick}
                 onConnectionContextMenu={handleConnectionContextMenu}
               />

@@ -2,11 +2,81 @@ import { useRef, useEffect } from 'react'
 import type { Person, Connection } from '@/lib/types'
 import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 
+function lineIntersectsRect(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  rectX: number,
+  rectY: number,
+  rectWidth: number,
+  rectHeight: number
+): boolean {
+  const rectRight = rectX + rectWidth
+  const rectBottom = rectY + rectHeight
+
+  const lineIntersectsLine = (
+    x1: number, y1: number, x2: number, y2: number,
+    x3: number, y3: number, x4: number, y4: number
+  ): boolean => {
+    const denominator = ((y4 - y3) * (x2 - x1)) - ((x4 - x3) * (y2 - y1))
+    if (denominator === 0) return false
+
+    const ua = (((x4 - x3) * (y1 - y3)) - ((y4 - y3) * (x1 - x3))) / denominator
+    const ub = (((x2 - x1) * (y1 - y3)) - ((y2 - y1) * (x1 - x3))) / denominator
+
+    return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1
+  }
+
+  if ((x1 >= rectX && x1 <= rectRight && y1 >= rectY && y1 <= rectBottom) ||
+      (x2 >= rectX && x2 <= rectRight && y2 >= rectY && y2 <= rectBottom)) {
+    return true
+  }
+
+  return (
+    lineIntersectsLine(x1, y1, x2, y2, rectX, rectY, rectRight, rectY) ||
+    lineIntersectsLine(x1, y1, x2, y2, rectRight, rectY, rectRight, rectBottom) ||
+    lineIntersectsLine(x1, y1, x2, y2, rectRight, rectBottom, rectX, rectBottom) ||
+    lineIntersectsLine(x1, y1, x2, y2, rectX, rectBottom, rectX, rectY)
+  )
+}
+
+export function getConnectionsInRect(
+  persons: Person[],
+  connections: Connection[],
+  rectX: number,
+  rectY: number,
+  rectWidth: number,
+  rectHeight: number
+): string[] {
+  const personMap = new Map(persons.map(p => [p.id, p]))
+  const selectedConnectionIds: string[] = []
+
+  connections.forEach(conn => {
+    const from = personMap.get(conn.fromPersonId)
+    const to = personMap.get(conn.toPersonId)
+
+    if (!from || !to) return
+
+    const fromX = from.x + NODE_WIDTH / 2
+    const fromY = from.y + NODE_HEIGHT / 2
+    const toX = to.x + NODE_WIDTH / 2
+    const toY = to.y + NODE_HEIGHT / 2
+
+    if (lineIntersectsRect(fromX, fromY, toX, toY, rectX, rectY, rectWidth, rectHeight)) {
+      selectedConnectionIds.push(conn.id)
+    }
+  })
+
+  return selectedConnectionIds
+}
+
 interface CanvasEdgesProps {
   persons: Person[]
   connections: Connection[]
   transform: { x: number; y: number; scale: number }
   selectedConnections: string[]
+  selectionRect?: { x: number; y: number; width: number; height: number } | null
   onConnectionClick?: (connectionId: string, e: React.MouseEvent) => void
   onConnectionContextMenu?: (connectionId: string, e: React.MouseEvent) => void
 }
@@ -16,6 +86,7 @@ export function CanvasEdges({
   connections, 
   transform, 
   selectedConnections,
+  selectionRect,
   onConnectionClick,
   onConnectionContextMenu,
 }: CanvasEdgesProps) {
