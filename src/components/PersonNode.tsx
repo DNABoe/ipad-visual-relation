@@ -35,12 +35,15 @@ export function PersonNode({
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
-          'cursor-grab select-none transition-shadow',
+          'cursor-grab select-none transition-shadow border-4',
           'hover:shadow-lg',
           isSelected && 'ring-2 ring-accent shadow-xl',
           isDragging && 'node-dragging shadow-2xl'
         )}
-        style={style}
+        style={{
+          ...style,
+          borderColor: frameColor,
+        }}
         onMouseDown={onMouseDown}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
@@ -57,12 +60,7 @@ export function PersonNode({
             }}
           >
             <Avatar 
-              className="h-24 w-24 flex-shrink-0 ring-4" 
-              style={{ 
-                borderColor: frameColor,
-                borderWidth: '4px',
-                borderStyle: 'solid'
-              }}
+              className="h-24 w-24 flex-shrink-0"
             >
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
