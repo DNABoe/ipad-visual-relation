@@ -40,6 +40,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         const baseName = handle.name.replace('.enc.json', '').replace('.json', '')
         setNewFileName(baseName)
         toast.success('File location selected')
+        return true
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           toast.info('File selection cancelled')
@@ -47,6 +48,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           toast.error('Failed to select file location')
           console.error(error)
         }
+        return false
       }
     } else {
       setSelectedPath(`${fileName}.enc.json`)
@@ -54,6 +56,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         setNewFileName(fileName)
       }
       toast.success('Ready to save - you will choose location when creating the network')
+      return true
     }
   }
 
@@ -187,7 +190,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
             onClick={async () => {
               setShowNewDialog(true)
               await new Promise(resolve => setTimeout(resolve, 100))
-              await handleSelectLocation()
+              const locationSelected = await handleSelectLocation()
+              if (!locationSelected) {
+                setShowNewDialog(false)
+              }
             }}
             className="w-full h-24 text-lg"
             size="lg"
