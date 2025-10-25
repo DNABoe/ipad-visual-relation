@@ -8,6 +8,7 @@ interface CanvasEdgesProps {
   transform: { x: number; y: number; scale: number }
   selectedConnections: string[]
   onConnectionClick?: (connectionId: string, e: React.MouseEvent) => void
+  onConnectionContextMenu?: (connectionId: string, e: React.MouseEvent) => void
   draggingConnection?: { x: number; y: number; fromPersonId: string; fromSide: string } | null
 }
 
@@ -17,6 +18,7 @@ export function CanvasEdges({
   transform, 
   selectedConnections,
   onConnectionClick,
+  onConnectionContextMenu,
   draggingConnection
 }: CanvasEdgesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -140,22 +142,39 @@ export function CanvasEdges({
     hitCtx.restore()
   }, [persons, connections, transform, selectedConnections, draggingConnection])
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (!onConnectionClick || !hitCanvasRef.current) return
+  const getConnectionIdAtPosition = (clientX: number, clientY: number): string | null => {
+    if (!hitCanvasRef.current) return null
     
     const hitCtx = hitCanvasRef.current.getContext('2d')
-    if (!hitCtx) return
+    if (!hitCtx) return null
 
     const rect = hitCanvasRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left) * (hitCanvasRef.current.width / rect.width)
-    const y = (e.clientY - rect.top) * (hitCanvasRef.current.height / rect.height)
+    const x = (clientX - rect.left) * (hitCanvasRef.current.width / rect.width)
+    const y = (clientY - rect.top) * (hitCanvasRef.current.height / rect.height)
 
     const pixel = hitCtx.getImageData(x, y, 1, 1).data
     const hitColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`
     
-    const connectionId = connectionColorMap.current.get(hitColor)
+    return connectionColorMap.current.get(hitColor) || null
+  }
+
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (!onConnectionClick) return
+    
+    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
     if (connectionId) {
       onConnectionClick(connectionId, e)
+    }
+  }
+
+  const handleCanvasContextMenu = (e: React.MouseEvent) => {
+    if (!onConnectionContextMenu) return
+    
+    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
+    if (connectionId) {
+      e.preventDefault()
+      e.stopPropagation()
+      onConnectionContextMenu(connectionId, e)
     }
   }
 
@@ -171,6 +190,7 @@ export function CanvasEdges({
         className="absolute inset-0 opacity-0"
         style={{ width: '100%', height: '100%', cursor: 'pointer' }}
         onClick={handleCanvasClick}
+        onContextMenu={handleCanvasContextMenu}
       />
     </>
   )

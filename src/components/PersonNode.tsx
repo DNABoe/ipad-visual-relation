@@ -35,49 +35,45 @@ export function PersonNode({
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
 
-  const hubClass = "absolute w-3 h-3 bg-accent border-2 border-accent-foreground rounded-full cursor-crosshair hover:scale-150 transition-transform z-10"
+  const hubClass = "absolute w-3 h-3 bg-accent border-2 border-accent-foreground rounded-full cursor-crosshair hover:scale-150 transition-transform z-10 pointer-events-auto"
+
+  const handleHubMouseDown = (e: React.MouseEvent, side: ConnectionSide) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (onHubMouseDown) {
+      onHubMouseDown(e, side)
+    }
+  }
 
   return (
-    <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
+    <div className="absolute pointer-events-none" style={{ left: person.x, top: person.y, width: 260 }}>
       {onHubMouseDown && (
         <>
           <div
             className={hubClass}
             style={{ top: -6, left: '50%', transform: 'translateX(-50%)' }}
-            onMouseDown={(e) => {
-              e.stopPropagation()
-              onHubMouseDown(e, 'top')
-            }}
+            onMouseDown={(e) => handleHubMouseDown(e, 'top')}
           />
           <div
             className={hubClass}
             style={{ top: '50%', right: -6, transform: 'translateY(-50%)' }}
-            onMouseDown={(e) => {
-              e.stopPropagation()
-              onHubMouseDown(e, 'right')
-            }}
+            onMouseDown={(e) => handleHubMouseDown(e, 'right')}
           />
           <div
             className={hubClass}
             style={{ bottom: -6, left: '50%', transform: 'translateX(-50%)' }}
-            onMouseDown={(e) => {
-              e.stopPropagation()
-              onHubMouseDown(e, 'bottom')
-            }}
+            onMouseDown={(e) => handleHubMouseDown(e, 'bottom')}
           />
           <div
             className={hubClass}
             style={{ top: '50%', left: -6, transform: 'translateY(-50%)' }}
-            onMouseDown={(e) => {
-              e.stopPropagation()
-              onHubMouseDown(e, 'left')
-            }}
+            onMouseDown={(e) => handleHubMouseDown(e, 'left')}
           />
         </>
       )}
       <Card
         className={cn(
-          'cursor-grab select-none transition-shadow',
+          'cursor-grab select-none transition-shadow pointer-events-auto',
           'hover:shadow-lg',
           isSelected && 'ring-2 ring-accent shadow-xl',
           isDragging && 'node-dragging shadow-2xl'

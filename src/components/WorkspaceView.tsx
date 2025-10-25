@@ -141,6 +141,17 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     }
   }, [])
 
+  const handleConnectionContextMenu = useCallback((connectionId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setWorkspace((current) => ({
+      ...current!,
+      connections: current!.connections.filter(c => c.id !== connectionId),
+    }))
+    setSelectedConnections(prev => prev.filter(id => id !== connectionId))
+    toast.success('Connection removed')
+  }, [setWorkspace])
+
   const handlePersonClick = useCallback((personId: string, e: React.MouseEvent) => {
     if (connectMode) {
       if (!connectFrom) {
@@ -395,7 +406,10 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (draggingConnection && workspace) {
       const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
+      if (!rect) {
+        setDraggingConnection(null)
+        return
+      }
 
       const canvasX = (e.clientX - rect.left - transform.x) / transform.scale
       const canvasY = (e.clientY - rect.top - transform.y) / transform.scale
@@ -448,7 +462,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     setDragStart(null)
     setSelectionRect(null)
     isPanning.current = false
-  }, [selectionRect, workspace])
+  }, [draggingConnection, selectionRect, workspace, transform, findPersonAtPosition, setWorkspace])
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -573,11 +587,27 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         setSelectedPersons([])
         setSelectedGroups([])
         setSelectedConnections([])
+        setDraggingConnection(null)
       }
     }
     
+    const handleGlobalMouseUp = () => {
+      setDraggingPerson(null)
+      setDraggingGroup(null)
+      setDraggingGroupPersons([])
+      setResizingGroup(null)
+      setDragStart(null)
+      setSelectionRect(null)
+      setDraggingConnection(null)
+      isPanning.current = false
+    }
+    
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('mouseup', handleGlobalMouseUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
   }, [selectedPersons, selectedGroups, selectedConnections, handleDeleteSelected, setWorkspace])
 
   if (!workspace) {
@@ -871,6 +901,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
               transform={transform}
               selectedConnections={selectedConnections}
               onConnectionClick={handleConnectionClick}
+              onConnectionContextMenu={handleConnectionContextMenu}
               draggingConnection={draggingConnection}
             />
 
