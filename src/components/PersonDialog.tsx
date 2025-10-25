@@ -103,7 +103,6 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Photo</Label>
             <div className="flex flex-col items-center gap-3">
               <div 
                 className="relative cursor-pointer group"
@@ -155,16 +154,19 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
               </div>
               <div className="w-full space-y-2">
                 <Label htmlFor="frameColor">Status</Label>
-                <div className="flex gap-2 justify-center">
+                <div className="grid grid-cols-4 gap-3 justify-items-center px-4">
                   {FRAME_COLOR_NAMES.map(color => (
                     <button
                       key={color}
                       type="button"
                       onClick={() => setFrameColor(color as FrameColor)}
-                      className={`w-10 h-10 rounded-full border-4 transition-all ${
-                        frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110' : 'hover:scale-105'
+                      className={`w-12 h-12 rounded-lg border-2 transition-all ${
+                        frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110 shadow-lg' : 'hover:scale-105 border-border'
                       }`}
-                      style={{ backgroundColor: FRAME_COLORS[color] }}
+                      style={{ 
+                        backgroundColor: FRAME_COLORS[color],
+                        borderColor: frameColor === color ? FRAME_COLORS[color] : undefined
+                      }}
                       title={color.charAt(0).toUpperCase() + color.slice(1)}
                     />
                   ))}
