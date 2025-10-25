@@ -139,15 +139,13 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const handleConnectionContextMenu = useCallback((connectionId: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (selectedConnections.includes(connectionId)) {
-      setWorkspace((current) => ({
-        ...current,
-        connections: current.connections.filter(c => c.id !== connectionId),
-      }))
-      setSelectedConnections(prev => prev.filter(id => id !== connectionId))
-      toast.success('Connection removed')
-    }
-  }, [selectedConnections, setWorkspace])
+    setWorkspace((current) => ({
+      ...current,
+      connections: current.connections.filter(c => c.id !== connectionId),
+    }))
+    setSelectedConnections(prev => prev.filter(id => id !== connectionId))
+    toast.success('Connection removed')
+  }, [setWorkspace])
 
   const handlePersonClick = useCallback((personId: string, e: React.MouseEvent) => {
     if (connectMode) {
