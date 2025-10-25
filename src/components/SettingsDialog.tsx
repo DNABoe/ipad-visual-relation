@@ -138,20 +138,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                 onCheckedChange={(checked) => setSettings((current) => ({ ...current!, showGrid: checked }))}
               />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="snap-toggle">Snap to Grid</Label>
-                <div className="text-sm text-muted-foreground">
-                  {settings?.showGrid ? 'Align nodes to grid when dragging' : 'Enable grid to use this feature'}
-                </div>
-              </div>
-              <Switch
-                id="snap-toggle"
-                checked={settings?.snapToGrid ?? false}
-                disabled={!settings?.showGrid}
-                onCheckedChange={(checked) => setSettings((current) => ({ ...current!, snapToGrid: checked }))}
-              />
-            </div>
           </div>
 
           <Separator />
