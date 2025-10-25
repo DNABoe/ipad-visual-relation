@@ -69,7 +69,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
   return (
     <div
       className={cn(
-        'absolute rounded-lg border-2 group/frame',
+        'absolute rounded-lg border-2 group/frame cursor-move',
         'transition-all',
         group.solidBackground ? 'border-solid' : 'border-dashed',
         isSelected && 'ring-2 ring-accent'
@@ -84,18 +84,20 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
         pointerEvents: 'auto',
         ...style,
       }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick(e)
+      }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && onDragStart) {
+          e.stopPropagation()
+          onDragStart(e)
+        }
+      }}
     >
-      <div 
-        className="absolute inset-0 cursor-move"
-        onClick={onClick}
-        onMouseDown={(e) => {
-          if (e.target === e.currentTarget && onDragStart) {
-            onDragStart(e)
-          }
-        }}
-      />
       <div
-        className="absolute -top-8 left-0 flex items-center gap-1"
+        className="absolute -top-8 left-0 flex items-center gap-1 pointer-events-auto"
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         {isEditingName ? (
@@ -113,6 +115,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
               }
             }}
             className="h-7 text-xs w-32 bg-white"
+            onMouseDown={(e) => e.stopPropagation()}
           />
         ) : (
           <div
@@ -136,11 +139,16 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
                   size="sm"
                   className="h-4 w-4 p-0 hover:bg-white/20"
                   onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
                 >
                   <DotsThree size={14} weight="bold" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuContent 
+                align="start" 
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <DropdownMenuLabel>Edit Group</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setIsEditingName(true)}>
@@ -175,7 +183,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onDragStart, 
       {isSelected && onResizeStart && resizeHandles.map((handle) => (
         <div
           key={handle.position}
-          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity"
+          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity pointer-events-auto z-10"
           style={{
             ...handle.style,
             cursor: handle.cursor,

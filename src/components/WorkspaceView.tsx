@@ -124,6 +124,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [setWorkspace])
 
   const handlePersonClick = useCallback((personId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (connectMode) {
       if (!connectFrom) {
         setConnectFrom(personId)
@@ -173,7 +174,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
   const handlePersonDragStart = useCallback((personId: string, e: React.MouseEvent) => {
     if (connectMode) return
-    e.stopPropagation()
     setDraggingPerson(personId)
     if (!selectedPersons.includes(personId)) {
       setSelectedPersons([personId])
@@ -181,7 +181,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [connectMode, selectedPersons])
 
   const handleGroupDragStart = useCallback((groupId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
     setDraggingGroup(groupId)
     if (!selectedGroups.includes(groupId)) {
       setSelectedGroups([groupId])
@@ -223,7 +222,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
   }, [workspace])
 
   const handleGroupResizeStart = useCallback((groupId: string, handle: string, e: React.MouseEvent) => {
-    e.stopPropagation()
     const group = workspace?.groups.find(g => g.id === groupId)
     if (!group) return
     
@@ -754,7 +752,6 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                   group={group}
                   isSelected={selectedGroups.includes(group.id)}
                   onClick={(e) => {
-                    e.stopPropagation()
                     setSelectedGroups([group.id])
                   }}
                   onUpdate={(updates) => handleGroupUpdate(group.id, updates)}
@@ -770,10 +767,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                   isSelected={selectedPersons.includes(person.id)}
                   isDragging={draggingPerson === person.id}
                   onMouseDown={(e) => handlePersonDragStart(person.id, e)}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handlePersonClick(person.id, e)
-                  }}
+                  onClick={(e) => handlePersonClick(person.id, e)}
                   onDoubleClick={(e) => handlePersonDoubleClick(person.id, e)}
                   onPhotoDoubleClick={(e) => handlePhotoDoubleClick(person.id, e)}
                   onContextMenu={(e) => {
