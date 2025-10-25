@@ -44,20 +44,49 @@ export function FileManager({ onLoad }: FileManagerProps) {
     try {
       const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
       const fileData = JSON.stringify(encrypted, null, 2)
-      const blob = new Blob([fileData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${newFileName.trim()}.enc.json`
-      a.click()
-      URL.revokeObjectURL(url)
 
-      onLoad(emptyWorkspace, newFileName.trim(), newPassword)
-      setShowNewDialog(false)
-      setNewFileName('')
-      setNewPassword('')
-      setNewPasswordConfirm('')
-      toast.success('New encrypted network created')
+      if ('showSaveFilePicker' in window) {
+        try {
+          const fileHandle = await (window as Window).showSaveFilePicker({
+            suggestedName: `${newFileName.trim()}.enc.json`,
+            types: [{
+              description: 'Encrypted Network File',
+              accept: { 'application/json': ['.enc.json', '.json'] }
+            }]
+          })
+
+          const writable = await fileHandle.createWritable()
+          await writable.write(fileData)
+          await writable.close()
+
+          onLoad(emptyWorkspace, newFileName.trim(), newPassword)
+          setShowNewDialog(false)
+          setNewFileName('')
+          setNewPassword('')
+          setNewPasswordConfirm('')
+          toast.success('New encrypted network created')
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            return
+          }
+          throw error
+        }
+      } else {
+        const blob = new Blob([fileData], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${newFileName.trim()}.enc.json`
+        a.click()
+        URL.revokeObjectURL(url)
+
+        onLoad(emptyWorkspace, newFileName.trim(), newPassword)
+        setShowNewDialog(false)
+        setNewFileName('')
+        setNewPassword('')
+        setNewPasswordConfirm('')
+        toast.success('New encrypted network created')
+      }
     } catch (error) {
       toast.error('Failed to create encrypted file')
       console.error(error)
@@ -149,7 +178,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Create a new encrypted network database. Choose a strong password.
+              Create a new encrypted network database. You'll be prompted to choose where to save the file.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
