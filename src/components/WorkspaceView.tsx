@@ -30,11 +30,19 @@ import {
   Target,
   FilePlus,
   FloppyDisk,
-  FolderOpen
+  FolderOpen,
+  ArrowCounterClockwise
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
 import { encryptData } from '@/lib/encryption'
+
+interface UndoAction {
+  type: 'delete-persons' | 'delete-groups' | 'delete-connections'
+  persons?: Person[]
+  groups?: Group[]
+  connections?: Connection[]
+}
 
 interface WorkspaceViewProps {
   workspace: Workspace
@@ -74,6 +82,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
   const [draggingConnection, setDraggingConnection] = useState<{ fromPersonId: string; mouseX: number; mouseY: number } | null>(null)
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([])
   
   const canvasRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -91,6 +100,19 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   }, [editPerson, setWorkspace])
 
   const handleDeletePerson = useCallback((personId: string) => {
+    const personToDelete = workspace.persons.find(p => p.id === personId)
+    const connectionsToDelete = workspace.connections.filter(
+      c => c.fromPersonId === personId || c.toPersonId === personId
+    )
+    
+    if (personToDelete) {
+      setUndoStack(prev => [...prev, {
+        type: 'delete-persons',
+        persons: [personToDelete],
+        connections: connectionsToDelete,
+      }])
+    }
+    
     setWorkspace((current) => ({
       ...current,
       persons: current.persons.filter(p => p.id !== personId),
@@ -101,7 +123,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     setSelectedPersons([])
     setEditPerson(undefined)
     toast.success('Person deleted')
-  }, [setWorkspace])
+  }, [workspace, setWorkspace])
 
   const handleAddGroup = useCallback((group: Group) => {
     setWorkspace((current) => ({
@@ -114,6 +136,17 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const handleDeleteSelected = useCallback(() => {
     if (selectedPersons.length === 0) return
     
+    const personsToDelete = workspace.persons.filter(p => selectedPersons.includes(p.id))
+    const connectionsToDelete = workspace.connections.filter(
+      c => selectedPersons.includes(c.fromPersonId) || selectedPersons.includes(c.toPersonId)
+    )
+    
+    setUndoStack(prev => [...prev, {
+      type: 'delete-persons',
+      persons: personsToDelete,
+      connections: connectionsToDelete,
+    }])
+    
     setWorkspace((current) => ({
       ...current,
       persons: current.persons.filter(p => !selectedPersons.includes(p.id)),
@@ -123,7 +156,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     }))
     setSelectedPersons([])
     toast.success('Deleted selected persons')
-  }, [selectedPersons, setWorkspace])
+  }, [selectedPersons, workspace, setWorkspace])
 
   const handleConnectionClick = useCallback((connectionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -1028,14 +1061,56 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     setWorkspace(imported)
   }, [setWorkspace])
 
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) {
+      toast.info('Nothing to undo')
+      return
+    }
+    
+    const lastAction = undoStack[undoStack.length - 1]
+    
+    if (lastAction.type === 'delete-persons') {
+      setWorkspace((current) => ({
+        ...current,
+        persons: [...current.persons, ...(lastAction.persons || [])],
+        connections: [...current.connections, ...(lastAction.connections || [])],
+      }))
+      toast.success('Restored deleted persons')
+    } else if (lastAction.type === 'delete-groups') {
+      setWorkspace((current) => ({
+        ...current,
+        groups: [...current.groups, ...(lastAction.groups || [])],
+      }))
+      toast.success('Restored deleted groups')
+    } else if (lastAction.type === 'delete-connections') {
+      setWorkspace((current) => ({
+        ...current,
+        connections: [...current.connections, ...(lastAction.connections || [])],
+      }))
+      toast.success('Restored deleted connections')
+    }
+    
+    setUndoStack(prev => prev.slice(0, -1))
+  }, [undoStack, setWorkspace])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault()
+        handleUndo()
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selectedPersons.length > 0) {
           e.preventDefault()
           handleDeleteSelected()
         } else if (selectedGroups.length > 0) {
           e.preventDefault()
+          const groupsToDelete = workspace.groups.filter(g => selectedGroups.includes(g.id))
+          
+          setUndoStack(prev => [...prev, {
+            type: 'delete-groups',
+            groups: groupsToDelete,
+          }])
+          
           setWorkspace((current) => ({
             ...current,
             groups: current.groups.filter(g => !selectedGroups.includes(g.id)),
@@ -1044,6 +1119,13 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           toast.success('Deleted selected groups')
         } else if (selectedConnections.length > 0) {
           e.preventDefault()
+          const connectionsToDelete = workspace.connections.filter(c => selectedConnections.includes(c.id))
+          
+          setUndoStack(prev => [...prev, {
+            type: 'delete-connections',
+            connections: connectionsToDelete,
+          }])
+          
           setWorkspace((current) => ({
             ...current,
             connections: current.connections.filter(c => !selectedConnections.includes(c.id)),
@@ -1078,7 +1160,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('mouseup', handleGlobalMouseUp)
     }
-  }, [selectedPersons, selectedGroups, selectedConnections, handleDeleteSelected, setWorkspace])
+  }, [selectedPersons, selectedGroups, selectedConnections, workspace, handleDeleteSelected, handleUndo, setWorkspace])
 
   return (
     <TooltipProvider>
@@ -1230,9 +1312,16 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                       variant="destructive" 
                       size="sm" 
                       onClick={() => {
+                        const groupsToDelete = workspace.groups.filter(g => selectedGroups.includes(g.id))
+                        
+                        setUndoStack(prev => [...prev, {
+                          type: 'delete-groups',
+                          groups: groupsToDelete,
+                        }])
+                        
                         setWorkspace((current) => ({
-                          ...current!,
-                          groups: current!.groups.filter(g => !selectedGroups.includes(g.id)),
+                          ...current,
+                          groups: current.groups.filter(g => !selectedGroups.includes(g.id)),
                         }))
                         setSelectedGroups([])
                         toast.success('Deleted selected groups')
@@ -1255,9 +1344,16 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                       variant="destructive" 
                       size="sm" 
                       onClick={() => {
+                        const connectionsToDelete = workspace.connections.filter(c => selectedConnections.includes(c.id))
+                        
+                        setUndoStack(prev => [...prev, {
+                          type: 'delete-connections',
+                          connections: connectionsToDelete,
+                        }])
+                        
                         setWorkspace((current) => ({
-                          ...current!,
-                          connections: current!.connections.filter(c => !selectedConnections.includes(c.id)),
+                          ...current,
+                          connections: current.connections.filter(c => !selectedConnections.includes(c.id)),
                         }))
                         setSelectedConnections([])
                         toast.success('Deleted selected connections')
@@ -1270,6 +1366,22 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                 </Tooltip>
               </>
             )}
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUndo}
+                  disabled={undoStack.length === 0}
+                >
+                  <ArrowCounterClockwise size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
+            </Tooltip>
 
             <Separator orientation="vertical" className="h-6" />
 
