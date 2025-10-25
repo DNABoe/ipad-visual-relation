@@ -47,6 +47,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const blob = new Blob([fileData], { type: 'application/json' })
       const fileName = newFileName.trim()
 
+      let saveSuccessful = false
+      let saveError = null
+
       if ('showSaveFilePicker' in window) {
         try {
           const handle = await (window as any).showSaveFilePicker({
@@ -61,23 +64,25 @@ export function FileManager({ onLoad }: FileManagerProps) {
           await writable.write(fileData)
           await writable.close()
 
-          onLoad(emptyWorkspace, fileName, newPassword)
-          setShowNewDialog(false)
-          setNewFileName('')
-          setNewPassword('')
-          setNewPasswordConfirm('')
+          saveSuccessful = true
           toast.success('New encrypted network created and saved')
         } catch (error) {
+          saveError = error
           if ((error as Error).name === 'AbortError') {
             toast.info('File save cancelled - you can save later from the workspace')
-            onLoad(emptyWorkspace, fileName, newPassword)
-            setShowNewDialog(false)
-            setNewFileName('')
-            setNewPassword('')
-            setNewPasswordConfirm('')
+            saveSuccessful = true
           } else {
-            toast.error('Failed to save file')
-            console.error(error)
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${fileName}.enc.json`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+            
+            saveSuccessful = true
+            toast.success('New encrypted network created - file downloaded')
           }
         }
       } else {
@@ -90,12 +95,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
+        saveSuccessful = true
+        toast.success('New encrypted network created - file downloaded')
+      }
+
+      if (saveSuccessful) {
         onLoad(emptyWorkspace, fileName, newPassword)
         setShowNewDialog(false)
         setNewFileName('')
         setNewPassword('')
         setNewPasswordConfirm('')
-        toast.success('New encrypted network created - file downloaded')
       }
     } catch (error) {
       toast.error('Failed to create encrypted file')

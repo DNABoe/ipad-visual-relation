@@ -964,6 +964,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     try {
       const encrypted = await encryptData(JSON.stringify(workspace), password)
       const fileData = JSON.stringify(encrypted, null, 2)
+      const blob = new Blob([fileData], { type: 'application/json' })
 
       if ('showSaveFilePicker' in window) {
         try {
@@ -985,10 +986,18 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             toast.info('Save cancelled')
             return
           }
-          throw error
+          
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${fileName}.enc.json`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+          toast.success('Network downloaded successfully')
         }
       } else {
-        const blob = new Blob([fileData], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -997,7 +1006,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        toast.success('Network saved successfully')
+        toast.success('Network downloaded successfully')
       }
     } catch (error) {
       toast.error('Failed to save network')
