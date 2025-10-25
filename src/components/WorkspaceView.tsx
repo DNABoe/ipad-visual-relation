@@ -31,7 +31,9 @@ import {
   FilePlus,
   FloppyDisk,
   FolderOpen,
-  ArrowCounterClockwise
+  ArrowCounterClockwise,
+  UserMinus,
+  LinkBreak
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
@@ -1295,7 +1297,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
-                      <Trash size={16} />
+                      <UserMinus size={16} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Delete Selected Persons</TooltipContent>
@@ -1359,7 +1361,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                         toast.success('Deleted selected connections')
                       }}
                     >
-                      <Trash size={16} />
+                      <LinkBreak size={16} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Delete Selected Connections</TooltipContent>
