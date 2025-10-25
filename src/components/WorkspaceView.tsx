@@ -27,7 +27,8 @@ import {
   SignOut,
   Trash,
   X,
-  TreeStructure
+  TreeStructure,
+  Target
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
@@ -739,6 +740,152 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
     toast.success('Layout optimized')
   }, [workspace, settings, setWorkspace, handleZoomToFit])
 
+  const handleArrangeByScore = useCallback(() => {
+    if (!workspace || workspace.persons.length === 0) return
+
+    const persons = [...workspace.persons]
+
+    const canvasWidth = 3000
+    const canvasHeight = 3000
+    const centerX = canvasWidth / 2
+    const centerY = canvasHeight / 2
+
+    persons.forEach(p => {
+      const angle = Math.random() * Math.PI * 2
+      const normalizedScore = (p.score - 1) / 4
+      
+      const minRadius = 150
+      const maxRadius = 1200
+      const radius = minRadius + (normalizedScore * (maxRadius - minRadius))
+      
+      p.x = centerX + Math.cos(angle) * radius
+      p.y = centerY + Math.sin(angle) * radius
+    })
+
+    const iterations = 300
+    const repulsionForce = 30000
+    const dampening = 0.8
+    const minDistance = NODE_WIDTH + 50
+
+    const velocities = new Map<string, { vx: number; vy: number }>()
+    persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
+
+    for (let iter = 0; iter < iterations; iter++) {
+      const forces = new Map<string, { fx: number; fy: number }>()
+      persons.forEach(p => forces.set(p.id, { fx: 0, fy: 0 }))
+
+      for (let i = 0; i < persons.length; i++) {
+        for (let j = i + 1; j < persons.length; j++) {
+          const p1 = persons[i]
+          const p2 = persons[j]
+          
+          const dx = (p2.x + NODE_WIDTH / 2) - (p1.x + NODE_WIDTH / 2)
+          const dy = (p2.y + NODE_HEIGHT / 2) - (p1.y + NODE_HEIGHT / 2)
+          const distSq = dx * dx + dy * dy
+          const dist = Math.sqrt(distSq)
+          
+          if (dist > 0) {
+            let repulsion = repulsionForce / distSq
+            
+            if (dist < minDistance) {
+              repulsion *= 4
+            }
+            
+            const fx = (dx / dist) * repulsion
+            const fy = (dy / dist) * repulsion
+            
+            const f1 = forces.get(p1.id)!
+            const f2 = forces.get(p2.id)!
+            f1.fx -= fx
+            f1.fy -= fy
+            f2.fx += fx
+            f2.fy += fy
+          }
+        }
+      }
+
+      persons.forEach(p => {
+        const normalizedScore = (p.score - 1) / 4
+        const idealRadius = 150 + (normalizedScore * (1200 - 150))
+        
+        const dx = (p.x + NODE_WIDTH / 2) - centerX
+        const dy = (p.y + NODE_HEIGHT / 2) - centerY
+        const distToCenter = Math.sqrt(dx * dx + dy * dy)
+        
+        if (distToCenter > 0) {
+          const radiusDiff = distToCenter - idealRadius
+          const radialForce = radiusDiff * 0.02
+          
+          const force = forces.get(p.id)!
+          force.fx -= (dx / distToCenter) * radialForce
+          force.fy -= (dy / distToCenter) * radialForce
+        }
+      })
+
+      persons.forEach(p => {
+        const force = forces.get(p.id)!
+        const vel = velocities.get(p.id)!
+        
+        vel.vx = (vel.vx + force.fx) * dampening
+        vel.vy = (vel.vy + force.fy) * dampening
+        
+        p.x += vel.vx
+        p.y += vel.vy
+      })
+    }
+
+    for (let overlapIter = 0; overlapIter < 60; overlapIter++) {
+      let hadOverlap = false
+      for (let i = 0; i < persons.length; i++) {
+        for (let j = i + 1; j < persons.length; j++) {
+          const p1 = persons[i]
+          const p2 = persons[j]
+          
+          const dx = (p2.x + NODE_WIDTH / 2) - (p1.x + NODE_WIDTH / 2)
+          const dy = (p2.y + NODE_HEIGHT / 2) - (p1.y + NODE_HEIGHT / 2)
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          if (dist < minDistance && dist > 0) {
+            hadOverlap = true
+            const overlap = minDistance - dist
+            const pushX = (dx / dist) * overlap * 0.5
+            const pushY = (dy / dist) * overlap * 0.5
+            
+            p1.x -= pushX
+            p1.y -= pushY
+            p2.x += pushX
+            p2.y += pushY
+          }
+        }
+      }
+      if (!hadOverlap) break
+    }
+
+    const minX = Math.min(...persons.map(p => p.x))
+    const minY = Math.min(...persons.map(p => p.y))
+    
+    persons.forEach(p => {
+      p.x = Math.round(p.x - minX + 100)
+      p.y = Math.round(p.y - minY + 100)
+      
+      if (settings?.snapToGrid) {
+        p.x = snapValue(p.x)
+        p.y = snapValue(p.y)
+      }
+    })
+
+    setWorkspace((current) => ({
+      ...current!,
+      persons,
+    }))
+
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+
+    toast.success('Arranged by score - lowest in center')
+  }, [workspace, settings, setWorkspace, handleZoomToFit])
+
   const handleLoadSample = useCallback(() => {
     const sample = generateSampleData()
     setWorkspace((current) => ({
@@ -894,6 +1041,15 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Auto Arrange</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleArrangeByScore}>
+                  <Target size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Arrange by Score (Center)</TooltipContent>
             </Tooltip>
 
             <Tooltip>
