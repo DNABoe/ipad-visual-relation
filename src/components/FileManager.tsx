@@ -50,7 +50,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
         }
       }
     } else {
-      toast.error('File picker is not supported in your browser. Please use a modern browser like Chrome or Edge.')
+      setSelectedPath(`${newFileName.trim()}.enc.json`)
+      toast.success('Ready to save - you will choose location when creating the network')
     }
   }
 
@@ -101,7 +102,24 @@ export function FileManager({ onLoad }: FileManagerProps) {
           console.error(error)
         }
       } else {
-        toast.error('No file location selected')
+        const blob = new Blob([fileData], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${newFileName.trim()}.enc.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        onLoad(emptyWorkspace, newFileName.trim(), newPassword)
+        setShowNewDialog(false)
+        setNewFileName('')
+        setNewPassword('')
+        setNewPasswordConfirm('')
+        setFileHandle(null)
+        setSelectedPath('')
+        toast.success('New encrypted network created - file downloaded')
       }
     } catch (error) {
       toast.error('Failed to create encrypted file')
@@ -234,7 +252,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
               )}
               {!selectedPath && (
                 <p className="text-xs text-muted-foreground">
-                  Click the button above to open the file save dialog
+                  {('showSaveFilePicker' in window) 
+                    ? 'Click the button above to open the file save dialog'
+                    : 'Click the button above, then you will choose the save location when creating the network'}
                 </p>
               )}
             </div>
