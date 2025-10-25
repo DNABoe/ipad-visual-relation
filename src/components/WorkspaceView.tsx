@@ -310,8 +310,12 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         ...current!,
         persons: current!.persons.map(p => {
           if (selectedPersons.includes(p.id)) {
-            const newX = settings?.snapToGrid ? snapValue(p.x + dx) : p.x + dx
-            const newY = settings?.snapToGrid ? snapValue(p.y + dy) : p.y + dy
+            let newX = p.x + dx
+            let newY = p.y + dy
+            if (settings?.snapToGrid) {
+              newX = snapValue(newX)
+              newY = snapValue(newY)
+            }
             return { ...p, x: newX, y: newY }
           }
           return p
@@ -325,16 +329,24 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         ...current!,
         groups: current!.groups.map(g => {
           if (g.id === draggingGroup) {
-            const newX = settings?.snapToGrid ? snapValue(g.x + dx) : g.x + dx
-            const newY = settings?.snapToGrid ? snapValue(g.y + dy) : g.y + dy
+            let newX = g.x + dx
+            let newY = g.y + dy
+            if (settings?.snapToGrid) {
+              newX = snapValue(newX)
+              newY = snapValue(newY)
+            }
             return { ...g, x: newX, y: newY }
           }
           return g
         }),
         persons: current!.persons.map(p => {
           if (draggingGroupPersons.includes(p.id)) {
-            const newX = settings?.snapToGrid ? snapValue(p.x + dx) : p.x + dx
-            const newY = settings?.snapToGrid ? snapValue(p.y + dy) : p.y + dy
+            let newX = p.x + dx
+            let newY = p.y + dy
+            if (settings?.snapToGrid) {
+              newX = snapValue(newX)
+              newY = snapValue(newY)
+            }
             return { ...p, x: newX, y: newY }
           }
           return p
