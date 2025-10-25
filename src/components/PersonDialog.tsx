@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import type { Person, FrameColor } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
@@ -19,9 +19,13 @@ interface PersonDialogProps {
 
 export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonDialogProps) {
   const [name, setName] = useState(editPerson?.name || '')
-  const [position, setPosition] = useState(editPerson?.position || '')
-  const [position2, setPosition2] = useState(editPerson?.position2 || '')
-  const [position3, setPosition3] = useState(editPerson?.position3 || '')
+  const [position, setPosition] = useState(() => {
+    if (editPerson) {
+      const lines = [editPerson.position, editPerson.position2, editPerson.position3].filter(Boolean)
+      return lines.join('\n')
+    }
+    return ''
+  })
   const [score, setScore] = useState(editPerson?.score || 3)
   const [frameColor, setFrameColor] = useState<FrameColor>(editPerson?.frameColor || 'white')
   const [photo, setPhoto] = useState<string | undefined>(editPerson?.photo)
@@ -30,9 +34,8 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
   useEffect(() => {
     if (open) {
       setName(editPerson?.name || '')
-      setPosition(editPerson?.position || '')
-      setPosition2(editPerson?.position2 || '')
-      setPosition3(editPerson?.position3 || '')
+      const lines = editPerson ? [editPerson.position, editPerson.position2, editPerson.position3].filter(Boolean) : []
+      setPosition(lines.join('\n'))
       setScore(editPerson?.score || 3)
       setFrameColor(editPerson?.frameColor || 'white')
       setPhoto(editPerson?.photo)
@@ -60,12 +63,14 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
   const handleSave = () => {
     if (!name.trim()) return
 
+    const positionLines = position.split('\n').slice(0, 3)
+    
     const person: Person = {
       id: editPerson?.id || generateId(),
       name: name.trim(),
-      position: position.trim(),
-      position2: position2.trim() || undefined,
-      position3: position3.trim() || undefined,
+      position: positionLines[0]?.trim() || '',
+      position2: positionLines[1]?.trim() || undefined,
+      position3: positionLines[2]?.trim() || undefined,
       score,
       frameColor,
       photo,
@@ -81,8 +86,6 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
     if (!editPerson) {
       setName('')
       setPosition('')
-      setPosition2('')
-      setPosition3('')
       setScore(3)
       setFrameColor('white')
       setPhoto(undefined)
@@ -151,7 +154,7 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
                 )}
               </div>
               <div className="w-full space-y-2">
-                <Label htmlFor="frameColor">Frame Color</Label>
+                <Label htmlFor="frameColor">Status</Label>
                 <div className="flex gap-2 justify-center">
                   {FRAME_COLOR_NAMES.map(color => (
                     <button
@@ -165,6 +168,10 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
                       title={color.charAt(0).toUpperCase() + color.slice(1)}
                     />
                   ))}
+                </div>
+                <div className="text-xs text-muted-foreground text-center space-y-0.5">
+                  <p>Red - Negative, Green - Positive</p>
+                  <p>Orange - Neutral, White - Uncategorized</p>
                 </div>
               </div>
             </div>
@@ -180,41 +187,40 @@ export function PersonDialog({ open, onOpenChange, onSave, editPerson }: PersonD
           </div>
           <div className="space-y-2">
             <Label htmlFor="position">Position</Label>
-            <Input
+            <Textarea
               id="position"
               value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              placeholder="Enter position"
+              onChange={(e) => {
+                const lines = e.target.value.split('\n')
+                if (lines.length <= 3) {
+                  setPosition(e.target.value)
+                }
+              }}
+              placeholder="Enter position (max 3 lines)"
+              rows={3}
+              className="resize-none"
             />
+            <p className="text-xs text-muted-foreground">You can enter up to 3 lines</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="position2">Position (Line 2)</Label>
-            <Input
-              id="position2"
-              value={position2}
-              onChange={(e) => setPosition2(e.target.value)}
-              placeholder="Enter position (line 2)"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="position3">Position (Line 3)</Label>
-            <Input
-              id="position3"
-              value={position3}
-              onChange={(e) => setPosition3(e.target.value)}
-              placeholder="Enter position (line 3)"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="score">Score (1-5)</Label>
-            <Input
-              id="score"
-              type="number"
-              min="1"
-              max="5"
-              value={score}
-              onChange={(e) => setScore(Number(e.target.value))}
-            />
+            <Label htmlFor="importance">Importance</Label>
+            <div className="flex gap-2 justify-center">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => setScore(num)}
+                  className={`w-12 h-12 rounded-lg border-2 transition-all font-semibold ${
+                    score === num 
+                      ? 'bg-primary text-primary-foreground border-primary ring-2 ring-accent ring-offset-2 scale-110' 
+                      : 'bg-card hover:bg-muted border-border hover:scale-105'
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground text-center">1 - High Importance, 5 - Lower Importance</p>
           </div>
         </div>
         <DialogFooter>
