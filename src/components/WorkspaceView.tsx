@@ -567,8 +567,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
     const maxConnections = Math.max(...Array.from(connectionCounts.values()), 1)
 
-    const canvasWidth = 3000
-    const canvasHeight = 3000
+    const canvasWidth = 1600
+    const canvasHeight = 1600
     const centerX = canvasWidth / 2
     const centerY = canvasHeight / 2
 
@@ -577,20 +577,20 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       const connectionCount = connectionCounts.get(p.id) || 0
       const normalizedConnectivity = connectionCount / maxConnections
       
-      const maxRadius = 1200
-      const minRadius = 200
+      const maxRadius = 600
+      const minRadius = 100
       const radius = maxRadius - (normalizedConnectivity * (maxRadius - minRadius))
       
       p.x = centerX + Math.cos(angle) * radius
       p.y = centerY + Math.sin(angle) * radius
     })
 
-    const iterations = 300
-    const repulsionForce = 25000
-    const attractionForce = 0.03
-    const centeringForce = 0.015
-    const dampening = 0.82
-    const minDistance = NODE_WIDTH + 40
+    const iterations = 400
+    const repulsionForce = 18000
+    const attractionForce = 0.08
+    const centeringForce = 0.02
+    const dampening = 0.85
+    const minDistance = NODE_WIDTH + 30
 
     const velocities = new Map<string, { vx: number; vy: number }>()
     persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
@@ -613,7 +613,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             let repulsion = repulsionForce / distSq
             
             if (dist < minDistance) {
-              repulsion *= 3
+              repulsion *= 3.5
             }
             
             const fx = (dx / dist) * repulsion
@@ -642,9 +642,9 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
             const p1Connections = connectionCounts.get(p1.id) || 0
             const p2Connections = connectionCounts.get(p2.id) || 0
             const avgConnections = (p1Connections + p2Connections) / 2
-            const connectivityFactor = 1 + (avgConnections / maxConnections) * 0.5
+            const connectivityFactor = 1 + (avgConnections / maxConnections) * 0.4
             
-            const idealDistance = 350 / connectivityFactor
+            const idealDistance = 280 / connectivityFactor
             const displacement = dist - idealDistance
             const attraction = displacement * attractionForce
             const fx = (dx / dist) * attraction
@@ -688,7 +688,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       })
     }
 
-    for (let overlapIter = 0; overlapIter < 50; overlapIter++) {
+    for (let overlapIter = 0; overlapIter < 60; overlapIter++) {
       let hadOverlap = false
       for (let i = 0; i < persons.length; i++) {
         for (let j = i + 1; j < persons.length; j++) {
@@ -745,8 +745,8 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
     const persons = [...workspace.persons]
 
-    const canvasWidth = 3000
-    const canvasHeight = 3000
+    const canvasWidth = 1600
+    const canvasHeight = 1600
     const centerX = canvasWidth / 2
     const centerY = canvasHeight / 2
 
@@ -754,18 +754,18 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
       const angle = Math.random() * Math.PI * 2
       const normalizedScore = (p.score - 1) / 4
       
-      const minRadius = 150
-      const maxRadius = 1200
+      const minRadius = 80
+      const maxRadius = 600
       const radius = minRadius + (normalizedScore * (maxRadius - minRadius))
       
       p.x = centerX + Math.cos(angle) * radius
       p.y = centerY + Math.sin(angle) * radius
     })
 
-    const iterations = 300
-    const repulsionForce = 30000
-    const dampening = 0.8
-    const minDistance = NODE_WIDTH + 50
+    const iterations = 400
+    const repulsionForce = 18000
+    const dampening = 0.85
+    const minDistance = NODE_WIDTH + 30
 
     const velocities = new Map<string, { vx: number; vy: number }>()
     persons.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
@@ -806,7 +806,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
 
       persons.forEach(p => {
         const normalizedScore = (p.score - 1) / 4
-        const idealRadius = 150 + (normalizedScore * (1200 - 150))
+        const idealRadius = 80 + (normalizedScore * (600 - 80))
         
         const dx = (p.x + NODE_WIDTH / 2) - centerX
         const dy = (p.y + NODE_HEIGHT / 2) - centerY
@@ -814,7 +814,7 @@ export function WorkspaceView({ onLogout }: WorkspaceViewProps) {
         
         if (distToCenter > 0) {
           const radiusDiff = distToCenter - idealRadius
-          const radialForce = radiusDiff * 0.02
+          const radialForce = radiusDiff * 0.025
           
           const force = forces.get(p.id)!
           force.fx -= (dx / distToCenter) * radialForce
