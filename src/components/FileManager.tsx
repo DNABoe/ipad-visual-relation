@@ -45,48 +45,23 @@ export function FileManager({ onLoad }: FileManagerProps) {
     const fileData = JSON.stringify(encrypted, null, 2)
     const fileName = newFileName.trim()
 
-    if ('showSaveFilePicker' in window) {
-      try {
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: `${fileName}.enc.json`,
-          types: [{
-            description: 'Encrypted Network File',
-            accept: { 'application/json': ['.enc.json', '.json'] }
-          }]
-        })
-        
-        const writable = await handle.createWritable()
-        await writable.write(fileData)
-        await writable.close()
+    const blob = new Blob([fileData], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${fileName}.enc.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
 
-        onLoad(emptyWorkspace, fileName, newPassword)
-        setShowNewDialog(false)
-        setNewFileName('')
-        setNewPassword('')
-        setNewPasswordConfirm('')
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') {
-          return
-        }
-        console.error(error)
-      }
-    } else {
-      const blob = new Blob([fileData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${fileName}.enc.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+    toast.success(`Created ${fileName}.enc.json - saved to Downloads folder`)
 
-      onLoad(emptyWorkspace, fileName, newPassword)
-      setShowNewDialog(false)
-      setNewFileName('')
-      setNewPassword('')
-      setNewPasswordConfirm('')
-    }
+    onLoad(emptyWorkspace, fileName, newPassword)
+    setShowNewDialog(false)
+    setNewFileName('')
+    setNewPassword('')
+    setNewPasswordConfirm('')
   }
 
   const handleLoadNetwork = async () => {
@@ -168,7 +143,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Enter a name and password, then choose where to save the file.
+              Create a new encrypted network file. The file will be saved to your Downloads folder.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -221,7 +196,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             }}>
               Cancel
             </Button>
-            <Button onClick={handleNewNetwork}>Create & Choose Location</Button>
+            <Button onClick={handleNewNetwork}>Create Network</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
