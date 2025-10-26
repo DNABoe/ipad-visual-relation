@@ -102,8 +102,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-8">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/10" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 via-transparent to-primary/5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/30" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 via-transparent to-primary/20" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -119,15 +119,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
           >
             <Logo size={72} showText={true} />
           </motion.div>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-sm text-muted-foreground mt-4 flex items-center gap-2"
-          >
-            <ShieldCheck size={16} weight="duotone" className="text-accent" />
-            AES-256 Encrypted • Zero-Knowledge • Local-Only
-          </motion.p>
         </div>
 
         {!showNewDialog && !showLoadDialog && (
@@ -140,26 +131,32 @@ export function FileManager({ onLoad }: FileManagerProps) {
             <Button
               size="lg"
               onClick={() => setShowNewDialog(true)}
-              className="h-24 text-lg bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="h-16 text-lg bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <FilePlus className="mr-3" size={28} weight="duotone" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold">Create New Network</span>
-                <span className="text-xs opacity-90">Start with sample data</span>
-              </div>
+              <span className="font-semibold">Create New Network</span>
             </Button>
             <Button
               size="lg"
               variant="outline"
               onClick={() => setShowLoadDialog(true)}
-              className="h-24 text-lg border-2 hover:border-accent hover:bg-accent/5 transition-all duration-300"
+              className="h-16 text-lg border-2 hover:border-accent hover:bg-accent/5 transition-all duration-300"
             >
               <FolderOpen className="mr-3" size={28} weight="duotone" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold">Load Existing Network</span>
-                <span className="text-xs text-muted-foreground">Open .neteye file</span>
-              </div>
+              <span className="font-semibold">Load Existing Network</span>
             </Button>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-4 bg-card/60 backdrop-blur-sm border border-border/50 rounded-lg p-4"
+            >
+              <p className="text-xs text-muted-foreground flex items-center gap-2">
+                <ShieldCheck size={16} weight="duotone" className="text-accent shrink-0" />
+                AES-256 Encrypted • Zero-Knowledge • Local-Only
+              </p>
+            </motion.div>
           </motion.div>
         )}
 
