@@ -50,37 +50,27 @@ export function PersonNode({
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >
-        <div className="p-2 flex items-center gap-2.5 pointer-events-none">
+        <div className="flex items-center gap-3 p-3">
           <div 
-            className="flex flex-col items-center gap-1.5 pointer-events-auto"
             onDoubleClick={(e) => {
-              if (person.photo && onPhotoDoubleClick) {
-                e.stopPropagation()
-                onPhotoDoubleClick(e)
-              }
+              e.stopPropagation()
+              onPhotoDoubleClick?.(e)
             }}
           >
-            <Avatar 
-              className="h-20 w-20 flex-shrink-0"
-            >
+            <Avatar className="h-20 w-20 flex-shrink-0">
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
                 <span className="text-xl font-bold">{getInitials(person.name)}</span>
               </AvatarFallback>
             </Avatar>
-            <Badge 
-              variant="secondary" 
-              className="flex-shrink-0 font-bold text-xs px-2 py-0.5 bg-muted text-foreground border border-border/70 shadow-sm"
-            >
-              {person.score}
-            </Badge>
           </div>
           <div className="flex-1 min-w-0 space-y-0.5">
             <h3 className="font-semibold text-sm leading-tight break-words text-foreground tracking-tight">{person.name}</h3>
             {person.position && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position}</p>}
-            {person.position2 && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position2}</p>}
-            {person.position3 && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position3}</p>}
           </div>
+          <Badge className="flex-shrink-0 font-bold text-xs px-2 py-0.5 bg-muted text-foreground border border-border/70 shadow-sm">
+            {person.score}
+          </Badge>
         </div>
       </Card>
     </div>
