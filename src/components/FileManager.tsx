@@ -377,6 +377,21 @@ export function FileManager({ onLoad }: FileManagerProps) {
   }
 
   const handleDownloadAndContinue = () => {
+    if (downloadUrl && downloadFileName) {
+      const a = document.createElement('a')
+      a.href = downloadUrl
+      a.download = downloadFileName
+      document.body.appendChild(a)
+      a.click()
+      
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(downloadUrl)
+      }, 100)
+      
+      toast.success(`Downloaded ${downloadFileName}`)
+    }
+    
     if (createdWorkspace && createdName && createdPassword) {
       onLoad(createdWorkspace, createdName, createdPassword)
       setDownloadUrl(null)
@@ -426,18 +441,12 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
           <div className="space-y-3">
             <Button
-              asChild
+              onClick={handleDownloadAndContinue}
               className="w-full h-16 text-lg"
               size="lg"
             >
-              <a 
-                href={downloadUrl} 
-                download={downloadFileName}
-                onClick={handleDownloadAndContinue}
-              >
-                <DownloadSimple size={24} className="mr-3" weight="bold" />
-                Download File
-              </a>
+              <DownloadSimple size={24} className="mr-3" weight="bold" />
+              Download File & Continue
             </Button>
 
             <Button
