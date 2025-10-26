@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
 import type { Workspace } from '@/lib/types'
 import { generateSampleData } from '@/lib/sampleData'
+import { Logo } from '@/components/Logo'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -153,22 +154,25 @@ export function FileManager({ onLoad }: FileManagerProps) {
   }
 
   return (
-    <div className="dark h-screen flex items-center justify-center bg-background">
+    <div className="dark h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
       {downloadUrl ? (
         <motion.div 
-          className="w-full max-w-md space-y-8 p-8"
+          className="relative w-full max-w-md space-y-8 p-8"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
           <div className="text-center space-y-3">
             <motion.div 
-              className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4"
+              className="w-24 h-24 mx-auto bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm border border-primary/20"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", duration: 0.5, delay: 0.1 }}
             >
-              <DownloadSimple size={40} className="text-primary" weight="duotone" />
+              <DownloadSimple size={48} className="text-primary" weight="duotone" />
             </motion.div>
             <motion.h1 
               className="text-3xl font-semibold tracking-tight"
@@ -189,7 +193,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           </div>
 
           <motion.div 
-            className="bg-muted/50 border border-border rounded-lg p-6 space-y-4"
+            className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 space-y-4 shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.4 }}
@@ -223,7 +227,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           >
             <Button
               onClick={handleContinueWithoutDownload}
-              className="w-full h-14 text-base"
+              className="w-full h-14 text-base shadow-lg hover:shadow-xl transition-shadow"
               size="lg"
             >
               Continue to Main Screen
@@ -231,7 +235,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           </motion.div>
 
           <motion.div 
-            className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2"
+            className="bg-accent/10 backdrop-blur-sm border border-accent/20 rounded-xl p-4 space-y-2 shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.6 }}
@@ -250,62 +254,62 @@ export function FileManager({ onLoad }: FileManagerProps) {
         </motion.div>
       ) : (
         <motion.div 
-          className="w-full max-w-md space-y-8 p-8"
+          className="relative w-full max-w-md space-y-8 p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-        <div className="text-center space-y-3">
-          <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
+        <div className="text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, type: "spring" }}
+          >
+            <Logo size={80} showText={true} className="justify-center mb-2" />
+          </motion.div>
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
+            className="space-y-2"
           >
             <p className="text-sm text-muted-foreground leading-relaxed">
-              End-to-end encrypted with AES-256-GCM.
+              End-to-end encrypted with <span className="text-primary font-medium">AES-256-GCM</span>
             </p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Zero-knowledge architecture.
+              <span className="text-accent font-medium">Zero-knowledge</span> architecture
             </p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-          >
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground/80 leading-relaxed pt-2">
               All files stored locally on your device. No cloud, no servers, no tracking.
             </p>
           </motion.div>
         </div>
 
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
           <Button
             onClick={() => setShowNewDialog(true)}
-            className="w-full h-24 text-lg"
+            className="w-full h-24 text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
             size="lg"
           >
-            <FilePlus size={24} className="mr-3" />
+            <FilePlus size={28} className="mr-3" weight="duotone" />
             Create New Network
           </Button>
 
           <Button
             onClick={handleFileSelect}
             variant="outline"
-            className="w-full h-24 text-lg"
+            className="w-full h-24 text-lg backdrop-blur-sm bg-card/50 border-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
             size="lg"
           >
-            <FolderOpen size={24} className="mr-3" />
+            <FolderOpen size={28} className="mr-3" weight="duotone" />
             Load Existing Network
           </Button>
-        </div>
+        </motion.div>
         </motion.div>
       )}
 

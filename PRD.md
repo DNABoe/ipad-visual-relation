@@ -1,4 +1,4 @@
-# Visual Relationship Network App
+# NetEye - Relationship Network App
 
 A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored locally and encrypted with AES-256 for maximum security and privacy.
 

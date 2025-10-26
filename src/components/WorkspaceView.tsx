@@ -12,6 +12,7 @@ import { SettingsDialog } from './SettingsDialog'
 import { ListPanel } from './ListPanel'
 import { PhotoViewerDialog } from './PhotoViewerDialog'
 import { UnsavedChangesDialog } from './UnsavedChangesDialog'
+import { Logo } from './Logo'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT, GRID_SIZE } from '@/lib/constants'
@@ -1190,7 +1191,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       <div className="h-screen flex flex-col bg-background">
         <div className="border-b bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap dark:bg-card dark:border-border">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">Visual Relationship Network</h1>
+            <Logo size={32} showText={false} />
+            <h1 className="text-xl font-semibold tracking-tight text-foreground bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">NetEye</h1>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2">
               {downloadUrl ? (
