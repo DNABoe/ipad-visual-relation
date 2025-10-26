@@ -2,131 +2,125 @@ import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-
 import { Label } from '@/components/ui/label'
-import { encryptData, decryptD
+import { Checkbox } from '@/components/ui/checkbox'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
 import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
 import { Logo } from './Logo'
-  onLoad: (workspace: Workspace, fileName: s
+import type { Workspace } from '@/lib/types'
+import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
 
 interface FileManagerProps {
-    if (!newPasswo
+  onLoad: (workspace: Workspace, fileName: string, password: string) => void
 }
 
 interface CreatedNetwork {
-        ? generateSamp
+  workspace: Workspace
   fileName: string
-      const 
+  password: string
   downloadUrl: string
- 
+}
 
 export function FileManager({ onLoad }: FileManagerProps) {
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [showLoadDialog, setShowLoadDialog] = useState(false)
   const [newFileName, setNewFileName] = useState('')
-        : { persons: [], connections: [], groups: []
-      const workspaceJson = JSON.stringify(newWorkspace)
+  const [newPassword, setNewPassword] = useState('')
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
+  const [includeSampleData, setIncludeSampleData] = useState(true)
+  const [loadingFile, setLoadingFile] = useState<File | null>(null)
+  const [loadPassword, setLoadPassword] = useState('')
+  const [createdNetwork, setCreatedNetwork] = useState<CreatedNetwork | null>(null)
 
-      const blob = new Blob([JSON.stringify(encrypted)
-
-      onLoad(workspace, fileName
-
-      })
-              <h1 className="text-3xl font-se
-
-                <div className="flex items-ce
-     
-
-
-            
-
-
-     
-
-
-              </Button>
-
-    )
-
-         
-
-            className="w-full 
-            Create New Network
-
-          >
-        </div>
-
-      const fullFileName = `${trimmedFileName}.enc.json`
-              Create New Network
-      const url = URL.createObjectURL(blob)
-
-      setCreatedNetwork({
-                onKeyDow
-        fileName: fullFileName,
-              </
-              <Label html
-     
-
-            
-        <div className="relative w-full max-w-2xl 
-            onClick={
-              <h1 className="text-3xl font-semibol
-          </Button
-    }
-            size="lg"
-
-                    <FilePlus size={20} className="te
-                  <div>
-                    <p className="text-xs
-            
-
-
-                classNam
-      toast.error('Please enter a password')
-            
-    }
-
-
-              <h3 className="text-sm font-medium f
-              </h3>
-                <li>• <strong>Keep your password safe!</strong> If
-                className="focus-visible:ring-primary"
-                   
-
-              <Button variant="outline" onClick
-              </Butto
-              <Inputnew-password-confirm"
-                va
-        
-     
-
-    <div className="min-h-screen flex ite
-
-          <p className="text-sm text-muted-foreground leadi
-          </p>
-
-     
-  }, [createdNetwork, onLoad])
-
-        <DialogContent classNa
-
+  const handleResetNewDialog = useCallback(() => {
+    setShowNewDialog(false)
     setNewFileName('')
-            className=
+    setNewPassword('')
     setNewPasswordConfirm('')
-            Load Existing Netw
-              
-        <div className="text-center te
-      URL.revokeObjectURL(createdNetwork.downloadUrl)
-
-  }, [createdNetwork])
+    setIncludeSampleData(true)
+    setCreatedNetwork(null)
+  }, [])
 
   const handleResetLoadDialog = useCallback(() => {
     setShowLoadDialog(false)
     setLoadPassword('')
     setLoadingFile(null)
   }, [])
+
+  const handleCreateNetwork = async () => {
+    const trimmedFileName = newFileName.trim() || 'my-network'
+
+    if (!newPassword) {
+      toast.error('Please enter a password')
+      return
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters')
+      return
+    }
+
+    try {
+      const newWorkspace: Workspace = includeSampleData
+        ? generateSampleData()
+        : { persons: [], connections: [], groups: [] }
+
+      const workspaceJson = JSON.stringify(newWorkspace)
+      const encrypted = await encryptData(workspaceJson, newPassword)
+
+      const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const fullFileName = `${trimmedFileName}.enc.json`
+
+      setCreatedNetwork({
+        workspace: newWorkspace,
+        fileName: fullFileName,
+        password: newPassword,
+        downloadUrl: url,
+      })
+
+      toast.success('Network created successfully!')
+    } catch (error) {
+      toast.error('Failed to create network')
+      console.error(error)
+    }
+  }
+
+  const handleLoadNetwork = async () => {
+    if (!loadingFile) {
+      toast.error('Please select a file')
+      return
+    }
+
+    if (!loadPassword) {
+      toast.error('Please enter a password')
+      return
+    }
+
+    try {
+      const fileContent = await loadingFile.text()
+      const encrypted: EncryptedData = JSON.parse(fileContent)
+      const decrypted = await decryptData(encrypted, loadPassword)
+      const workspace: Workspace = JSON.parse(decrypted)
+
+      onLoad(workspace, loadingFile.name, loadPassword)
+      toast.success('Network loaded successfully!')
+    } catch (error) {
+      toast.error('Failed to load network. Check your password.')
+      console.error(error)
+    }
+  }
+
+  const handleContinueWithoutDownload = useCallback(() => {
+    if (!createdNetwork) return
+    onLoad(createdNetwork.workspace, createdNetwork.fileName, createdNetwork.password)
+  }, [createdNetwork, onLoad])
 
   useEffect(() => {
     return () => {
@@ -246,13 +240,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </DialogTitle>
             <DialogDescription>
               Set up your encrypted relationship network
-
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="new-filename">File Name</Label>
-
+              <Input
                 id="new-filename"
                 value={newFileName}
                 onChange={(e) => setNewFileName(e.target.value)}
@@ -262,7 +256,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   if (e.key === 'Enter' && newPassword && newPasswordConfirm) {
                     handleCreateNetwork()
                   }
-
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 Will be saved as: <span className="font-mono">{newFileName.trim() || 'my-network'}.enc.json</span>
@@ -278,15 +272,15 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter a strong password"
                 className="focus-visible:ring-primary"
-
+                onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPasswordConfirm) {
-
+                    handleCreateNetwork()
                   }
-
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 Use a strong, unique password. Recommended: 12+ characters with mixed case, numbers, and symbols.
-
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -296,15 +290,15 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 type="password"
                 value={newPasswordConfirm}
                 onChange={(e) => setNewPasswordConfirm(e.target.value)}
-
+                placeholder="Confirm password"
                 className="focus-visible:ring-primary"
-
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-
+                    handleCreateNetwork()
                   }
-
+                }}
               />
-
+            </div>
 
             <div className="flex items-center space-x-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
               <Checkbox
@@ -312,39 +306,39 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 checked={includeSampleData}
                 onCheckedChange={(checked) => setIncludeSampleData(checked === true)}
               />
-
+              <Label htmlFor="include-sample" className="text-sm cursor-pointer">
                 Include sample data to explore features
-
+              </Label>
             </div>
-
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={handleResetNewDialog}>
-
+              Cancel
             </Button>
             <Button onClick={handleCreateNetwork} className="bg-gradient-to-r from-primary to-accent">
               Create Network
             </Button>
           </DialogFooter>
-
+        </DialogContent>
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FolderOpen size={24} className="text-primary" weight="duotone" />
-
+              Load Existing Network
             </DialogTitle>
-
+            <DialogDescription>
               Select your encrypted network file
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-
+            <div className="space-y-2">
               <Label htmlFor="load-file">Network File</Label>
-
+              <Input
                 id="load-file"
                 type="file"
                 accept=".json,.enc.json"
@@ -352,23 +346,23 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
-
+                    setLoadingFile(file)
                   }
-
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 Select your <span className="font-mono">.enc.json</span> file
-
+              </p>
             </div>
 
             <div className="space-y-2">
-
+              <Label htmlFor="load-password">Password</Label>
               <Input
-
+                id="load-password"
                 type="password"
-
+                value={loadPassword}
                 onChange={(e) => setLoadPassword(e.target.value)}
-
+                placeholder="Enter your password"
                 className="focus-visible:ring-primary"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -376,19 +370,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-
+            </div>
 
             <div className="text-center text-xs text-muted-foreground p-3 rounded-lg bg-muted/30">
               <p>
                 <span className="text-xs">🔒</span> All decryption happens locally in your browser
               </p>
-
+            </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={handleResetLoadDialog}>
               Cancel
-
+            </Button>
             <Button onClick={handleLoadNetwork} className="bg-gradient-to-r from-primary to-accent">
               Load Network
             </Button>
@@ -396,5 +390,5 @@ export function FileManager({ onLoad }: FileManagerProps) {
         </DialogContent>
       </Dialog>
     </div>
-
+  )
 }
