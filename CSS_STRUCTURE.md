@@ -8,16 +8,16 @@ This document outlines the CSS file structure and ensures no conflicts exist in 
 ### 1. `/src/main.css` (DO NOT EDIT - Structural)
 - **Purpose**: Structural CSS file managed by the runtime
 - **Content**: `@import 'tailwindcss';`
-- **Status**: ✅ Correct - imports base Tailwind
+  - Dark mode enforcement on html, body, #root
 
-### 2. `/src/index.css` (Main Style File)
-- **Purpose**: Primary CSS customization file
-- **Imports**:
-  - `@import 'tailwindcss';`
-  - `@import "tw-animate-css";`
-  - `@import './styles/theme.css';`
-- **Defines**:
-  - Base layer with border styling
+- **Status**: ✅ Correct - dark color sche
+### 3. `/src/styles/theme.css` (Radix Colors)
+- **Content**:
+  - Defines contrast variabl
+
+
+| Variable | V
+| `--background` | `oklch(0.12 0.0
   - Dark mode enforcement on html, body, #root
   - CSS custom properties in `:root` for theme colors
   - `@theme` mapping for Tailwind
@@ -38,49 +38,49 @@ This document outlines the CSS file structure and ensures no conflicts exist in 
 |----------|-------|---------|
 | `--background` | `oklch(0.12 0.02 250)` | Very dark blue-tinted background |
 | `--foreground` | `oklch(0.95 0.01 250)` | Near-white text |
-| `--card` | `oklch(0.18 0.02 250)` | Slightly lighter than background |
-| `--card-foreground` | `oklch(0.95 0.01 250)` | Near-white text on cards |
-| `--popover` | `oklch(0.16 0.02 250)` | Dark popover background |
-| `--primary` | `oklch(0.55 0.18 250)` | Medium-bright blue accent |
-| `--secondary` | `oklch(0.25 0.03 250)` | Dark secondary background |
-| `--muted` | `oklch(0.20 0.02 250)` | Muted background |
-| `--muted-foreground` | `oklch(0.60 0.02 250)` | Dimmed text |
-| `--accent` | `oklch(0.65 0.15 200)` | Bright cyan accent |
-| `--destructive` | `oklch(0.55 0.22 25)` | Orange-red for warnings |
-| `--border` | `oklch(0.28 0.02 250)` | Subtle border color |
-| `--input` | `oklch(0.28 0.02 250)` | Input border color |
-| `--ring` | `oklch(0.65 0.15 200)` | Focus ring color |
-
-### Sidebar Colors
-| Variable | Value |
-|----------|-------|
-| `--sidebar` | `oklch(0.15 0.02 250)` |
-| `--sidebar-foreground` | `oklch(0.95 0.01 250)` |
-| `--sidebar-primary` | `oklch(0.55 0.18 250)` |
-| `--sidebar-border` | `oklch(0.25 0.02 250)` |
-
-### Chart Colors (all dark-compatible)
-- `--chart-1` through `--chart-5` use medium-high lightness (0.65-0.72) for visibility on dark backgrounds
-
-## Color Scheme Enforcement
-
-### HTML Level
-```css
-html {
-  background: var(--background);
+  color-scheme: dark;
+```
+### Root Element
+#root {
   color: var(--foreground);
+```
+### JavaScript Enforcement
+```typescript
+  document.documentElement.setAttribute('data-appearance', 'dark')
+```
+## Conflicts Resolved
+### ✅ Fixed Issues:
+
+4. **Hard-coded co
+
+- All color values a
+- All Radix imports use `-dark.css` vari
+- No competing style definitions
+## Testing Checklist
+- [x] All backgrounds use dark colors (lightnes
+
+- [x] No light mode color definitions
+- [x] CSS custom properties properly mapped to Tailwind
+
+
+
+4. **All color
+
+
+
+
   color-scheme: dark;
 }
 ```
 
-### Body Level
-```css
-body {
-  background: var(--background);
-  color: var(--foreground);
-  color-scheme: dark;
-}
-```
+
+
+
+
+
+
+
+
 
 ### Root Element
 ```css
