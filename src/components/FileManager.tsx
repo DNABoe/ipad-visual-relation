@@ -136,64 +136,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
   }
 
-  const handleDownloadAndContinue = () => {
-    if (downloadUrl && downloadFileName) {
-      try {
-        console.log('🔍 Starting download process...')
-        console.log('📋 Download URL:', downloadUrl.substring(0, 50) + '...')
-        console.log('📄 File name:', downloadFileName)
-        
-        const a = document.createElement('a')
-        a.href = downloadUrl
-        a.download = downloadFileName
-        a.style.display = 'none'
-        a.target = '_blank'
-        
-        document.body.appendChild(a)
-        console.log('✅ Anchor element added to DOM')
-        
-        a.click()
-        console.log('✅ Click event triggered')
-        
-        console.log('📁 File should now be downloading to:')
-        console.log('   Windows: C:\\Users\\[YourName]\\Downloads\\' + downloadFileName)
-        console.log('   Mac: ~/Downloads/' + downloadFileName)
-        console.log('   Linux: ~/Downloads/' + downloadFileName)
-        console.log('')
-        console.log('💡 To view downloads:')
-        console.log('   Chrome/Edge: Press Ctrl+J (Windows) or Cmd+Shift+J (Mac)')
-        console.log('   Firefox: Press Ctrl+Shift+Y (Windows) or Cmd+Shift+Y (Mac)')
-        console.log('   Safari: Click Downloads button in toolbar')
-        
-        setTimeout(() => {
-          document.body.removeChild(a)
-          URL.revokeObjectURL(downloadUrl)
-          console.log('✅ Download cleanup complete')
-        }, 1000)
-        
-        toast.success(`Download started: ${downloadFileName}`, {
-          duration: 6000,
-          description: 'Check your Downloads folder. Press Ctrl+J (or Cmd+Shift+J on Mac) to view browser downloads.'
-        })
-      } catch (error) {
-        console.error('❌ Download error:', error)
-        toast.error('Download failed', {
-          description: 'Try using the direct download link below the button'
-        })
-      }
-    }
-    
-    setTimeout(() => {
-      if (createdWorkspace && createdName && createdPassword) {
-        onLoad(createdWorkspace, createdName, createdPassword)
-        setDownloadUrl(null)
-        setDownloadFileName('')
-        setCreatedWorkspace(null)
-        setCreatedPassword('')
-        setCreatedName('')
-      }
-    }, 300)
-  }
+
 
   const handleFileSelect = () => {
     const input = document.createElement('input')
@@ -212,18 +155,45 @@ export function FileManager({ onLoad }: FileManagerProps) {
   return (
     <div className="h-screen flex items-center justify-center bg-background">
       {downloadUrl ? (
-        <div className="w-full max-w-md space-y-8 p-8">
+        <motion.div 
+          className="w-full max-w-md space-y-8 p-8"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="text-center space-y-3">
-            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <motion.div 
+              className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", duration: 0.5, delay: 0.1 }}
+            >
               <DownloadSimple size={40} className="text-primary" weight="duotone" />
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight">Save Your File</h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            </motion.div>
+            <motion.h1 
+              className="text-3xl font-semibold tracking-tight"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
+              Save Your File
+            </motion.h1>
+            <motion.p 
+              className="text-sm text-muted-foreground leading-relaxed"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
               Right-click the link below and choose <strong>"Save link as..."</strong> to download your encrypted network file.
-            </p>
+            </motion.p>
           </div>
 
-          <div className="bg-muted/50 border border-border rounded-lg p-6 space-y-4">
+          <motion.div 
+            className="bg-muted/50 border border-border rounded-lg p-6 space-y-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground mb-1">File Name</p>
@@ -234,7 +204,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <a
                 href={downloadUrl}
                 download={downloadFileName}
-                className="text-lg font-medium text-primary hover:underline inline-flex items-center gap-2"
+                className="text-lg font-medium text-primary hover:underline inline-flex items-center gap-2 transition-colors"
               >
                 <DownloadSimple size={20} weight="bold" />
                 {downloadFileName}
@@ -243,9 +213,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 Right-click this link and select <strong>"Save link as..."</strong>
               </p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="space-y-3">
+          <motion.div 
+            className="space-y-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+          >
             <Button
               onClick={handleContinueWithoutDownload}
               className="w-full h-14 text-base"
@@ -253,9 +228,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
             >
               Continue to Main Screen
             </Button>
-          </div>
+          </motion.div>
 
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2">
+          <motion.div 
+            className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+          >
             <h3 className="text-sm font-medium flex items-center gap-2">
               🔒 Security & Important Information
             </h3>
@@ -266,8 +246,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <li>• <strong>No cloud storage</strong> - this file is only stored on your computer</li>
               <li>• <strong>Zero-knowledge security</strong> - no one can access your data without your password</li>
             </ul>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       ) : (
         <motion.div 
           className="w-full max-w-md space-y-8 p-8"
