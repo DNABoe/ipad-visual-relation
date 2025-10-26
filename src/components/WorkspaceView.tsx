@@ -1641,22 +1641,23 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         )}
 
         <UnsavedChangesDialog
+          open={showUnsavedDialog}
           onOpenChange={setShowUnsavedDialog}
-          onOpenChange={setShowUnsavedChangesDialog}
+          onDiscard={handleDiscardChanges}
+          fileName={fileName}
           downloadUrl={downloadUrl}
-          downloadUrl={downloadUrl}
-        />
         />
 
+        <ExportDialog
           open={showExportDialog}
-          open={showExportDialog}
+          onOpenChange={setShowExportDialog}
           persons={workspace.persons}
-          persons={workspace.persons}
+          groups={workspace.groups}
           connections={workspace.connections}
           transform={transform}
-          transform={transform}
+          canvasRef={canvasRef}
           selectedPersons={selectedPersons}
-          selectedPersons={selectedPersons}
+        />
       </div>
     </TooltipProvider>
   )
