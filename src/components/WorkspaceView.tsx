@@ -1484,7 +1484,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
           <div
             ref={canvasRef}
-            className={`flex-1 relative overflow-hidden ${showGrid ? 'canvas-grid' : ''}`}
+            className={`flex-1 relative overflow-hidden bg-background ${showGrid ? 'canvas-grid' : ''}`}
             style={showGrid ? { '--grid-size': `${settings?.gridSize ?? 20}px` } as React.CSSProperties : undefined}
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleMouseMove}
