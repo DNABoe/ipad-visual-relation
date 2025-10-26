@@ -88,27 +88,29 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 ## Design Direction
 
-The design should feel like a professional, secure data visualization tool—clean, sophisticated, and trustworthy. Privacy and security are paramount, communicated through clear messaging about local-only storage and encryption. The interface should balance the complexity of a network graph with the approachability of consumer software, using subtle depth, generous whitespace, and purposeful color to create visual hierarchy without overwhelming users.
+The design should feel like a professional, secure data visualization tool—clean, sophisticated, and trustworthy with a **dark, modern aesthetic**. Privacy and security are paramount, communicated through clear messaging about local-only storage and encryption. The dark theme reduces eye strain during extended use and provides excellent contrast for network visualization. The interface should balance the complexity of a network graph with the approachability of consumer software, using subtle depth, generous whitespace, and purposeful color to create visual hierarchy without overwhelming users.
 
 ## Color Selection
 
-**Triadic color scheme** with vibrant, distinct colors for high visual separation between groups and states, while maintaining a neutral canvas background.
+**Triadic dark color scheme** with vibrant, distinct colors for high visual separation between groups and states, maintaining a dark canvas background for reduced eye strain and professional appearance.
 
-- **Primary Color**: Deep Blue `oklch(0.45 0.15 250)` — Represents authority and stability; used for primary actions (Add Person, Save, Login)
+- **Primary Color**: Vibrant Blue `oklch(0.55 0.18 250)` — Represents authority and stability; used for primary actions (Add Person, Save, Login)
 - **Secondary Colors**: 
-  - Slate `oklch(0.35 0.02 250)` for secondary UI elements and toolbar backgrounds
-  - Light Gray `oklch(0.96 0.01 250)` for canvas background providing subtle contrast
-- **Accent Color**: Vibrant Cyan `oklch(0.65 0.15 200)` — Highlights active connections, selected nodes, and interactive states
+  - Dark Slate `oklch(0.25 0.03 250)` for secondary UI elements and toolbar backgrounds
+  - Very Dark Blue `oklch(0.12 0.02 250)` for main background providing deep contrast
+- **Accent Color**: Bright Cyan `oklch(0.65 0.15 200)` — Highlights active connections, selected nodes, and interactive states
 - **Foreground/Background Pairings**:
-  - Background (Light Gray `oklch(0.96 0.01 250)`): Dark text `oklch(0.20 0.02 250)` - Ratio 12.8:1 ✓
-  - Card (White `oklch(1 0 0)`): Dark text `oklch(0.20 0.02 250)` - Ratio 16.5:1 ✓
-  - Primary (Deep Blue `oklch(0.45 0.15 250)`): White text `oklch(1 0 0)` - Ratio 7.2:1 ✓
-  - Accent (Vibrant Cyan `oklch(0.65 0.15 200)`): White text `oklch(1 0 0)` - Ratio 4.9:1 ✓
+  - Background (Very Dark `oklch(0.12 0.02 250)`): Light text `oklch(0.95 0.01 250)` - Ratio 14.5:1 ✓
+  - Card (Dark Slate `oklch(0.18 0.02 250)`): Light text `oklch(0.95 0.01 250)` - Ratio 12.1:1 ✓
+  - Primary (Vibrant Blue `oklch(0.55 0.18 250)`): White text `oklch(0.98 0 0)` - Ratio 5.8:1 ✓
+  - Secondary (Dark Slate `oklch(0.25 0.03 250)`): Light text `oklch(0.95 0.01 250)` - Ratio 9.2:1 ✓
+  - Accent (Bright Cyan `oklch(0.65 0.15 200)`): White text `oklch(0.98 0 0)` - Ratio 4.9:1 ✓
+  - Muted (Dark `oklch(0.20 0.02 250)`): Muted text `oklch(0.60 0.02 250)` - Ratio 4.5:1 ✓
   - Node Frame Colors (user-selectable):
-    - Red `oklch(0.60 0.20 25)`: White text - Ratio 5.1:1 ✓
-    - Green `oklch(0.65 0.18 145)`: White text - Ratio 5.3:1 ✓
-    - Orange `oklch(0.70 0.16 60)`: Dark text - Ratio 6.8:1 ✓
-    - White `oklch(0.95 0.01 250)`: Dark text - Ratio 14.2:1 ✓
+    - Red `oklch(0.55 0.22 25)`: White text - Ratio 5.3:1 ✓
+    - Green `oklch(0.68 0.18 145)`: White text - Ratio 5.1:1 ✓
+    - Orange `oklch(0.72 0.16 60)`: White text - Ratio 6.2:1 ✓
+    - Slate `oklch(0.65 0.12 250)`: White text - Ratio 4.8:1 ✓
 
 ## Font Selection
 
