@@ -1185,10 +1185,12 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   return (
     <TooltipProvider>
       <div className="h-screen flex flex-col bg-background">
-        <div className="border-b border-border bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
+        <div className="border-b border-border bg-card/80 backdrop-blur-sm px-4 py-2.5 flex items-center justify-between gap-4 flex-wrap shadow-sm">
           <div className="flex items-center gap-3">
             <Logo size={32} showText={false} />
-            <h1 className="text-xl font-semibold tracking-tight text-foreground bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">NetEye</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">NetEye</span>
+            </h1>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2">
               {downloadUrl ? (
@@ -1197,7 +1199,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                     <a
                       href={downloadUrl}
                       download={`${fileName}.enc.json`}
-                      className="text-sm text-primary hover:underline font-medium inline-flex items-center gap-1.5"
+                      className="text-sm text-primary hover:text-accent hover:underline font-medium inline-flex items-center gap-1.5 transition-colors"
                     >
                       {fileName}
                       <DownloadSimple size={14} weight="bold" />

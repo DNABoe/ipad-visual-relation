@@ -501,7 +501,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md backdrop-blur-xl bg-card/95 border-border/70">
+      <DialogContent className="max-w-md bg-card/98 backdrop-blur-md border-border">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -509,7 +509,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             </div>
             Export Canvas
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground/80">
+          <DialogDescription className="text-muted-foreground">
             {selectedPersons.length > 0 
               ? `Export selection (${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}) or choose a different area`
               : 'Choose export format and select the area to export'}
@@ -520,40 +520,40 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           <div className="space-y-3">
             <Label className="text-sm font-medium">Export Format</Label>
             <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)} className="space-y-2">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
                 <RadioGroupItem value="png" id="format-png" />
                 <Label htmlFor="format-png" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium text-foreground">PNG</div>
-                  <div className="text-xs text-muted-foreground/70">Lossless, transparent background</div>
+                  <div className="text-xs text-muted-foreground">Lossless, transparent background</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
                 <RadioGroupItem value="jpeg" id="format-jpeg" />
                 <Label htmlFor="format-jpeg" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium text-foreground">JPEG</div>
-                  <div className="text-xs text-muted-foreground/70">Smaller file size</div>
+                  <div className="text-xs text-muted-foreground">Smaller file size</div>
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
-          <Separator className="bg-border/50" />
+          <Separator className="bg-border" />
 
           <div className="space-y-3">
             <Label className="text-sm font-medium">Export Mode</Label>
             <RadioGroup value={mode} onValueChange={(v) => setMode(v as ExportMode)} className="space-y-2">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
                 <RadioGroupItem value="all" id="mode-all" />
                 <Label htmlFor="mode-all" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium text-foreground">Entire Canvas</div>
-                  <div className="text-xs text-muted-foreground/70">Export everything</div>
+                  <div className="text-xs text-muted-foreground">Export everything</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
                 <RadioGroupItem value="selection" id="mode-selection" />
                 <Label htmlFor="mode-selection" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium text-foreground">Selected Area</div>
-                  <div className="text-xs text-muted-foreground/70">Export specific region</div>
+                  <div className="text-xs text-muted-foreground">Export specific region</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -573,11 +573,11 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-foreground bg-accent/10 border border-accent/20 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-foreground bg-accent/15 border border-accent/30 rounded-lg p-3">
                       <CheckCircle size={18} weight="fill" className="text-accent flex-shrink-0" />
                       <div>
                         <div className="font-medium">Area selected</div>
-                        <div className="text-xs text-muted-foreground/70">
+                        <div className="text-xs text-muted-foreground">
                           {Math.round(selectionRect.width)} × {Math.round(selectionRect.height)}
                           {selectedPersons.length > 0 && ` • ${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}`}
                         </div>

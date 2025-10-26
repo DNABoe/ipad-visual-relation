@@ -62,15 +62,15 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg backdrop-blur-xl bg-card/95 border-border/70">
+      <DialogContent className="max-w-lg bg-card/98 backdrop-blur-md border-border">
         <DialogHeader>
           <DialogTitle className="text-xl">Settings</DialogTitle>
-          <DialogDescription className="text-muted-foreground/80">
+          <DialogDescription className="text-muted-foreground">
             Manage your system preferences and account
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="system" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-2 bg-muted">
             <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
             <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
           </TabsList>
@@ -78,11 +78,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           <TabsContent value="system" className="space-y-5 py-4">
             <div className="space-y-4">
               <h3 className="font-semibold text-foreground text-sm">Canvas Settings</h3>
-              <div className="space-y-4 rounded-xl border border-border/50 bg-muted/20 p-4">
+              <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="snap-toggle" className="text-sm font-medium cursor-pointer">Snap to Grid</Label>
-                    <div className="text-xs text-muted-foreground/80">
+                    <div className="text-xs text-muted-foreground">
                       Align cards and groups to grid when dragging
                     </div>
                   </div>
@@ -96,7 +96,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                    <span className="text-sm font-semibold text-foreground bg-primary/10 px-2.5 py-1 rounded-lg">{settings?.gridSize ?? 20}px</span>
+                    <span className="text-sm font-semibold text-foreground bg-primary/15 px-2.5 py-1 rounded-lg">{settings?.gridSize ?? 20}px</span>
                   </div>
                   <Slider
                     id="grid-size"

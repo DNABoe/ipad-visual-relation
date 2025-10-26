@@ -72,7 +72,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
       className={cn(
         'absolute rounded-xl border-[3px] group/frame cursor-move',
         'transition-all duration-200',
-        group.solidBackground ? 'border-solid backdrop-blur-sm' : 'border-dashed',
+        group.solidBackground ? 'border-solid' : 'border-dashed',
         isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-xl'
       )}
       style={{
@@ -81,8 +81,8 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
         width: group.width,
         height: group.height,
         borderColor: groupColor,
-        backgroundColor: group.solidBackground ? `${groupColor}25` : `${groupColor}10`,
-        boxShadow: group.solidBackground ? `inset 0 0 40px ${groupColor}15` : 'none',
+        backgroundColor: group.solidBackground ? `${groupColor}30` : `${groupColor}12`,
+        boxShadow: group.solidBackground ? `inset 0 0 50px ${groupColor}18` : 'none',
         ...style,
       }}
       onClick={onClick}
@@ -111,12 +111,12 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 setIsEditingName(false)
               }
             }}
-            className="h-8 text-xs w-40 bg-card/95 backdrop-blur-sm border-border/70 shadow-md"
+            className="h-8 text-xs w-40 bg-card border-border shadow-md"
             onMouseDown={(e) => e.stopPropagation()}
           />
         ) : (
           <div
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg backdrop-blur-sm"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg"
             style={{
               backgroundColor: groupColor,
               color: '#fff',
@@ -129,24 +129,24 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
               }
             }}
           >
-            <span className="tracking-wide">{group.name}</span>
+            <span className="tracking-wide drop-shadow-sm">{group.name}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-5 w-5 p-0 hover:bg-white/20 rounded-md transition-colors"
+                  className="h-5 w-5 p-0 hover:bg-white/25 rounded-md transition-colors"
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  <DotsThree size={16} weight="bold" />
+                  <DotsThree size={16} weight="bold" className="drop-shadow-sm" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="start" 
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
-                className="backdrop-blur-xl bg-card/95 border-border/70"
+                className="bg-card/98 backdrop-blur-md border-border"
               >
                 <DropdownMenuLabel className="text-foreground">Edit Group</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -155,7 +155,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="cursor-pointer">Change Color</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="backdrop-blur-xl bg-card/95 border-border/70">
+                  <DropdownMenuSubContent className="bg-card/98 backdrop-blur-md border-border">
                     {GROUP_COLOR_NAMES.map((colorName) => (
                       <DropdownMenuItem
                         key={colorName}
@@ -163,7 +163,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                         className="cursor-pointer"
                       >
                         <div
-                          className="w-5 h-5 rounded-md mr-2 border-2 border-white/20 shadow-sm"
+                          className="w-5 h-5 rounded-md mr-2 border-2 border-border shadow-sm"
                           style={{ backgroundColor: GROUP_COLORS[colorName] }}
                         />
                         <span className="capitalize">{colorName}</span>

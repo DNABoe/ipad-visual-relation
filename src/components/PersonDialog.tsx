@@ -102,10 +102,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto backdrop-blur-xl bg-card/95 border-border/70">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-card/98 backdrop-blur-md border-border">
         <DialogHeader>
           <DialogTitle className="text-xl">{editPerson ? 'Edit Person' : 'Add Person'}</DialogTitle>
-          <DialogDescription className="text-muted-foreground/80">
+          <DialogDescription className="text-muted-foreground">
             {editPerson ? 'Update person details' : 'Add a new person to your network'}
           </DialogDescription>
         </DialogHeader>
@@ -117,7 +117,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 onDoubleClick={() => fileInputRef.current?.click()}
                 title="Double-click to upload photo"
               >
-                <Avatar className="h-32 w-32 ring-4 ring-border/50 transition-all group-hover:ring-accent group-hover:shadow-xl">
+                <Avatar className="h-32 w-32 ring-4 ring-border transition-all group-hover:ring-accent group-hover:shadow-xl">
                   {photo ? (
                     <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
                   ) : (
@@ -126,7 +126,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+                <div className="absolute inset-0 rounded-full bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
                   <Upload className="text-white" size={36} weight="duotone" />
                 </div>
               </div>
@@ -186,7 +186,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           }}
                           title={labels[color]}
                         />
-                        <span className="text-[11px] text-muted-foreground/80 text-center font-medium">{labels[color]}</span>
+                        <span className="text-[11px] text-muted-foreground text-center font-medium">{labels[color]}</span>
                       </div>
                     )
                   })}

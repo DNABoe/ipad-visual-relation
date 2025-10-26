@@ -144,16 +144,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
           </div>
 
-          <div className="bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl p-8 space-y-6 shadow-2xl shadow-black/20">
+          <div className="bg-card/70 backdrop-blur-xl border border-border rounded-2xl p-8 space-y-6 shadow-2xl shadow-black/30">
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 border border-primary/30 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                     <FilePlus size={24} className="text-white" weight="duotone" />
                   </div>
                   <div>
                     <p className="font-mono text-sm font-medium truncate">{createdNetwork.fileName}</p>
-                    <p className="text-xs text-muted-foreground/70">Encrypted network file</p>
+                    <p className="text-xs text-muted-foreground">Encrypted network file</p>
                   </div>
                 </div>
               </div>
@@ -168,17 +168,17 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 <span className="relative">Download {createdNetwork.fileName}</span>
               </a>
 
-              <p className="text-xs text-muted-foreground/70 text-center px-4">
+              <p className="text-xs text-muted-foreground text-center px-4">
                 Right-click the button above and select <strong className="text-foreground">"Save link as..."</strong> if download doesn't start automatically
               </p>
             </div>
 
-            <div className="border-t border-border/50 pt-6 space-y-4">
+            <div className="border-t border-border pt-6 space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <span className="text-accent">🔒</span>
                 Security & Important Information
               </h3>
-              <ul className="text-xs text-muted-foreground/80 leading-relaxed space-y-2 pl-1">
+              <ul className="text-xs text-muted-foreground leading-relaxed space-y-2 pl-1">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-0.5">•</span>
                   <span><strong className="text-foreground">Keep your password safe!</strong> If you lose it, your data cannot be recovered</span>
@@ -217,7 +217,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <div className="w-full max-w-md space-y-12 animate-fade-in-up">
         <div className="text-center space-y-6">
           <Logo size={80} showText={true} className="justify-center" />
-          <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-sm mx-auto">
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
             Create and visualize professional relationships with military-grade encryption
           </p>
         </div>
@@ -245,7 +245,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         </div>
 
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-border/30 text-xs text-muted-foreground/70">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/60 backdrop-blur-sm border border-border text-xs text-muted-foreground">
             <span className="text-accent">🔒</span>
             <span>All data is encrypted locally in your browser</span>
           </div>
@@ -253,7 +253,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md backdrop-blur-xl bg-card/95 border-border/70">
+        <DialogContent className="sm:max-w-md bg-card/98 backdrop-blur-md border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -261,7 +261,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               </div>
               Create New Network
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground/80">
+            <DialogDescription className="text-muted-foreground">
               Set up your encrypted relationship network
             </DialogDescription>
           </DialogHeader>
@@ -274,15 +274,15 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={newFileName}
                 onChange={(e) => setNewFileName(e.target.value)}
                 placeholder="my-network"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border/70 h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPassword && newPasswordConfirm) {
                     handleCreateNetwork()
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground/70 pl-1">
-                Will be saved as: <span className="font-mono text-foreground/80">{newFileName.trim() || 'my-network'}.enc.json</span>
+              <p className="text-xs text-muted-foreground pl-1">
+                Will be saved as: <span className="font-mono text-foreground">{newFileName.trim() || 'my-network'}.enc.json</span>
               </p>
             </div>
 
@@ -294,14 +294,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter a strong password"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border/70 h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPasswordConfirm) {
                     handleCreateNetwork()
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground/70 pl-1">
+              <p className="text-xs text-muted-foreground pl-1">
                 Use a strong, unique password. Recommended: 12+ characters with mixed case, numbers, and symbols.
               </p>
             </div>
@@ -314,7 +314,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={newPasswordConfirm}
                 onChange={(e) => setNewPasswordConfirm(e.target.value)}
                 placeholder="Confirm password"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border/70 h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleCreateNetwork()
@@ -348,7 +348,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="sm:max-w-md backdrop-blur-xl bg-card/95 border-border/70">
+        <DialogContent className="sm:max-w-md bg-card/98 backdrop-blur-md border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -356,7 +356,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               </div>
               Load Existing Network
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground/80">
+            <DialogDescription className="text-muted-foreground">
               Select your encrypted network file
             </DialogDescription>
           </DialogHeader>
@@ -368,7 +368,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 id="load-file"
                 type="file"
                 accept=".json,.enc.json"
-                className="cursor-pointer border-border/70 h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer"
+                className="cursor-pointer border-border h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary/15 file:text-primary hover:file:bg-primary/25 file:cursor-pointer"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
@@ -376,8 +376,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground/70 pl-1">
-                Select your <span className="font-mono text-foreground/80">.enc.json</span> file
+              <p className="text-xs text-muted-foreground pl-1">
+                Select your <span className="font-mono text-foreground">.enc.json</span> file
               </p>
             </div>
 
@@ -389,7 +389,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={loadPassword}
                 onChange={(e) => setLoadPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border/70 h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleLoadNetwork()
@@ -398,8 +398,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="text-center p-4 rounded-xl bg-gradient-to-r from-muted/50 to-muted/30 border border-border/40">
-              <p className="text-xs text-muted-foreground/80 flex items-center justify-center gap-2">
+            <div className="text-center p-4 rounded-xl bg-gradient-to-r from-muted/60 to-muted/40 border border-border">
+              <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                 <span className="text-accent text-sm">🔒</span>
                 <span>All decryption happens locally in your browser</span>
               </p>

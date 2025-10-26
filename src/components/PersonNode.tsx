@@ -35,15 +35,15 @@ export function PersonNode({
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
-          'cursor-grab select-none transition-all duration-200 border-[3px] backdrop-blur-sm',
-          'hover:shadow-xl hover:shadow-primary/10',
-          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-2xl shadow-accent/20',
+          'cursor-grab select-none transition-all duration-200 border-[3px]',
+          'hover:shadow-xl hover:shadow-primary/20',
+          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-2xl shadow-accent/30',
           isDragging && 'node-dragging shadow-2xl'
         )}
         style={{
           ...style,
           borderColor: frameColor,
-          background: 'linear-gradient(to bottom, var(--card), oklch(0.17 0.03 250))',
+          background: 'oklch(0.22 0.025 250)',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -63,7 +63,7 @@ export function PersonNode({
             <Avatar 
               className={cn(
                 "h-20 w-20 flex-shrink-0 ring-2 ring-offset-2 ring-offset-card transition-all",
-                isSelected ? "ring-accent" : "ring-border/30"
+                isSelected ? "ring-accent" : "ring-border/50"
               )}
             >
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
@@ -73,16 +73,16 @@ export function PersonNode({
             </Avatar>
             <Badge 
               variant="secondary" 
-              className="flex-shrink-0 font-bold text-xs px-2 py-0.5 bg-gradient-to-br from-muted to-muted/80 text-foreground border border-border/50 shadow-sm"
+              className="flex-shrink-0 font-bold text-xs px-2 py-0.5 bg-muted text-foreground border border-border/70 shadow-sm"
             >
               {person.score}
             </Badge>
           </div>
           <div className="flex-1 min-w-0 space-y-0.5">
             <h3 className="font-semibold text-sm leading-tight break-words text-foreground tracking-tight">{person.name}</h3>
-            {person.position && <p className="text-xs text-muted-foreground/90 leading-tight break-words">{person.position}</p>}
-            {person.position2 && <p className="text-xs text-muted-foreground/90 leading-tight break-words">{person.position2}</p>}
-            {person.position3 && <p className="text-xs text-muted-foreground/90 leading-tight break-words">{person.position3}</p>}
+            {person.position && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position}</p>}
+            {person.position2 && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position2}</p>}
+            {person.position3 && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position3}</p>}
           </div>
         </div>
       </Card>
