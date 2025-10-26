@@ -1,16 +1,15 @@
 import { useState, useCallback, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
+import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
+import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
+import { Logo } from './Logo'
 import type { Workspace } from '@/lib/types'
 import { generateSampleData } from '@/lib/sampleData'
-import { Logo } from './Logo'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -70,7 +69,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
         downloadUrl: url,
       })
 
-      console.log(`📦 File: ${fullFileName}`)
       console.log(`📊 Size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`)
       console.log(`🔐 Encrypted with AES-256-GCM`)
     } catch (error) {
@@ -118,11 +116,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
     setNewPassword('')
     setNewPasswordConfirm('')
     setIncludeSampleData(true)
-    
+    setCreatedNetwork(null)
     if (createdNetwork?.downloadUrl) {
       URL.revokeObjectURL(createdNetwork.downloadUrl)
     }
-    setCreatedNetwork(null)
   }, [createdNetwork])
 
   const handleResetLoadDialog = useCallback(() => {
@@ -144,7 +141,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-primary/5 to-accent/10">
         <div className="relative w-full max-w-2xl space-y-8">
           <div className="text-center space-y-4">
-            <Logo size={64} showText={false} className="justify-center" />
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight">Network Created Successfully!</h1>
               <p className="text-muted-foreground">Download your encrypted file to keep it safe</p>
@@ -186,7 +182,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <ul className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
                 <li>• <strong>Keep your password safe!</strong> If you lose it, your data cannot be recovered</li>
                 <li>• Your file is encrypted with AES-256-GCM encryption</li>
-                <li>• Store the file in a secure location</li>
+                <li>• Store the file in a secure location (USB drive, cloud storage, etc.)</li>
                 <li>• You can continue working without downloading (not recommended)</li>
               </ul>
             </div>
@@ -352,7 +348,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 id="load-file"
                 type="file"
                 accept=".json,.enc.json"
-                className="focus-visible:ring-primary cursor-pointer"
+                className="cursor-pointer"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
