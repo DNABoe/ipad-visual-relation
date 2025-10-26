@@ -107,17 +107,18 @@
 }
 
 .canvas-grid {
+  --grid-size: 20px;
   background-image: 
     linear-gradient(to right, oklch(0.92 0.01 250) 1px, transparent 1px),
     linear-gradient(to bottom, oklch(0.92 0.01 250) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-size: var(--grid-size) var(--grid-size);
 }
 
 .dark .canvas-grid {
   background-image: 
     linear-gradient(to right, oklch(0.28 0.015 250) 1px, transparent 1px),
     linear-gradient(to bottom, oklch(0.28 0.015 250) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-size: var(--grid-size) var(--grid-size);
 }
 
 .node-dragging {

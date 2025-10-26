@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { hashPassword } from '@/lib/helpers'
 import { Moon, Sun } from '@phosphor-icons/react'
 import { toast } from 'sonner'
@@ -25,12 +26,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     passwordHash: string
     showGrid: boolean
     snapToGrid: boolean
+    gridSize: number
     showMinimap: boolean
   }>('app-settings', {
     username: 'admin',
     passwordHash: hashPassword('admin'),
     showGrid: true,
     snapToGrid: false,
+    gridSize: 20,
     showMinimap: true,
   })
 
@@ -108,6 +111,44 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   checked={settings?.showGrid ?? true}
                   onCheckedChange={(checked) => setSettings((current) => ({ ...current!, showGrid: checked }))}
                 />
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="snap-toggle" className="dark:text-foreground">Snap to Grid</Label>
+                    <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+                      Align cards and groups to grid when dragging
+                    </div>
+                  </div>
+                  <Switch
+                    id="snap-toggle"
+                    checked={settings?.snapToGrid ?? false}
+                    onCheckedChange={(checked) => setSettings((current) => ({ ...current!, snapToGrid: checked }))}
+                  />
+                </div>
+                
+                <div className="space-y-2 pl-0">
+                  <Label htmlFor="grid-size" className="dark:text-foreground">Grid Size</Label>
+                  <Select
+                    value={String(settings?.gridSize ?? 20)}
+                    onValueChange={(value) => setSettings((current) => ({ ...current!, gridSize: Number(value) }))}
+                  >
+                    <SelectTrigger id="grid-size">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10px - Fine</SelectItem>
+                      <SelectItem value="20">20px - Default</SelectItem>
+                      <SelectItem value="30">30px - Medium</SelectItem>
+                      <SelectItem value="40">40px - Large</SelectItem>
+                      <SelectItem value="50">50px - Extra Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">
+                    Controls both grid spacing and snap increment
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>

@@ -15,7 +15,7 @@ import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 import { Logo } from './Logo'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
-import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT, GRID_SIZE } from '@/lib/constants'
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 import { 
   Plus, 
   UsersThree, 
@@ -58,9 +58,10 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork }: WorkspaceViewProps) {
-  const [settings] = useKV<{ showGrid: boolean; snapToGrid: boolean; showMinimap: boolean }>('app-settings', {
+  const [settings] = useKV<{ showGrid: boolean; snapToGrid: boolean; gridSize: number; showMinimap: boolean }>('app-settings', {
     showGrid: true,
     snapToGrid: false,
+    gridSize: 20,
     showMinimap: true,
   })
 
@@ -371,16 +372,17 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       const dy = e.movementY / transform.scale
       
       if (settings?.snapToGrid) {
+        const gridSize = settings.gridSize ?? 20
         setDragAccumulator((acc) => {
           const newAccX = acc.x + dx
           const newAccY = acc.y + dy
           
-          const gridStepsX = Math.floor(newAccX / GRID_SIZE)
-          const gridStepsY = Math.floor(newAccY / GRID_SIZE)
+          const gridStepsX = Math.floor(newAccX / gridSize)
+          const gridStepsY = Math.floor(newAccY / gridSize)
           
           if (gridStepsX !== 0 || gridStepsY !== 0) {
-            const moveX = gridStepsX * GRID_SIZE
-            const moveY = gridStepsY * GRID_SIZE
+            const moveX = gridStepsX * gridSize
+            const moveY = gridStepsY * gridSize
             
             setWorkspace((current) => ({
               ...current,
@@ -413,16 +415,17 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       const dy = e.movementY / transform.scale
       
       if (settings?.snapToGrid) {
+        const gridSize = settings.gridSize ?? 20
         setDragAccumulator((acc) => {
           const newAccX = acc.x + dx
           const newAccY = acc.y + dy
           
-          const gridStepsX = Math.floor(newAccX / GRID_SIZE)
-          const gridStepsY = Math.floor(newAccY / GRID_SIZE)
+          const gridStepsX = Math.floor(newAccX / gridSize)
+          const gridStepsY = Math.floor(newAccY / gridSize)
           
           if (gridStepsX !== 0 || gridStepsY !== 0) {
-            const moveX = gridStepsX * GRID_SIZE
-            const moveY = gridStepsY * GRID_SIZE
+            const moveX = gridStepsX * gridSize
+            const moveY = gridStepsY * gridSize
             
             setWorkspace((current) => ({
               ...current,
@@ -857,8 +860,9 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       p.y = Math.round(p.y - minY + 100)
       
       if (settings?.snapToGrid) {
-        p.x = snapValue(p.x)
-        p.y = snapValue(p.y)
+        const gridSize = settings.gridSize ?? 20
+        p.x = snapValue(p.x, gridSize)
+        p.y = snapValue(p.y, gridSize)
       }
     })
 
@@ -1003,8 +1007,9 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       p.y = Math.round(p.y - minY + 100)
       
       if (settings?.snapToGrid) {
-        p.x = snapValue(p.x)
-        p.y = snapValue(p.y)
+        const gridSize = settings.gridSize ?? 20
+        p.x = snapValue(p.x, gridSize)
+        p.y = snapValue(p.y, gridSize)
       }
     })
 
@@ -1483,6 +1488,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           <div
             ref={canvasRef}
             className={`flex-1 relative overflow-hidden ${showGrid ? 'canvas-grid' : ''}`}
+            style={showGrid ? { '--grid-size': `${settings?.gridSize ?? 20}px` } as React.CSSProperties : undefined}
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
