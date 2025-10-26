@@ -12,33 +12,33 @@
 }
 
 :root {
-  --background: oklch(0.98 0.005 250);
-  --foreground: oklch(0.15 0.015 250);
+  --background: oklch(0.15 0.015 250);
+  --foreground: oklch(0.95 0.005 250);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.015 250);
+  --card: oklch(0.20 0.02 250);
+  --card-foreground: oklch(0.95 0.005 250);
   
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.015 250);
+  --popover: oklch(0.18 0.018 250);
+  --popover-foreground: oklch(0.95 0.005 250);
 
-  --primary: oklch(0.50 0.18 250);
-  --primary-foreground: oklch(1 0 0);
+  --primary: oklch(0.60 0.20 250);
+  --primary-foreground: oklch(0.98 0.005 250);
 
-  --secondary: oklch(0.92 0.01 250);
-  --secondary-foreground: oklch(0.15 0.015 250);
+  --secondary: oklch(0.25 0.015 250);
+  --secondary-foreground: oklch(0.95 0.005 250);
 
-  --muted: oklch(0.96 0.008 250);
-  --muted-foreground: oklch(0.45 0.01 250);
+  --muted: oklch(0.22 0.015 250);
+  --muted-foreground: oklch(0.60 0.01 250);
 
-  --accent: oklch(0.68 0.18 200);
-  --accent-foreground: oklch(1 0 0);
+  --accent: oklch(0.65 0.20 200);
+  --accent-foreground: oklch(0.98 0.005 250);
 
   --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
+  --destructive-foreground: oklch(0.98 0.005 250);
 
-  --border: oklch(0.90 0.008 250);
-  --input: oklch(0.90 0.008 250);
-  --ring: oklch(0.68 0.18 200);
+  --border: oklch(0.30 0.015 250);
+  --input: oklch(0.30 0.015 250);
+  --ring: oklch(0.65 0.20 200);
 
   --radius: 0.5rem;
 }
@@ -75,8 +75,8 @@
 .canvas-grid {
   --grid-size: 20px;
   background-image: 
-    linear-gradient(to right, oklch(0.93 0.008 250) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.93 0.008 250) 1px, transparent 1px);
+    linear-gradient(to right, oklch(0.25 0.015 250) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.25 0.015 250) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
 }
 
