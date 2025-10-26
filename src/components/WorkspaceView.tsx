@@ -36,8 +36,8 @@ import {
   ArrowCounterClockwise,
   UserMinus,
   LinkBreak,
-  Export
-} from '@phosphor-icons/react'
+  Export,
+  DownloadSimple
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { encryptData } from '@/lib/encryption'
@@ -76,10 +76,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [showListPanel, setShowListPanel] = useState(false)
   const [showPhotoViewer, setShowPhotoViewer] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
-  const [showExportDialog, setShowExportDialog] = useState(false)
   const [editPerson, setEditPerson] = useState<Person | undefined>()
   const [connectMode, setConnectMode] = useState(false)
-  const [connectMode, setConnectMode] = useState(false)
+  const [connectFrom, setConnectFrom] = useState<string | null>(null)
+  const [photoViewerData, setPhotoViewerData] = useState<{ name: string; photoUrl: string } | null>(null)
   const [draggingPerson, setDraggingPerson] = useState<string | null>(null)
   const [draggingGroup, setDraggingGroup] = useState<string | null>(null)
   const [draggingGroupPersons, setDraggingGroupPersons] = useState<string[]>([])
@@ -267,7 +267,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     e.stopPropagation()
     const person = workspace.persons.find(p => p.id === personId)
     if (person && person.photo) {
-      setPhotoViewerData({ url: person.photo, name: person.name })
+      setPhotoViewerData({ photoUrl: person.photo, name: person.name })
       setShowPhotoViewer(true)
     }
   }, [workspace])
@@ -1027,16 +1027,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     toast.success('Arranged by score - lowest in center')
   }, [workspace, settings, setWorkspace, handleZoomToFit])
 
-  const handleLoadSample = useCallback(() => {
-    const sample = generateSampleData()
-    setWorkspace((current) => ({
-      persons: [...current.persons, ...sample.persons],
-      connections: [...current.connections, ...sample.connections],
-      groups: [...current.groups, ...sample.groups],
-    }))
-    toast.success('Sample data loaded')
-  }, [setWorkspace])
-
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
 
   const createDownloadUrl = useCallback(async () => {
@@ -1220,11 +1210,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                 <span className="text-sm text-muted-foreground font-medium">{fileName}</span>
               )}
             </div>
-            {workspace.persons.length === 0 && (
-              <Button variant="outline" size="sm" onClick={handleLoadSample}>
-                Load Sample Data
-              </Button>
-            )}
           </div>
           
           <div className="flex items-center gap-2">
@@ -1312,10 +1297,9 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             </Tooltip>
 
             <Separator orientation="vertical" className="h-6" />
-            <Separator orientation="vertical" className="h-6" />
 
+            <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
                 <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
                   <Export size={16} />
                 </Button>
@@ -1325,21 +1309,24 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             <Tooltip>
               <TooltipTrigger asChild>
+                <Button
                   variant={showGrid ? "default" : "outline"}
-                  variant={showGrid ? "default" : "outline"}
-                  size="sm"() => setShowGrid(!showGrid)}
+                  size="sm"
+                  onClick={() => setShowGrid(!showGrid)}
                 >
                   <GridFour size={16} />
-                  <GridFour size={16} />
+                </Button>
+              </TooltipTrigger>
               <TooltipContent>Toggle Grid</TooltipContent>
             </Tooltip>
-              <TooltipContent>Toggle Grid</TooltipContent>
-            <Separator orientation="vertical" className="h-6" />
 
             <Separator orientation="vertical" className="h-6" />
 
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant={showListPanel ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setShowListPanel(!showListPanel)}
                 >
                   <List size={16} />
@@ -1649,7 +1636,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           <PhotoViewerDialog
             open={showPhotoViewer}
             onOpenChange={setShowPhotoViewer}
-            photoUrl={photoViewerData.url}
+            photoUrl={photoViewerData.photoUrl}
             personName={photoViewerData.name}
           />
         )}
@@ -1664,14 +1651,14 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
         <ExportDialog
           open={showExportDialog}
-OpenChange={setShowExportDialog}
+          onOpenChange={setShowExportDialog}
+          persons={workspace.persons}
+          connections={workspace.connections}
+          groups={workspace.groups}
+          transform={transform}
           canvasRef={canvasRef}
           selectedPersons={selectedPersons}
         />
-      </div>
-    </TooltipProvider>
-  )
-}
       </div>
     </TooltipProvider>
   )
