@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FilePlus, FolderOpen, DownloadSimple, Database } from '@phosphor-icons/react'
+import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
 import type { Workspace } from '@/lib/types'
@@ -86,11 +86,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
   }
 
-  const handleLoadSampleData = () => {
-    const sampleWorkspace = generateSampleData()
-    onLoad(sampleWorkspace, 'sample-network', '')
-    toast.success('Sample data loaded')
-  }
+
 
   const handleLoadNetwork = async () => {
     if (!loadingFile) {
@@ -291,16 +287,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
           >
             <FolderOpen size={24} className="mr-3" />
             Load Existing Network
-          </Button>
-
-          <Button
-            onClick={handleLoadSampleData}
-            variant="secondary"
-            className="w-full h-24 text-lg"
-            size="lg"
-          >
-            <Database size={24} className="mr-3" />
-            Load Sample Data
           </Button>
         </div>
         </div>
