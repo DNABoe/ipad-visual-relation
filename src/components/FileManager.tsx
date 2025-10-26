@@ -269,33 +269,41 @@ export function FileManager({ onLoad }: FileManagerProps) {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-md space-y-8 p-8">
+        <motion.div 
+          className="w-full max-w-md space-y-8 p-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
-          <motion.p 
-            className="text-sm text-muted-foreground leading-relaxed"
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            End-to-end encrypted with AES-256-GCM.
-          </motion.p>
-          <motion.p 
-            className="text-sm text-muted-foreground leading-relaxed"
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              End-to-end encrypted with AES-256-GCM.
+            </p>
+          </motion.div>
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            Zero-knowledge architecture.
-          </motion.p>
-          <motion.p 
-            className="text-xs text-muted-foreground leading-relaxed"
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Zero-knowledge architecture.
+            </p>
+          </motion.div>
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
           >
-            All files stored locally on your device. No cloud, no servers, no tracking.
-          </motion.p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              All files stored locally on your device. No cloud, no servers, no tracking.
+            </p>
+          </motion.div>
         </div>
 
         <div className="space-y-4">
@@ -318,7 +326,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             Load Existing Network
           </Button>
         </div>
-        </div>
+        </motion.div>
       )}
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
