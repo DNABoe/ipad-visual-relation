@@ -11,6 +11,7 @@ import { GroupDialog } from './GroupDialog'
 import { SettingsDialog } from './SettingsDialog'
 import { ListPanel } from './ListPanel'
 import { PhotoViewerDialog } from './PhotoViewerDialog'
+import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, NODE_WIDTH, NODE_HEIGHT, GRID_SIZE } from '@/lib/constants'
@@ -85,6 +86,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
   const [draggingConnection, setDraggingConnection] = useState<{ fromPersonId: string; mouseX: number; mouseY: number } | null>(null)
   const [undoStack, setUndoStack] = useState<UndoAction[]>([])
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'new' | 'load' | null>(null)
   
   const canvasRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -1081,6 +1084,26 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     setUndoStack(prev => prev.slice(0, -1))
   }, [undoStack, setWorkspace])
 
+  const handleNewNetworkClick = useCallback(() => {
+    setPendingAction('new')
+    setShowUnsavedDialog(true)
+  }, [])
+
+  const handleLoadNetworkClick = useCallback(() => {
+    setPendingAction('load')
+    setShowUnsavedDialog(true)
+  }, [])
+
+  const handleDiscardChanges = useCallback(() => {
+    if (pendingAction === 'new') {
+      onNewNetwork()
+    } else if (pendingAction === 'load') {
+      onLoadNetwork()
+    }
+    setShowUnsavedDialog(false)
+    setPendingAction(null)
+  }, [pendingAction, onNewNetwork, onLoadNetwork])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -1404,7 +1427,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={onNewNetwork}>
+                <Button variant="outline" size="sm" onClick={handleNewNetworkClick}>
                   <FilePlus size={16} />
                 </Button>
               </TooltipTrigger>
@@ -1413,7 +1436,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={onLoadNetwork}>
+                <Button variant="outline" size="sm" onClick={handleLoadNetworkClick}>
                   <FolderOpen size={16} />
                 </Button>
               </TooltipTrigger>
@@ -1599,6 +1622,14 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             personName={photoViewerData.name}
           />
         )}
+
+        <UnsavedChangesDialog
+          open={showUnsavedDialog}
+          onOpenChange={setShowUnsavedDialog}
+          onDiscard={handleDiscardChanges}
+          downloadUrl={downloadUrl}
+          fileName={fileName}
+        />
       </div>
     </TooltipProvider>
   )
