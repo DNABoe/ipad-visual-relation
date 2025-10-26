@@ -61,10 +61,7 @@ export function PersonNode({
             }}
           >
             <Avatar 
-              className={cn(
-                "h-20 w-20 flex-shrink-0 ring-2 ring-offset-2 ring-offset-card transition-all",
-                isSelected ? "ring-accent" : "ring-border/50"
-              )}
+              className="h-20 w-20 flex-shrink-0"
             >
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback style={{ backgroundColor: frameColor, color: person.frameColor === 'white' ? '#000' : '#fff' }}>
