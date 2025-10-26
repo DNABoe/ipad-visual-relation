@@ -153,7 +153,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-background">
+    <div className="dark h-screen flex items-center justify-center bg-background">
       {downloadUrl ? (
         <motion.div 
           className="w-full max-w-md space-y-8 p-8"
