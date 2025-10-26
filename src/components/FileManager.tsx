@@ -535,13 +535,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
             Load Existing Network
           </Button>
         </div>
-
-        <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
-          <h3 className="text-sm font-medium">Where are my files?</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Files are downloaded to your browser's <strong>Downloads folder</strong>. In Edge/Chrome, check the download bar at the bottom of the window or press <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Ctrl+J</kbd> to view downloads.
-          </p>
-        </div>
         </div>
       )}
 
