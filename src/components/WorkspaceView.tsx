@@ -1027,9 +1027,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     toast.success('Arranged by score - lowest in center')
   }, [workspace, settings, setWorkspace, handleZoomToFit])
 
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
 
-  const createDownloadUrl = useCallback(async () => {
+
     try {
       const encrypted = await encryptData(JSON.stringify(workspace), password)
       const fileData = JSON.stringify(encrypted, null, 2)
@@ -1642,10 +1641,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         )}
 
         <UnsavedChangesDialog
-          open={showUnsavedDialog}
-          onOpenChange={setShowUnsavedDialog}
+            photoUrl={photoViewerData.photoUrl}
+            personName={photoViewerData.name}
           onDiscard={handleDiscardChanges}
-          downloadUrl={downloadUrl}
+        )}
           fileName={fileName}
         />
 
