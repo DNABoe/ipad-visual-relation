@@ -36,11 +36,10 @@ import {
   ArrowCounterClockwise,
   UserMinus,
   LinkBreak,
-  DownloadSimple,
   Export
 } from '@phosphor-icons/react'
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import { generateSampleData } from '@/lib/sampleData'
 import { encryptData } from '@/lib/encryption'
 
 interface UndoAction {
@@ -77,10 +76,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [showListPanel, setShowListPanel] = useState(false)
   const [showPhotoViewer, setShowPhotoViewer] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
-  const [photoViewerData, setPhotoViewerData] = useState<{ url: string; name: string } | null>(null)
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const [editPerson, setEditPerson] = useState<Person | undefined>()
   const [connectMode, setConnectMode] = useState(false)
-  const [connectFrom, setConnectFrom] = useState<string | null>(null)
+  const [connectMode, setConnectMode] = useState(false)
   const [draggingPerson, setDraggingPerson] = useState<string | null>(null)
   const [draggingGroup, setDraggingGroup] = useState<string | null>(null)
   const [draggingGroupPersons, setDraggingGroupPersons] = useState<string[]>([])
@@ -1313,9 +1312,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             </Tooltip>
 
             <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6" />
 
-            <Tooltip>
               <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
                 <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
                   <Export size={16} />
                 </Button>
@@ -1325,24 +1325,21 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
                   variant={showGrid ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowGrid(!showGrid)}
+                  variant={showGrid ? "default" : "outline"}
+                  size="sm"() => setShowGrid(!showGrid)}
                 >
                   <GridFour size={16} />
-                </Button>
-              </TooltipTrigger>
+                  <GridFour size={16} />
               <TooltipContent>Toggle Grid</TooltipContent>
             </Tooltip>
+              <TooltipContent>Toggle Grid</TooltipContent>
+            <Separator orientation="vertical" className="h-6" />
 
             <Separator orientation="vertical" className="h-6" />
 
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
                   variant={showListPanel ? "default" : "outline"}
-                  size="sm"
                   onClick={() => setShowListPanel(!showListPanel)}
                 >
                   <List size={16} />
@@ -1667,14 +1664,14 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
         <ExportDialog
           open={showExportDialog}
-          onOpenChange={setShowExportDialog}
-          persons={workspace.persons}
-          connections={workspace.connections}
-          groups={workspace.groups}
-          transform={transform}
+OpenChange={setShowExportDialog}
           canvasRef={canvasRef}
           selectedPersons={selectedPersons}
         />
+      </div>
+    </TooltipProvider>
+  )
+}
       </div>
     </TooltipProvider>
   )
