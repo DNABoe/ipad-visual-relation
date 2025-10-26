@@ -1189,7 +1189,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           <div className="flex items-center gap-3">
             <Logo size={32} showText={false} />
             <h1 className="text-xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">NetEye</span>
+              <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">NetEye</span>
             </h1>
             <Separator orientation="vertical" className="h-6 bg-border/50" />
             <div className="flex items-center gap-2">
