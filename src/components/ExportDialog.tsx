@@ -501,10 +501,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md bg-card text-card-foreground">
         <DialogHeader>
-          <DialogTitle>Export Canvas</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-foreground">Export Canvas</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             {selectedPersons.length > 0 
               ? `Export selection (${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}) or choose a different area`
               : 'Choose export format and select the area to export'}
@@ -513,37 +513,37 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
         <div className="space-y-6">
           <div className="space-y-3">
-            <Label>Export Format</Label>
+            <Label className="text-foreground">Export Format</Label>
             <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="png" id="format-png" />
-                <Label htmlFor="format-png" className="font-normal cursor-pointer">
+                <Label htmlFor="format-png" className="font-normal cursor-pointer text-foreground">
                   PNG (Lossless, transparent background support)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="jpeg" id="format-jpeg" />
-                <Label htmlFor="format-jpeg" className="font-normal cursor-pointer">
+                <Label htmlFor="format-jpeg" className="font-normal cursor-pointer text-foreground">
                   JPEG (Smaller file size)
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <div className="space-y-3">
-            <Label>Export Mode</Label>
+            <Label className="text-foreground">Export Mode</Label>
             <RadioGroup value={mode} onValueChange={(v) => setMode(v as ExportMode)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="all" id="mode-all" />
-                <Label htmlFor="mode-all" className="font-normal cursor-pointer">
+                <Label htmlFor="mode-all" className="font-normal cursor-pointer text-foreground">
                   Export entire canvas
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="selection" id="mode-selection" />
-                <Label htmlFor="mode-selection" className="font-normal cursor-pointer">
+                <Label htmlFor="mode-selection" className="font-normal cursor-pointer text-foreground">
                   Export selected area
                 </Label>
               </div>
@@ -564,7 +564,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm text-foreground">
                       <CheckCircle size={16} weight="fill" className="text-accent" />
                       Area selected ({Math.round(selectionRect.width)} × {Math.round(selectionRect.height)})
                       {selectedPersons.length > 0 && ` - ${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}`}
@@ -593,10 +593,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <div className="space-y-3">
-            <Label>Include in Export</Label>
+            <Label className="text-foreground">Include in Export</Label>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -604,7 +604,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   checked={includeName} 
                   onCheckedChange={(checked) => setIncludeName(checked === true)}
                 />
-                <Label htmlFor="include-name" className="font-normal cursor-pointer">
+                <Label htmlFor="include-name" className="font-normal cursor-pointer text-foreground">
                   Person name
                 </Label>
               </div>
@@ -614,7 +614,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   checked={includePosition} 
                   onCheckedChange={(checked) => setIncludePosition(checked === true)}
                 />
-                <Label htmlFor="include-position" className="font-normal cursor-pointer">
+                <Label htmlFor="include-position" className="font-normal cursor-pointer text-foreground">
                   Position/Title
                 </Label>
               </div>
@@ -624,7 +624,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   checked={includeImportanceScore} 
                   onCheckedChange={(checked) => setIncludeImportanceScore(checked === true)}
                 />
-                <Label htmlFor="include-importance" className="font-normal cursor-pointer">
+                <Label htmlFor="include-importance" className="font-normal cursor-pointer text-foreground">
                   Importance score
                 </Label>
               </div>
@@ -634,14 +634,14 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   checked={includePhoto} 
                   onCheckedChange={(checked) => setIncludePhoto(checked === true)}
                 />
-                <Label htmlFor="include-photo" className="font-normal cursor-pointer">
+                <Label htmlFor="include-photo" className="font-normal cursor-pointer text-foreground">
                   Photos
                 </Label>
               </div>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
