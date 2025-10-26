@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
@@ -11,6 +12,14 @@ import { generateSampleData } from '@/lib/sampleData'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
+}
+
+interface CreatedNetwork {
+  workspace: Workspace
+  password: string
+  name: string
+  downloadUrl: string
+  fileName: string
 }
 
 export function FileManager({ onLoad }: FileManagerProps) {
@@ -22,14 +31,12 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [includeSampleData, setIncludeSampleData] = useState(true)
   const [loadPassword, setLoadPassword] = useState('')
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
-  const [downloadFileName, setDownloadFileName] = useState<string>('')
-  const [createdWorkspace, setCreatedWorkspace] = useState<Workspace | null>(null)
-  const [createdPassword, setCreatedPassword] = useState<string>('')
-  const [createdName, setCreatedName] = useState<string>('')
+  const [createdNetwork, setCreatedNetwork] = useState<CreatedNetwork | null>(null)
 
-  const handleCreateNetwork = async () => {
-    if (!newFileName.trim()) {
+  const handleCreateNetwork = useCallback(async () => {
+    const trimmedFileName = newFileName.trim()
+    
+    if (!trimmedFileName) {
       toast.error('Please enter a file name')
       return
     }
@@ -52,15 +59,17 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const workspaceJson = JSON.stringify(newWorkspace)
       const encrypted = await encryptData(workspaceJson, newPassword)
 
-      const fullFileName = `${newFileName.trim()}.enc.json`
+      const fullFileName = `${trimmedFileName}.enc.json`
       const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
 
-      setDownloadUrl(url)
-      setDownloadFileName(fullFileName)
-      setCreatedWorkspace(newWorkspace)
-      setCreatedPassword(newPassword)
-      setCreatedName(newFileName.trim())
+      setCreatedNetwork({
+        workspace: newWorkspace,
+        password: newPassword,
+        name: trimmedFileName,
+        downloadUrl: url,
+        fileName: fullFileName,
+      })
 
       console.log(`📦 File: ${fullFileName}`)
       console.log(`📊 Size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`)
@@ -69,9 +78,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
       toast.error('Failed to create network file')
       console.error('Error creating network:', error)
     }
-  }
+  }, [newFileName, newPassword, newPasswordConfirm, includeSampleData])
 
-  const handleLoadNetwork = async () => {
+  const handleLoadNetwork = useCallback(async () => {
     if (!loadingFile) {
       toast.error('Please select a file')
       return
@@ -90,39 +99,48 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const fileName = loadingFile.name.replace('.enc.json', '')
 
       onLoad(workspace, fileName, loadPassword)
-      setShowLoadDialog(false)
-      setLoadPassword('')
-      setLoadingFile(null)
     } catch (error) {
       toast.error('Incorrect password or corrupted file', {
         description: 'Please check your password and try again',
       })
       console.error(error)
     }
-  }
+  }, [loadingFile, loadPassword, onLoad])
 
-  const handleContinueWithoutDownload = () => {
-    if (createdWorkspace && createdName && createdPassword) {
-      onLoad(createdWorkspace, createdName, createdPassword)
+  const handleContinueWithoutDownload = useCallback(() => {
+    if (createdNetwork) {
+      onLoad(createdNetwork.workspace, createdNetwork.name, createdNetwork.password)
     }
-  }
+  }, [createdNetwork, onLoad])
 
-  const handleResetNewDialog = () => {
+  const handleResetNewDialog = useCallback(() => {
     setShowNewDialog(false)
     setNewFileName('')
     setNewPassword('')
     setNewPasswordConfirm('')
     setIncludeSampleData(true)
-    if (downloadUrl) {
-      URL.revokeObjectURL(downloadUrl)
+    
+    if (createdNetwork?.downloadUrl) {
+      URL.revokeObjectURL(createdNetwork.downloadUrl)
     }
-    setDownloadUrl(null)
-    setCreatedWorkspace(null)
-    setCreatedPassword('')
-    setCreatedName('')
-  }
+    setCreatedNetwork(null)
+  }, [createdNetwork])
 
-  if (createdWorkspace && downloadUrl) {
+  const handleResetLoadDialog = useCallback(() => {
+    setShowLoadDialog(false)
+    setLoadPassword('')
+    setLoadingFile(null)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (createdNetwork?.downloadUrl) {
+        URL.revokeObjectURL(createdNetwork.downloadUrl)
+      }
+    }
+  }, [createdNetwork])
+
+  if (createdNetwork) {
     return (
       <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-background to-muted/20">
         <div className="relative w-full max-w-2xl space-y-6">
@@ -139,19 +157,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
                     <FilePlus size={20} className="text-primary" />
                   </div>
                   <div>
-                    <p className="font-mono text-sm font-medium truncate">{downloadFileName}</p>
+                    <p className="font-mono text-sm font-medium truncate">{createdNetwork.fileName}</p>
                     <p className="text-xs text-muted-foreground">Encrypted network file</p>
                   </div>
                 </div>
               </div>
 
               <a
-                href={downloadUrl}
-                download={downloadFileName}
+                href={createdNetwork.downloadUrl}
+                download={createdNetwork.fileName}
                 className="flex items-center justify-center gap-2 w-full h-12 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
                 <DownloadSimple size={20} weight="bold" />
-                Download {downloadFileName}
+                Download {createdNetwork.fileName}
               </a>
 
               <p className="text-xs text-muted-foreground text-center">
@@ -280,12 +298,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
 
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="include-sample"
                 checked={includeSampleData}
-                onChange={(e) => setIncludeSampleData(e.target.checked)}
-                className="rounded"
+                onCheckedChange={(checked) => setIncludeSampleData(checked === true)}
               />
               <Label htmlFor="include-sample" className="cursor-pointer">
                 Include sample data
@@ -352,11 +368,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setShowLoadDialog(false)
-                setLoadPassword('')
-                setLoadingFile(null)
-              }}
+              onClick={handleResetLoadDialog}
             >
               Cancel
             </Button>
