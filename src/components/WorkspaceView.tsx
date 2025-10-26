@@ -1022,22 +1022,31 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
       const blob = new Blob([fileData], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
+      
       const a = document.createElement('a')
       a.href = url
       a.download = fullFileName
+      a.style.display = 'none'
       document.body.appendChild(a)
+      
       a.click()
+      
+      console.log(`✅ File download triggered: ${fullFileName}`)
+      console.log(`📦 File size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`)
+      console.log(`📁 Default download location:`)
+      console.log(`   - Windows: C:\\Users\\[YourName]\\Downloads`)
+      console.log(`   - Mac: ~/Downloads or /Users/[YourName]/Downloads`)
+      console.log(`   - Linux: ~/Downloads or /home/[YourName]/Downloads`)
+      console.log(`💡 Tip: Press Ctrl+J (Windows/Linux) or Cmd+Shift+J (Mac) to view browser downloads`)
       
       setTimeout(() => {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-      }, 100)
+      }, 1000)
       
-      console.log(`✅ File saved: ${fullFileName} (${blob.size} bytes)`)
-      
-      toast.success(`Saved "${fullFileName}"`, {
-        duration: 5000,
-        description: `Size: ${(blob.size / 1024).toFixed(1)} KB. Check your Downloads folder.`
+      toast.success(`Downloading "${fullFileName}"`, {
+        duration: 6000,
+        description: `${(blob.size / 1024).toFixed(1)} KB - Check your Downloads folder. Press Ctrl+J to view downloads.`
       })
     } catch (error) {
       toast.error('Failed to save network file')

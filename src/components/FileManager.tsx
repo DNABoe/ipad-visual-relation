@@ -378,28 +378,61 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
   const handleDownloadAndContinue = () => {
     if (downloadUrl && downloadFileName) {
-      const a = document.createElement('a')
-      a.href = downloadUrl
-      a.download = downloadFileName
-      document.body.appendChild(a)
-      a.click()
-      
-      setTimeout(() => {
-        document.body.removeChild(a)
-        URL.revokeObjectURL(downloadUrl)
-      }, 100)
-      
-      toast.success(`Downloaded ${downloadFileName}`)
+      try {
+        console.log('🔍 Starting download process...')
+        console.log('📋 Download URL:', downloadUrl.substring(0, 50) + '...')
+        console.log('📄 File name:', downloadFileName)
+        
+        const a = document.createElement('a')
+        a.href = downloadUrl
+        a.download = downloadFileName
+        a.style.display = 'none'
+        a.target = '_blank'
+        
+        document.body.appendChild(a)
+        console.log('✅ Anchor element added to DOM')
+        
+        a.click()
+        console.log('✅ Click event triggered')
+        
+        console.log('📁 File should now be downloading to:')
+        console.log('   Windows: C:\\Users\\[YourName]\\Downloads\\' + downloadFileName)
+        console.log('   Mac: ~/Downloads/' + downloadFileName)
+        console.log('   Linux: ~/Downloads/' + downloadFileName)
+        console.log('')
+        console.log('💡 To view downloads:')
+        console.log('   Chrome/Edge: Press Ctrl+J (Windows) or Cmd+Shift+J (Mac)')
+        console.log('   Firefox: Press Ctrl+Shift+Y (Windows) or Cmd+Shift+Y (Mac)')
+        console.log('   Safari: Click Downloads button in toolbar')
+        
+        setTimeout(() => {
+          document.body.removeChild(a)
+          URL.revokeObjectURL(downloadUrl)
+          console.log('✅ Download cleanup complete')
+        }, 1000)
+        
+        toast.success(`Download started: ${downloadFileName}`, {
+          duration: 6000,
+          description: 'Check your Downloads folder. Press Ctrl+J (or Cmd+Shift+J on Mac) to view browser downloads.'
+        })
+      } catch (error) {
+        console.error('❌ Download error:', error)
+        toast.error('Download failed', {
+          description: 'Try using the direct download link below the button'
+        })
+      }
     }
     
-    if (createdWorkspace && createdName && createdPassword) {
-      onLoad(createdWorkspace, createdName, createdPassword)
-      setDownloadUrl(null)
-      setDownloadFileName('')
-      setCreatedWorkspace(null)
-      setCreatedPassword('')
-      setCreatedName('')
-    }
+    setTimeout(() => {
+      if (createdWorkspace && createdName && createdPassword) {
+        onLoad(createdWorkspace, createdName, createdPassword)
+        setDownloadUrl(null)
+        setDownloadFileName('')
+        setCreatedWorkspace(null)
+        setCreatedPassword('')
+        setCreatedName('')
+      }
+    }, 300)
   }
 
   const handleFileSelect = () => {
@@ -437,17 +470,57 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 <p className="font-mono text-sm font-medium truncate">{downloadFileName}</p>
               </div>
             </div>
+            <div className="pt-2">
+              <a
+                href={downloadUrl}
+                download={downloadFileName}
+                className="text-sm text-primary hover:underline inline-flex items-center gap-2"
+                onClick={() => {
+                  toast.success('Download started', {
+                    description: 'Check your Downloads folder'
+                  })
+                }}
+              >
+                <DownloadSimple size={16} weight="bold" />
+                Or click here to download directly
+              </a>
+            </div>
           </div>
 
           <div className="space-y-3">
-            <Button
-              onClick={handleDownloadAndContinue}
-              className="w-full h-16 text-lg"
-              size="lg"
+            <a
+              href={downloadUrl || '#'}
+              download={downloadFileName}
+              onClick={(e) => {
+                if (!downloadUrl) {
+                  e.preventDefault()
+                  return
+                }
+                console.log('🔽 Download link clicked')
+                console.log('📄 Downloading:', downloadFileName)
+                toast.success('Download started', {
+                  duration: 6000,
+                  description: 'Check your Downloads folder. Press Ctrl+J to view browser downloads.'
+                })
+                setTimeout(() => {
+                  if (createdWorkspace && createdName && createdPassword) {
+                    onLoad(createdWorkspace, createdName, createdPassword)
+                    if (downloadUrl) {
+                      URL.revokeObjectURL(downloadUrl)
+                    }
+                    setDownloadUrl(null)
+                    setDownloadFileName('')
+                    setCreatedWorkspace(null)
+                    setCreatedPassword('')
+                    setCreatedName('')
+                  }
+                }, 500)
+              }}
+              className="w-full h-16 text-lg bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center justify-center gap-3 font-medium transition-colors"
             >
-              <DownloadSimple size={24} className="mr-3" weight="bold" />
+              <DownloadSimple size={24} weight="bold" />
               Download File & Continue
-            </Button>
+            </a>
 
             <Button
               variant="outline"
@@ -460,11 +533,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
           <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
-              💡 Important
+              💡 How to Download
             </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Save this file to a secure location. You'll need it to load your network later. Without this file, your network data cannot be recovered.
-            </p>
+            <ul className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
+              <li>• Click the button below to download your encrypted file</li>
+              <li>• The file will save to your browser's Downloads folder</li>
+              <li>• Press <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Ctrl+J</kbd> (Windows/Linux) or <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Cmd+Shift+J</kbd> (Mac) to view downloads</li>
+              <li>• <strong>Save this file securely - you'll need it and your password to access your network later!</strong></li>
+            </ul>
           </div>
         </div>
       ) : (
