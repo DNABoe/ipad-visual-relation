@@ -1658,7 +1658,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           canvasRef={canvasRef}
           selectedPersons={selectedPersons}
         />
-      </div>
+    </TooltipProvider>
     </TooltipProvider>
   )
 }
