@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
 import type { Workspace } from '@/lib/types'
 import { generateSampleData } from '@/lib/sampleData'
+import { Logo } from './Logo'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -142,19 +143,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
   if (createdNetwork) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="relative w-full max-w-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">Network Created Successfully!</h1>
-            <p className="text-muted-foreground">Download your encrypted file to keep it safe</p>
+      <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-primary/5 to-accent/10">
+        <div className="relative w-full max-w-2xl space-y-8">
+          <div className="text-center space-y-4">
+            <Logo size={64} showText={false} className="justify-center" />
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight">Network Created Successfully!</h1>
+              <p className="text-muted-foreground">Download your encrypted file to keep it safe</p>
+            </div>
           </div>
 
-          <div className="bg-card border rounded-lg p-8 space-y-6">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-8 space-y-6 shadow-2xl">
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/10 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <FilePlus size={20} className="text-primary" />
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <FilePlus size={20} className="text-primary" weight="duotone" />
                   </div>
                   <div>
                     <p className="font-mono text-sm font-medium truncate">{createdNetwork.fileName}</p>
@@ -166,7 +170,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <a
                 href={createdNetwork.downloadUrl}
                 download={createdNetwork.fileName}
-                className="flex items-center justify-center gap-2 w-full h-12 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                className="flex items-center justify-center gap-2 w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-medium hover:shadow-lg hover:shadow-primary/25 transition-all duration-200 active:scale-[0.98]"
               >
                 <DownloadSimple size={20} weight="bold" />
                 Download {createdNetwork.fileName}
@@ -204,11 +208,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-primary/5 to-accent/10">
+      <div className="w-full max-w-md space-y-12">
+        <div className="text-center space-y-6">
+          <Logo size={80} showText={true} className="justify-center" />
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
             Create and visualize professional relationships with end-to-end encryption
           </p>
         </div>
@@ -216,29 +220,36 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="space-y-4">
           <Button
             onClick={() => setShowNewDialog(true)}
-            className="w-full h-24 text-lg"
+            className="w-full h-20 text-lg bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 transition-all duration-200 active:scale-[0.98] group"
             size="lg"
           >
-            <FilePlus size={24} className="mr-3" />
+            <FilePlus size={28} className="mr-3 group-hover:scale-110 transition-transform" weight="duotone" />
             Create New Network
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
             variant="outline"
-            className="w-full h-24 text-lg"
+            className="w-full h-20 text-lg border-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 active:scale-[0.98] group"
             size="lg"
           >
-            <FolderOpen size={24} className="mr-3" />
+            <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform" weight="duotone" />
             Load Existing Network
           </Button>
+        </div>
+
+        <div className="text-center text-xs text-muted-foreground/60">
+          <p>🔒 All data is encrypted locally in your browser</p>
         </div>
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={handleResetNewDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Network</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FilePlus size={24} className="text-primary" weight="duotone" />
+              Create New Network
+            </DialogTitle>
             <DialogDescription>
               Set up your encrypted relationship network
             </DialogDescription>
@@ -251,6 +262,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={newFileName}
                 onChange={(e) => setNewFileName(e.target.value)}
                 placeholder="my-network"
+                className="focus-visible:ring-primary"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPassword && newPasswordConfirm) {
                     handleCreateNetwork()
@@ -258,7 +270,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Will be saved as: {newFileName.trim() || 'my-network'}.enc.json
+                Will be saved as: <span className="font-mono">{newFileName.trim() || 'my-network'}.enc.json</span>
               </p>
             </div>
 
@@ -270,6 +282,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter a strong password"
+                className="focus-visible:ring-primary"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPasswordConfirm) {
                     handleCreateNetwork()
@@ -289,6 +302,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={newPasswordConfirm}
                 onChange={(e) => setNewPasswordConfirm(e.target.value)}
                 placeholder="Re-enter password"
+                className="focus-visible:ring-primary"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleCreateNetwork()
@@ -297,14 +311,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
               <Checkbox
                 id="include-sample"
                 checked={includeSampleData}
                 onCheckedChange={(checked) => setIncludeSampleData(checked === true)}
               />
-              <Label htmlFor="include-sample" className="cursor-pointer">
-                Include sample data
+              <Label htmlFor="include-sample" className="cursor-pointer text-sm font-normal">
+                Include sample data to explore features
               </Label>
             </div>
           </div>
@@ -313,15 +327,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
             <Button variant="outline" onClick={handleResetNewDialog}>
               Cancel
             </Button>
-            <Button onClick={handleCreateNetwork}>Create Network</Button>
+            <Button onClick={handleCreateNetwork} className="bg-gradient-to-r from-primary to-accent">
+              Create Network
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Load Existing Network</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen size={24} className="text-primary" weight="duotone" />
+              Load Existing Network
+            </DialogTitle>
             <DialogDescription>
               Select your encrypted network file
             </DialogDescription>
@@ -333,6 +352,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 id="load-file"
                 type="file"
                 accept=".json,.enc.json"
+                className="focus-visible:ring-primary cursor-pointer"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
@@ -341,7 +361,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Select your .enc.json file
+                Select your <span className="font-mono">.enc.json</span> file
               </p>
             </div>
 
@@ -353,15 +373,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 value={loadPassword}
                 onChange={(e) => setLoadPassword(e.target.value)}
                 placeholder="Enter your password"
+                className="focus-visible:ring-primary"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleLoadNetwork()
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                Your file will be decrypted locally in your browser
-              </p>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/5 border border-accent/10">
+                <span className="text-xs">🔒</span>
+                <p className="text-xs text-muted-foreground">
+                  Your file will be decrypted locally in your browser
+                </p>
+              </div>
             </div>
           </div>
 
@@ -372,7 +396,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
             >
               Cancel
             </Button>
-            <Button onClick={handleLoadNetwork}>Load Network</Button>
+            <Button onClick={handleLoadNetwork} className="bg-gradient-to-r from-primary to-accent">
+              Load Network
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
