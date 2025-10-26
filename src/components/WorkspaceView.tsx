@@ -29,7 +29,6 @@ import {
   TreeStructure,
   Target,
   FilePlus,
-  FloppyDisk,
   FolderOpen,
   ArrowCounterClockwise,
   UserMinus,
@@ -1046,39 +1045,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     }
   }, [workspace, password])
 
-  const handleSaveNetwork = useCallback(async () => {
-    try {
-      const encrypted = await encryptData(JSON.stringify(workspace), password)
-      const fileData = JSON.stringify(encrypted, null, 2)
-      const fullFileName = `${fileName}.enc.json`
-
-      const blob = new Blob([fileData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      
-      const a = document.createElement('a')
-      a.href = url
-      a.download = fullFileName
-      document.body.appendChild(a)
-      a.click()
-      
-      console.log(`✅ File download triggered: ${fullFileName}`)
-      console.log(`📦 File size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`)
-      
-      setTimeout(() => {
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      }, 100)
-      
-      toast.success(`Download started: ${fullFileName}`, {
-        duration: 6000,
-        description: `${(blob.size / 1024).toFixed(1)} KB - Check your Downloads folder. Press Ctrl+J to view downloads.`
-      })
-    } catch (error) {
-      toast.error('Failed to save network file')
-      console.error('Save error:', error)
-    }
-  }, [workspace, password, fileName])
-
   const handleImport = useCallback((imported: Workspace) => {
     setWorkspace(imported)
   }, [setWorkspace])
@@ -1192,26 +1158,22 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <h1 className="text-xl font-semibold tracking-tight">Visual Relationship Network</h1>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground font-medium">{fileName}</span>
-              {downloadUrl && (
+              {downloadUrl ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
                       href={downloadUrl}
                       download={`${fileName}.enc.json`}
-                      className="inline-flex items-center justify-center h-7 w-7 rounded-md text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      onClick={() => {
-                        toast.success('Download started', {
-                          duration: 6000,
-                          description: `Downloading ${fileName}.enc.json - Check your Downloads folder`
-                        })
-                      }}
+                      className="text-sm text-primary hover:underline font-medium inline-flex items-center gap-1.5"
                     >
-                      <DownloadSimple size={16} weight="bold" />
+                      {fileName}
+                      <DownloadSimple size={14} weight="bold" />
                     </a>
                   </TooltipTrigger>
-                  <TooltipContent>Download File Directly</TooltipContent>
+                  <TooltipContent>Right-click and "Save link as..." to download</TooltipContent>
                 </Tooltip>
+              ) : (
+                <span className="text-sm text-muted-foreground font-medium">{fileName}</span>
               )}
             </div>
             {workspace.persons.length === 0 && (
@@ -1447,15 +1409,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                 </Button>
               </TooltipTrigger>
               <TooltipContent>New Network</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={handleSaveNetwork}>
-                  <FloppyDisk size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Save Network</TooltipContent>
             </Tooltip>
 
             <Tooltip>

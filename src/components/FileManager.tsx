@@ -457,93 +457,52 @@ export function FileManager({ onLoad }: FileManagerProps) {
             <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <DownloadSimple size={40} className="text-primary" weight="duotone" />
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight">Your File is Ready!</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Save Your File</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Click the button below to download your encrypted network file to your computer.
+              Right-click the link below and choose <strong>"Save link as..."</strong> to download your encrypted network file.
             </p>
           </div>
 
-          <div className="bg-muted/50 border border-border rounded-lg p-6 space-y-3">
+          <div className="bg-muted/50 border border-border rounded-lg p-6 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground mb-1">File Name</p>
                 <p className="font-mono text-sm font-medium truncate">{downloadFileName}</p>
               </div>
             </div>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col items-center gap-3">
               <a
                 href={downloadUrl}
                 download={downloadFileName}
-                className="text-sm text-primary hover:underline inline-flex items-center gap-2"
-                onClick={() => {
-                  toast.success('Download started', {
-                    description: 'Check your Downloads folder'
-                  })
-                }}
+                className="text-lg font-medium text-primary hover:underline inline-flex items-center gap-2"
               >
-                <DownloadSimple size={16} weight="bold" />
-                Or click here to download directly
+                <DownloadSimple size={20} weight="bold" />
+                {downloadFileName}
               </a>
+              <p className="text-xs text-muted-foreground text-center">
+                Right-click this link and select <strong>"Save link as..."</strong>
+              </p>
             </div>
           </div>
 
           <div className="space-y-3">
             <Button
-              onClick={() => {
-                if (!downloadUrl || !downloadFileName) return
-                
-                const a = document.createElement('a')
-                a.href = downloadUrl
-                a.download = downloadFileName
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
-                
-                console.log('🔽 Download triggered:', downloadFileName)
-                toast.success('Download started', {
-                  duration: 6000,
-                  description: 'Check your Downloads folder. Press Ctrl+J to view browser downloads.'
-                })
-                
-                setTimeout(() => {
-                  if (createdWorkspace && createdName && createdPassword) {
-                    onLoad(createdWorkspace, createdName, createdPassword)
-                    if (downloadUrl) {
-                      URL.revokeObjectURL(downloadUrl)
-                    }
-                    setDownloadUrl(null)
-                    setDownloadFileName('')
-                    setCreatedWorkspace(null)
-                    setCreatedPassword('')
-                    setCreatedName('')
-                  }
-                }, 300)
-              }}
-              className="w-full h-16 text-lg"
+              onClick={handleContinueWithoutDownload}
+              className="w-full h-14 text-base"
               size="lg"
             >
-              <DownloadSimple size={24} weight="bold" className="mr-3" />
-              Download File & Continue
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={handleContinueWithoutDownload}
-              className="w-full"
-            >
-              Skip Download & Continue
+              Continue to Main Screen
             </Button>
           </div>
 
           <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
-              💡 How to Download
+              💡 Important
             </h3>
             <ul className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
-              <li>• Click the button below to download your encrypted file</li>
-              <li>• The file will save to your browser's Downloads folder</li>
-              <li>• Press <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Ctrl+J</kbd> (Windows/Linux) or <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Cmd+Shift+J</kbd> (Mac) to view downloads</li>
-              <li>• <strong>Save this file securely - you'll need it and your password to access your network later!</strong></li>
+              <li>• <strong>Right-click</strong> the link above and choose "Save link as..." to download</li>
+              <li>• The file will be saved to your chosen location</li>
+              <li>• <strong>Keep this file safe - you'll need it and your password to load your network later!</strong></li>
             </ul>
           </div>
         </div>
