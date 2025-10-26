@@ -92,6 +92,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [undoStack, setUndoStack] = useState<UndoAction[]>([])
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
   const [pendingAction, setPendingAction] = useState<'new' | 'load' | null>(null)
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   
   const canvasRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -1027,8 +1028,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     toast.success('Arranged by score - lowest in center')
   }, [workspace, settings, setWorkspace, handleZoomToFit])
 
-
-
+  const createDownloadUrl = useCallback(async () => {
     try {
       const encrypted = await encryptData(JSON.stringify(workspace), password)
       const fileData = JSON.stringify(encrypted, null, 2)
@@ -1641,10 +1641,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         )}
 
         <UnsavedChangesDialog
-            photoUrl={photoViewerData.photoUrl}
-            personName={photoViewerData.name}
+          open={showUnsavedDialog}
+          onOpenChange={setShowUnsavedDialog}
           onDiscard={handleDiscardChanges}
-        )}
+          downloadUrl={downloadUrl}
           fileName={fileName}
         />
 
