@@ -99,20 +99,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   <Moon size={16} className={theme === 'dark' ? 'text-foreground' : 'text-muted-foreground'} />
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="grid-toggle" className="dark:text-foreground">Show Grid</Label>
-                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
-                    Display background grid on canvas
-                  </div>
-                </div>
-                <Switch
-                  id="grid-toggle"
-                  checked={settings?.showGrid ?? true}
-                  onCheckedChange={(checked) => setSettings((current) => ({ ...current!, showGrid: checked }))}
-                />
-              </div>
-              
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
