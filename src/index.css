@@ -9,17 +9,27 @@
   html,
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background-color: var(--background);
-    color: var(--foreground);
+  }
+  
+  html {
+    background-color: oklch(0.15 0.015 250);
+    color: oklch(0.95 0.005 250);
+  }
+  
+  body {
+    background-color: oklch(0.15 0.015 250);
+    color: oklch(0.95 0.005 250);
   }
   
   #root {
     min-height: 100vh;
-    background-color: var(--background);
+    background-color: oklch(0.15 0.015 250);
+    color: oklch(0.95 0.005 250);
   }
 }
 
-:root {
+:root,
+:root.dark {
   --background: oklch(0.15 0.015 250);
   --foreground: oklch(0.95 0.005 250);
 
