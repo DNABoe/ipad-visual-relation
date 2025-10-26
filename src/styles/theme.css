@@ -30,42 +30,6 @@
 @import '@radix-ui/colors/slate-dark.css' layer(base);
 @import '@radix-ui/colors/slate-dark-alpha.css' layer(base);
 
-@layer base {
-  :root {
-    --tomato-contrast: #fff;
-    --red-contrast: #fff;
-    --ruby-contrast: #fff;
-    --crimson-contrast: #fff;
-    --pink-contrast: #fff;
-    --plum-contrast: #fff;
-    --purple-contrast: #fff;
-    --violet-contrast: #fff;
-    --iris-contrast: #fff;
-    --indigo-contrast: #fff;
-    --blue-contrast: #fff;
-    --cyan-contrast: #fff;
-    --teal-contrast: #fff;
-    --jade-contrast: #fff;
-    --green-contrast: #fff;
-    --grass-contrast: #fff;
-    --bronze-contrast: #fff;
-    --gold-contrast: #fff;
-    --brown-contrast: #fff;
-    --orange-contrast: #fff;
-    --amber-contrast: #000;
-    --yellow-contrast: #000;
-    --lime-contrast: #000;
-    --mint-contrast: #000;
-    --sky-contrast: #000;
-    --gray-contrast: #fff;
-    --mauve-contrast: #fff;
-    --slate-contrast: #fff;
-    --sage-contrast: #fff;
-    --olive-contrast: #fff;
-    --sand-contrast: #fff;
-  }
-}
-
 
 
 
