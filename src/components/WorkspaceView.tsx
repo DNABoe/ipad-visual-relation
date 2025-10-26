@@ -1185,7 +1185,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   return (
     <TooltipProvider>
       <div className="h-screen flex flex-col bg-background">
-        <div className="border-b bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap dark:bg-card dark:border-border">
+        <div className="border-b border-border bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <Logo size={32} showText={false} />
             <h1 className="text-xl font-semibold tracking-tight text-foreground bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">NetEye</h1>

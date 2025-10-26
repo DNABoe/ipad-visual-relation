@@ -110,7 +110,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 setIsEditingName(false)
               }
             }}
-            className="h-7 text-xs w-32 bg-card dark:bg-card"
+            className="h-7 text-xs w-32 bg-card"
             onMouseDown={(e) => e.stopPropagation()}
           />
         ) : (

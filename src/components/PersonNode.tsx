@@ -67,7 +67,7 @@ export function PersonNode({
                 <span className="text-xl font-bold">{getInitials(person.name)}</span>
               </AvatarFallback>
             </Avatar>
-            <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs px-1.5 py-0 dark:bg-muted dark:text-foreground dark:border-border">
+            <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs px-1.5 py-0 bg-muted text-foreground border-border">
               {person.score}
             </Badge>
           </div>
