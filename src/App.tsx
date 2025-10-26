@@ -6,7 +6,9 @@ import type { Workspace } from './lib/types'
 
 function App() {
   useEffect(() => {
-    document.documentElement.setAttribute('data-appearance', 'dark')
+    document.documentElement.classList.add('dark')
+    document.documentElement.style.colorScheme = 'dark'
+    document.body.classList.add('dark')
   }, [])
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null)

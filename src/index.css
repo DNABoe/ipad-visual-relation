@@ -1,34 +1,10 @@
 @import 'tailwindcss';
 @import "tw-animate-css";
-@import './styles/theme.css';
 
 :root {
-  --font-sans: Inter;
-  --font-serif: Inter;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
   
-  --chart-1: oklch(0.65 0.20 250);
-  --chart-2: oklch(0.70 0.18 200);
-  --chart-3: oklch(0.70 0.22 25);
-  --chart-4: oklch(0.68 0.20 145);
-  --chart-5: oklch(0.72 0.18 60);
-  
-  --sidebar: oklch(0.15 0.04 250);
-  --sidebar-foreground: oklch(0.95 0.02 250);
-  --sidebar-primary: oklch(0.60 0.20 250);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.65 0.18 200);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.28 0.04 250);
-  --sidebar-ring: oklch(0.65 0.18 200);
-  
-  --shadow-color: oklch(0.10 0.04 250);
-  --shadow-opacity: 0.4;
-  --shadow-blur: 16px;
-  --shadow-spread: 0px;
-  --shadow-offset-x: 0px;
-  --shadow-offset-y: 2px;
-
   --background: oklch(0.12 0.04 250);
   --foreground: oklch(0.95 0.02 250);
 
@@ -58,6 +34,21 @@
   --ring: oklch(0.70 0.18 200);
 
   --radius: 0.5rem;
+
+  --sidebar: oklch(0.15 0.04 250);
+  --sidebar-foreground: oklch(0.95 0.02 250);
+  --sidebar-primary: oklch(0.60 0.20 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.65 0.18 200);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.28 0.04 250);
+  --sidebar-ring: oklch(0.65 0.18 200);
+  
+  --chart-1: oklch(0.65 0.20 250);
+  --chart-2: oklch(0.70 0.18 200);
+  --chart-3: oklch(0.70 0.22 25);
+  --chart-4: oklch(0.68 0.20 145);
+  --chart-5: oklch(0.72 0.18 60);
 }
 
 @layer base {
@@ -68,14 +59,12 @@
   html {
     background-color: oklch(0.12 0.04 250);
     color: oklch(0.95 0.02 250);
-    color-scheme: dark;
   }
   
   body {
     background-color: oklch(0.12 0.04 250);
     color: oklch(0.95 0.02 250);
-    font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    color-scheme: dark;
+    font-family: var(--font-sans);
     min-height: 100vh;
   }
   
