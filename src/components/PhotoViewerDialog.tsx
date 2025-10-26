@@ -86,13 +86,15 @@ export function PhotoViewerDialog({ open, onOpenChange, photoUrl, personName }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={contentRef}
-        className="p-0 overflow-hidden border-2 select-none"
+        className="p-0 overflow-hidden border-2 select-none !opacity-100"
         style={{
           width: size.width,
           height: size.height,
           maxWidth: 'none',
           transform: `translate(${position.x}px, ${position.y}px)`,
           cursor: isDragging ? 'grabbing' : 'grab',
+          opacity: 1,
+          backgroundColor: 'oklch(0.22 0.025 250)'
         }}
         onMouseDown={handleMouseDown}
       >

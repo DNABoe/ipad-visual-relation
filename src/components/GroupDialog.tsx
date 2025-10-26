@@ -52,7 +52,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border">
+      <DialogContent className="!bg-card border-border !opacity-100" style={{ opacity: 1, backgroundColor: 'oklch(0.22 0.025 250)' }}>
         <DialogHeader>
           <DialogTitle>{editGroup ? 'Edit Group' : 'Add Group'}</DialogTitle>
           <DialogDescription>
