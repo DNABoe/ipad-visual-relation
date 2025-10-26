@@ -4,11 +4,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
+import { FilePlus, FolderOpen, DownloadSimple, ShieldCheck, LockKey } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
 import type { Workspace } from '@/lib/types'
 import { generateSampleData } from '@/lib/sampleData'
+import { Logo } from './Logo'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -100,164 +101,238 @@ export function FileManager({ onLoad }: FileManagerProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-8">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-8">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/10" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 via-transparent to-primary/5" />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full max-w-lg"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">NetEye</h1>
-          <p className="text-muted-foreground">Relationship Network Manager</p>
+        <div className="flex flex-col items-center mb-12">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Logo size={72} showText={true} />
+          </motion.div>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-sm text-muted-foreground mt-4 flex items-center gap-2"
+          >
+            <ShieldCheck size={16} weight="duotone" className="text-accent" />
+            AES-256 Encrypted • Zero-Knowledge • Local-Only
+          </motion.p>
         </div>
 
         {!showNewDialog && !showLoadDialog && (
-          <div className="flex flex-col gap-4">
+          <motion.div 
+            className="flex flex-col gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             <Button
               size="lg"
               onClick={() => setShowNewDialog(true)}
-              className="h-20 text-lg"
+              className="h-24 text-lg bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <FilePlus className="mr-2" size={24} />
-              Create New Network
+              <FilePlus className="mr-3" size={28} weight="duotone" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold">Create New Network</span>
+                <span className="text-xs opacity-90">Start with sample data</span>
+              </div>
             </Button>
             <Button
               size="lg"
               variant="outline"
               onClick={() => setShowLoadDialog(true)}
-              className="h-20 text-lg"
+              className="h-24 text-lg border-2 hover:border-accent hover:bg-accent/5 transition-all duration-300"
             >
-              <FolderOpen className="mr-2" size={24} />
-              Load Existing Network
+              <FolderOpen className="mr-3" size={28} weight="duotone" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold">Load Existing Network</span>
+                <span className="text-xs text-muted-foreground">Open .neteye file</span>
+              </div>
             </Button>
-          </div>
+          </motion.div>
         )}
 
         {showNewDialog && !downloadUrl && (
-          <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-4">Create New Network</h2>
-            <div className="flex flex-col gap-4">
-              <div>
-                <Label htmlFor="new-filename">File Name</Label>
-                <Input
-                  id="new-filename"
-                  value={newFileName}
-                  onChange={(e) => setNewFileName(e.target.value)}
-                  placeholder="my-network"
-                />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <Card className="p-8 shadow-2xl border-2 bg-card/95 backdrop-blur">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <FilePlus size={20} className="text-primary" weight="duotone" />
+                </div>
+                <h2 className="text-2xl font-semibold">Create New Network</h2>
               </div>
-              <div>
-                <Label htmlFor="new-password">Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter password"
-                />
+              
+              <div className="flex flex-col gap-4">
+                <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 flex gap-3">
+                  <LockKey size={20} className="text-accent mt-0.5 shrink-0" weight="duotone" />
+                  <p className="text-xs text-muted-foreground">
+                    Your network will be encrypted with AES-256. <strong>Keep your password safe</strong> — there's no way to recover it if lost.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="new-filename" className="text-sm font-medium">File Name</Label>
+                  <Input
+                    id="new-filename"
+                    value={newFileName}
+                    onChange={(e) => setNewFileName(e.target.value)}
+                    placeholder="my-network"
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-password" className="text-sm font-medium">Password</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter a strong password"
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-password-confirm" className="text-sm font-medium">Confirm Password</Label>
+                  <Input
+                    id="new-password-confirm"
+                    type="password"
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    placeholder="Re-enter your password"
+                    className="mt-1.5"
+                  />
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={handleCreateNetwork} className="flex-1" size="lg">
+                    Create Network
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowNewDialog(false)
+                      setNewFileName('')
+                      setNewPassword('')
+                      setNewPasswordConfirm('')
+                    }}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="new-password-confirm">Confirm Password</Label>
-                <Input
-                  id="new-password-confirm"
-                  type="password"
-                  value={newPasswordConfirm}
-                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                  placeholder="Confirm password"
-                />
+            </Card>
+          </motion.div>
+        )}
+
+        {downloadUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <Card className="p-8 shadow-2xl border-2 bg-card/95 backdrop-blur">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                  <ShieldCheck size={20} className="text-accent" weight="duotone" />
+                </div>
+                <h2 className="text-2xl font-semibold">Network Created!</h2>
               </div>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleCreateNetwork} className="flex-1">
-                  Create
+              <p className="text-muted-foreground mb-6">
+                Your encrypted network file is ready with sample data. Download it to keep your network secure.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Button onClick={handleDownloadAndOpen} size="lg" className="shadow-lg">
+                  <DownloadSimple className="mr-2" size={20} weight="duotone" />
+                  Download & Open Network
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowNewDialog(false)
+                    setDownloadUrl(null)
+                    setDownloadFileName('')
+                    setCreatedWorkspace(null)
+                    setCreatedPassword('')
                     setNewFileName('')
                     setNewPassword('')
                     setNewPasswordConfirm('')
                   }}
-                  className="flex-1"
                 >
                   Cancel
                 </Button>
               </div>
-            </div>
-          </Card>
-        )}
-
-        {downloadUrl && (
-          <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-4">Network Created!</h2>
-            <p className="text-muted-foreground mb-4">
-              Your encrypted network file is ready. Download it to save your work.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button onClick={handleDownloadAndOpen} size="lg">
-                <DownloadSimple className="mr-2" size={20} />
-                Download & Open Network
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowNewDialog(false)
-                  setDownloadUrl(null)
-                  setDownloadFileName('')
-                  setCreatedWorkspace(null)
-                  setCreatedPassword('')
-                  setNewFileName('')
-                  setNewPassword('')
-                  setNewPasswordConfirm('')
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Card>
+            </Card>
+          </motion.div>
         )}
 
         {showLoadDialog && (
-          <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-4">Load Network</h2>
-            <div className="flex flex-col gap-4">
-              <div>
-                <Label htmlFor="load-file">Network File (.neteye)</Label>
-                <Input
-                  id="load-file"
-                  type="file"
-                  accept=".neteye"
-                  onChange={(e) => setLoadingFile(e.target.files?.[0] || null)}
-                />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <Card className="p-8 shadow-2xl border-2 bg-card/95 backdrop-blur">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <FolderOpen size={20} className="text-primary" weight="duotone" />
+                </div>
+                <h2 className="text-2xl font-semibold">Load Network</h2>
               </div>
-              <div>
-                <Label htmlFor="load-password">Password</Label>
-                <Input
-                  id="load-password"
-                  type="password"
-                  value={loadPassword}
-                  onChange={(e) => setLoadPassword(e.target.value)}
-                  placeholder="Enter password"
-                />
+              <div className="flex flex-col gap-4">
+                <div>
+                  <Label htmlFor="load-file" className="text-sm font-medium">Network File (.neteye)</Label>
+                  <Input
+                    id="load-file"
+                    type="file"
+                    accept=".neteye"
+                    onChange={(e) => setLoadingFile(e.target.files?.[0] || null)}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="load-password" className="text-sm font-medium">Password</Label>
+                  <Input
+                    id="load-password"
+                    type="password"
+                    value={loadPassword}
+                    onChange={(e) => setLoadPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="mt-1.5"
+                  />
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={handleLoadNetwork} className="flex-1" size="lg">
+                    Load Network
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowLoadDialog(false)
+                      setLoadingFile(null)
+                      setLoadPassword('')
+                    }}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleLoadNetwork} className="flex-1">
-                  Load
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowLoadDialog(false)
-                    setLoadingFile(null)
-                    setLoadPassword('')
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </motion.div>
         )}
       </motion.div>
     </div>
