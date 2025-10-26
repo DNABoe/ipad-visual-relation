@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 
 export function useTheme() {
-  const [theme, setTheme] = useKV<'light' | 'dark'>('app-theme', 'light')
+  const [theme, setTheme] = useKV<'light' | 'dark'>('app-theme', 'dark')
 
   useEffect(() => {
     if (theme === 'dark') {
