@@ -1185,13 +1185,13 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   return (
     <TooltipProvider>
       <div className="h-screen flex flex-col bg-background">
-        <div className="border-b border-border bg-card/80 backdrop-blur-sm px-4 py-2.5 flex items-center justify-between gap-4 flex-wrap shadow-sm">
+        <div className="border-b border-border/70 bg-gradient-to-r from-card via-card/95 to-card px-4 py-2.5 flex items-center justify-between gap-4 flex-wrap shadow-lg">
           <div className="flex items-center gap-3">
             <Logo size={32} showText={false} />
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
+            <h1 className="text-xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">NetEye</span>
             </h1>
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
             <div className="flex items-center gap-2">
               {downloadUrl ? (
                 <Tooltip>
@@ -1223,19 +1223,20 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                     setConnectMode(!connectMode)
                     setConnectFrom(null)
                   }}
+                  className={connectMode ? "bg-gradient-to-r from-primary to-accent" : ""}
                 >
-                  {connectMode ? <X size={16} /> : <Link size={16} />}
+                  {connectMode ? <X size={16} className="text-primary-foreground" /> : <Link size={16} className="text-blue-400" />}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{connectMode ? 'Cancel Connect' : 'Connect Mode'}</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => setShowPersonDialog(true)}>
-                  <Plus size={16} />
+                  <Plus size={16} className="text-green-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Add Person</TooltipContent>
@@ -1244,18 +1245,18 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => setShowGroupDialog(true)}>
-                  <UsersThree size={16} />
+                  <UsersThree size={16} className="text-blue-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Add Group</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleZoomIn}>
-                  <MagnifyingGlassPlus size={16} />
+                  <MagnifyingGlassPlus size={16} className="text-cyan-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Zoom In</TooltipContent>
@@ -1264,7 +1265,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleZoomOut}>
-                  <MagnifyingGlassMinus size={16} />
+                  <MagnifyingGlassMinus size={16} className="text-cyan-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Zoom Out</TooltipContent>
@@ -1273,7 +1274,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleZoomToFit}>
-                  <ArrowsOut size={16} />
+                  <ArrowsOut size={16} className="text-cyan-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Zoom to Fit</TooltipContent>
@@ -1282,7 +1283,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleAutoArrange}>
-                  <TreeStructure size={16} />
+                  <TreeStructure size={16} className="text-purple-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Auto Arrange</TooltipContent>
@@ -1291,18 +1292,18 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleArrangeByScore}>
-                  <Target size={16} />
+                  <Target size={16} className="text-purple-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Arrange by Score (Center)</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
-                  <Export size={16} />
+                  <Export size={16} className="text-amber-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Export Canvas</TooltipContent>
@@ -1314,14 +1315,15 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                   variant={showGrid ? "default" : "outline"}
                   size="sm"
                   onClick={() => setShowGrid(!showGrid)}
+                  className={showGrid ? "bg-gradient-to-r from-primary to-accent" : ""}
                 >
-                  <GridFour size={16} />
+                  <GridFour size={16} className={showGrid ? "text-primary-foreground" : "text-slate-400"} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Toggle Grid</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -1329,8 +1331,9 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                   variant={showListPanel ? "default" : "outline"}
                   size="sm"
                   onClick={() => setShowListPanel(!showListPanel)}
+                  className={showListPanel ? "bg-gradient-to-r from-primary to-accent" : ""}
                 >
-                  <List size={16} />
+                  <List size={16} className={showListPanel ? "text-primary-foreground" : "text-slate-400"} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Toggle List</TooltipContent>
@@ -1338,11 +1341,11 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             {selectedPersons.length > 0 && (
               <>
-                <Separator orientation="vertical" className="h-6" />
+                <Separator orientation="vertical" className="h-6 bg-border/50" />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
-                      <UserMinus size={16} />
+                    <Button variant="destructive" size="sm" onClick={handleDeleteSelected} className="bg-red-600 hover:bg-red-700">
+                      <UserMinus size={16} className="text-white" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Delete Selected Persons</TooltipContent>
@@ -1352,12 +1355,13 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             {selectedGroups.length > 0 && (
               <>
-                <Separator orientation="vertical" className="h-6" />
+                <Separator orientation="vertical" className="h-6 bg-border/50" />
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
                       variant="destructive" 
-                      size="sm" 
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700"
                       onClick={() => {
                         const groupsToDelete = workspace.groups.filter(g => selectedGroups.includes(g.id))
                         
@@ -1374,7 +1378,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                         toast.success('Deleted selected groups')
                       }}
                     >
-                      <Trash size={16} />
+                      <Trash size={16} className="text-white" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Delete Selected Groups</TooltipContent>
@@ -1384,12 +1388,13 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
             {selectedConnections.length > 0 && (
               <>
-                <Separator orientation="vertical" className="h-6" />
+                <Separator orientation="vertical" className="h-6 bg-border/50" />
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
                       variant="destructive" 
-                      size="sm" 
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700"
                       onClick={() => {
                         const connectionsToDelete = workspace.connections.filter(c => selectedConnections.includes(c.id))
                         
@@ -1406,7 +1411,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                         toast.success('Deleted selected connections')
                       }}
                     >
-                      <LinkBreak size={16} />
+                      <LinkBreak size={16} className="text-white" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Delete Selected Connections</TooltipContent>
@@ -1414,7 +1419,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
               </>
             )}
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -1424,29 +1429,29 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
                   onClick={handleUndo}
                   disabled={undoStack.length === 0}
                 >
-                  <ArrowCounterClockwise size={16} />
+                  <ArrowCounterClockwise size={16} className={undoStack.length > 0 ? "text-orange-400" : "text-muted-foreground"} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => setShowSettingsDialog(true)}>
-                  <Gear size={16} />
+                  <Gear size={16} className="text-slate-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Settings</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 bg-border/50" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleNewNetworkClick}>
-                  <FilePlus size={16} />
+                  <FilePlus size={16} className="text-green-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>New Network</TooltipContent>
@@ -1455,7 +1460,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={handleLoadNetworkClick}>
-                  <FolderOpen size={16} />
+                  <FolderOpen size={16} className="text-blue-400" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Load Network</TooltipContent>

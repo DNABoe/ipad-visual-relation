@@ -72,8 +72,6 @@
   
   #root {
     min-height: 100vh;
-    background-color: oklch(0.15 0.015 250);
-    color: oklch(0.98 0.005 250);
   }
 }
 
@@ -109,22 +107,22 @@
 .canvas-grid {
   --grid-size: 20px;
   background-image: 
-    linear-gradient(to right, oklch(0.40 0.08 250 / 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.40 0.08 250 / 0.35) 1px, transparent 1px);
+    linear-gradient(to right, oklch(0.35 0.08 250 / 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.35 0.08 250 / 0.5) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
+  background-position: 0 0;
 }
 
 .node-dragging {
-  cursor: grabbing !important;
   opacity: 0.95;
   transform: scale(1.02);
 }
 
 .selection-rect {
-  border: 2px dashed var(--accent);
-  background: oklch(0.75 0.18 220 / 0.15);
-  pointer-events: none;
+  background: oklch(0.72 0.20 195 / 0.12);
+  border: 2px solid oklch(0.75 0.18 220);
   border-radius: 0.375rem;
+  pointer-events: none;
 }
 
 @keyframes fadeInUp {

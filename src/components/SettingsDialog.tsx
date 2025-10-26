@@ -62,7 +62,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-card/98 backdrop-blur-md border-border">
+      <DialogContent className="max-w-lg bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl">Settings</DialogTitle>
           <DialogDescription className="text-muted-foreground">

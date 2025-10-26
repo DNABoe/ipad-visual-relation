@@ -144,7 +144,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
           </div>
 
-          <div className="bg-card/70 backdrop-blur-xl border border-border rounded-2xl p-8 space-y-6 shadow-2xl shadow-black/30">
+          <div className="bg-card border border-border rounded-2xl p-8 space-y-6 shadow-2xl shadow-black/30">
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 border border-primary/30 rounded-xl">
                 <div className="flex items-center gap-3">
@@ -253,7 +253,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md bg-card/98 backdrop-blur-md border-border">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -348,7 +348,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="sm:max-w-md bg-card/98 backdrop-blur-md border-border">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
