@@ -1018,20 +1018,29 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     try {
       const encrypted = await encryptData(JSON.stringify(workspace), password)
       const fileData = JSON.stringify(encrypted, null, 2)
+      const fullFileName = `${fileName}.enc.json`
 
       const blob = new Blob([fileData], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${fileName}.enc.json`
+      a.download = fullFileName
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      toast.success('Network saved to Downloads folder')
+      
+      console.log(`✅ File saved: ${fullFileName} (${blob.size} bytes)`)
+      console.log('📁 Location: Your browser\'s Downloads folder')
+      console.log('💡 Tip: Press Ctrl+J (Chrome/Edge) or Ctrl+Shift+Y (Firefox) to view downloads')
+      
+      toast.success(`File "${fullFileName}" downloaded successfully!`, {
+        duration: 8000,
+        description: `Size: ${(blob.size / 1024).toFixed(1)} KB. Check your Downloads folder or browser's download bar (Ctrl+J).`
+      })
     } catch (error) {
-      toast.error('Failed to save')
-      console.error(error)
+      toast.error('Failed to save network file')
+      console.error('Save error:', error)
     }
   }, [workspace, password, fileName])
 

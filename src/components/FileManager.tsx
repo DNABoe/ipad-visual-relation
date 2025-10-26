@@ -41,27 +41,40 @@ export function FileManager({ onLoad }: FileManagerProps) {
       groups: []
     }
 
-    const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
-    const fileData = JSON.stringify(encrypted, null, 2)
-    const fileName = newFileName.trim()
+    try {
+      const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
+      const fileData = JSON.stringify(encrypted, null, 2)
+      const fileName = newFileName.trim()
+      const fullFileName = `${fileName}.enc.json`
 
-    const blob = new Blob([fileData], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${fileName}.enc.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+      const blob = new Blob([fileData], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fullFileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
 
-    toast.success(`Created ${fileName}.enc.json - saved to Downloads folder`)
+      console.log(`✅ File created: ${fullFileName} (${blob.size} bytes)`)
+      console.log('📁 Location: Your browser\'s Downloads folder (usually ~/Downloads or C:\\Users\\YourName\\Downloads)')
+      console.log('💡 Tip: Check your browser\'s download bar or press Ctrl+J (Chrome/Edge) or Ctrl+Shift+Y (Firefox) to see downloads')
 
-    onLoad(emptyWorkspace, fileName, newPassword)
-    setShowNewDialog(false)
-    setNewFileName('')
-    setNewPassword('')
-    setNewPasswordConfirm('')
+      toast.success(`File "${fullFileName}" downloaded successfully!`, {
+        duration: 8000,
+        description: `Size: ${(blob.size / 1024).toFixed(1)} KB. Check your Downloads folder or browser's download bar (Ctrl+J).`
+      })
+
+      onLoad(emptyWorkspace, fileName, newPassword)
+      setShowNewDialog(false)
+      setNewFileName('')
+      setNewPassword('')
+      setNewPasswordConfirm('')
+    } catch (error) {
+      toast.error('Failed to create network file')
+      console.error('Error creating network:', error)
+    }
   }
 
   const handleLoadNetwork = async () => {
@@ -136,6 +149,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
             Load Existing Network
           </Button>
         </div>
+
+        <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
+          <h3 className="text-sm font-medium">Where are my files?</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Files are downloaded to your browser's <strong>Downloads folder</strong>. In Edge/Chrome, check the download bar at the bottom of the window or press <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Ctrl+J</kbd> to view downloads.
+          </p>
+        </div>
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
@@ -143,7 +163,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Create a new encrypted network file. The file will be saved to your Downloads folder.
+              Create a new encrypted network file. Your browser will download it automatically to your Downloads folder. In Edge and Chrome, you'll see it in the download bar at the bottom of the window.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
