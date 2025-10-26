@@ -33,7 +33,8 @@ import {
   FolderOpen,
   ArrowCounterClockwise,
   UserMinus,
-  LinkBreak
+  LinkBreak,
+  DownloadSimple
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
@@ -1014,6 +1015,37 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     toast.success('Sample data loaded')
   }, [setWorkspace])
 
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+
+  const createDownloadUrl = useCallback(async () => {
+    try {
+      const encrypted = await encryptData(JSON.stringify(workspace), password)
+      const fileData = JSON.stringify(encrypted, null, 2)
+      const blob = new Blob([fileData], { type: 'application/json' })
+      
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl)
+      }
+      
+      const url = URL.createObjectURL(blob)
+      setDownloadUrl(url)
+      return url
+    } catch (error) {
+      console.error('Error creating download URL:', error)
+      return null
+    }
+  }, [workspace, password, downloadUrl])
+
+  useEffect(() => {
+    createDownloadUrl()
+    
+    return () => {
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl)
+      }
+    }
+  }, [workspace, password])
+
   const handleSaveNetwork = useCallback(async () => {
     try {
       const encrypted = await encryptData(JSON.stringify(workspace), password)
@@ -1166,7 +1198,29 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-semibold tracking-tight">Visual Relationship Network</h1>
             <Separator orientation="vertical" className="h-6" />
-            <span className="text-sm text-muted-foreground font-medium">{fileName}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground font-medium">{fileName}</span>
+              {downloadUrl && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={downloadUrl}
+                      download={`${fileName}.enc.json`}
+                      className="inline-flex items-center justify-center h-7 w-7 rounded-md text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      onClick={() => {
+                        toast.success('Download started', {
+                          duration: 6000,
+                          description: `Downloading ${fileName}.enc.json - Check your Downloads folder`
+                        })
+                      }}
+                    >
+                      <DownloadSimple size={16} weight="bold" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Download File Directly</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
             {workspace.persons.length === 0 && (
               <Button variant="outline" size="sm" onClick={handleLoadSample}>
                 Load Sample Data
