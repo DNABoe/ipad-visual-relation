@@ -110,8 +110,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
       setShowLoadDialog(false)
       setLoadingFile(null)
       setLoadPassword('')
+      toast.success('Network loaded and decrypted successfully', {
+        description: 'Your data is now decrypted in memory for editing.'
+      })
     } catch (error) {
-      toast.error('Incorrect password')
+      toast.error('Incorrect password or corrupted file', {
+        description: 'Please verify your password and try again. Decryption failed.'
+      })
       console.error(error)
     }
   }
@@ -251,12 +256,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
           <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
-              💡 Important
+              🔒 Security & Important Information
             </h3>
             <ul className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
               <li>• <strong>Right-click</strong> the link above and choose "Save link as..." to download</li>
-              <li>• The file will be saved to your chosen location</li>
-              <li>• <strong>Keep this file safe - you'll need it and your password to load your network later!</strong></li>
+              <li>• <strong>Your file is encrypted with military-grade AES-256-GCM encryption</strong></li>
+              <li>• <strong>Keep your password safe!</strong> If you lose it, your data cannot be recovered</li>
+              <li>• <strong>No cloud storage</strong> - this file is only stored on your computer</li>
+              <li>• <strong>Zero-knowledge security</strong> - no one can access your data without your password</li>
             </ul>
           </div>
         </div>
@@ -265,7 +272,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            AES-256-GCM encrypted. Stored locally on your computer.
+            End-to-end encrypted with AES-256-GCM. Zero-knowledge architecture.
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            All files stored locally on your device. No cloud, no servers, no tracking.
           </p>
         </div>
 
@@ -328,6 +338,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
+              <p className="text-xs text-muted-foreground">Use a strong, unique password. Recommended: 12+ characters with mixed case, numbers, and symbols.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password-confirm">Confirm Password</Label>
@@ -342,6 +353,12 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
+            </div>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 space-y-1">
+              <p className="text-xs font-medium text-destructive">⚠️ Critical Security Warning</p>
+              <p className="text-xs text-muted-foreground">
+                If you lose your password, <strong>your data cannot be recovered</strong>. This is zero-knowledge encryption—no password reset, no backdoor, no recovery option.
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -358,12 +375,18 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Load Network</DialogTitle>
+            <DialogTitle>Load Encrypted Network</DialogTitle>
             <DialogDescription>
-              Enter the password for: {loadingFile?.name}
+              Enter the password to decrypt: {loadingFile?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 space-y-1">
+              <p className="text-xs font-medium">🔒 Secure Decryption</p>
+              <p className="text-xs text-muted-foreground">
+                Your file will be decrypted locally in your browser. No data is transmitted to any server.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="load-password">Password</Label>
               <Input
@@ -391,7 +414,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             >
               Cancel
             </Button>
-            <Button onClick={handleLoadNetwork}>Load Network</Button>
+            <Button onClick={handleLoadNetwork}>Decrypt & Load</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

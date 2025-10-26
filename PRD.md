@@ -16,8 +16,8 @@ This is a full-featured network visualization tool with encrypted local file sto
 - **Functionality**: Create and load encrypted network database files with password protection
 - **Purpose**: Ensure data privacy and security - all data stays on the user's computer, never transmitted online
 - **Trigger**: App launch shows "New Network" or "Load Network" options
-- **Progression**: New Network → Enter filename and password → Empty encrypted file created and downloaded → Workspace opens | Load Network → Select .enc.json file → Enter password → Workspace loads with data
-- **Success criteria**: Files are encrypted with AES-256-GCM using PBKDF2 (100,000 iterations) for key derivation; wrong password fails gracefully; file can be saved/loaded across sessions
+- **Progression**: New Network → Enter filename and password → See security warning about password loss → Empty encrypted file created and downloaded → Workspace opens | Load Network → Select .enc.json file → Enter password → Workspace loads with data
+- **Success criteria**: Files are encrypted with AES-256-GCM using PBKDF2 (100,000 iterations) for key derivation; wrong password fails gracefully with clear error message; file can be saved/loaded across sessions; user sees security warnings about zero-knowledge architecture
 
 ### Save Network
 - **Functionality**: Save current network state to encrypted file
