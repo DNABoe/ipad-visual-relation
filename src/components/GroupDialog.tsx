@@ -61,7 +61,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="groupName">Name *</Label>
+            <Label htmlFor="groupName" className="dark:text-foreground">Name *</Label>
             <Input
               id="groupName"
               value={name}
@@ -70,7 +70,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="groupColor">Color</Label>
+            <Label htmlFor="groupColor" className="dark:text-foreground">Color</Label>
             <Select value={color} onValueChange={(v) => setColor(v as GroupColor)}>
               <SelectTrigger id="groupColor">
                 <SelectValue />

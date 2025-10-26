@@ -1188,9 +1188,9 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   return (
     <TooltipProvider>
       <div className="h-screen flex flex-col bg-background">
-        <div className="border-b bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap">
+        <div className="border-b bg-card px-4 py-2 flex items-center justify-between gap-4 flex-wrap dark:bg-card dark:border-border">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold tracking-tight">Visual Relationship Network</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Visual Relationship Network</h1>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2">
               {downloadUrl ? (

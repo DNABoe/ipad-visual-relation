@@ -161,7 +161,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 )}
               </div>
               <div className="w-full space-y-2">
-                <Label htmlFor="frameColor">Status</Label>
+                <Label htmlFor="frameColor" className="dark:text-foreground">Status</Label>
                 <div className="grid grid-cols-4 gap-3 justify-items-center px-4">
                   {FRAME_COLOR_NAMES.map(color => {
                     const labels: Record<string, string> = {
@@ -176,7 +176,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           type="button"
                           onClick={() => setFrameColor(color as FrameColor)}
                           className={`w-12 h-12 rounded-lg border-2 transition-all ${
-                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110 shadow-lg' : 'hover:scale-105 border-border'
+                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110 shadow-lg dark:ring-offset-background' : 'hover:scale-105 border-border'
                           }`}
                           style={{ 
                             backgroundColor: FRAME_COLORS[color],
@@ -184,7 +184,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           }}
                           title={labels[color]}
                         />
-                        <span className="text-xs text-muted-foreground text-center">{labels[color]}</span>
+                        <span className="text-xs text-muted-foreground text-center dark:text-muted-foreground">{labels[color]}</span>
                       </div>
                     )
                   })}
@@ -193,7 +193,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name">Name *</Label>
+            <Label htmlFor="name" className="dark:text-foreground">Name *</Label>
             <Input
               id="name"
               value={name}
@@ -202,7 +202,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="position">Position</Label>
+            <Label htmlFor="position" className="dark:text-foreground">Position</Label>
             <Textarea
               id="position"
               value={position}
@@ -216,10 +216,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               rows={3}
               className="resize-none"
             />
-            <p className="text-xs text-muted-foreground">You can enter up to 3 lines</p>
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">You can enter up to 3 lines</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="importance">Importance</Label>
+            <Label htmlFor="importance" className="dark:text-foreground">Importance</Label>
             <div className="flex gap-2 justify-center">
               {[1, 2, 3, 4, 5].map((num) => (
                 <button
@@ -228,15 +228,15 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   onClick={() => setScore(num)}
                   className={`w-12 h-12 rounded-lg border-2 transition-all font-semibold ${
                     score === num 
-                      ? 'bg-primary text-primary-foreground border-primary ring-2 ring-accent ring-offset-2 scale-110' 
-                      : 'bg-card hover:bg-muted border-border hover:scale-105'
+                      ? 'bg-primary text-primary-foreground border-primary ring-2 ring-accent ring-offset-2 scale-110 dark:ring-offset-background' 
+                      : 'bg-card hover:bg-muted border-border hover:scale-105 dark:text-foreground'
                   }`}
                 >
                   {num}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center">1 - High Importance, 5 - Lower Importance</p>
+            <p className="text-xs text-muted-foreground text-center dark:text-muted-foreground">1 - High Importance, 5 - Lower Importance</p>
           </div>
         </div>
         <DialogFooter>

@@ -78,11 +78,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           
           <TabsContent value="system" className="space-y-4 py-4">
             <div className="space-y-4">
-              <h3 className="font-medium">Appearance</h3>
+              <h3 className="font-medium text-foreground">Appearance</h3>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="theme-toggle">Theme</Label>
-                  <div className="text-sm text-muted-foreground">
+                  <Label htmlFor="theme-toggle" className="dark:text-foreground">Theme</Label>
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                   </div>
                 </div>
@@ -98,8 +98,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="grid-toggle">Show Grid</Label>
-                  <div className="text-sm text-muted-foreground">
+                  <Label htmlFor="grid-toggle" className="dark:text-foreground">Show Grid</Label>
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     Display background grid on canvas
                   </div>
                 </div>
@@ -114,9 +114,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
           <TabsContent value="user" className="space-y-4 py-4">
             <div className="space-y-4">
-              <h3 className="font-medium">Account</h3>
+              <h3 className="font-medium text-foreground">Account</h3>
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="dark:text-foreground">Username</Label>
                 <Input
                   id="username"
                   value={username}
@@ -124,7 +124,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password (optional)</Label>
+                <Label htmlFor="newPassword" className="dark:text-foreground">New Password (optional)</Label>
                 <Input
                   id="newPassword"
                   type="password"
