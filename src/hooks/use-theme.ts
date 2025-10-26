@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 export function useTheme() {
   useEffect(() => {
-    document.documentElement.classList.add('dark')
+    document.documentElement.setAttribute('data-appearance', 'dark')
   }, [])
 
   return { theme: 'dark' as const }
