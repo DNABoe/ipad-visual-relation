@@ -35,14 +35,268 @@ export function FileManager({ onLoad }: FileManagerProps) {
       return
     }
 
-    const emptyWorkspace: Workspace = {
-      persons: [],
-      connections: [],
-      groups: []
+    const sampleWorkspace: Workspace = {
+      persons: [
+        {
+          id: 'person-1',
+          name: 'Sarah Chen',
+          position: 'Chief Executive Officer',
+          position2: 'Board Member',
+          position3: 'Strategy Lead',
+          score: 5,
+          frameColor: 'green',
+          x: 100,
+          y: 100,
+          createdAt: Date.now() - 80000,
+        },
+        {
+          id: 'person-2',
+          name: 'Marcus Rodriguez',
+          position: 'Chief Technology Officer',
+          position2: 'Head of Engineering',
+          position3: 'Platform Architect',
+          score: 5,
+          frameColor: 'green',
+          x: 400,
+          y: 100,
+          createdAt: Date.now() - 70000,
+        },
+        {
+          id: 'person-3',
+          name: 'Emily Watson',
+          position: 'VP of Product',
+          position2: 'Product Strategy',
+          position3: 'UX Design Lead',
+          score: 4,
+          frameColor: 'orange',
+          x: 100,
+          y: 220,
+          createdAt: Date.now() - 60000,
+        },
+        {
+          id: 'person-4',
+          name: 'James Park',
+          position: 'VP of Engineering',
+          position2: 'Technical Lead',
+          position3: 'DevOps Manager',
+          score: 4,
+          frameColor: 'orange',
+          x: 400,
+          y: 220,
+          createdAt: Date.now() - 50000,
+        },
+        {
+          id: 'person-5',
+          name: 'Dr. Lisa Kumar',
+          position: 'Strategic Advisor',
+          position2: 'Research Director',
+          position3: 'AI/ML Consultant',
+          score: 5,
+          frameColor: 'white',
+          x: 750,
+          y: 100,
+          createdAt: Date.now() - 40000,
+        },
+        {
+          id: 'person-6',
+          name: 'David Thompson',
+          position: 'Board Member',
+          position2: 'Investor Relations',
+          position3: 'Growth Advisor',
+          score: 4,
+          frameColor: 'white',
+          x: 1000,
+          y: 100,
+          createdAt: Date.now() - 30000,
+        },
+        {
+          id: 'person-7',
+          name: 'Rachel Green',
+          position: 'Technical Consultant',
+          position2: 'Cloud Architect',
+          position3: 'Security Specialist',
+          score: 3,
+          frameColor: 'white',
+          x: 750,
+          y: 220,
+          createdAt: Date.now() - 20000,
+        },
+        {
+          id: 'person-8',
+          name: 'Alex Martinez',
+          position: 'Design Lead',
+          position2: 'Creative Director',
+          position3: 'Brand Manager',
+          score: 3,
+          frameColor: 'red',
+          x: 250,
+          y: 450,
+          createdAt: Date.now() - 10000,
+        },
+        {
+          id: 'person-9',
+          name: 'Jennifer Wu',
+          position: 'Head of Marketing',
+          position2: 'Growth Marketing',
+          position3: 'Content Strategy',
+          score: 4,
+          frameColor: 'orange',
+          x: 550,
+          y: 450,
+          createdAt: Date.now() - 9000,
+        },
+        {
+          id: 'person-10',
+          name: 'Michael O\'Brien',
+          position: 'Sales Director',
+          position2: 'Enterprise Sales',
+          position3: 'Customer Success',
+          score: 4,
+          frameColor: 'orange',
+          x: 850,
+          y: 450,
+          createdAt: Date.now() - 8000,
+        },
+        {
+          id: 'person-11',
+          name: 'Sophia Anderson',
+          position: 'Head of HR',
+          position2: 'Talent Acquisition',
+          position3: 'Culture Lead',
+          score: 4,
+          frameColor: 'orange',
+          x: 100,
+          y: 650,
+          createdAt: Date.now() - 7000,
+        },
+        {
+          id: 'person-12',
+          name: 'Ryan Mitchell',
+          position: 'CFO',
+          position2: 'Financial Planning',
+          position3: 'Investor Relations',
+          score: 5,
+          frameColor: 'green',
+          x: 400,
+          y: 650,
+          createdAt: Date.now() - 6000,
+        },
+        {
+          id: 'person-13',
+          name: 'Olivia Taylor',
+          position: 'Data Scientist',
+          position2: 'ML Engineer',
+          position3: 'Analytics Lead',
+          score: 3,
+          frameColor: 'white',
+          x: 700,
+          y: 650,
+          createdAt: Date.now() - 5000,
+        },
+        {
+          id: 'person-14',
+          name: 'Daniel Lee',
+          position: 'Security Engineer',
+          position2: 'InfoSec Lead',
+          position3: 'Compliance Officer',
+          score: 4,
+          frameColor: 'orange',
+          x: 1000,
+          y: 650,
+          createdAt: Date.now() - 4000,
+        },
+        {
+          id: 'person-15',
+          name: 'Isabella Garcia',
+          position: 'Customer Support Lead',
+          position2: 'Success Manager',
+          position3: 'Training Coordinator',
+          score: 3,
+          frameColor: 'white',
+          x: 250,
+          y: 850,
+          createdAt: Date.now() - 3000,
+        },
+      ],
+      connections: [
+        { id: 'conn-1', fromPersonId: 'person-1', toPersonId: 'person-2' },
+        { id: 'conn-2', fromPersonId: 'person-1', toPersonId: 'person-3' },
+        { id: 'conn-3', fromPersonId: 'person-1', toPersonId: 'person-4' },
+        { id: 'conn-4', fromPersonId: 'person-2', toPersonId: 'person-4' },
+        { id: 'conn-5', fromPersonId: 'person-3', toPersonId: 'person-8' },
+        { id: 'conn-6', fromPersonId: 'person-1', toPersonId: 'person-5' },
+        { id: 'conn-7', fromPersonId: 'person-5', toPersonId: 'person-6' },
+        { id: 'conn-8', fromPersonId: 'person-5', toPersonId: 'person-7' },
+        { id: 'conn-9', fromPersonId: 'person-3', toPersonId: 'person-9' },
+        { id: 'conn-10', fromPersonId: 'person-9', toPersonId: 'person-10' },
+        { id: 'conn-11', fromPersonId: 'person-1', toPersonId: 'person-9' },
+        { id: 'conn-12', fromPersonId: 'person-1', toPersonId: 'person-10' },
+        { id: 'conn-13', fromPersonId: 'person-1', toPersonId: 'person-11' },
+        { id: 'conn-14', fromPersonId: 'person-1', toPersonId: 'person-12' },
+        { id: 'conn-15', fromPersonId: 'person-2', toPersonId: 'person-13' },
+        { id: 'conn-16', fromPersonId: 'person-2', toPersonId: 'person-14' },
+        { id: 'conn-17', fromPersonId: 'person-4', toPersonId: 'person-13' },
+        { id: 'conn-18', fromPersonId: 'person-4', toPersonId: 'person-14' },
+        { id: 'conn-19', fromPersonId: 'person-10', toPersonId: 'person-15' },
+        { id: 'conn-20', fromPersonId: 'person-9', toPersonId: 'person-15' },
+      ],
+      groups: [
+        {
+          id: 'group-1',
+          name: 'Executive Leadership',
+          color: 'blue',
+          x: 50,
+          y: 50,
+          width: 600,
+          height: 300,
+          createdAt: Date.now() - 100000,
+        },
+        {
+          id: 'group-2',
+          name: 'Board & Advisors',
+          color: 'purple',
+          x: 700,
+          y: 50,
+          width: 500,
+          height: 300,
+          createdAt: Date.now() - 90000,
+        },
+        {
+          id: 'group-3',
+          name: 'Department Heads',
+          color: 'emerald',
+          x: 200,
+          y: 400,
+          width: 800,
+          height: 200,
+          createdAt: Date.now() - 85000,
+        },
+        {
+          id: 'group-4',
+          name: 'Operations & Finance',
+          color: 'amber',
+          x: 50,
+          y: 600,
+          width: 600,
+          height: 250,
+          createdAt: Date.now() - 75000,
+        },
+        {
+          id: 'group-5',
+          name: 'Technical Team',
+          color: 'cyan',
+          x: 700,
+          y: 600,
+          width: 500,
+          height: 250,
+          createdAt: Date.now() - 65000,
+        },
+      ]
     }
 
     try {
-      const encrypted = await encryptData(JSON.stringify(emptyWorkspace), newPassword)
+      const workspaceJson = JSON.stringify(sampleWorkspace, null, 2)
+      const encrypted = await encryptData(workspaceJson, newPassword)
       const fileData = JSON.stringify(encrypted, null, 2)
       const fileName = newFileName.trim()
       const fullFileName = `${fileName}.enc.json`
@@ -52,33 +306,36 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const a = document.createElement('a')
       a.href = url
       a.download = fullFileName
-      a.style.display = 'none'
       document.body.appendChild(a)
       
+      console.log(`🔄 Initiating download...`)
+      console.log(`📦 File: ${fullFileName}`)
+      console.log(`📊 Size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`)
+      console.log(`🔐 Encrypted with AES-256-GCM`)
+      
+      a.click()
+      
+      console.log(`✅ Download triggered!`)
+      console.log(`📁 Check your Downloads folder:`)
+      console.log(`   - Windows: C:\\Users\\YourName\\Downloads\\`)
+      console.log(`   - Mac: ~/Downloads/`)
+      console.log(`   - Linux: ~/Downloads/`)
+      console.log(`💡 Browser shortcuts:`)
+      console.log(`   - Chrome/Edge: Ctrl+J (Windows/Linux) or Cmd+Shift+J (Mac)`)
+      console.log(`   - Firefox: Ctrl+Shift+Y (Windows/Linux) or Cmd+Shift+Y (Mac)`)
+      
       setTimeout(() => {
-        a.click()
-        
-        setTimeout(() => {
-          document.body.removeChild(a)
-          URL.revokeObjectURL(url)
-        }, 100)
-      }, 0)
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        console.log(`🧹 Cleanup complete`)
+      }, 1000)
 
-      console.log(`✅ File created: ${fullFileName} (${blob.size} bytes)`)
-      console.log('📁 Location: Your browser\'s Downloads folder (usually ~/Downloads or C:\\Users\\YourName\\Downloads)')
-      console.log('💡 Tip: Check your browser\'s download bar or press Ctrl+J (Chrome/Edge) or Ctrl+Shift+Y (Firefox) to see downloads')
-      console.log('🔍 If you don\'t see the download, check:')
-      console.log('   1. Browser download bar (usually at bottom of window)')
-      console.log('   2. Browser downloads page (Ctrl+J in Chrome/Edge)')
-      console.log('   3. Your browser may have blocked the download - look for a blocked download icon in the address bar')
-      console.log('   4. Check browser settings for download location')
-
-      toast.success(`File "${fullFileName}" ready for download!`, {
-        duration: 10000,
-        description: `Size: ${(blob.size / 1024).toFixed(1)} KB. The browser should download this file now. Look for a download notification or press Ctrl+J to see your downloads.`
+      toast.success(`Download started: ${fullFileName}`, {
+        duration: 15000,
+        description: `File size: ${(blob.size / 1024).toFixed(2)} KB with sample data. Check your Downloads folder or browser's download bar. Press Ctrl+J (Chrome/Edge) to view downloads.`
       })
 
-      onLoad(emptyWorkspace, fileName, newPassword)
+      onLoad(sampleWorkspace, fileName, newPassword)
       setShowNewDialog(false)
       setNewFileName('')
       setNewPassword('')
