@@ -188,18 +188,29 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         setConnectFrom(personId)
         toast.info('Click another person to connect')
       } else if (connectFrom !== personId) {
-        const newConnection: Connection = {
-          id: generateId(),
-          fromPersonId: connectFrom,
-          toPersonId: personId,
+        const existingConnection = workspace.connections.find(
+          c => (c.fromPersonId === connectFrom && c.toPersonId === personId) ||
+               (c.fromPersonId === personId && c.toPersonId === connectFrom)
+        )
+        
+        if (!existingConnection) {
+          const newConnection: Connection = {
+            id: generateId(),
+            fromPersonId: connectFrom,
+            toPersonId: personId,
+          }
+          setWorkspace((current) => ({
+            ...current,
+            connections: [...current.connections, newConnection],
+          }))
+          setConnectMode(false)
+          setConnectFrom(null)
+          toast.success('Connection created')
+        } else {
+          toast.info('Connection already exists')
+          setConnectMode(false)
+          setConnectFrom(null)
         }
-        setWorkspace((current) => ({
-          ...current,
-          connections: [...current.connections, newConnection],
-        }))
-        setConnectMode(false)
-        setConnectFrom(null)
-        toast.success('Connection created')
       }
     } else {
       e.stopPropagation()
@@ -211,7 +222,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         setSelectedPersons([personId])
       }
     }
-  }, [connectMode, connectFrom, setWorkspace])
+  }, [connectMode, connectFrom, workspace, setWorkspace])
 
   const handlePersonContextMenu = useCallback((personId: string, e: React.MouseEvent) => {
     e.preventDefault()
@@ -528,7 +539,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       
       if (targetPerson && targetPerson.id !== draggingConnection.fromPersonId) {
         const existingConnection = workspace.connections.find(
-          c => c.fromPersonId === draggingConnection.fromPersonId && c.toPersonId === targetPerson.id
+          c => (c.fromPersonId === draggingConnection.fromPersonId && c.toPersonId === targetPerson.id) ||
+               (c.fromPersonId === targetPerson.id && c.toPersonId === draggingConnection.fromPersonId)
         )
         
         if (!existingConnection) {
