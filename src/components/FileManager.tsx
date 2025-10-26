@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FilePlus, FolderOpen } from '@phosphor-icons/react'
+import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
 import type { Workspace } from '@/lib/types'
@@ -20,6 +20,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
   const [loadPassword, setLoadPassword] = useState('')
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+  const [downloadFileName, setDownloadFileName] = useState<string>('')
+  const [createdWorkspace, setCreatedWorkspace] = useState<Workspace | null>(null)
+  const [createdPassword, setCreatedPassword] = useState<string>('')
+  const [createdName, setCreatedName] = useState<string>('')
 
   const handleNewNetwork = async () => {
     if (!newFileName.trim()) {
@@ -303,39 +308,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
       const blob = new Blob([fileData], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = fullFileName
-      document.body.appendChild(a)
+
+      setDownloadUrl(url)
+      setDownloadFileName(fullFileName)
+      setCreatedWorkspace(sampleWorkspace)
+      setCreatedPassword(newPassword)
+      setCreatedName(fileName)
       
-      console.log(`🔄 Initiating download...`)
+      console.log(`✅ File ready for download!`)
       console.log(`📦 File: ${fullFileName}`)
       console.log(`📊 Size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`)
       console.log(`🔐 Encrypted with AES-256-GCM`)
-      
-      a.click()
-      
-      console.log(`✅ Download triggered!`)
-      console.log(`📁 Check your Downloads folder:`)
-      console.log(`   - Windows: C:\\Users\\YourName\\Downloads\\`)
-      console.log(`   - Mac: ~/Downloads/`)
-      console.log(`   - Linux: ~/Downloads/`)
-      console.log(`💡 Browser shortcuts:`)
-      console.log(`   - Chrome/Edge: Ctrl+J (Windows/Linux) or Cmd+Shift+J (Mac)`)
-      console.log(`   - Firefox: Ctrl+Shift+Y (Windows/Linux) or Cmd+Shift+Y (Mac)`)
-      
-      setTimeout(() => {
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        console.log(`🧹 Cleanup complete`)
-      }, 1000)
 
-      toast.success(`Download started: ${fullFileName}`, {
-        duration: 15000,
-        description: `File size: ${(blob.size / 1024).toFixed(2)} KB with sample data. Check your Downloads folder or browser's download bar. Press Ctrl+J (Chrome/Edge) to view downloads.`
+      toast.success('Network file ready!', {
+        description: `Click the download button to save ${fullFileName} (${(blob.size / 1024).toFixed(2)} KB)`
       })
 
-      onLoad(sampleWorkspace, fileName, newPassword)
       setShowNewDialog(false)
       setNewFileName('')
       setNewPassword('')
@@ -374,6 +362,31 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
   }
 
+  const handleContinueWithoutDownload = () => {
+    if (createdWorkspace && createdName && createdPassword) {
+      onLoad(createdWorkspace, createdName, createdPassword)
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl)
+      }
+      setDownloadUrl(null)
+      setDownloadFileName('')
+      setCreatedWorkspace(null)
+      setCreatedPassword('')
+      setCreatedName('')
+    }
+  }
+
+  const handleDownloadAndContinue = () => {
+    if (createdWorkspace && createdName && createdPassword) {
+      onLoad(createdWorkspace, createdName, createdPassword)
+      setDownloadUrl(null)
+      setDownloadFileName('')
+      setCreatedWorkspace(null)
+      setCreatedPassword('')
+      setCreatedName('')
+    }
+  }
+
   const handleFileSelect = () => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -390,7 +403,63 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
   return (
     <div className="h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 p-8">
+      {downloadUrl ? (
+        <div className="w-full max-w-md space-y-8 p-8">
+          <div className="text-center space-y-3">
+            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <DownloadSimple size={40} className="text-primary" weight="duotone" />
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight">Your File is Ready!</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Click the button below to download your encrypted network file to your computer.
+            </p>
+          </div>
+
+          <div className="bg-muted/50 border border-border rounded-lg p-6 space-y-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground mb-1">File Name</p>
+                <p className="font-mono text-sm font-medium truncate">{downloadFileName}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              asChild
+              className="w-full h-16 text-lg"
+              size="lg"
+            >
+              <a 
+                href={downloadUrl} 
+                download={downloadFileName}
+                onClick={handleDownloadAndContinue}
+              >
+                <DownloadSimple size={24} className="mr-3" weight="bold" />
+                Download File
+              </a>
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleContinueWithoutDownload}
+              className="w-full"
+            >
+              Skip Download & Continue
+            </Button>
+          </div>
+
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-2">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              💡 Important
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Save this file to a secure location. You'll need it to load your network later. Without this file, your network data cannot be recovered.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-semibold tracking-tight">Visual Relationship Network</h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -425,14 +494,15 @@ export function FileManager({ onLoad }: FileManagerProps) {
             Files are downloaded to your browser's <strong>Downloads folder</strong>. In Edge/Chrome, check the download bar at the bottom of the window or press <kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-[10px] font-mono">Ctrl+J</kbd> to view downloads.
           </p>
         </div>
-      </div>
+        </div>
+      )}
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Network</DialogTitle>
             <DialogDescription>
-              Create a new encrypted network file. Your browser will download it automatically to your Downloads folder. In Edge and Chrome, you'll see it in the download bar at the bottom of the window.
+              Create a new encrypted network file with sample data. You'll be able to download it after creation.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

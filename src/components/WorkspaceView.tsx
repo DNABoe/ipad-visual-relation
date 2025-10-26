@@ -1025,30 +1025,19 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       const a = document.createElement('a')
       a.href = url
       a.download = fullFileName
-      a.style.display = 'none'
       document.body.appendChild(a)
+      a.click()
       
       setTimeout(() => {
-        a.click()
-        
-        setTimeout(() => {
-          document.body.removeChild(a)
-          URL.revokeObjectURL(url)
-        }, 100)
-      }, 0)
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
       
       console.log(`✅ File saved: ${fullFileName} (${blob.size} bytes)`)
-      console.log('📁 Location: Your browser\'s Downloads folder')
-      console.log('💡 Tip: Press Ctrl+J (Chrome/Edge) or Ctrl+Shift+Y (Firefox) to view downloads')
-      console.log('🔍 If you don\'t see the download, check:')
-      console.log('   1. Browser download bar (usually at bottom of window)')
-      console.log('   2. Browser downloads page (Ctrl+J in Chrome/Edge)')
-      console.log('   3. Your browser may have blocked the download - look for a blocked download icon in the address bar')
-      console.log('   4. Check browser settings for download location')
       
-      toast.success(`File "${fullFileName}" ready for download!`, {
-        duration: 10000,
-        description: `Size: ${(blob.size / 1024).toFixed(1)} KB. The browser should download this file now. Look for a download notification or press Ctrl+J to see your downloads.`
+      toast.success(`Saved "${fullFileName}"`, {
+        duration: 5000,
+        description: `Size: ${(blob.size / 1024).toFixed(1)} KB. Check your Downloads folder.`
       })
     } catch (error) {
       toast.error('Failed to save network file')
