@@ -137,17 +137,14 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           opacity="0.4"
         />
       </svg>
-      
       {showText && (
         <div className="flex flex-col">
-          <span className="text-3xl font-bold tracking-tight leading-none bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent">
-            NetEye
-          </span>
+          <span className="text-3xl font-bold tracking-tight leading-none text-foreground">NetEye</span>
           <span className="text-[10px] text-muted-foreground tracking-[0.15em] uppercase leading-none mt-1 font-medium">
             Relationship Network
           </span>
         </div>
       )}
     </div>
-  )
+  );
 }
