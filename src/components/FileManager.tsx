@@ -488,20 +488,23 @@ export function FileManager({ onLoad }: FileManagerProps) {
           </div>
 
           <div className="space-y-3">
-            <a
-              href={downloadUrl || '#'}
-              download={downloadFileName}
-              onClick={(e) => {
-                if (!downloadUrl) {
-                  e.preventDefault()
-                  return
-                }
-                console.log('🔽 Download link clicked')
-                console.log('📄 Downloading:', downloadFileName)
+            <Button
+              onClick={() => {
+                if (!downloadUrl || !downloadFileName) return
+                
+                const a = document.createElement('a')
+                a.href = downloadUrl
+                a.download = downloadFileName
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                
+                console.log('🔽 Download triggered:', downloadFileName)
                 toast.success('Download started', {
                   duration: 6000,
                   description: 'Check your Downloads folder. Press Ctrl+J to view browser downloads.'
                 })
+                
                 setTimeout(() => {
                   if (createdWorkspace && createdName && createdPassword) {
                     onLoad(createdWorkspace, createdName, createdPassword)
@@ -514,13 +517,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
                     setCreatedPassword('')
                     setCreatedName('')
                   }
-                }, 500)
+                }, 300)
               }}
-              className="w-full h-16 text-lg bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center justify-center gap-3 font-medium transition-colors"
+              className="w-full h-16 text-lg"
+              size="lg"
             >
-              <DownloadSimple size={24} weight="bold" />
+              <DownloadSimple size={24} weight="bold" className="mr-3" />
               Download File & Continue
-            </a>
+            </Button>
 
             <Button
               variant="outline"
