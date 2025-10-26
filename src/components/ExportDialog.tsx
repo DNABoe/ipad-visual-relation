@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import type { Person, Connection, Group, ViewTransform } from '@/lib/types'
 import { toast } from 'sonner'
-import { Image, Selection, ArrowsOut, CheckCircle, ClipboardText } from '@phosphor-icons/react'
+import { Image, Selection, ArrowsOut, CheckCircle, ClipboardText, Export as ExportIcon } from '@phosphor-icons/react'
 import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 
 interface ExportDialogProps {
@@ -501,50 +501,59 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card text-card-foreground">
+      <DialogContent className="max-w-md backdrop-blur-xl bg-card/95 border-border/70">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Export Canvas</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <ExportIcon size={18} className="text-white" weight="duotone" />
+            </div>
+            Export Canvas
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground/80">
             {selectedPersons.length > 0 
               ? `Export selection (${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}) or choose a different area`
               : 'Choose export format and select the area to export'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div className="space-y-3">
-            <Label className="text-foreground">Export Format</Label>
-            <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)}>
-              <div className="flex items-center space-x-2">
+            <Label className="text-sm font-medium">Export Format</Label>
+            <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)} className="space-y-2">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
                 <RadioGroupItem value="png" id="format-png" />
-                <Label htmlFor="format-png" className="font-normal cursor-pointer text-foreground">
-                  PNG (Lossless, transparent background support)
+                <Label htmlFor="format-png" className="font-normal cursor-pointer flex-1">
+                  <div className="font-medium text-foreground">PNG</div>
+                  <div className="text-xs text-muted-foreground/70">Lossless, transparent background</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
                 <RadioGroupItem value="jpeg" id="format-jpeg" />
-                <Label htmlFor="format-jpeg" className="font-normal cursor-pointer text-foreground">
-                  JPEG (Smaller file size)
+                <Label htmlFor="format-jpeg" className="font-normal cursor-pointer flex-1">
+                  <div className="font-medium text-foreground">JPEG</div>
+                  <div className="text-xs text-muted-foreground/70">Smaller file size</div>
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
-          <Separator className="bg-border" />
+          <Separator className="bg-border/50" />
 
           <div className="space-y-3">
-            <Label className="text-foreground">Export Mode</Label>
-            <RadioGroup value={mode} onValueChange={(v) => setMode(v as ExportMode)}>
-              <div className="flex items-center space-x-2">
+            <Label className="text-sm font-medium">Export Mode</Label>
+            <RadioGroup value={mode} onValueChange={(v) => setMode(v as ExportMode)} className="space-y-2">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
                 <RadioGroupItem value="all" id="mode-all" />
-                <Label htmlFor="mode-all" className="font-normal cursor-pointer text-foreground">
-                  Export entire canvas
+                <Label htmlFor="mode-all" className="font-normal cursor-pointer flex-1">
+                  <div className="font-medium text-foreground">Entire Canvas</div>
+                  <div className="text-xs text-muted-foreground/70">Export everything</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
                 <RadioGroupItem value="selection" id="mode-selection" />
-                <Label htmlFor="mode-selection" className="font-normal cursor-pointer text-foreground">
-                  Export selected area
+                <Label htmlFor="mode-selection" className="font-normal cursor-pointer flex-1">
+                  <div className="font-medium text-foreground">Selected Area</div>
+                  <div className="text-xs text-muted-foreground/70">Export specific region</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -557,32 +566,38 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                     size="sm"
                     onClick={handleStartSelection}
                     disabled={isSelecting}
-                    className="w-full"
+                    className="w-full border-2 h-10"
                   >
                     <Selection size={16} className="mr-2" />
                     {isSelecting ? 'Selecting area...' : 'Draw selection on canvas'}
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-foreground">
-                      <CheckCircle size={16} weight="fill" className="text-accent" />
-                      Area selected ({Math.round(selectionRect.width)} × {Math.round(selectionRect.height)})
-                      {selectedPersons.length > 0 && ` - ${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}`}
+                    <div className="flex items-center gap-2 text-sm text-foreground bg-accent/10 border border-accent/20 rounded-lg p-3">
+                      <CheckCircle size={18} weight="fill" className="text-accent flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Area selected</div>
+                        <div className="text-xs text-muted-foreground/70">
+                          {Math.round(selectionRect.width)} × {Math.round(selectionRect.height)}
+                          {selectedPersons.length > 0 && ` • ${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}`}
+                        </div>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleStartSelection}
-                        className="flex-1"
+                        className="flex-1 border-2 h-10"
                       >
                         <Selection size={16} className="mr-2" />
-                        Change selection
+                        Change
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleClearSelection}
+                        className="h-10"
                       >
                         Clear
                       </Button>
@@ -593,80 +608,82 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             )}
           </div>
 
-          <Separator className="bg-border" />
+          <Separator className="bg-border/50" />
 
           <div className="space-y-3">
-            <Label className="text-foreground">Include in Export</Label>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+            <Label className="text-sm font-medium">Include in Export</Label>
+            <div className="space-y-2 rounded-lg border border-border/50 bg-muted/20 p-4">
+              <div className="flex items-center space-x-3">
                 <Checkbox 
                   id="include-name" 
                   checked={includeName} 
                   onCheckedChange={(checked) => setIncludeName(checked === true)}
+                  className="border-border/70"
                 />
-                <Label htmlFor="include-name" className="font-normal cursor-pointer text-foreground">
+                <Label htmlFor="include-name" className="font-normal cursor-pointer text-sm">
                   Person name
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Checkbox 
                   id="include-position" 
                   checked={includePosition} 
                   onCheckedChange={(checked) => setIncludePosition(checked === true)}
+                  className="border-border/70"
                 />
-                <Label htmlFor="include-position" className="font-normal cursor-pointer text-foreground">
+                <Label htmlFor="include-position" className="font-normal cursor-pointer text-sm">
                   Position/Title
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Checkbox 
                   id="include-importance" 
                   checked={includeImportanceScore} 
                   onCheckedChange={(checked) => setIncludeImportanceScore(checked === true)}
+                  className="border-border/70"
                 />
-                <Label htmlFor="include-importance" className="font-normal cursor-pointer text-foreground">
+                <Label htmlFor="include-importance" className="font-normal cursor-pointer text-sm">
                   Importance score
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Checkbox 
                   id="include-photo" 
                   checked={includePhoto} 
                   onCheckedChange={(checked) => setIncludePhoto(checked === true)}
+                  className="border-border/70"
                 />
-                <Label htmlFor="include-photo" className="font-normal cursor-pointer text-foreground">
+                <Label htmlFor="include-photo" className="font-normal cursor-pointer text-sm">
                   Photos
                 </Label>
               </div>
             </div>
           </div>
 
-          <Separator className="bg-border" />
-
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 pt-2">
             <div className="flex gap-2">
               <Button
                 onClick={copyToClipboard}
-                variant="secondary"
-                className="flex-1"
+                variant="outline"
+                className="flex-1 border-2 h-11"
                 disabled={isExporting || (mode === 'selection' && !selectionRect)}
               >
-                <ClipboardText size={16} className="mr-2" />
+                <ClipboardText size={18} className="mr-2" />
                 Copy to Clipboard
               </Button>
               <Button
                 onClick={exportCanvas}
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-primary to-accent h-11 shadow-lg"
                 disabled={isExporting || (mode === 'selection' && !selectionRect)}
               >
-                <Image size={16} className="mr-2" />
+                <Image size={18} className="mr-2" />
                 {isExporting ? 'Exporting...' : 'Download'}
               </Button>
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="w-full"
+              className="w-full h-10"
               disabled={isExporting}
             >
               Cancel
@@ -683,7 +700,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
         >
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-background/90 backdrop-blur-md" />
           <div
             className="absolute"
             style={{
@@ -696,7 +713,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           >
             {selectionRect && (
               <div
-                className="absolute border-4 border-accent bg-accent/20 pointer-events-none shadow-lg"
+                className="absolute border-[3px] border-accent bg-accent/15 pointer-events-none shadow-2xl rounded-lg"
                 style={{
                   left: selectionRect.x,
                   top: selectionRect.y,
@@ -706,7 +723,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               />
             )}
           </div>
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-accent text-accent-foreground px-6 py-3 rounded-lg shadow-xl font-medium">
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-primary-foreground px-8 py-4 rounded-xl shadow-2xl font-semibold text-lg">
             Click and drag to select export area
           </div>
         </div>

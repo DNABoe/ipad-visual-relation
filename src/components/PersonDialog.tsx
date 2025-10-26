@@ -102,32 +102,32 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto backdrop-blur-xl bg-card/95 border-border/70">
         <DialogHeader>
-          <DialogTitle>{editPerson ? 'Edit Person' : 'Add Person'}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl">{editPerson ? 'Edit Person' : 'Add Person'}</DialogTitle>
+          <DialogDescription className="text-muted-foreground/80">
             {editPerson ? 'Update person details' : 'Add a new person to your network'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-5 py-4">
           <div className="space-y-2">
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-4">
               <div 
                 className="relative cursor-pointer group"
                 onDoubleClick={() => fileInputRef.current?.click()}
                 title="Double-click to upload photo"
               >
-                <Avatar className="h-32 w-32 ring-2 ring-border transition-all group-hover:ring-accent">
+                <Avatar className="h-32 w-32 ring-4 ring-border/50 transition-all group-hover:ring-accent group-hover:shadow-xl">
                   {photo ? (
                     <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
                   ) : (
                     <AvatarFallback style={{ backgroundColor: FRAME_COLORS[frameColor], color: frameColor === 'white' ? '#000' : '#fff' }}>
-                      <span className="text-3xl font-bold">{name ? getInitials(name) : '?'}</span>
+                      <span className="text-4xl font-bold">{name ? getInitials(name) : '?'}</span>
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Upload className="text-white" size={32} />
+                <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+                  <Upload className="text-white" size={36} weight="duotone" />
                 </div>
               </div>
               <div className="flex gap-2">
@@ -144,8 +144,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
+                  className="border-2 h-9"
                 >
-                  <Upload className="mr-2" />
+                  <Upload className="mr-2" size={16} />
                   Upload Photo
                 </Button>
                 {photo && (
@@ -154,15 +155,16 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     variant="outline"
                     size="sm"
                     onClick={handleRemovePhoto}
+                    className="border-2 h-9"
                   >
-                    <X className="mr-2" />
+                    <X className="mr-2" size={16} />
                     Remove
                   </Button>
                 )}
               </div>
-              <div className="w-full space-y-2">
-                <Label htmlFor="frameColor" className="dark:text-foreground">Status</Label>
-                <div className="grid grid-cols-4 gap-3 justify-items-center px-4">
+              <div className="w-full space-y-3">
+                <Label htmlFor="frameColor" className="text-sm font-medium">Status</Label>
+                <div className="grid grid-cols-4 gap-4 justify-items-center">
                   {FRAME_COLOR_NAMES.map(color => {
                     const labels: Record<string, string> = {
                       red: 'Negative',
@@ -171,12 +173,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                       white: 'Uncategorized'
                     }
                     return (
-                      <div key={color} className="flex flex-col items-center gap-1">
+                      <div key={color} className="flex flex-col items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setFrameColor(color as FrameColor)}
-                          className={`w-12 h-12 rounded-lg border-2 transition-all ${
-                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 scale-110 shadow-lg dark:ring-offset-background' : 'hover:scale-105 border-border'
+                          className={`w-14 h-14 rounded-xl border-2 transition-all shadow-md ${
+                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl' : 'hover:scale-105 border-border/50 hover:border-border'
                           }`}
                           style={{ 
                             backgroundColor: FRAME_COLORS[color],
@@ -184,7 +186,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           }}
                           title={labels[color]}
                         />
-                        <span className="text-xs text-muted-foreground text-center dark:text-muted-foreground">{labels[color]}</span>
+                        <span className="text-[11px] text-muted-foreground/80 text-center font-medium">{labels[color]}</span>
                       </div>
                     )
                   })}
@@ -193,16 +195,17 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name" className="dark:text-foreground">Name *</Label>
+            <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter name"
+              className="border-border/70 h-11 focus-visible:ring-2"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="position" className="dark:text-foreground">Position</Label>
+            <Label htmlFor="position" className="text-sm font-medium">Position</Label>
             <Textarea
               id="position"
               value={position}
@@ -214,40 +217,40 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               }}
               placeholder="Enter position (max 3 lines)"
               rows={3}
-              className="resize-none"
+              className="resize-none border-border/70 focus-visible:ring-2"
             />
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground">You can enter up to 3 lines</p>
+            <p className="text-xs text-muted-foreground/70 pl-1">You can enter up to 3 lines</p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="importance" className="dark:text-foreground">Importance</Label>
-            <div className="flex gap-2 justify-center">
+          <div className="space-y-3">
+            <Label htmlFor="importance" className="text-sm font-medium">Importance</Label>
+            <div className="flex gap-3 justify-center">
               {[1, 2, 3, 4, 5].map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => setScore(num)}
-                  className={`w-12 h-12 rounded-lg border-2 transition-all font-semibold ${
+                  className={`w-14 h-14 rounded-xl border-2 transition-all font-bold text-lg shadow-md ${
                     score === num 
-                      ? 'bg-primary text-primary-foreground border-primary ring-2 ring-accent ring-offset-2 scale-110 dark:ring-offset-background' 
-                      : 'bg-card hover:bg-muted border-border hover:scale-105 dark:text-foreground'
+                      ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-primary ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl' 
+                      : 'bg-card hover:bg-muted border-border/50 hover:scale-105 hover:border-border'
                   }`}
                 >
                   {num}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center dark:text-muted-foreground">1 - High Importance, 5 - Lower Importance</p>
+            <p className="text-xs text-muted-foreground/70 text-center">1 - High Importance, 5 - Lower Importance</p>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           {editPerson && onDelete && (
-            <Button variant="destructive" onClick={handleDelete} className="mr-auto">
-              <Trash className="mr-2" />
+            <Button variant="destructive" onClick={handleDelete} className="mr-auto h-11 shadow-md">
+              <Trash className="mr-2" size={16} />
               Delete Person
             </Button>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!name.trim()}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-2 h-11">Cancel</Button>
+          <Button onClick={handleSave} disabled={!name.trim()} className="bg-gradient-to-r from-primary to-accent h-11 shadow-lg">
             {editPerson ? 'Update' : 'Add'} Person
           </Button>
         </DialogFooter>

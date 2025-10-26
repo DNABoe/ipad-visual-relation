@@ -70,10 +70,10 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
   return (
     <div
       className={cn(
-        'absolute rounded-lg border-2 group/frame cursor-move',
-        'transition-all',
-        group.solidBackground ? 'border-solid' : 'border-dashed',
-        isSelected && 'ring-2 ring-accent'
+        'absolute rounded-xl border-[3px] group/frame cursor-move',
+        'transition-all duration-200',
+        group.solidBackground ? 'border-solid backdrop-blur-sm' : 'border-dashed',
+        isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-xl'
       )}
       style={{
         left: group.x,
@@ -81,7 +81,8 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
         width: group.width,
         height: group.height,
         borderColor: groupColor,
-        backgroundColor: group.solidBackground ? groupColor : `${groupColor}15`,
+        backgroundColor: group.solidBackground ? `${groupColor}25` : `${groupColor}10`,
+        boxShadow: group.solidBackground ? `inset 0 0 40px ${groupColor}15` : 'none',
         ...style,
       }}
       onClick={onClick}
@@ -92,7 +93,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
       }}
     >
       <div
-        className="absolute -top-8 left-0 flex items-center gap-1"
+        className="absolute -top-9 left-0 flex items-center gap-1"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -110,15 +111,16 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 setIsEditingName(false)
               }
             }}
-            className="h-7 text-xs w-32 bg-card"
+            className="h-8 text-xs w-40 bg-card/95 backdrop-blur-sm border-border/70 shadow-md"
             onMouseDown={(e) => e.stopPropagation()}
           />
         ) : (
           <div
-            className="px-2 py-1 rounded text-xs font-medium flex items-center gap-1 cursor-move"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg backdrop-blur-sm"
             style={{
               backgroundColor: groupColor,
               color: '#fff',
+              border: `2px solid ${groupColor}`,
             }}
             onMouseDown={(e) => {
               if (onDragStart) {
@@ -127,52 +129,54 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
               }
             }}
           >
-            <span>{group.name}</span>
+            <span className="tracking-wide">{group.name}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-4 w-4 p-0 hover:bg-white/20"
+                  className="h-5 w-5 p-0 hover:bg-white/20 rounded-md transition-colors"
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  <DotsThree size={14} weight="bold" />
+                  <DotsThree size={16} weight="bold" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="start" 
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
+                className="backdrop-blur-xl bg-card/95 border-border/70"
               >
-                <DropdownMenuLabel>Edit Group</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-foreground">Edit Group</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsEditingName(true)}>
+                <DropdownMenuItem onClick={() => setIsEditingName(true)} className="cursor-pointer">
                   Rename
                 </DropdownMenuItem>
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Change Color</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
+                  <DropdownMenuSubTrigger className="cursor-pointer">Change Color</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="backdrop-blur-xl bg-card/95 border-border/70">
                     {GROUP_COLOR_NAMES.map((colorName) => (
                       <DropdownMenuItem
                         key={colorName}
                         onClick={() => handleColorChange(colorName)}
+                        className="cursor-pointer"
                       >
                         <div
-                          className="w-4 h-4 rounded mr-2"
+                          className="w-5 h-5 rounded-md mr-2 border-2 border-white/20 shadow-sm"
                           style={{ backgroundColor: GROUP_COLORS[colorName] }}
                         />
-                        {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                        <span className="capitalize">{colorName}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                <DropdownMenuItem onClick={handleBackgroundToggle}>
+                <DropdownMenuItem onClick={handleBackgroundToggle} className="cursor-pointer">
                   {group.solidBackground ? 'Transparent Background' : 'Solid Background'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                  className="text-destructive focus:text-destructive"
+                  className="text-destructive focus:text-destructive cursor-pointer"
                   onClick={() => onRemove?.(group.id)}
                 >
                   Remove Group
@@ -186,7 +190,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
       {isSelected && onResizeStart && resizeHandles.map((handle) => (
         <div
           key={handle.position}
-          className="absolute w-2 h-2 bg-accent border border-white rounded-sm opacity-0 group-hover/frame:opacity-100 transition-opacity z-10"
+          className="absolute w-2.5 h-2.5 bg-accent border-2 border-white rounded-sm opacity-0 group-hover/frame:opacity-100 hover:scale-150 transition-all z-10 shadow-md"
           style={{
             ...handle.style,
             cursor: handle.cursor,
