@@ -267,29 +267,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
           >
             <Logo size={80} showText={true} className="justify-center mb-2" />
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="space-y-2"
-          >
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              End-to-end encrypted with <span className="text-primary font-medium">AES-256-GCM</span>
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              <span className="text-accent font-medium">Zero-knowledge</span> architecture
-            </p>
-            <p className="text-xs text-muted-foreground/80 leading-relaxed pt-2">
-              All files stored locally on your device. No cloud, no servers, no tracking.
-            </p>
-          </motion.div>
         </div>
 
         <motion.div 
           className="space-y-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
         >
           <Button
             onClick={() => setShowNewDialog(true)}
@@ -309,6 +293,25 @@ export function FileManager({ onLoad }: FileManagerProps) {
             <FolderOpen size={28} className="mr-3" weight="duotone" />
             Load Existing Network
           </Button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="mt-6 p-4 rounded-lg border border-border/40 bg-card/30 backdrop-blur-sm"
+        >
+          <div className="space-y-1.5 text-center">
+            <p className="text-xs text-muted-foreground/90 leading-relaxed">
+              End-to-end encrypted with <span className="text-primary/90 font-medium">AES-256-GCM</span>
+            </p>
+            <p className="text-xs text-muted-foreground/90 leading-relaxed">
+              <span className="text-accent/90 font-medium">Zero-knowledge</span> architecture
+            </p>
+            <p className="text-xs text-muted-foreground/70 leading-relaxed pt-1">
+              All files stored locally on your device. No cloud, no servers, no tracking.
+            </p>
+          </div>
         </motion.div>
         </motion.div>
       )}
