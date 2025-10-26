@@ -12,6 +12,7 @@ import { SettingsDialog } from './SettingsDialog'
 import { ListPanel } from './ListPanel'
 import { PhotoViewerDialog } from './PhotoViewerDialog'
 import { UnsavedChangesDialog } from './UnsavedChangesDialog'
+import { ExportDialog } from './ExportDialog'
 import { Logo } from './Logo'
 import type { Person, Connection, Group, Workspace } from '@/lib/types'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
@@ -35,7 +36,8 @@ import {
   ArrowCounterClockwise,
   UserMinus,
   LinkBreak,
-  DownloadSimple
+  DownloadSimple,
+  Export
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
@@ -74,6 +76,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
   const [showListPanel, setShowListPanel] = useState(false)
   const [showPhotoViewer, setShowPhotoViewer] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const [photoViewerData, setPhotoViewerData] = useState<{ url: string; name: string } | null>(null)
   const [editPerson, setEditPerson] = useState<Person | undefined>()
   const [connectMode, setConnectMode] = useState(false)
@@ -1309,6 +1312,17 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
               <TooltipContent>Arrange by Score (Center)</TooltipContent>
             </Tooltip>
 
+            <Separator orientation="vertical" className="h-6" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)}>
+                  <Export size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Export Canvas</TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1649,6 +1663,17 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           onDiscard={handleDiscardChanges}
           downloadUrl={downloadUrl}
           fileName={fileName}
+        />
+
+        <ExportDialog
+          open={showExportDialog}
+          onOpenChange={setShowExportDialog}
+          persons={workspace.persons}
+          connections={workspace.connections}
+          groups={workspace.groups}
+          transform={transform}
+          canvasRef={canvasRef}
+          selectedPersons={selectedPersons}
         />
       </div>
     </TooltipProvider>
