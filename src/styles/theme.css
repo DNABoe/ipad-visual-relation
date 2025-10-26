@@ -1,93 +1,37 @@
-@import "tailwindcss";
-
-@import '@radix-ui/colors/olive-dark.css' layer(base)
-@import '@radix-ui/colors/sand-dark.css' layer(ba
+@import '@radix-ui/colors/olive-dark.css' layer(base);
+@import '@radix-ui/colors/sand-dark.css' layer(base);
 @import '@radix-ui/colors/red-dark.css' layer(base);
-@import '@radix-ui/colors/ruby-dark.css' layer(b
-@import '@radix-ui/colors/crimson-dark.css' layer(bas
-@import '@radix-ui/colors/pink-dark.css' layer(
-@import '@radix-ui/colors/plum-dark.css' layer(base)
-@import '@radix-ui/colors/purple-dark.css' layer
-@import '@radix-ui/colors/violet-dark.css' layer(base
-@import '@radix-ui/colors/iris-dark.css' layer(base
+@import '@radix-ui/colors/ruby-dark.css' layer(base);
+@import '@radix-ui/colors/crimson-dark.css' layer(base);
+@import '@radix-ui/colors/pink-dark.css' layer(base);
+@import '@radix-ui/colors/plum-dark.css' layer(base);
+@import '@radix-ui/colors/purple-dark.css' layer(base);
+@import '@radix-ui/colors/violet-dark.css' layer(base);
+@import '@radix-ui/colors/iris-dark.css' layer(base);
 @import '@radix-ui/colors/indigo-dark.css' layer(base);
-@import '@radix-ui/colors/blue-dark.css' layer(b
+@import '@radix-ui/colors/blue-dark.css' layer(base);
 @import '@radix-ui/colors/cyan-dark.css' layer(base);
-@import '@radix-ui/colors/teal-dark.css' layer(b
+@import '@radix-ui/colors/teal-dark.css' layer(base);
 @import '@radix-ui/colors/jade-dark.css' layer(base);
-@import '@radix-ui/colors/green-dark.css' layer(ba
+@import '@radix-ui/colors/green-dark.css' layer(base);
 @import '@radix-ui/colors/grass-dark.css' layer(base);
-@import '@radix-ui/colors/bronze-dark.css' layer(b
+@import '@radix-ui/colors/bronze-dark.css' layer(base);
 @import '@radix-ui/colors/gold-dark.css' layer(base);
-@import '@radix-ui/colors/brown-dark.css' layer(
-@import '@radix-ui/colors/orange-dark.css' layer(base
-@import '@radix-ui/colors/amber-dark.css' layer(ba
+@import '@radix-ui/colors/brown-dark.css' layer(base);
+@import '@radix-ui/colors/orange-dark.css' layer(base);
+@import '@radix-ui/colors/amber-dark.css' layer(base);
 @import '@radix-ui/colors/yellow-dark.css' layer(base);
-@import '@radix-ui/colors/lime-dark.css' layer(b
+@import '@radix-ui/colors/lime-dark.css' layer(base);
 @import '@radix-ui/colors/mint-dark.css' layer(base);
-@import '@radix-ui/colors/sky-dark.css' layer(ba
-@import '@radix-ui/colors/tomato-dark.css' layer(base
-@import '@radix-ui/colors/gray-dark.css' layer(b
-@import '@radix-ui/colors/mauve-dark.css' layer(base)
-@import '@radix-ui/colors/slate-dark.css' layer(
-@import '@radix-ui/colors/slate-dark-alpha.css' layer
-@import 'tailwindcss/theme' layer(theme);
-@import 'tailwindcss/preflight' layer(base);
-/*
-  so we've added these compatibility styles to make su
-
-  color utility to any element that depends on these de
-@layer base {
-  ::after,
-  ::backdrop,
-    border-color: var(--color-gray-200, currentColor);
-}
-@layer base {
-    --tomato-contrast: #fff;
-    --ruby-contrast: #fff;
-    --pink-contrast: #fff;
-    --purple-contrast: #fff;
-    --iris-contrast: #fff;
-    --blue-contrast: #fff;
-    --teal-contrast: #fff;
-    --green-contrast: #fff;
-    --bronze-contrast: #fff;
-    --brown-contrast: #fff;
-    --amber-contrast: #000;
-    --lime-contrast: #000;
-    --sky-contrast: #000;
-    --mauve-contrast: #fff;
-    --sage-contrast: #fff;
-    --sand-contrast: #fff;
-    /**
-   *
-   * We've introduced a --size-scale variable as a mult
+@import '@radix-ui/colors/sky-dark.css' layer(base);
+@import '@radix-ui/colors/tomato-dark.css' layer(base);
+@import '@radix-ui/colors/gray-dark.css' layer(base);
+@import '@radix-ui/colors/mauve-dark.css' layer(base);
+@import '@radix-ui/colors/slate-dark.css' layer(base);
 @import '@radix-ui/colors/slate-dark-alpha.css' layer(base);
 
-@import 'tailwindcss/theme' layer(theme);
-
-@import 'tailwindcss/preflight' layer(base);
-
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
-}
-
-@layer base {
-  #spark-app {
+  :root {
     --tomato-contrast: #fff;
     --red-contrast: #fff;
     --ruby-contrast: #fff;
@@ -119,13 +63,8 @@
     --sage-contrast: #fff;
     --olive-contrast: #fff;
     --sand-contrast: #fff;
-
-    /**
-   * Spacing scale
-   *
-   * These variables define a spacing scale based on Tailwind's default.
-   * We've introduced a --size-scale variable as a multiplier.
-   * By adjusting this single value, we can proportionally
+  }
+}
 
 
 
