@@ -23,65 +23,79 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 export async function hashPassword(password: string): Promise<PasswordHash> {
-  const encoder = new TextEncoder()
-  const passwordBuffer = encoder.encode(password)
-  
-  const saltArray = crypto.getRandomValues(new Uint8Array(32))
-  const iterations = 210000
-  
-  const baseKey = await crypto.subtle.importKey(
-    'raw',
-    passwordBuffer,
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
-  
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: saltArray.buffer,
-      iterations: iterations,
-      hash: 'SHA-256'
-    },
-    baseKey,
-    256
-  )
-  
-  return {
-    hash: arrayBufferToBase64(derivedBits),
-    salt: arrayBufferToBase64(saltArray.buffer),
-    iterations: iterations
+  try {
+    const encoder = new TextEncoder()
+    const passwordBuffer = encoder.encode(password)
+    
+    const saltArray = crypto.getRandomValues(new Uint8Array(32))
+    const iterations = 210000
+    
+    const baseKey = await crypto.subtle.importKey(
+      'raw',
+      passwordBuffer,
+      'PBKDF2',
+      false,
+      ['deriveBits']
+    )
+    
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt: saltArray.buffer,
+        iterations: iterations,
+        hash: 'SHA-256'
+      },
+      baseKey,
+      256
+    )
+    
+    return {
+      hash: arrayBufferToBase64(derivedBits),
+      salt: arrayBufferToBase64(saltArray.buffer),
+      iterations: iterations
+    }
+  } catch (error) {
+    console.error('Password hashing error:', error)
+    throw new Error('Failed to hash password')
   }
 }
 
 export async function verifyPassword(password: string, storedHash: PasswordHash): Promise<boolean> {
-  const encoder = new TextEncoder()
-  const passwordBuffer = encoder.encode(password)
-  
-  const saltBuffer = base64ToArrayBuffer(storedHash.salt)
-  
-  const baseKey = await crypto.subtle.importKey(
-    'raw',
-    passwordBuffer,
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
-  
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: saltBuffer,
-      iterations: storedHash.iterations,
-      hash: 'SHA-256'
-    },
-    baseKey,
-    256
-  )
-  
-  const computedHash = arrayBufferToBase64(derivedBits)
-  return computedHash === storedHash.hash
+  try {
+    if (!password || !storedHash || !isPasswordHash(storedHash)) {
+      return false
+    }
+
+    const encoder = new TextEncoder()
+    const passwordBuffer = encoder.encode(password)
+    
+    const saltBuffer = base64ToArrayBuffer(storedHash.salt)
+    
+    const baseKey = await crypto.subtle.importKey(
+      'raw',
+      passwordBuffer,
+      'PBKDF2',
+      false,
+      ['deriveBits']
+    )
+    
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt: saltBuffer,
+        iterations: storedHash.iterations,
+        hash: 'SHA-256'
+      },
+      baseKey,
+      256
+    )
+    
+    const computedHash = arrayBufferToBase64(derivedBits)
+    return computedHash === storedHash.hash
+  } catch (error) {
+    console.error('Password verification error:', error)
+    return false
+  }
 }
 
 export function isPasswordHash(value: unknown): value is PasswordHash {
@@ -98,5 +112,10 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
 }
 
 export async function getDefaultPasswordHash(): Promise<PasswordHash> {
-  return hashPassword('admin')
+  try {
+    return await hashPassword('admin')
+  } catch (error) {
+    console.error('Failed to generate default password hash:', error)
+    throw new Error('Failed to initialize authentication system')
+  }
 }

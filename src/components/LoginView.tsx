@@ -47,13 +47,22 @@ export function LoginView({ onLogin }: LoginViewProps) {
         return
       }
 
-      if (username === storedUsername && await verifyPassword(password, storedPasswordHash)) {
+      if (username !== storedUsername) {
+        setError('Invalid username or password')
+        setIsLoading(false)
+        return
+      }
+
+      const isValid = await verifyPassword(password, storedPasswordHash)
+      
+      if (isValid) {
         onLogin()
       } else {
         setError('Invalid username or password')
       }
     } catch (err) {
-      setError('An error occurred during login')
+      console.error('Login error:', err)
+      setError('An error occurred during login. Please try again.')
     } finally {
       setIsLoading(false)
     }

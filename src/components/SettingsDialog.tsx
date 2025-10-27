@@ -97,7 +97,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
         }
 
         const newHash = await hashPassword(newPassword)
-        await setSettings((current) => ({
+        setSettings((current) => ({
           ...current!,
           username: username.trim(),
           passwordHash: newHash,
@@ -105,7 +105,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
         toast.success('Username and password updated successfully')
       } else {
-        await setSettings((current) => ({
+        setSettings((current) => ({
           ...current!,
           username: username.trim(),
         }))
@@ -118,8 +118,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
       setConfirmPassword('')
       onOpenChange(false)
     } catch (error) {
-      toast.error('Failed to update settings')
-      console.error(error)
+      console.error('Settings update error:', error)
+      toast.error('Failed to update settings. Please try again.')
     } finally {
       setIsSaving(false)
     }
