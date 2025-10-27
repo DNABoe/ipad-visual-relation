@@ -125,6 +125,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     id="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="newPassword" className="text-sm font-medium">New Password (optional)</Label>
@@ -135,6 +136,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Leave blank to keep current"
                   />
+                  <p className="text-xs text-muted-foreground">
                     Only enter a new password if you want to change it
                   </p>
                 </div>
@@ -145,8 +147,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} className="bg-gradient-to-r from-primary to-accent shadow-lg">Save Changes</Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} className="bg-gradient-to-r from-primary to-accent shadow-lg">Save Changes</Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   )
 }
