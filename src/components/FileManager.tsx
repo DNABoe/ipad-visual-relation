@@ -254,7 +254,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <FilePlus size={20} className="text-primary-foreground" weight="duotone" />
+                <UsersThree size={20} className="text-primary-foreground" weight="duotone" />
               </div>
               Create New Network
             </DialogTitle>
