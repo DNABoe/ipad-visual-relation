@@ -35,14 +35,15 @@ export function PersonNode({
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
-          'cursor-grab select-none transition-all duration-200 border-[3px] bg-card',
+          'cursor-grab select-none transition-all duration-200 border-[3px] bg-card shadow-lg',
           'hover:shadow-xl hover:shadow-primary/20 hover:border-primary/50',
-          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-2xl shadow-accent/40 border-accent/60',
+          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl shadow-accent/40 border-accent/60',
           isDragging && 'node-dragging shadow-2xl'
         )}
         style={{
           ...style,
           borderColor: frameColor,
+          opacity: 1,
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -56,7 +57,7 @@ export function PersonNode({
               onPhotoDoubleClick?.(e)
             }}
           >
-            <Avatar className="h-20 w-20 flex-shrink-0 border-2 border-border/40 shadow-md">
+            <Avatar className="h-20 w-20 flex-shrink-0 border-0 shadow-md">
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback 
                 className={cn(
@@ -75,7 +76,7 @@ export function PersonNode({
             <h3 className="font-semibold text-sm leading-tight break-words text-foreground tracking-tight">{person.name}</h3>
             {person.position && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position}</p>}
           </div>
-          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 bg-primary text-primary-foreground border-2 border-primary/50 shadow-md">
+          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 bg-primary text-primary-foreground border-0 shadow-md">
             {person.score}
           </Badge>
         </div>
