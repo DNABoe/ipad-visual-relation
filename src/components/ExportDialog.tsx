@@ -501,7 +501,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card border-border shadow-2xl">
+      <DialogContent className="max-w-md shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -509,7 +509,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             </div>
             Export Canvas
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription>
             {selectedPersons.length > 0 
               ? `Export selection (${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}) or choose a different area`
               : 'Choose export format and select the area to export'}
@@ -518,20 +518,20 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
         <div className="space-y-5">
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Export Format</Label>
+            <Label className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Export Format</Label>
             <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)} className="space-y-2">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-[oklch(0.60_0.20_255)] hover:bg-[oklch(0.25_0.045_245)] transition-colors cursor-pointer">
                 <RadioGroupItem value="png" id="format-png" />
                 <Label htmlFor="format-png" className="font-normal cursor-pointer flex-1">
-                  <div className="font-medium text-foreground">PNG</div>
-                  <div className="text-xs text-muted-foreground">Lossless, transparent background</div>
+                  <div className="font-medium text-[oklch(0.82_0.015_250)]">PNG</div>
+                  <div className="text-xs text-[oklch(0.62_0.025_250)]">Lossless, transparent background</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-[oklch(0.60_0.20_255)] hover:bg-[oklch(0.25_0.045_245)] transition-colors cursor-pointer">
                 <RadioGroupItem value="jpeg" id="format-jpeg" />
                 <Label htmlFor="format-jpeg" className="font-normal cursor-pointer flex-1">
-                  <div className="font-medium text-foreground">JPEG</div>
-                  <div className="text-xs text-muted-foreground">Smaller file size</div>
+                  <div className="font-medium text-[oklch(0.82_0.015_250)]">JPEG</div>
+                  <div className="text-xs text-[oklch(0.62_0.025_250)]">Smaller file size</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -540,20 +540,20 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           <Separator className="bg-border" />
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Export Mode</Label>
+            <Label className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Export Mode</Label>
             <RadioGroup value={mode} onValueChange={(v) => setMode(v as ExportMode)} className="space-y-2">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-[oklch(0.60_0.20_255)] hover:bg-[oklch(0.25_0.045_245)] transition-colors cursor-pointer">
                 <RadioGroupItem value="all" id="mode-all" />
                 <Label htmlFor="mode-all" className="font-normal cursor-pointer flex-1">
-                  <div className="font-medium text-foreground">Entire Canvas</div>
-                  <div className="text-xs text-muted-foreground">Export everything</div>
+                  <div className="font-medium text-[oklch(0.82_0.015_250)]">Entire Canvas</div>
+                  <div className="text-xs text-[oklch(0.62_0.025_250)]">Export everything</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary/60 hover:bg-primary/8 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-[oklch(0.60_0.20_255)] hover:bg-[oklch(0.25_0.045_245)] transition-colors cursor-pointer">
                 <RadioGroupItem value="selection" id="mode-selection" />
                 <Label htmlFor="mode-selection" className="font-normal cursor-pointer flex-1">
-                  <div className="font-medium text-foreground">Selected Area</div>
-                  <div className="text-xs text-muted-foreground">Export specific region</div>
+                  <div className="font-medium text-[oklch(0.82_0.015_250)]">Selected Area</div>
+                  <div className="text-xs text-[oklch(0.62_0.025_250)]">Export specific region</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -573,11 +573,11 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-foreground bg-accent/15 border border-accent/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-[oklch(0.82_0.015_250)] bg-[oklch(0.42_0.12_250)] border border-[oklch(0.60_0.20_255)] rounded-lg p-3">
                       <CheckCircle size={18} weight="fill" className="text-accent flex-shrink-0" />
                       <div>
                         <div className="font-medium">Area selected</div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-[oklch(0.62_0.025_250)]">
                           {Math.round(selectionRect.width)} × {Math.round(selectionRect.height)}
                           {selectedPersons.length > 0 && ` • ${selectedPersons.length} person${selectedPersons.length > 1 ? 's' : ''}`}
                         </div>
@@ -611,8 +611,8 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           <Separator className="bg-border/50" />
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Include in Export</Label>
-            <div className="space-y-2 rounded-lg border border-border/50 bg-muted/20 p-4">
+            <Label className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Include in Export</Label>
+            <div className="space-y-2 rounded-lg border border-border bg-[oklch(0.22_0.030_248)] p-4">
               <div className="flex items-center space-x-3">
                 <Checkbox 
                   id="include-name" 
@@ -620,7 +620,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   onCheckedChange={(checked) => setIncludeName(checked === true)}
                   className="border-border/70"
                 />
-                <Label htmlFor="include-name" className="font-normal cursor-pointer text-sm">
+                <Label htmlFor="include-name" className="font-normal cursor-pointer text-sm text-[oklch(0.78_0.015_250)]">
                   Person name
                 </Label>
               </div>
@@ -631,7 +631,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   onCheckedChange={(checked) => setIncludePosition(checked === true)}
                   className="border-border/70"
                 />
-                <Label htmlFor="include-position" className="font-normal cursor-pointer text-sm">
+                <Label htmlFor="include-position" className="font-normal cursor-pointer text-sm text-[oklch(0.78_0.015_250)]">
                   Position/Title
                 </Label>
               </div>
@@ -642,7 +642,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   onCheckedChange={(checked) => setIncludeImportanceScore(checked === true)}
                   className="border-border/70"
                 />
-                <Label htmlFor="include-importance" className="font-normal cursor-pointer text-sm">
+                <Label htmlFor="include-importance" className="font-normal cursor-pointer text-sm text-[oklch(0.78_0.015_250)]">
                   Importance score
                 </Label>
               </div>
@@ -653,7 +653,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   onCheckedChange={(checked) => setIncludePhoto(checked === true)}
                   className="border-border/70"
                 />
-                <Label htmlFor="include-photo" className="font-normal cursor-pointer text-sm">
+                <Label htmlFor="include-photo" className="font-normal cursor-pointer text-sm text-[oklch(0.78_0.015_250)]">
                   Photos
                 </Label>
               </div>

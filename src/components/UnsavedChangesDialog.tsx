@@ -33,8 +33,8 @@ export function UnsavedChangesDialog({
           <AlertDialogDescription className="space-y-3">
             <p>You have unsaved changes. Would you like to save before continuing?</p>
             {downloadUrl && (
-              <div className="bg-secondary/50 p-3 rounded-lg border-2 border-border">
-                <p className="text-sm font-medium mb-2 text-foreground">To save your work:</p>
+              <div className="bg-[oklch(0.25_0.045_245)] p-3 rounded-lg border-2 border-border">
+                <p className="text-sm font-medium mb-2 text-[oklch(0.82_0.015_250)]">To save your work:</p>
                 <a
                   href={downloadUrl}
                   download={`${fileName}.enc.json`}
@@ -44,7 +44,7 @@ export function UnsavedChangesDialog({
                   <DownloadSimple size={16} weight="bold" />
                   {fileName}.enc.json
                 </a>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-[oklch(0.58_0.020_250)] mt-2">
                   Right-click the link above and choose "Save link as..."
                 </p>
               </div>

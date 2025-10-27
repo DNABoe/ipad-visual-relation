@@ -65,7 +65,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl">Settings</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription>
             Manage your system preferences and account
           </DialogDescription>
         </DialogHeader>
@@ -77,12 +77,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           
           <TabsContent value="system" className="space-y-5 py-4">
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground text-sm">Canvas Settings</h3>
-              <div className="space-y-4 rounded-xl border-2 border-border bg-muted/30 p-4">
+              <h3 className="font-semibold text-[oklch(0.82_0.015_250)] text-sm">Canvas Settings</h3>
+              <div className="space-y-4 rounded-xl border-2 border-border bg-[oklch(0.22_0.030_248)] p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="snap-toggle" className="text-sm font-medium cursor-pointer">Snap to Grid</Label>
-                    <div className="text-xs text-muted-foreground">
+                    <Label htmlFor="snap-toggle" className="text-sm font-medium cursor-pointer text-[oklch(0.82_0.015_250)]">Snap to Grid</Label>
+                    <div className="text-xs text-[oklch(0.62_0.025_250)]">
                       Align cards and groups to grid when dragging
                     </div>
                   </div>
@@ -95,8 +95,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                 
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                    <span className="text-sm font-semibold text-foreground bg-primary/15 px-2.5 py-1 rounded-lg">{settings?.gridSize ?? 20}px</span>
+                    <Label htmlFor="grid-size" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Grid Size</Label>
+                    <span className="text-sm font-semibold text-[oklch(0.82_0.015_250)] bg-[oklch(0.42_0.12_250)] px-2.5 py-1 rounded-lg">{settings?.gridSize ?? 20}px</span>
                   </div>
                   <Slider
                     id="grid-size"
@@ -107,7 +107,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     onValueChange={(value) => setSettings((current) => ({ ...current!, gridSize: value[0] }))}
                     className="w-full"
                   />
-                  <div className="text-xs text-muted-foreground/70 pl-1">
+                  <div className="text-xs text-[oklch(0.54_0.018_250)] pl-1">
                     Controls both grid spacing and snap increment
                   </div>
                 </div>
@@ -117,10 +117,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
           <TabsContent value="user" className="space-y-5 py-4">
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground text-sm">Account</h3>
-              <div className="space-y-4 rounded-xl border-2 border-border/50 bg-muted/20 p-4">
+              <h3 className="font-semibold text-[oklch(0.82_0.015_250)] text-sm">Account</h3>
+              <div className="space-y-4 rounded-xl border-2 border-border bg-[oklch(0.22_0.030_248)] p-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+                  <Label htmlFor="username" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Username</Label>
                   <Input
                     id="username"
                     value={username}
@@ -128,7 +128,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-sm font-medium">New Password (optional)</Label>
+                  <Label htmlFor="newPassword" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">New Password (optional)</Label>
                   <Input
                     id="newPassword"
                     type="password"
@@ -136,7 +136,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Leave blank to keep current"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-[oklch(0.62_0.025_250)]">
                     Only enter a new password if you want to change it
                   </p>
                 </div>

@@ -253,7 +253,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md bg-card border-border shadow-2xl">
+        <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -261,14 +261,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
               </div>
               Create New Network
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription>
               Set up your encrypted relationship network
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-filename" className="text-sm font-medium">File Name</Label>
+              <Label htmlFor="new-filename" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">File Name</Label>
               <Input
                 id="new-filename"
                 value={newFileName}
@@ -281,13 +281,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground pl-1">
-                Will be saved as: <span className="font-mono text-foreground">{newFileName.trim() || 'my-network'}.enc.json</span>
+              <p className="text-xs text-[oklch(0.58_0.020_250)] pl-1">
+                Will be saved as: <span className="font-mono text-[oklch(0.82_0.015_250)]">{newFileName.trim() || 'my-network'}.enc.json</span>
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-password" className="text-sm font-medium">Password</Label>
+              <Label htmlFor="new-password" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Password</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -301,13 +301,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground pl-1">
+              <p className="text-xs text-[oklch(0.58_0.020_250)] pl-1">
                 Use a strong, unique password. Recommended: 12+ characters with mixed case, numbers, and symbols.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-password-confirm" className="text-sm font-medium">Confirm Password</Label>
+              <Label htmlFor="new-password-confirm" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Confirm Password</Label>
               <Input
                 id="new-password-confirm"
                 type="password"
@@ -323,14 +323,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-[oklch(0.25_0.045_245)] border border-[oklch(0.35_0.040_248)]">
               <Checkbox
                 id="include-sample"
                 checked={includeSampleData}
                 onCheckedChange={(checked) => setIncludeSampleData(checked === true)}
                 className="border-primary/40"
               />
-              <Label htmlFor="include-sample" className="text-sm cursor-pointer font-normal">
+              <Label htmlFor="include-sample" className="text-sm cursor-pointer font-normal text-[oklch(0.78_0.015_250)]">
                 Include sample data to explore features
               </Label>
             </div>
@@ -348,7 +348,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="sm:max-w-md bg-card border-border shadow-2xl">
+        <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -356,19 +356,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
               </div>
               Load Existing Network
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription>
               Select your encrypted network file
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="load-file" className="text-sm font-medium">Network File</Label>
+              <Label htmlFor="load-file" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Network File</Label>
               <Input
                 id="load-file"
                 type="file"
                 accept=".json,.enc.json"
-                className="cursor-pointer border-border h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary/15 file:text-primary hover:file:bg-primary/25 file:cursor-pointer"
+                className="cursor-pointer border-border h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[oklch(0.42_0.12_250)] file:text-[oklch(0.88_0.012_255)] hover:file:bg-[oklch(0.38_0.14_250)] file:cursor-pointer"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
@@ -376,13 +376,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground pl-1">
-                Select your <span className="font-mono text-foreground">.enc.json</span> file
+              <p className="text-xs text-[oklch(0.58_0.020_250)] pl-1">
+                Select your <span className="font-mono text-[oklch(0.82_0.015_250)]">.enc.json</span> file
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="load-password" className="text-sm font-medium">Password</Label>
+              <Label htmlFor="load-password" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Password</Label>
               <Input
                 id="load-password"
                 type="password"
@@ -398,8 +398,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="text-center p-4 rounded-xl bg-gradient-to-r from-muted/60 to-muted/40 border border-border">
-              <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+            <div className="text-center p-4 rounded-xl bg-[oklch(0.25_0.045_245)] border border-border">
+              <p className="text-xs text-[oklch(0.62_0.025_250)] flex items-center justify-center gap-2">
                 <span className="text-accent text-sm">🔒</span>
                 <span>All decryption happens locally in your browser</span>
               </p>
