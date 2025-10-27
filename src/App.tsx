@@ -2,14 +2,19 @@ import { useState, useCallback } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { WorkspaceView } from './components/WorkspaceView2'
 import { FileManager } from './components/FileManager'
+import { LoginView } from './components/LoginView'
 import type { Workspace } from './lib/types'
 
 function App() {
-
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
+
+  const handleLogin = useCallback(() => {
+    setIsAuthenticated(true)
+  }, [])
 
   const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     setWorkspace(loadedWorkspace)
@@ -42,6 +47,15 @@ function App() {
       setWorkspace(update)
     }
   }, [])
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <LoginView onLogin={handleLogin} />
+        <Toaster />
+      </>
+    )
+  }
 
   if (showFileManager || !workspace) {
     return (

@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { hashPassword, verifyPassword } from '@/lib/helpers'
-import { DEFAULT_USERNAME, DEFAULT_PASSWORD } from '@/lib/constants'
+import { verifyPassword, getDefaultPasswordHash, type PasswordHash, isPasswordHash } from '@/lib/auth'
+import { DEFAULT_USERNAME } from '@/lib/constants'
 import { UserCircle } from '@phosphor-icons/react'
 
 interface LoginViewProps {
@@ -15,33 +15,47 @@ interface LoginViewProps {
 export function LoginView({ onLogin }: LoginViewProps) {
   const [settings] = useKV<{
     username: string
-    passwordHash: string
+    passwordHash: PasswordHash
     showGrid: boolean
     snapToGrid: boolean
+    gridSize: number
     showMinimap: boolean
-  }>('app-settings', {
-    username: DEFAULT_USERNAME,
-    passwordHash: hashPassword(DEFAULT_PASSWORD),
-    showGrid: true,
-    snapToGrid: false,
-    showMinimap: true,
-  })
+  }>('app-settings', undefined)
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [defaultHash, setDefaultHash] = useState<PasswordHash | null>(null)
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    getDefaultPasswordHash().then(setDefaultHash)
+  }, [])
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setIsLoading(true)
 
-    const storedUsername = settings?.username || DEFAULT_USERNAME
-    const storedPasswordHash = settings?.passwordHash || hashPassword(DEFAULT_PASSWORD)
+    try {
+      const storedUsername = settings?.username || DEFAULT_USERNAME
+      const storedPasswordHash = settings?.passwordHash || defaultHash
 
-    if (username === storedUsername && verifyPassword(password, storedPasswordHash)) {
-      onLogin()
-    } else {
-      setError('Invalid username or password')
+      if (!storedPasswordHash) {
+        setError('System initializing, please try again')
+        setIsLoading(false)
+        return
+      }
+
+      if (username === storedUsername && await verifyPassword(password, storedPasswordHash)) {
+        onLogin()
+      } else {
+        setError('Invalid username or password')
+      }
+    } catch (err) {
+      setError('An error occurred during login')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -84,8 +98,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-4">
               Default credentials: admin / admin

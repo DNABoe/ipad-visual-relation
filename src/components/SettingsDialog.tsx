@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
-import { hashPassword } from '@/lib/helpers'
+import { hashPassword, getDefaultPasswordHash, type PasswordHash, verifyPassword } from '@/lib/auth'
 import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
+import { DEFAULT_USERNAME } from '@/lib/constants'
 
 interface SettingsDialogProps {
   open: boolean
@@ -23,46 +24,105 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange, workspace, onImport }: SettingsDialogProps) {
   const [settings, setSettings] = useKV<{
     username: string
-    passwordHash: string
+    passwordHash: PasswordHash
     showGrid: boolean
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
-  }>('app-settings', {
-    username: 'admin',
-    passwordHash: hashPassword('admin'),
-    showGrid: true,
-    snapToGrid: false,
-    gridSize: 20,
-    showMinimap: true,
-  })
+  }>('app-settings', undefined)
 
   const [username, setUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [defaultHash, setDefaultHash] = useState<PasswordHash | null>(null)
+
+  useEffect(() => {
+    getDefaultPasswordHash().then(setDefaultHash)
+  }, [])
 
   useEffect(() => {
     if (settings) {
-      setUsername(settings.username)
+      setUsername(settings.username || DEFAULT_USERNAME)
+    } else if (!settings && defaultHash) {
+      setSettings({
+        username: DEFAULT_USERNAME,
+        passwordHash: defaultHash,
+        showGrid: true,
+        snapToGrid: false,
+        gridSize: 20,
+        showMinimap: true,
+      })
     }
-  }, [settings])
+  }, [settings, defaultHash, setSettings])
 
   const handleSave = async () => {
-    if (!username.trim()) return
+    if (!username.trim()) {
+      toast.error('Username cannot be empty')
+      return
+    }
 
-    await setSettings((current) => ({
-      ...current!,
-      username: username.trim(),
-      ...(newPassword ? { passwordHash: hashPassword(newPassword) } : {}),
-    }))
+    if (newPassword && !currentPassword) {
+      toast.error('Please enter your current password to change it')
+      return
+    }
 
-    setTimeout(() => {
-      toast.success('Settings saved')
-    }, 50)
-    
-    setCurrentPassword('')
-    setNewPassword('')
-    onOpenChange(false)
+    if (newPassword && newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters')
+      return
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      if (newPassword && currentPassword) {
+        const storedHash = settings?.passwordHash || defaultHash
+        if (!storedHash) {
+          toast.error('Unable to verify current password')
+          setIsSaving(false)
+          return
+        }
+
+        const isCurrentPasswordValid = await verifyPassword(currentPassword, storedHash)
+        if (!isCurrentPasswordValid) {
+          toast.error('Current password is incorrect')
+          setIsSaving(false)
+          return
+        }
+
+        const newHash = await hashPassword(newPassword)
+        await setSettings((current) => ({
+          ...current!,
+          username: username.trim(),
+          passwordHash: newHash,
+        }))
+
+        toast.success('Username and password updated successfully')
+      } else {
+        await setSettings((current) => ({
+          ...current!,
+          username: username.trim(),
+        }))
+
+        toast.success('Username updated successfully')
+      }
+
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      onOpenChange(false)
+    } catch (error) {
+      toast.error('Failed to update settings')
+      console.error(error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -127,7 +187,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
           <TabsContent value="user" className="space-y-5 py-4">
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Account</h3>
+              <h3 className="font-semibold text-sm">Account Security</h3>
               <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
@@ -135,21 +195,79 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     id="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-sm font-medium">New Password (optional)</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Leave blank to keep current"
+                    placeholder="Enter username"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Only enter a new password if you want to change it
+                    Used for authentication to access the application
                   </p>
                 </div>
+
+                <div className="h-px bg-border my-4"></div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-medium">Change Password</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Leave blank to keep your current password
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      autoComplete="current-password"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password (min 8 characters)"
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 space-y-2">
+                    <p className="text-xs font-medium text-primary">🔒 Password Security Tips</p>
+                    <ul className="text-xs text-muted-foreground space-y-1 pl-4">
+                      <li>• Use at least 8 characters (12+ recommended)</li>
+                      <li>• Include uppercase, lowercase, numbers, and symbols</li>
+                      <li>• Avoid common words and personal information</li>
+                      <li>• Use a unique password for this application</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-accent text-sm mt-0.5">⚠️</span>
+                  <span>
+                    <strong className="text-foreground">Important:</strong> Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256. 
+                    Make sure to remember your password as it cannot be recovered.
+                  </span>
+                </p>
               </div>
             </div>
           </TabsContent>
@@ -221,8 +339,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           </TabsContent>
         </Tabs>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} className="bg-gradient-to-r from-primary to-accent shadow-lg">Save Changes</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            className="bg-gradient-to-r from-primary to-accent shadow-lg"
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
