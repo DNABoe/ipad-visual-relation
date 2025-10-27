@@ -47,7 +47,7 @@ export function WorkspaceToolbar({
 }: WorkspaceToolbarProps) {
   return (
     <TooltipProvider>
-      <div className="border-b border-border bg-card px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg backdrop-blur-sm" style={{ backgroundColor: 'var(--toolbar-bg)' }}>
+      <div className="border-b border-toolbar-border bg-toolbar-bg px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Logo size={32} showText={false} />
           <h1 className="text-xl font-bold tracking-tight text-primary">NetEye</h1>
@@ -87,7 +87,7 @@ export function WorkspaceToolbar({
                     controller.interaction.enableConnectMode()
                   }
                 }}
-                className={controller.interaction.isConnecting ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-secondary hover:border-primary/50"}
+                className={controller.interaction.isConnecting ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
               >
                 {controller.interaction.isConnecting ? <X size={18} weight="bold" /> : <Link size={18} weight="duotone" className="text-accent" />}
               </Button>
@@ -99,8 +99,8 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-secondary hover:border-primary/50">
-                <Plus size={18} weight="bold" className="text-emerald-400" />
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Plus size={18} weight="bold" className="text-success" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Add Person</TooltipContent>
@@ -108,7 +108,7 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openGroupDialog()} className="hover:bg-secondary hover:border-primary/50">
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openGroupDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <UsersThree size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
@@ -119,7 +119,7 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.transform.zoomIn} className="hover:bg-secondary hover:border-primary/50">
+              <Button variant="outline" size="sm" onClick={controller.transform.zoomIn} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <MagnifyingGlassPlus size={18} weight="duotone" className="text-accent" />
               </Button>
             </TooltipTrigger>
@@ -128,7 +128,7 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.transform.zoomOut} className="hover:bg-secondary hover:border-primary/50">
+              <Button variant="outline" size="sm" onClick={controller.transform.zoomOut} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <MagnifyingGlassMinus size={18} weight="duotone" className="text-accent" />
               </Button>
             </TooltipTrigger>
@@ -137,7 +137,7 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleZoomToFit} className="hover:bg-secondary hover:border-primary/50">
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleZoomToFit} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <ArrowsOut size={18} weight="duotone" className="text-accent" />
               </Button>
             </TooltipTrigger>
@@ -148,8 +148,8 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-secondary hover:border-primary/50">
-                <Export size={18} weight="duotone" className="text-amber-400" />
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Export size={18} weight="duotone" className="text-warning" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Export Canvas</TooltipContent>
@@ -161,7 +161,7 @@ export function WorkspaceToolbar({
                 variant={showGrid ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowGrid(!showGrid)}
-                className={showGrid ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-secondary hover:border-primary/50"}
+                className={showGrid ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
               >
                 <GridFour size={18} weight={showGrid ? "fill" : "duotone"} className={showGrid ? "" : "text-muted-foreground"} />
               </Button>
@@ -177,7 +177,7 @@ export function WorkspaceToolbar({
                 variant={showListPanel ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowListPanel(!showListPanel)}
-                className={showListPanel ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-secondary hover:border-primary/50"}
+                className={showListPanel ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
               >
                 <List size={18} weight={showListPanel ? "fill" : "duotone"} className={showListPanel ? "" : "text-muted-foreground"} />
               </Button>
@@ -190,8 +190,8 @@ export function WorkspaceToolbar({
               <Separator orientation="vertical" className="h-6 bg-border" />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-red-500/50 hover:bg-red-500/10 hover:border-red-500">
-                    <UserMinus size={18} weight="bold" className="text-red-500" />
+                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                    <UserMinus size={18} weight="bold" className="text-destructive" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Delete Selected Persons</TooltipContent>
@@ -204,8 +204,8 @@ export function WorkspaceToolbar({
               <Separator orientation="vertical" className="h-6 bg-border" />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedGroups} className="border-red-500/50 hover:bg-red-500/10 hover:border-red-500">
-                    <Trash size={18} weight="bold" className="text-red-500" />
+                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedGroups} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                    <Trash size={18} weight="bold" className="text-destructive" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Delete Selected Groups</TooltipContent>
@@ -218,8 +218,8 @@ export function WorkspaceToolbar({
               <Separator orientation="vertical" className="h-6 bg-border" />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-red-500/50 hover:bg-red-500/10 hover:border-red-500">
-                    <LinkBreak size={18} weight="bold" className="text-red-500" />
+                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                    <LinkBreak size={18} weight="bold" className="text-destructive" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Delete Selected Connections</TooltipContent>
@@ -236,9 +236,9 @@ export function WorkspaceToolbar({
                 size="sm"
                 onClick={controller.handlers.undo}
                 disabled={!controller.hasUndo}
-                className="hover:bg-secondary hover:border-primary/50 disabled:opacity-40"
+                className="hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
               >
-                <ArrowCounterClockwise size={18} weight="duotone" className={controller.hasUndo ? "text-orange-400" : "text-muted-foreground"} />
+                <ArrowCounterClockwise size={18} weight="duotone" className={controller.hasUndo ? "text-warning" : "text-muted-foreground"} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
@@ -248,7 +248,7 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openSettingsDialog()} className="hover:bg-secondary hover:border-primary/50">
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openSettingsDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <Gear size={18} weight="duotone" className="text-muted-foreground" />
               </Button>
             </TooltipTrigger>
@@ -260,7 +260,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')}>
-                <FilePlus size={16} className="text-green-400" />
+                <FilePlus size={16} className="text-success" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>New Network</TooltipContent>
@@ -269,7 +269,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('load')}>
-                <FolderOpen size={16} className="text-blue-400" />
+                <FolderOpen size={16} className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Load Network</TooltipContent>

@@ -123,8 +123,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   {photo ? (
                     <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
                   ) : (
-                    <AvatarFallback style={{ backgroundColor: FRAME_COLORS[frameColor], color: frameColor === 'white' ? '#000' : '#fff' }}>
-                      <span className="text-4xl font-bold">{name ? getInitials(name) : '?'}</span>
+                    <AvatarFallback 
+                      className="text-4xl font-bold"
+                      style={{ 
+                        backgroundColor: FRAME_COLORS[frameColor], 
+                        color: frameColor === 'white' ? 'oklch(0.18 0.028 248)' : 'oklch(0.95 0.01 250)' 
+                      }}
+                    >
+                      {name ? getInitials(name) : '?'}
                     </AvatarFallback>
                   )}
                 </Avatar>

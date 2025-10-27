@@ -63,6 +63,22 @@
   
   --canvas-grid: oklch(0.24 0.028 248);
   --canvas-bg: oklch(0.12 0.022 250);
+  
+  --frame-red: oklch(0.65 0.24 25);
+  --frame-green: oklch(0.70 0.20 145);
+  --frame-orange: oklch(0.75 0.18 60);
+  --frame-white: oklch(0.95 0.02 250);
+  
+  --group-blue: oklch(0.65 0.18 250);
+  --group-purple: oklch(0.65 0.18 290);
+  --group-pink: oklch(0.70 0.20 350);
+  --group-yellow: oklch(0.78 0.18 90);
+  --group-teal: oklch(0.65 0.15 180);
+  --group-indigo: oklch(0.60 0.18 270);
+  --group-rose: oklch(0.68 0.22 10);
+  --group-emerald: oklch(0.68 0.18 155);
+  --group-amber: oklch(0.75 0.18 75);
+  --group-cyan: oklch(0.70 0.18 200);
 }
 
 @layer base {
@@ -109,6 +125,16 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-toolbar-bg: var(--toolbar-bg);
+  --color-toolbar-border: var(--toolbar-border);
+  --color-toolbar-hover: var(--toolbar-hover);
+  --color-toolbar-active: var(--toolbar-active);
+  --color-canvas-bg: var(--canvas-bg);
+  --color-canvas-grid: var(--canvas-grid);
 
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: var(--radius);

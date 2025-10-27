@@ -81,8 +81,8 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
         width: group.width,
         height: group.height,
         borderColor: groupColor,
-        backgroundColor: group.solidBackground ? `${groupColor}30` : `${groupColor}12`,
-        boxShadow: group.solidBackground ? `inset 0 0 50px ${groupColor}18` : 'none',
+        backgroundColor: group.solidBackground ? `color-mix(in oklch, ${groupColor} 25%, transparent)` : `color-mix(in oklch, ${groupColor} 8%, transparent)`,
+        boxShadow: group.solidBackground ? `inset 0 0 50px color-mix(in oklch, ${groupColor} 12%, transparent)` : 'none',
         ...style,
       }}
       onClick={onClick}
@@ -116,11 +116,11 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
           />
         ) : (
           <div
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg border-2"
             style={{
               backgroundColor: groupColor,
-              color: '#fff',
-              border: `2px solid ${groupColor}`,
+              color: 'oklch(0.95 0.01 250)',
+              borderColor: groupColor,
             }}
             onMouseDown={(e) => {
               if (onDragStart) {
@@ -135,7 +135,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-5 w-5 p-0 hover:bg-white/25 rounded-md transition-colors"
+                  className="h-5 w-5 p-0 hover:bg-background/25 rounded-md transition-colors"
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
@@ -190,7 +190,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
       {isSelected && onResizeStart && resizeHandles.map((handle) => (
         <div
           key={handle.position}
-          className="absolute w-2.5 h-2.5 bg-accent border-2 border-white rounded-sm opacity-0 group-hover/frame:opacity-100 hover:scale-150 transition-all z-10 shadow-md"
+          className="absolute w-2.5 h-2.5 bg-accent border-2 border-background rounded-sm opacity-0 group-hover/frame:opacity-100 hover:scale-150 transition-all z-10 shadow-md"
           style={{
             ...handle.style,
             cursor: handle.cursor,

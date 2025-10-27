@@ -22,14 +22,14 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="oklch(0.55 0.22 250)" />
-            <stop offset="50%" stopColor="oklch(0.65 0.18 220)" />
-            <stop offset="100%" stopColor="oklch(0.70 0.20 200)" />
+            <stop offset="0%" stopColor="var(--primary)" />
+            <stop offset="50%" stopColor="var(--accent)" />
+            <stop offset="100%" stopColor="var(--accent)" />
           </linearGradient>
           <radialGradient id={irisGradientId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="oklch(0.75 0.20 200)" />
-            <stop offset="40%" stopColor="oklch(0.60 0.22 230)" />
-            <stop offset="70%" stopColor="oklch(0.45 0.20 250)" />
+            <stop offset="0%" stopColor="var(--accent)" />
+            <stop offset="40%" stopColor="var(--primary)" />
+            <stop offset="70%" stopColor="var(--primary)" />
             <stop offset="100%" stopColor="oklch(0.30 0.15 260)" />
           </radialGradient>
           <filter id={glowId}>
@@ -74,14 +74,14 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           cx="50"
           cy="50"
           r="9"
-          fill="oklch(0.12 0.02 260)"
+          fill="var(--background)"
         />
         
         <circle
           cx="45"
           cy="45"
           r="3.5"
-          fill="oklch(0.98 0.01 250)"
+          fill="var(--foreground)"
           opacity="0.9"
         />
         
@@ -89,7 +89,7 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           cx="48"
           cy="48"
           r="1.5"
-          fill="oklch(0.98 0.01 250)"
+          fill="var(--foreground)"
           opacity="0.6"
         />
         
@@ -139,8 +139,8 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
       </svg>
       {showText && (
         <div className="flex flex-col">
-          <span className="text-5xl font-bold tracking-tight leading-none bg-gradient-to-r from-[oklch(0.65_0.22_250)] via-[oklch(0.75_0.18_220)] to-[oklch(0.80_0.20_200)] bg-clip-text text-transparent drop-shadow-lg">NetEye</span>
-          <span className="text-sm text-[oklch(0.70_0.015_250)] tracking-[0.15em] uppercase leading-none mt-2 font-medium">
+          <span className="text-5xl font-bold tracking-tight leading-none bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent drop-shadow-lg">NetEye</span>
+          <span className="text-sm text-muted-foreground tracking-[0.15em] uppercase leading-none mt-2 font-medium">
             Relationship Network
           </span>
         </div>

@@ -110,9 +110,10 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
                 <div className="flex items-center gap-3 w-full">
                   <Avatar className="h-10 w-10 flex-shrink-0">
                     <AvatarFallback
+                      className="font-bold"
                       style={{
                         backgroundColor: frameColor,
-                        color: person.frameColor === 'white' ? '#000' : '#fff',
+                        color: person.frameColor === 'white' ? 'oklch(0.18 0.028 248)' : 'oklch(0.95 0.01 250)',
                       }}
                     >
                       {getInitials(person.name)}
