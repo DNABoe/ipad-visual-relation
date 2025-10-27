@@ -103,42 +103,63 @@ export function organizeByImportance(
     5: result.filter(p => p.score === 5),
   }
 
+  const importantPersons = scoreGroups[1]
+  
+  if (importantPersons.length === 1) {
+    importantPersons[0].x = 0
+    importantPersons[0].y = 0
+  } else if (importantPersons.length > 1) {
+    const smallRadius = 120
+    importantPersons.forEach((person, index) => {
+      const angle = (index / importantPersons.length) * 2 * Math.PI
+      person.x = Math.cos(angle) * smallRadius
+      person.y = Math.sin(angle) * smallRadius
+    })
+  }
+
   const rings = [
-    { score: 1, radius: 0 },
-    { score: 2, radius: 240 },
-    { score: 3, radius: 420 },
-    { score: 4, radius: 600 },
-    { score: 5, radius: 780 },
+    { score: 2, radius: 350 },
+    { score: 3, radius: 550 },
+    { score: 4, radius: 750 },
+    { score: 5, radius: 950 },
   ]
 
   rings.forEach(({ score, radius }) => {
     const group = scoreGroups[score as keyof typeof scoreGroups]
     if (group.length === 0) return
 
-    if (radius === 0) {
-      if (group.length === 1) {
-        group[0].x = 0
-        group[0].y = 0
+    group.forEach((person, index) => {
+      const connectedImportant = Array.from(connectionMap.get(person.id) || [])
+        .filter(id => importantPersons.some(p => p.id === id))
+      
+      let targetAngle: number
+      
+      if (connectedImportant.length > 0) {
+        const connectedPositions = connectedImportant
+          .map(id => importantPersons.find(p => p.id === id))
+          .filter(p => p !== undefined) as Person[]
+        
+        const avgX = connectedPositions.reduce((sum, p) => sum + p.x, 0) / connectedPositions.length
+        const avgY = connectedPositions.reduce((sum, p) => sum + p.y, 0) / connectedPositions.length
+        targetAngle = Math.atan2(avgY, avgX)
       } else {
-        const smallRadius = 100
-        group.forEach((person, index) => {
-          const angle = (index / group.length) * 2 * Math.PI - Math.PI / 2
-          person.x = Math.cos(angle) * smallRadius
-          person.y = Math.sin(angle) * smallRadius
-        })
+        targetAngle = (index / group.length) * 2 * Math.PI
       }
-    } else {
-      group.forEach((person, index) => {
-        const angle = (index / group.length) * 2 * Math.PI - Math.PI / 2
-        person.x = Math.cos(angle) * radius
-        person.y = Math.sin(angle) * radius
-      })
-    }
+      
+      const angleSpread = (2 * Math.PI) / group.length
+      const jitter = (Math.random() - 0.5) * angleSpread * 0.3
+      targetAngle += jitter
+      
+      person.x = Math.cos(targetAngle) * radius
+      person.y = Math.sin(targetAngle) * radius
+    })
   })
 
-  const maxIterations = 80
+  const maxIterations = 100
   for (let iter = 0; iter < maxIterations; iter++) {
     result.forEach(person => {
+      if (person.score === 1) return
+
       const connectedIds = Array.from(connectionMap.get(person.id) || [])
       if (connectedIds.length === 0) return
 
@@ -146,7 +167,7 @@ export function organizeByImportance(
       const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
       const avgY = connected.reduce((sum, p) => sum + p.y, 0) / connected.length
 
-      const pullStrength = person.score === 1 ? 0.04 : 0.25
+      const pullStrength = 0.15
       const dx = avgX - person.x
       const dy = avgY - person.y
       
@@ -154,17 +175,28 @@ export function organizeByImportance(
       person.y += dy * pullStrength
 
       const currentDist = Math.sqrt(person.x ** 2 + person.y ** 2)
-      const targetRadius = rings.find(r => r.score === person.score)?.radius || 0
+      const targetRadius = rings.find(r => r.score === person.score)?.radius || 350
       
       if (currentDist > 10) {
         const radiusScale = targetRadius / currentDist
-        person.x *= (1 - pullStrength * 0.5) + pullStrength * 0.5 * radiusScale
-        person.y *= (1 - pullStrength * 0.5) + pullStrength * 0.5 * radiusScale
+        const radiusStrength = 0.3
+        person.x = person.x * (1 - radiusStrength) + (person.x * radiusScale) * radiusStrength
+        person.y = person.y * (1 - radiusStrength) + (person.y * radiusScale) * radiusStrength
       }
     })
   }
 
-  return resolveOverlaps(result)
+  const finalResult = resolveOverlaps(result)
+  
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
 }
 
 export function hierarchicalFromSelected(
@@ -283,7 +315,17 @@ export function hierarchicalFromSelected(
     })
   }
 
-  return resolveOverlaps(result)
+  const finalResult = resolveOverlaps(result)
+  
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
 }
 
 export function tightenNetwork(
@@ -367,7 +409,17 @@ export function tightenNetwork(
     })
   }
 
-  return resolveOverlaps(result)
+  const finalResult = resolveOverlaps(result)
+  
+  const finalCenterX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const finalCenterY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  
+  finalResult.forEach(person => {
+    person.x -= finalCenterX
+    person.y -= finalCenterY
+  })
+
+  return finalResult
 }
 
 export function smartArrange(
@@ -500,5 +552,15 @@ export function smartArrange(
     })
   }
 
-  return resolveOverlaps(result)
+  const finalResult = resolveOverlaps(result)
+  
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
 }
