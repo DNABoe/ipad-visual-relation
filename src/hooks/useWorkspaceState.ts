@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import type { Workspace, Person, Connection, Group } from '@/lib/types'
 import { toast } from 'sonner'
 
@@ -13,6 +13,16 @@ interface UndoAction {
 export function useWorkspaceState(initialWorkspace: Workspace) {
   const [workspace, setWorkspace] = useState<Workspace>(initialWorkspace)
   const [undoStack, setUndoStack] = useState<UndoAction[]>([])
+  const initialWorkspaceRef = useRef<string>(JSON.stringify(initialWorkspace))
+
+  useEffect(() => {
+    const newInitialStr = JSON.stringify(initialWorkspace)
+    if (newInitialStr !== initialWorkspaceRef.current) {
+      initialWorkspaceRef.current = newInitialStr
+      setWorkspace(initialWorkspace)
+      setUndoStack([])
+    }
+  }, [initialWorkspace])
 
   const addPerson = useCallback((person: Person) => {
     setWorkspace(prev => ({

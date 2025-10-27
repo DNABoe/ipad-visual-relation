@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
@@ -13,7 +13,6 @@ import { ExportDialog } from './ExportDialog'
 import { Toaster } from '@/components/ui/sonner'
 import type { Workspace } from '@/lib/types'
 import { encryptData } from '@/lib/encryption'
-import { useState } from 'react'
 
 interface WorkspaceViewProps {
   workspace: Workspace
@@ -49,25 +48,28 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     settings,
   })
 
-  useEffect(() => {
-    setWorkspace(controller.workspace)
-  }, [controller.workspace, setWorkspace])
-
   const currentWorkspaceStr = useMemo(() => JSON.stringify(controller.workspace), [controller.workspace])
 
   useEffect(() => {
+    let isMounted = true
+    
     const createDownloadUrl = async () => {
       try {
         const encrypted = await encryptData(currentWorkspaceStr, password)
         const fileData = JSON.stringify(encrypted, null, 2)
         const blob = new Blob([fileData], { type: 'application/json' })
-
-        if (downloadUrl) {
-          URL.revokeObjectURL(downloadUrl)
-        }
-
         const url = URL.createObjectURL(blob)
-        setDownloadUrl(url)
+        
+        if (isMounted) {
+          setDownloadUrl(prevUrl => {
+            if (prevUrl) {
+              URL.revokeObjectURL(prevUrl)
+            }
+            return url
+          })
+        } else {
+          URL.revokeObjectURL(url)
+        }
       } catch (error) {
         console.error('Error creating download URL:', error)
       }
@@ -76,9 +78,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     createDownloadUrl()
 
     return () => {
-      if (downloadUrl) {
-        URL.revokeObjectURL(downloadUrl)
-      }
+      isMounted = false
     }
   }, [currentWorkspaceStr, password])
 
