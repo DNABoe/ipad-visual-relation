@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { verifyPassword, getDefaultPasswordHash, type PasswordHash, isPasswordHash } from '@/lib/auth'
+import { verifyPassword, getDefaultPasswordHash, ensureDefaultPasswordHashInitialized, type PasswordHash, isPasswordHash } from '@/lib/auth'
 import { DEFAULT_USERNAME } from '@/lib/constants'
 import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
 
@@ -38,9 +38,13 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    if (!settings) {
-      setSettings(DEFAULT_SETTINGS)
+    const initAuth = async () => {
+      await ensureDefaultPasswordHashInitialized()
+      if (!settings) {
+        setSettings(DEFAULT_SETTINGS)
+      }
     }
+    initAuth()
   }, [settings, setSettings])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -126,9 +130,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeSlash size={20} weight="regular" />
-                  ) : (
                     <Eye size={20} weight="regular" />
+                  ) : (
+                    <EyeSlash size={20} weight="regular" />
                   )}
                 </button>
               </div>
@@ -139,9 +143,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
-            <p className="text-xs text-center text-muted-foreground mt-4">
-              Default credentials: admin / admin
-            </p>
           </form>
         </CardContent>
       </Card>
