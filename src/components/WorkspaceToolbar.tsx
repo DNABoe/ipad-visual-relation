@@ -79,28 +79,66 @@ export function WorkspaceToolbar({
           <Logo size={32} showText={false} />
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">RelEye</h1>
           <Separator orientation="vertical" className="h-6 bg-border" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card/50 px-3 py-1.5 rounded-md border border-primary/30">
             {downloadUrl ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <a
                     href={downloadUrl}
                     download={`${fileName}.enc.json`}
-                    className="text-sm hover:underline font-medium inline-flex items-center gap-1.5 transition-colors text-accent"
+                    className="text-base hover:underline font-semibold inline-flex items-center gap-2 transition-colors text-accent"
                   >
                     {fileName}
-                    <DownloadSimple size={14} weight="bold" />
+                    <DownloadSimple size={16} weight="bold" className="text-success" />
                   </a>
                 </TooltipTrigger>
-                <TooltipContent>Right-click and "Save link as..." to download</TooltipContent>
+                <TooltipContent>Click to save network file</TooltipContent>
               </Tooltip>
             ) : (
-              <span className="text-sm font-medium text-foreground">{fileName}</span>
+              <span className="text-base font-semibold text-foreground">{fileName}</span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <FilePlus size={18} className="text-success" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>New Network</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('load')} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <FolderOpen size={18} className="text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Load Network</TooltipContent>
+          </Tooltip>
+
+          <Separator orientation="vertical" className="h-6 bg-border" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Plus size={18} weight="bold" className="text-success" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add Person</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openGroupDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <UsersThree size={18} weight="duotone" className="text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add Group</TooltipContent>
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -126,20 +164,38 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Plus size={18} weight="bold" className="text-success" />
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleSmartArrange} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Crosshair size={18} weight="duotone" className="text-success" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Add Person</TooltipContent>
+            <TooltipContent>Smart Arrange</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openGroupDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <UsersThree size={18} weight="duotone" className="text-primary" />
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleOrganizeByImportance} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Target size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Add Group</TooltipContent>
+            <TooltipContent>Organize by Importance</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleHierarchicalView} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <TreeStructure size={18} weight="duotone" className="text-accent" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Hierarchical View</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleTightenNetwork} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <ArrowsInCardinal size={18} weight="duotone" className="text-accent" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Tighten Network</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6 bg-border" />
@@ -175,53 +231,6 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleOrganizeByImportance} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Target size={18} weight="duotone" className="text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Organize by Importance</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleHierarchicalView} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <TreeStructure size={18} weight="duotone" className="text-accent" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Hierarchical View (Select 1 Person First)</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleTightenNetwork} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <ArrowsInCardinal size={18} weight="duotone" className="text-accent" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Tighten Network</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleSmartArrange} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Crosshair size={18} weight="duotone" className="text-success" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Smart Arrange (Recommended)</TooltipContent>
-          </Tooltip>
-
-          <Separator orientation="vertical" className="h-6 bg-border" />
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Export size={18} weight="duotone" className="text-warning" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Export Canvas</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
               <Button
                 variant={showGrid ? "default" : "outline"}
                 size="sm"
@@ -233,8 +242,6 @@ export function WorkspaceToolbar({
             </TooltipTrigger>
             <TooltipContent>Toggle Grid</TooltipContent>
           </Tooltip>
-
-          <Separator orientation="vertical" className="h-6 bg-border" />
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -250,45 +257,51 @@ export function WorkspaceToolbar({
             <TooltipContent>Toggle List</TooltipContent>
           </Tooltip>
 
-          {controller.selection.selectedPersons.length > 0 && (
-            <>
-              <Separator orientation="vertical" className="h-6 bg-border" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
-                    <UserMinus size={18} weight="bold" className="text-destructive" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Delete Selected Persons</TooltipContent>
-              </Tooltip>
-            </>
-          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Export size={18} weight="duotone" className="text-warning" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export Canvas</TooltipContent>
+          </Tooltip>
 
-          {controller.selection.selectedGroups.length > 0 && (
+          {(controller.selection.selectedPersons.length > 0 || controller.selection.selectedGroups.length > 0 || controller.selection.selectedConnections.length > 0) && (
             <>
               <Separator orientation="vertical" className="h-6 bg-border" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedGroups} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
-                    <Trash size={18} weight="bold" className="text-destructive" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Delete Selected Groups</TooltipContent>
-              </Tooltip>
-            </>
-          )}
 
-          {controller.selection.selectedConnections.length > 0 && (
-            <>
-              <Separator orientation="vertical" className="h-6 bg-border" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
-                    <LinkBreak size={18} weight="bold" className="text-destructive" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Delete Selected Connections</TooltipContent>
-              </Tooltip>
+              {controller.selection.selectedPersons.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                      <UserMinus size={18} weight="bold" className="text-destructive" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Selected Persons</TooltipContent>
+                </Tooltip>
+              )}
+
+              {controller.selection.selectedGroups.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedGroups} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                      <Trash size={18} weight="bold" className="text-destructive" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Selected Groups</TooltipContent>
+                </Tooltip>
+              )}
+
+              {controller.selection.selectedConnections.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                      <LinkBreak size={18} weight="bold" className="text-destructive" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Selected Connections</TooltipContent>
+                </Tooltip>
+              )}
             </>
           )}
 
@@ -309,8 +322,6 @@ export function WorkspaceToolbar({
             <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
           </Tooltip>
 
-          <Separator orientation="vertical" className="h-6 bg-border" />
-
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openSettingsDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
@@ -318,26 +329,6 @@ export function WorkspaceToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Settings</TooltipContent>
-          </Tooltip>
-
-          <Separator orientation="vertical" className="h-6 bg-border" />
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')}>
-                <FilePlus size={16} className="text-success" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>New Network</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('load')}>
-                <FolderOpen size={16} className="text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Load Network</TooltipContent>
           </Tooltip>
         </div>
       </div>
