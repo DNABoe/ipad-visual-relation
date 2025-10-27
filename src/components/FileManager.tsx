@@ -136,7 +136,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="relative w-full max-w-2xl space-y-8 animate-fade-in-up">
           <div className="text-center space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent mb-2">
-              <FilePlus size={32} className="text-primary-foreground" weight="duotone" />
+              <UsersThree size={32} className="text-primary-foreground" weight="duotone" />
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight">Network Created Successfully!</h1>
@@ -149,7 +149,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                    <FilePlus size={24} className="text-primary-foreground" weight="duotone" />
+                    <UsersThree size={24} className="text-primary-foreground" weight="duotone" />
                   </div>
                   <div>
                     <p className="font-mono text-sm font-medium truncate">{createdNetwork.fileName}</p>
