@@ -52,7 +52,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="border-border">
         <DialogHeader>
           <DialogTitle>{editGroup ? 'Edit Group' : 'Add Group'}</DialogTitle>
           <DialogDescription>

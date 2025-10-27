@@ -140,11 +140,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight">Network Created Successfully!</h1>
-              <p className="text-muted-foreground/80">Download your encrypted file to keep it safe</p>
+              <p className="text-muted-foreground">Download your encrypted file to keep it safe</p>
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-2xl p-8 space-y-6 shadow-2xl shadow-black/30">
+          <div className="bg-card border border-border rounded-2xl p-8 space-y-6 shadow-2xl">
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 border border-primary/30 rounded-xl">
                 <div className="flex items-center gap-3">
@@ -199,7 +199,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={handleResetNewDialog} className="flex-1 h-11 border-2">
+              <Button variant="outline" onClick={handleResetNewDialog} className="flex-1 h-11">
                 Cancel
               </Button>
               <Button onClick={handleContinueWithoutDownload} className="flex-1 h-11 bg-gradient-to-r from-primary to-accent">
@@ -253,7 +253,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md shadow-2xl">
+        <DialogContent className="sm:max-w-md shadow-2xl border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -268,53 +268,53 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-filename" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">File Name</Label>
+              <Label htmlFor="new-filename" className="text-sm font-medium">File Name</Label>
               <Input
                 id="new-filename"
                 value={newFileName}
                 onChange={(e) => setNewFileName(e.target.value)}
                 placeholder="my-network"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPassword && newPasswordConfirm) {
                     handleCreateNetwork()
                   }
                 }}
               />
-              <p className="text-xs text-[oklch(0.58_0.020_250)] pl-1">
-                Will be saved as: <span className="font-mono text-[oklch(0.82_0.015_250)]">{newFileName.trim() || 'my-network'}.enc.json</span>
+              <p className="text-xs text-muted-foreground pl-1">
+                Will be saved as: <span className="font-mono text-foreground">{newFileName.trim() || 'my-network'}.enc.json</span>
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-password" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Password</Label>
+              <Label htmlFor="new-password" className="text-sm font-medium">Password</Label>
               <Input
                 id="new-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter a strong password"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newPasswordConfirm) {
                     handleCreateNetwork()
                   }
                 }}
               />
-              <p className="text-xs text-[oklch(0.58_0.020_250)] pl-1">
+              <p className="text-xs text-muted-foreground pl-1">
                 Use a strong, unique password. Recommended: 12+ characters with mixed case, numbers, and symbols.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-password-confirm" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Confirm Password</Label>
+              <Label htmlFor="new-password-confirm" className="text-sm font-medium">Confirm Password</Label>
               <Input
                 id="new-password-confirm"
                 type="password"
                 value={newPasswordConfirm}
                 onChange={(e) => setNewPasswordConfirm(e.target.value)}
                 placeholder="Confirm password"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleCreateNetwork()
@@ -323,21 +323,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-[oklch(0.25_0.045_245)] border border-[oklch(0.35_0.040_248)]">
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-muted border border-border">
               <Checkbox
                 id="include-sample"
                 checked={includeSampleData}
                 onCheckedChange={(checked) => setIncludeSampleData(checked === true)}
-                className="border-primary/40"
               />
-              <Label htmlFor="include-sample" className="text-sm cursor-pointer font-normal text-[oklch(0.78_0.015_250)]">
+              <Label htmlFor="include-sample" className="text-sm cursor-pointer font-normal">
                 Include sample data to explore features
               </Label>
             </div>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleResetNewDialog} className="border-2 h-11">
+            <Button variant="outline" onClick={handleResetNewDialog} className="h-11">
               Cancel
             </Button>
             <Button onClick={handleCreateNetwork} className="bg-gradient-to-r from-primary to-accent h-11 shadow-lg">
@@ -348,7 +347,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="sm:max-w-md shadow-2xl">
+        <DialogContent className="sm:max-w-md shadow-2xl border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -363,12 +362,12 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="load-file" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Network File</Label>
+              <Label htmlFor="load-file" className="text-sm font-medium">Network File</Label>
               <Input
                 id="load-file"
                 type="file"
                 accept=".json,.enc.json"
-                className="cursor-pointer border-border h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[oklch(0.42_0.12_250)] file:text-[oklch(0.88_0.012_255)] hover:file:bg-[oklch(0.38_0.14_250)] file:cursor-pointer"
+                className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
@@ -376,20 +375,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
                   }
                 }}
               />
-              <p className="text-xs text-[oklch(0.58_0.020_250)] pl-1">
-                Select your <span className="font-mono text-[oklch(0.82_0.015_250)]">.enc.json</span> file
+              <p className="text-xs text-muted-foreground pl-1">
+                Select your <span className="font-mono text-foreground">.enc.json</span> file
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="load-password" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Password</Label>
+              <Label htmlFor="load-password" className="text-sm font-medium">Password</Label>
               <Input
                 id="load-password"
                 type="password"
                 value={loadPassword}
                 onChange={(e) => setLoadPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="focus-visible:ring-primary focus-visible:ring-2 border-border h-11"
+                className="focus-visible:ring-primary focus-visible:ring-2 h-11"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleLoadNetwork()
@@ -398,8 +397,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="text-center p-4 rounded-xl bg-[oklch(0.25_0.045_245)] border border-border">
-              <p className="text-xs text-[oklch(0.62_0.025_250)] flex items-center justify-center gap-2">
+            <div className="text-center p-4 rounded-xl bg-muted border border-border">
+              <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                 <span className="text-accent text-sm">🔒</span>
                 <span>All decryption happens locally in your browser</span>
               </p>
@@ -407,7 +406,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleResetLoadDialog} className="border-2 h-11">
+            <Button variant="outline" onClick={handleResetLoadDialog} className="h-11">
               Cancel
             </Button>
             <Button onClick={handleLoadNetwork} className="bg-gradient-to-r from-primary to-accent h-11 shadow-lg">

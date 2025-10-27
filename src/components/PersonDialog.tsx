@@ -102,7 +102,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border">
         <DialogHeader>
           <DialogTitle className="text-xl">
             {editPerson ? 'Edit Person' : 'Add Person'}
@@ -163,7 +163,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 )}
               </div>
               <div className="w-full space-y-3">
-                <Label htmlFor="frameColor" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Status</Label>
+                <Label htmlFor="frameColor" className="text-sm font-medium">Status</Label>
                 <div className="grid grid-cols-4 gap-4 justify-items-center">
                   {FRAME_COLOR_NAMES.map(color => {
                     const labels: Record<string, string> = {
@@ -186,7 +186,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           }}
                           title={labels[color]}
                         />
-                        <span className="text-[11px] text-[oklch(0.58_0.020_250)] text-center font-medium">{labels[color]}</span>
+                        <span className="text-[11px] text-muted-foreground text-center font-medium">{labels[color]}</span>
                       </div>
                     )
                   })}
@@ -195,7 +195,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Name *</Label>
+            <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
             <Input
               id="name"
               value={name}
@@ -205,7 +205,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="position" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Position</Label>
+            <Label htmlFor="position" className="text-sm font-medium">Position</Label>
             <Textarea
               id="position"
               value={position}
@@ -219,10 +219,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               rows={3}
               className="resize-none focus-visible:ring-2"
             />
-            <p className="text-xs text-[oklch(0.54_0.018_250)] pl-1">You can enter up to 3 lines</p>
+            <p className="text-xs text-muted-foreground pl-1">You can enter up to 3 lines</p>
           </div>
           <div className="space-y-3">
-            <Label htmlFor="importance" className="text-sm font-medium text-[oklch(0.82_0.015_250)]">Importance</Label>
+            <Label htmlFor="importance" className="text-sm font-medium">Importance</Label>
             <div className="flex gap-3 justify-center">
               {[1, 2, 3, 4, 5].map((num) => (
                 <button
@@ -232,14 +232,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   className={`w-14 h-14 rounded-xl border-2 transition-all font-bold text-lg shadow-lg ${
                     score === num 
                       ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl' 
-                      : 'bg-card hover:bg-muted border-border/60 hover:scale-105 hover:border-accent/40 text-[oklch(0.78_0.015_250)]'
+                      : 'bg-card hover:bg-muted border-border/60 hover:scale-105 hover:border-accent/40 text-foreground'
                   }`}
                 >
                   {num}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-[oklch(0.54_0.018_250)] text-center">1 - High Importance, 5 - Lower Importance</p>
+            <p className="text-xs text-muted-foreground text-center">1 - High Importance, 5 - Lower Importance</p>
           </div>
         </div>
         <DialogFooter className="gap-2">
