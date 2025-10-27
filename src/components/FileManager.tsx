@@ -216,7 +216,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-primary/8 to-accent/12">
       <div className="w-full max-w-md space-y-12 animate-fade-in-up">
         <div className="text-center space-y-6">
-          <Logo size={80} showText={true} className="justify-center" />
+          <Logo size={120} showText={true} className="justify-center" />
         </div>
 
         <div className="space-y-5">

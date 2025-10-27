@@ -139,8 +139,8 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
       </svg>
       {showText && (
         <div className="flex flex-col">
-          <span className="text-3xl font-bold tracking-tight leading-none bg-gradient-to-r from-[oklch(0.55_0.22_250)] via-[oklch(0.65_0.18_220)] to-[oklch(0.70_0.20_200)] bg-clip-text text-transparent">NetEye</span>
-          <span className="text-[10px] text-muted-foreground tracking-[0.15em] uppercase leading-none mt-1 font-medium">
+          <span className="text-5xl font-bold tracking-tight leading-none bg-gradient-to-r from-[oklch(0.65_0.22_250)] via-[oklch(0.75_0.18_220)] to-[oklch(0.80_0.20_200)] bg-clip-text text-transparent drop-shadow-lg">NetEye</span>
+          <span className="text-sm text-[oklch(0.70_0.015_250)] tracking-[0.15em] uppercase leading-none mt-2 font-medium">
             Relationship Network
           </span>
         </div>
