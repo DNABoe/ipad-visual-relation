@@ -111,11 +111,12 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
   )
 }
 
+const DEFAULT_PASSWORD_HASH: PasswordHash = {
+  hash: 'YjE5ZTQxYzg4ZjI5NzQzYjMyNDRmNmYyMzE5YzIzNjJhZTQ4YzIyOGU4NjU4YTQ4YTY3YzA2YThhNzBmNDZmNg==',
+  salt: 'ZGVmYXVsdC1zYWx0LWZvci1hZG1pbi1wYXNzd29yZC0yMDI0LXNlY3VyZS1zYWx0LWhlcmU=',
+  iterations: 210000
+}
+
 export async function getDefaultPasswordHash(): Promise<PasswordHash> {
-  try {
-    return await hashPassword('admin')
-  } catch (error) {
-    console.error('Failed to generate default password hash:', error)
-    throw new Error('Failed to initialize authentication system')
-  }
+  return DEFAULT_PASSWORD_HASH
 }
