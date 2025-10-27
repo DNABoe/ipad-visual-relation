@@ -53,16 +53,16 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
     : sortedPersons.filter(p => p.groupId === filterGroup)
 
   return (
-    <div className="w-80 border-r bg-card flex flex-col">
+    <div className="w-80 border-r flex flex-col" style={{ backgroundColor: '#1F2833', borderColor: '#2E3B4E' }}>
       <div className="p-4 space-y-3">
-        <h2 className="font-medium">People ({persons.length})</h2>
+        <h2 className="font-medium" style={{ color: '#FFFFFF' }}>People ({persons.length})</h2>
         
         <div className="space-y-2">
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card border-border">
               <SelectItem value="name-asc">Name (A-Z)</SelectItem>
               <SelectItem value="name-desc">Name (Z-A)</SelectItem>
               <SelectItem value="position-asc">Position (A-Z)</SelectItem>
@@ -78,7 +78,7 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
             <SelectTrigger>
               <SelectValue placeholder="Filter by group" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">All Groups</SelectItem>
               <SelectItem value="none">No Group</SelectItem>
               {groups.map(g => (
@@ -102,9 +102,13 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
                 key={person.id}
                 variant="ghost"
                 className={cn(
-                  'w-full justify-start h-auto p-3 hover:bg-toolbar-hover',
-                  isSelected && 'bg-accent text-accent-foreground'
+                  'w-full justify-start h-auto p-3',
+                  isSelected && 'glow-accent'
                 )}
+                style={{
+                  backgroundColor: isSelected ? '#66FCF1' : 'transparent',
+                  color: isSelected ? '#0B0C10' : '#FFFFFF',
+                }}
                 onClick={() => onPersonClick(person.id)}
               >
                 <div className="flex items-center gap-3 w-full">
@@ -112,7 +116,7 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
                     <AvatarFallback
                       className={cn(
                         "font-bold",
-                        person.frameColor === 'white' ? 'text-card' : 'text-card-foreground'
+                        person.frameColor === 'white' ? 'text-background' : 'text-foreground'
                       )}
                       style={{
                         backgroundColor: frameColor,
@@ -122,12 +126,12 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="font-medium text-sm truncate">{person.name}</div>
-                    {person.position && <div className="text-xs text-muted-foreground truncate">{person.position}</div>}
-                    {person.position2 && <div className="text-xs text-muted-foreground truncate">{person.position2}</div>}
-                    {person.position3 && <div className="text-xs text-muted-foreground truncate">{person.position3}</div>}
+                    <div className="font-medium text-sm truncate" style={{ color: '#FFFFFF' }}>{person.name}</div>
+                    {person.position && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position}</div>}
+                    {person.position2 && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position2}</div>}
+                    {person.position3 && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position3}</div>}
                   </div>
-                  <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs">
+                  <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs" style={{ backgroundColor: '#45A29E', color: '#0B0C10' }}>
                     {person.score}
                   </Badge>
                 </div>

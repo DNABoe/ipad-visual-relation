@@ -47,11 +47,11 @@ export function WorkspaceToolbar({
 }: WorkspaceToolbarProps) {
   return (
     <TooltipProvider>
-      <div className="border-b border-toolbar-border bg-toolbar-bg px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg">
+      <div className="px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg" style={{ backgroundColor: '#1F2833', borderBottom: '1px solid #2E3B4E' }}>
         <div className="flex items-center gap-3">
           <Logo size={32} showText={false} />
-          <h1 className="text-xl font-bold tracking-tight text-primary">NetEye</h1>
-          <Separator orientation="vertical" className="h-6 bg-border" />
+          <h1 className="text-xl font-bold tracking-tight" style={{ color: '#45A29E' }}>NetEye</h1>
+          <Separator orientation="vertical" className="h-6" style={{ backgroundColor: '#2E3B4E' }} />
           <div className="flex items-center gap-2">
             {downloadUrl ? (
               <Tooltip>
@@ -59,7 +59,8 @@ export function WorkspaceToolbar({
                   <a
                     href={downloadUrl}
                     download={`${fileName}.enc.json`}
-                    className="text-sm text-accent hover:text-accent/80 hover:underline font-medium inline-flex items-center gap-1.5 transition-colors"
+                    className="text-sm hover:underline font-medium inline-flex items-center gap-1.5 transition-colors"
+                    style={{ color: '#66FCF1' }}
                   >
                     {fileName}
                     <DownloadSimple size={14} weight="bold" />
@@ -68,7 +69,7 @@ export function WorkspaceToolbar({
                 <TooltipContent>Right-click and "Save link as..." to download</TooltipContent>
               </Tooltip>
             ) : (
-              <span className="text-sm text-foreground font-medium">{fileName}</span>
+              <span className="text-sm font-medium" style={{ color: '#FFFFFF' }}>{fileName}</span>
             )}
           </div>
         </div>

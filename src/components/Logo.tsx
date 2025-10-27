@@ -10,11 +10,11 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
   const irisGradientId = `irisGradient-${Math.random().toString(36).substr(2, 9)}`
   const glowId = `glow-${Math.random().toString(36).substr(2, 9)}`
   
-  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
-  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
-  const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary').trim()
-  const backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim()
-  const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim()
+  const primaryColor = '#45A29E'
+  const accentColor = '#66FCF1'
+  const secondaryColor = '#2E3B4E'
+  const backgroundColor = '#0B0C10'
+  const foregroundColor = '#FFFFFF'
   
   return (
     <div className={`flex items-center gap-3 ${className}`}>

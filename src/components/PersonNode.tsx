@@ -35,14 +35,15 @@ export function PersonNode({
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
-          'cursor-grab select-none transition-all duration-200 border-[3px] bg-card shadow-lg',
+          'cursor-grab select-none transition-all duration-200 border-[3px] shadow-lg backdrop-blur-none',
           'hover:shadow-xl hover:border-primary',
-          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl border-accent',
+          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl border-accent glow-accent',
           isDragging && 'node-dragging shadow-2xl'
         )}
         style={{
           ...style,
           borderColor: frameColor,
+          backgroundColor: '#1F2833',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -61,7 +62,7 @@ export function PersonNode({
               <AvatarFallback 
                 className={cn(
                   "text-xl font-bold",
-                  person.frameColor === 'white' ? 'text-card' : 'text-card-foreground'
+                  person.frameColor === 'white' ? 'text-background' : 'text-foreground'
                 )}
                 style={{ 
                   backgroundColor: frameColor,
@@ -72,10 +73,10 @@ export function PersonNode({
             </Avatar>
           </div>
           <div className="flex-1 min-w-0 space-y-0.5">
-            <h3 className="font-semibold text-sm leading-tight break-words text-foreground tracking-tight">{person.name}</h3>
-            {person.position && <p className="text-xs text-muted-foreground leading-tight break-words">{person.position}</p>}
+            <h3 className="font-semibold text-sm leading-tight break-words tracking-tight" style={{ color: '#FFFFFF' }}>{person.name}</h3>
+            {person.position && <p className="text-xs leading-tight break-words" style={{ color: '#C5C6C7' }}>{person.position}</p>}
           </div>
-          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 bg-primary text-primary-foreground border-0 shadow-md">
+          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 border-0 shadow-md" style={{ backgroundColor: '#45A29E', color: '#0B0C10' }}>
             {person.score}
           </Badge>
         </div>

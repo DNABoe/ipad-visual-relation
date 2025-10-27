@@ -67,13 +67,20 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
     { position: 'e', cursor: 'e-resize', style: { right: -4, top: '50%', transform: 'translateY(-50%)' } },
   ]
 
+  const getBackgroundColor = () => {
+    if (group.solidBackground) {
+      return `color-mix(in oklch, ${groupColor} 25%, #1F2833)`
+    }
+    return `color-mix(in oklch, ${groupColor} 8%, transparent)`
+  }
+
   return (
     <div
       className={cn(
         'absolute rounded-xl border-[3px] group/frame cursor-move',
         'transition-all duration-200',
         group.solidBackground ? 'border-solid' : 'border-dashed',
-        isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-xl'
+        isSelected && 'ring-2 ring-offset-2 shadow-xl glow-accent ring-accent'
       )}
       style={{
         left: group.x,
@@ -81,9 +88,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
         width: group.width,
         height: group.height,
         borderColor: groupColor,
-        backgroundColor: group.solidBackground 
-          ? `color-mix(in oklch, ${groupColor} 25%, var(--card))` 
-          : `color-mix(in oklch, ${groupColor} 8%, transparent)`,
+        backgroundColor: getBackgroundColor(),
         ...style,
       }}
       onClick={onClick}
@@ -121,7 +126,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
             style={{
               backgroundColor: groupColor,
               borderColor: groupColor,
-              color: 'var(--card-foreground)',
+              color: '#FFFFFF',
             }}
             onMouseDown={(e) => {
               if (onDragStart) {
@@ -138,12 +143,12 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                   size="sm"
                   className="h-5 w-5 p-0 rounded-md transition-colors"
                   style={{
-                    backgroundColor: 'color-mix(in oklch, var(--background) 25%, transparent)',
+                    backgroundColor: 'rgba(11, 12, 16, 0.25)',
                   }}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  <DotsThree size={16} weight="bold" className="drop-shadow-sm" />
+                  <DotsThree size={16} weight="bold" className="drop-shadow-sm" style={{ color: '#FFFFFF' }} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 

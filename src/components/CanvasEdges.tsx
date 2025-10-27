@@ -127,12 +127,8 @@ export function CanvasEdges({
     const personMap = new Map(persons.map(p => [p.id, p]))
     connectionColorMap.current.clear()
 
-    const primaryColor = getComputedStyle(document.documentElement)
-      .getPropertyValue('--primary')
-      .trim()
-    const accentColor = getComputedStyle(document.documentElement)
-      .getPropertyValue('--accent')
-      .trim()
+    const primaryColor = '#45A29E'
+    const accentColor = '#66FCF1'
 
     connections.forEach(conn => {
       const from = personMap.get(conn.fromPersonId)
@@ -150,9 +146,9 @@ export function CanvasEdges({
       ctx.beginPath()
       ctx.moveTo(fromX, fromY)
       ctx.lineTo(toX, toY)
-      ctx.strokeStyle = isSelected ? accentColor : primaryColor
+      ctx.strokeStyle = isSelected ? accentColor : 'rgba(102, 252, 241, 0.4)'
       ctx.lineWidth = isSelected ? 3 : 2
-      ctx.globalAlpha = isSelected ? 1 : 0.6
+      ctx.globalAlpha = isSelected ? 1 : 1
       ctx.stroke()
       ctx.globalAlpha = 1
 
