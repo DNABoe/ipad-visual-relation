@@ -8,6 +8,12 @@ import type { Workspace, Person, Connection, Group } from '@/lib/types'
 import { toast } from 'sonner'
 import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
 import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
+import { 
+  organizeByImportance, 
+  organizeMinimalOverlap, 
+  tightenNetwork,
+  smartArrange
+} from '@/lib/layoutAlgorithms'
 
 interface UseWorkspaceControllerOptions {
   initialWorkspace: Workspace
@@ -212,6 +218,86 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     }
   }, [interaction.isConnecting, transform, interaction, selection])
 
+  const handleOrganizeByImportance = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = organizeByImportance(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Organized by importance score')
+  }, [workspaceState])
+
+  const handleMinimalOverlap = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = organizeMinimalOverlap(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Minimized overlap and connection length')
+  }, [workspaceState])
+
+  const handleTightenNetwork = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = tightenNetwork(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Network tightened')
+  }, [workspaceState])
+
+  const handleSmartArrange = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = smartArrange(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Smart arrangement applied')
+  }, [workspaceState])
+
   return {
     workspace: workspaceState.workspace,
     selection,
@@ -238,6 +324,10 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleZoomToFit,
       handleFocusPerson,
       handleCanvasMouseDown,
+      handleOrganizeByImportance,
+      handleMinimalOverlap,
+      handleTightenNetwork,
+      handleSmartArrange,
       undo: workspaceState.undo,
       replaceWorkspace: workspaceState.replaceWorkspace,
       updatePersonsInBulk: workspaceState.updatePersonsInBulk,

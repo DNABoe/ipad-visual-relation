@@ -68,6 +68,17 @@ This is a full-featured network visualization tool with encrypted local file sto
 - **Progression**: Open list → Choose sort (name, position, score, created) → Apply filter (group, color, score) → Click person → Canvas pans to node
 - **Success criteria**: Sort/filter updates instantly; clicking list item focuses canvas on that person
 
+### Network Layout Algorithms
+- **Functionality**: Four automatic layout tools to organize person nodes intelligently
+- **Purpose**: Quickly arrange large networks to minimize overlap and optimize visual clarity
+- **Trigger**: Click layout buttons in toolbar: Organize by Importance, Minimize Overlap, Tighten Network, or Smart Arrange
+- **Progression**: 
+  - **Organize by Importance** → Persons arranged in concentric rings (score 1 at center → score 5 at outer edge)
+  - **Minimize Overlap** → Positions persons close to their connections while eliminating card overlap
+  - **Tighten Network** → Reduces spacing between cards while preserving relative positions
+  - **Smart Arrange (Recommended)** → Combines importance-based rings with connection optimization
+- **Success criteria**: All layouts ensure zero overlap between person cards; connections are visually clean; layouts complete within 1 second for 100+ person networks; undo restores previous positions
+
 ### Legacy Import/Export
 - **Functionality**: Import unencrypted JSON workspace files from Settings dialog
 - **Purpose**: Migrate from older versions or share data in unencrypted format if needed

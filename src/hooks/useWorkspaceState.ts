@@ -243,13 +243,26 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   }, [undoStack])
 
   const updatePersonsInBulk = useCallback((updates: Map<string, Partial<Person>>) => {
-    setWorkspace(prev => ({
-      ...prev,
-      persons: prev.persons.map(p => {
-        const update = updates.get(p.id)
-        return update ? { ...p, ...update } : p
-      }),
-    }))
+    setWorkspace(prev => {
+      const previousPersons = prev.persons
+        .filter(p => updates.has(p.id))
+        .map(p => ({ ...p }))
+      
+      if (previousPersons.length > 0) {
+        setUndoStack(stack => [...stack, {
+          type: 'update-persons',
+          persons: previousPersons,
+        }])
+      }
+
+      return {
+        ...prev,
+        persons: prev.persons.map(p => {
+          const update = updates.get(p.id)
+          return update ? { ...p, ...update } : p
+        }),
+      }
+    })
   }, [])
 
   const replaceWorkspace = useCallback((newWorkspace: Workspace) => {

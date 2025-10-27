@@ -24,6 +24,9 @@ import {
   LinkBreak,
   Export,
   DownloadSimple,
+  CirclesThree,
+  ArrowsInCardinal,
+  Crosshair,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 
@@ -166,6 +169,44 @@ export function WorkspaceToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Zoom to Fit</TooltipContent>
+          </Tooltip>
+
+          <Separator orientation="vertical" className="h-6 bg-border" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleOrganizeByImportance} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Target size={18} weight="duotone" className="text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Organize by Importance</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleMinimalOverlap} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <CirclesThree size={18} weight="duotone" className="text-accent" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Minimize Overlap & Connections</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleTightenNetwork} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <ArrowsInCardinal size={18} weight="duotone" className="text-accent" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Tighten Network</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleSmartArrange} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Crosshair size={18} weight="duotone" className="text-success" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Smart Arrange (Recommended)</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6 bg-border" />
