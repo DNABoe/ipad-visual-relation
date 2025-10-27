@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
@@ -53,10 +53,12 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     setWorkspace(controller.workspace)
   }, [controller.workspace, setWorkspace])
 
+  const currentWorkspaceStr = useMemo(() => JSON.stringify(controller.workspace), [controller.workspace])
+
   useEffect(() => {
     const createDownloadUrl = async () => {
       try {
-        const encrypted = await encryptData(JSON.stringify(controller.workspace), password)
+        const encrypted = await encryptData(currentWorkspaceStr, password)
         const fileData = JSON.stringify(encrypted, null, 2)
         const blob = new Blob([fileData], { type: 'application/json' })
 
@@ -78,7 +80,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         URL.revokeObjectURL(downloadUrl)
       }
     }
-  }, [controller.workspace, password])
+  }, [currentWorkspaceStr, password])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { WorkspaceView } from './components/WorkspaceView2'
 import { FileManager } from './components/FileManager'
@@ -11,28 +11,28 @@ function App() {
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
 
-  const handleLoad = (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
+  const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     setWorkspace(loadedWorkspace)
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
-  }
+  }, [])
 
-  const handleNewNetwork = () => {
+  const handleNewNetwork = useCallback(() => {
     setWorkspace(null)
     setFileName('')
     setPassword('')
     setShowFileManager(true)
-  }
+  }, [])
 
-  const handleLoadNetwork = () => {
+  const handleLoadNetwork = useCallback(() => {
     setWorkspace(null)
     setFileName('')
     setPassword('')
     setShowFileManager(true)
-  }
+  }, [])
 
-  const handleSetWorkspace = (update: Workspace | ((current: Workspace) => Workspace)) => {
+  const handleSetWorkspace = useCallback((update: Workspace | ((current: Workspace) => Workspace)) => {
     if (typeof update === 'function') {
       setWorkspace((current) => {
         if (!current) return current
@@ -41,7 +41,7 @@ function App() {
     } else {
       setWorkspace(update)
     }
-  }
+  }, [])
 
   if (showFileManager || !workspace) {
     return (

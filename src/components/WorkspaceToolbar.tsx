@@ -60,7 +60,14 @@ export function WorkspaceToolbar({
 
   const showGrid = settings?.showGrid ?? true
   const setShowGrid = (show: boolean) => {
-    setSettings((current) => ({ ...current!, showGrid: show }))
+    setSettings((current) => ({
+      username: current?.username ?? 'admin',
+      passwordHash: current?.passwordHash ?? '',
+      showGrid: show,
+      snapToGrid: current?.snapToGrid ?? false,
+      gridSize: current?.gridSize ?? 20,
+      showMinimap: current?.showMinimap ?? true,
+    }))
   }
   return (
     <TooltipProvider>
