@@ -32,11 +32,18 @@ export function PersonNode({
   const frameColor = FRAME_COLORS[person.frameColor]
 
   return (
-    <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
+    <div 
+      className="absolute" 
+      style={{ 
+        left: person.x, 
+        top: person.y, 
+        width: 260,
+        transition: isDragging ? 'none' : undefined,
+      }}
+    >
       <Card
         className={cn(
           'cursor-grab select-none border-[3px] shadow-lg backdrop-blur-none',
-          !isDragging && 'transition-all duration-200',
           'hover:shadow-xl hover:border-primary',
           isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl border-accent glow-accent',
           isDragging && 'node-dragging shadow-2xl'
