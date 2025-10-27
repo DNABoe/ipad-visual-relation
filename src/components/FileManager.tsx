@@ -219,10 +219,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
           <Logo size={80} showText={true} className="justify-center" />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <Button
             onClick={() => setShowNewDialog(true)}
-            className="w-full h-20 text-lg bg-[oklch(0.42_0.12_250)] hover:bg-[oklch(0.38_0.14_250)] hover:shadow-xl hover:shadow-[oklch(0.42_0.12_250)]/30 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden text-white"
+            className="w-full h-20 text-lg bg-[oklch(0.42_0.12_250)] hover:bg-[oklch(0.38_0.14_250)] shadow-[0_8px_24px_-4px_oklch(0.42_0.12_250/0.4)] hover:shadow-[0_12px_32px_-4px_oklch(0.42_0.12_250/0.6)] transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -232,7 +232,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            className="w-full h-20 text-lg bg-[oklch(0.42_0.12_250)] hover:bg-[oklch(0.38_0.14_250)] hover:shadow-xl hover:shadow-[oklch(0.42_0.12_250)]/30 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden text-white"
+            className="w-full h-20 text-lg bg-[oklch(0.42_0.12_250)] hover:bg-[oklch(0.38_0.14_250)] shadow-[0_8px_24px_-4px_oklch(0.42_0.12_250/0.4)] hover:shadow-[0_12px_32px_-4px_oklch(0.42_0.12_250/0.6)] transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -242,9 +242,12 @@ export function FileManager({ onLoad }: FileManagerProps) {
         </div>
 
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/60 backdrop-blur-sm border border-border text-xs text-muted-foreground">
-            <span className="text-accent">🔒</span>
-            <span>AES-256-GCM encryption with PBKDF2 key derivation (100,000 iterations)</span>
+          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-lg shadow-black/20 text-sm text-muted-foreground">
+            <span className="text-accent text-base">🔒</span>
+            <div className="text-left">
+              <div className="font-medium text-foreground/90">AES-256-GCM encryption</div>
+              <div className="text-xs">All data stored locally, nothing in the cloud</div>
+            </div>
           </div>
         </div>
       </div>
