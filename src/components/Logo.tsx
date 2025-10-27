@@ -139,10 +139,10 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
         />
       </svg>
       {showText && (
-        <div className="flex flex-col">
+        <div className="flex flex-col items-start">
           <span className="text-5xl font-bold tracking-tight leading-none bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent drop-shadow-lg">RelEye</span>
-          <span className="text-sm text-muted-foreground tracking-[0.15em] uppercase leading-none mt-2 font-medium">
-            Relationship Network
+          <span className="text-sm text-muted-foreground tracking-[0.15em] uppercase leading-tight mt-2 font-medium">
+            Relationship<br/>Network
           </span>
         </div>
       )}
