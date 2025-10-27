@@ -55,6 +55,12 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   }, [controller.workspace, setWorkspace])
 
   useEffect(() => {
+    if (settings?.showGrid !== undefined) {
+      setShowGrid(settings.showGrid)
+    }
+  }, [settings?.showGrid])
+
+  useEffect(() => {
     const createDownloadUrl = async () => {
       try {
         const encrypted = await encryptData(JSON.stringify(controller.workspace), password)
