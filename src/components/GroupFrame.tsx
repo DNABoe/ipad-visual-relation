@@ -69,7 +69,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
 
   const getBackgroundColor = () => {
     if (group.solidBackground) {
-      return `color-mix(in oklch, ${groupColor} 25%, #1F2833)`
+      return `color-mix(in oklch, ${groupColor} 25%, oklch(0.21 0.03 230))`
     }
     return `color-mix(in oklch, ${groupColor} 8%, transparent)`
   }

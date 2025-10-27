@@ -43,7 +43,7 @@ export function PersonNode({
         style={{
           ...style,
           borderColor: frameColor,
-          backgroundColor: '#1F2833',
+          backgroundColor: 'oklch(0.21 0.03 230)',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -73,10 +73,10 @@ export function PersonNode({
             </Avatar>
           </div>
           <div className="flex-1 min-w-0 space-y-0.5">
-            <h3 className="font-semibold text-sm leading-tight break-words tracking-tight" style={{ color: '#FFFFFF' }}>{person.name}</h3>
-            {person.position && <p className="text-xs leading-tight break-words" style={{ color: '#C5C6C7' }}>{person.position}</p>}
+            <h3 className="font-semibold text-sm leading-tight break-words tracking-tight text-foreground">{person.name}</h3>
+            {person.position && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position}</p>}
           </div>
-          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 border-0 shadow-md" style={{ backgroundColor: '#45A29E', color: '#0B0C10' }}>
+          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 border-0 shadow-md bg-primary text-primary-foreground">
             {person.score}
           </Badge>
         </div>
