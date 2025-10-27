@@ -11,6 +11,7 @@ import { hashPassword } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
+import { Logo } from '@/components/Logo'
 
 interface SettingsDialogProps {
   open: boolean
@@ -155,12 +156,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
           <TabsContent value="about" className="space-y-5 py-4">
             <div className="space-y-6">
-              <div className="text-center space-y-4 py-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent mb-2">
-                  <span className="text-3xl">👁️</span>
-                </div>
+              <div className="flex flex-col items-center text-center space-y-4 py-6">
+                <Logo size={64} showText={false} animated={true} />
                 <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">
                     RelEye
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">Relationship Network Visualizer</p>
@@ -187,11 +186,34 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     A secure, privacy-focused tool for visualizing and managing relationship networks. 
                     All data is encrypted and stored locally on your device.
                   </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                    <span className="text-accent">🔒</span>
-                    <span>AES-256-GCM Encryption</span>
-                    <span>•</span>
-                    <span>Local Storage Only</span>
+                </div>
+
+                <div className="h-px bg-border my-4"></div>
+
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-2">Security Features</p>
+                  <div className="space-y-2 text-left">
+                    <div className="flex items-start gap-2 text-xs">
+                      <span className="text-accent mt-0.5">🔐</span>
+                      <div>
+                        <span className="font-medium text-foreground">AES-256-GCM Encryption:</span>
+                        <span className="text-muted-foreground"> Military-grade authenticated encryption with PBKDF2 key derivation</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-xs">
+                      <span className="text-accent mt-0.5">💾</span>
+                      <div>
+                        <span className="font-medium text-foreground">Local Storage:</span>
+                        <span className="text-muted-foreground"> No cloud sync, all data stays on your device</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-xs">
+                      <span className="text-accent mt-0.5">🔑</span>
+                      <div>
+                        <span className="font-medium text-foreground">Password Protection:</span>
+                        <span className="text-muted-foreground"> Files are encrypted with your password, no master key exists</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
