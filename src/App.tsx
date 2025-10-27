@@ -1,15 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { WorkspaceView } from './components/WorkspaceView2'
 import { FileManager } from './components/FileManager'
 import type { Workspace } from './lib/types'
 
 function App() {
-  useEffect(() => {
-    document.documentElement.classList.add('dark')
-    document.documentElement.style.colorScheme = 'dark'
-    document.body.classList.add('dark')
-  }, [])
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
