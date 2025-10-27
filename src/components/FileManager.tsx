@@ -200,10 +200,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
             <div className="flex gap-3">
               <Button variant="outline" onClick={handleResetNewDialog} className="flex-1 h-11 border-2">
-                Create Another
+                Cancel
               </Button>
               <Button onClick={handleContinueWithoutDownload} className="flex-1 h-11 bg-gradient-to-r from-primary to-accent">
-                Continue Without Download
+                Continue
               </Button>
             </div>
           </div>
