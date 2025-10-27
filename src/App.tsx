@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
-import { WorkspaceView } from './components/WorkspaceView'
+import { WorkspaceView } from './components/WorkspaceView2'
 import { FileManager } from './components/FileManager'
 import type { Workspace } from './lib/types'
 
