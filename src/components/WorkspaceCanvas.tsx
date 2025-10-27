@@ -32,6 +32,19 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20
   const showGrid = settings?.showGrid ?? true
+  const settingsKey = `${showGrid}-${snapToGrid}-${gridSize}`
+
+  useEffect(() => {
+    if (controller.canvasRef.current) {
+      controller.canvasRef.current.style.setProperty('--grid-size', `${gridSize}px`)
+      
+      if (showGrid) {
+        controller.canvasRef.current.classList.add('canvas-grid')
+      } else {
+        controller.canvasRef.current.classList.remove('canvas-grid')
+      }
+    }
+  }, [gridSize, showGrid, controller.canvasRef])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
@@ -274,12 +287,13 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
   return (
     <div
       ref={controller.canvasRef}
-      className={`flex-1 relative overflow-hidden bg-canvas-bg ${showGrid ? 'canvas-grid' : ''}`}
+      className="flex-1 relative overflow-hidden bg-canvas-bg"
       style={{ '--grid-size': `${gridSize}px` } as React.CSSProperties}
       onMouseDown={controller.handlers.handleCanvasMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
+      data-settings-key={settingsKey}
     >
       <div
         className="absolute inset-0 z-10"
