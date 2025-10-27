@@ -52,8 +52,8 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
-        const gridStepsX = Math.round(newAccX / gridSize)
-        const gridStepsY = Math.round(newAccY / gridSize)
+        const gridStepsX = Math.floor(newAccX / gridSize)
+        const gridStepsY = Math.floor(newAccY / gridSize)
 
         if (gridStepsX !== 0 || gridStepsY !== 0) {
           const moveX = gridStepsX * gridSize
@@ -104,8 +104,8 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
-        const gridStepsX = Math.round(newAccX / gridSize)
-        const gridStepsY = Math.round(newAccY / gridSize)
+        const gridStepsX = Math.floor(newAccX / gridSize)
+        const gridStepsY = Math.floor(newAccY / gridSize)
 
         if (gridStepsX !== 0 || gridStepsY !== 0) {
           const moveX = gridStepsX * gridSize
