@@ -12,6 +12,8 @@ import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 interface UseWorkspaceControllerOptions {
   initialWorkspace: Workspace
   settings?: {
+    username: string
+    passwordHash: string
     showGrid: boolean
     snapToGrid: boolean
     gridSize: number

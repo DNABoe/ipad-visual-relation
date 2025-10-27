@@ -25,7 +25,16 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork }: WorkspaceViewProps) {
-  const [settings] = useKV<{ showGrid: boolean; snapToGrid: boolean; gridSize: number; showMinimap: boolean }>('app-settings', {
+  const [settings] = useKV<{
+    username: string
+    passwordHash: string
+    showGrid: boolean
+    snapToGrid: boolean
+    gridSize: number
+    showMinimap: boolean
+  }>('app-settings', {
+    username: 'admin',
+    passwordHash: '',
     showGrid: true,
     snapToGrid: false,
     gridSize: 20,
@@ -133,8 +142,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         <WorkspaceCanvas
           controller={controller}
           showGrid={showGrid}
-          gridSize={settings?.gridSize ?? 20}
-          snapToGrid={settings?.snapToGrid ?? false}
         />
       </div>
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
 import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
@@ -10,11 +11,27 @@ import { toast } from 'sonner'
 interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
   showGrid: boolean
-  gridSize: number
-  snapToGrid: boolean
 }
 
-export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: WorkspaceCanvasProps) {
+export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) {
+  const [settings] = useKV<{
+    username: string
+    passwordHash: string
+    showGrid: boolean
+    snapToGrid: boolean
+    gridSize: number
+    showMinimap: boolean
+  }>('app-settings', {
+    username: 'admin',
+    passwordHash: '',
+    showGrid: true,
+    snapToGrid: false,
+    gridSize: 20,
+    showMinimap: true,
+  })
+
+  const snapToGrid = settings?.snapToGrid ?? false
+  const gridSize = settings?.gridSize ?? 20
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
 
