@@ -1,23 +1,23 @@
 import type { FrameColor, GroupColor } from './types'
 
 export const FRAME_COLORS: Record<FrameColor, string> = {
-  red: 'var(--frame-red)',
-  green: 'var(--frame-green)',
-  orange: 'var(--frame-orange)',
-  white: 'var(--frame-white)',
+  red: 'oklch(0.608 0.221 14)',
+  green: 'oklch(0.825 0.145 165)',
+  orange: 'oklch(0.722 0.165 45)',
+  white: 'oklch(0.98 0 0)',
 }
 
 export const GROUP_COLORS: Record<GroupColor, string> = {
-  blue: 'var(--group-blue)',
-  purple: 'var(--group-purple)',
-  pink: 'var(--group-pink)',
-  yellow: 'var(--group-yellow)',
-  teal: 'var(--group-teal)',
-  indigo: 'var(--group-indigo)',
-  rose: 'var(--group-rose)',
-  emerald: 'var(--group-emerald)',
-  amber: 'var(--group-amber)',
-  cyan: 'var(--group-cyan)',
+  blue: 'oklch(0.628 0.088 196)',
+  purple: 'oklch(0.542 0.150 286)',
+  pink: 'oklch(0.722 0.165 340)',
+  yellow: 'oklch(0.850 0.125 95)',
+  teal: 'oklch(0.658 0.096 180)',
+  indigo: 'oklch(0.542 0.150 270)',
+  rose: 'oklch(0.722 0.165 10)',
+  emerald: 'oklch(0.825 0.145 165)',
+  amber: 'oklch(0.850 0.125 75)',
+  cyan: 'oklch(0.875 0.125 192)',
 }
 
 export const FRAME_COLOR_NAMES: FrameColor[] = ['red', 'green', 'orange', 'white']

@@ -127,9 +127,8 @@ export function CanvasEdges({
     const personMap = new Map(persons.map(p => [p.id, p]))
     connectionColorMap.current.clear()
 
-    const rootStyles = getComputedStyle(document.documentElement)
-    const accentColor = rootStyles.getPropertyValue('--accent').trim()
-    const mutedColor = rootStyles.getPropertyValue('--muted-foreground').trim()
+    const accentColor = 'oklch(0.875 0.125 192)'
+    const mutedColor = 'oklch(0.760 0.012 240)'
 
     connections.forEach(conn => {
       const from = personMap.get(conn.fromPersonId)
