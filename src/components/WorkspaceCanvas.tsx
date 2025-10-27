@@ -32,6 +32,7 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
 
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
 
@@ -51,8 +52,8 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
-        const gridStepsX = Math.floor(newAccX / gridSize)
-        const gridStepsY = Math.floor(newAccY / gridSize)
+        const gridStepsX = Math.round(newAccX / gridSize)
+        const gridStepsY = Math.round(newAccY / gridSize)
 
         if (gridStepsX !== 0 || gridStepsY !== 0) {
           const moveX = gridStepsX * gridSize
@@ -103,8 +104,8 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
-        const gridStepsX = Math.floor(newAccX / gridSize)
-        const gridStepsY = Math.floor(newAccY / gridSize)
+        const gridStepsX = Math.round(newAccX / gridSize)
+        const gridStepsY = Math.round(newAccY / gridSize)
 
         if (gridStepsX !== 0 || gridStepsY !== 0) {
           const moveX = gridStepsX * gridSize
