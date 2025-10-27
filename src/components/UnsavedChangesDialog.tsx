@@ -27,13 +27,13 @@ export function UnsavedChangesDialog({
 }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-card border-border shadow-2xl">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
           <AlertDialogDescription className="space-y-3">
             <p>You have unsaved changes. Would you like to save before continuing?</p>
             {downloadUrl && (
-              <div className="bg-secondary p-3 rounded-lg border border-border">
+              <div className="bg-secondary/50 p-3 rounded-lg border-2 border-border">
                 <p className="text-sm font-medium mb-2 text-foreground">To save your work:</p>
                 <a
                   href={downloadUrl}

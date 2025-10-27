@@ -102,9 +102,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto bg-card border-border shadow-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{editPerson ? 'Edit Person' : 'Add Person'}</DialogTitle>
+          <DialogTitle className="text-xl">
+            {editPerson ? 'Edit Person' : 'Add Person'}
+          </DialogTitle>
           <DialogDescription className="text-muted-foreground">
             {editPerson ? 'Update person details' : 'Add a new person to your network'}
           </DialogDescription>
@@ -144,7 +146,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 h-9"
                 >
                   <Upload className="mr-2" size={16} />
                   Upload Photo
@@ -155,7 +156,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     variant="outline"
                     size="sm"
                     onClick={handleRemovePhoto}
-                    className="border-2 h-9"
                   >
                     <X className="mr-2" size={16} />
                     Remove
@@ -177,12 +177,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         <button
                           type="button"
                           onClick={() => setFrameColor(color as FrameColor)}
-                          className={`w-14 h-14 rounded-xl border-2 transition-all shadow-md ${
-                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl' : 'hover:scale-105 border-border/50 hover:border-border'
+                          className={`w-14 h-14 rounded-xl border-2 transition-all shadow-lg ${
+                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl border-accent' : 'hover:scale-105 border-border/60 hover:border-border'
                           }`}
                           style={{ 
                             backgroundColor: FRAME_COLORS[color],
-                            borderColor: frameColor === color ? FRAME_COLORS[color] : undefined
+                            borderColor: frameColor === color ? undefined : FRAME_COLORS[color]
                           }}
                           title={labels[color]}
                         />
@@ -201,7 +201,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter name"
-              className="border-border/70 h-11 focus-visible:ring-2"
+              className="h-11 focus-visible:ring-2"
             />
           </div>
           <div className="space-y-2">
@@ -217,7 +217,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               }}
               placeholder="Enter position (max 3 lines)"
               rows={3}
-              className="resize-none border-border/70 focus-visible:ring-2"
+              className="resize-none focus-visible:ring-2"
             />
             <p className="text-xs text-muted-foreground/70 pl-1">You can enter up to 3 lines</p>
           </div>
@@ -229,10 +229,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   key={num}
                   type="button"
                   onClick={() => setScore(num)}
-                  className={`w-14 h-14 rounded-xl border-2 transition-all font-bold text-lg shadow-md ${
+                  className={`w-14 h-14 rounded-xl border-2 transition-all font-bold text-lg shadow-lg ${
                     score === num 
-                      ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-primary ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl' 
-                      : 'bg-card hover:bg-muted border-border/50 hover:scale-105 hover:border-border'
+                      ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl' 
+                      : 'bg-card hover:bg-muted border-border/60 hover:scale-105 hover:border-accent/40'
                   }`}
                 >
                   {num}
@@ -244,13 +244,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
         </div>
         <DialogFooter className="gap-2">
           {editPerson && onDelete && (
-            <Button variant="destructive" onClick={handleDelete} className="mr-auto h-11 shadow-md">
+            <Button variant="destructive" onClick={handleDelete} className="mr-auto shadow-lg">
               <Trash className="mr-2" size={16} />
               Delete Person
             </Button>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-2 h-11">Cancel</Button>
-          <Button onClick={handleSave} disabled={!name.trim()} className="bg-gradient-to-r from-primary to-accent h-11 shadow-lg">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={!name.trim()} className="bg-gradient-to-r from-primary to-accent shadow-lg">
             {editPerson ? 'Update' : 'Add'} Person
           </Button>
         </DialogFooter>

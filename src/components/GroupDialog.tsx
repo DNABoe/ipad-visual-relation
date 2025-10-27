@@ -52,7 +52,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border shadow-2xl">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{editGroup ? 'Edit Group' : 'Add Group'}</DialogTitle>
           <DialogDescription>
@@ -61,7 +61,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="groupName" className="dark:text-foreground">Name *</Label>
+            <Label htmlFor="groupName">Name *</Label>
             <Input
               id="groupName"
               value={name}
@@ -70,7 +70,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="groupColor" className="dark:text-foreground">Color</Label>
+            <Label htmlFor="groupColor">Color</Label>
             <Select value={color} onValueChange={(v) => setColor(v as GroupColor)}>
               <SelectTrigger id="groupColor">
                 <SelectValue />
@@ -87,7 +87,7 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
         </div>
         <DialogFooter>
           {editGroup && onRemove && (
-            <Button variant="destructive" onClick={handleRemove} className="mr-auto">
+            <Button variant="destructive" onClick={handleRemove} className="mr-auto shadow-lg">
               Remove Group
             </Button>
           )}
