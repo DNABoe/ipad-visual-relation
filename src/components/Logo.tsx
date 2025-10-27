@@ -10,11 +10,11 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
   const irisGradientId = `irisGradient-${Math.random().toString(36).substr(2, 9)}`
   const glowId = `glow-${Math.random().toString(36).substr(2, 9)}`
   
-  const primaryColor = 'oklch(0.628 0.088 196)'
-  const accentColor = 'oklch(0.875 0.125 192)'
-  const secondaryColor = 'oklch(0.235 0.030 228)'
-  const backgroundColor = 'oklch(0.065 0.018 240)'
-  const foregroundColor = 'oklch(0.98 0 0)'
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
+  const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary').trim()
+  const backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim()
+  const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim()
   
   return (
     <div className={`flex items-center gap-3 ${className}`}>
@@ -54,7 +54,6 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           fill="none"
           stroke={`url(#${gradientId})`}
           strokeWidth="1.5"
-          opacity="0.2"
         />
         
         <ellipse
@@ -88,7 +87,6 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           cy="45"
           r="3.5"
           fill={foregroundColor}
-          opacity="0.9"
         />
         
         <circle
@@ -96,10 +94,9 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           cy="48"
           r="1.5"
           fill={foregroundColor}
-          opacity="0.6"
         />
         
-        <g opacity="0.7">
+        <g>
           <line x1="20" y1="50" x2="30" y2="50" stroke={`url(#${gradientId})`} strokeWidth="2.5" strokeLinecap="round" />
           <line x1="70" y1="50" x2="80" y2="50" stroke={`url(#${gradientId})`} strokeWidth="2.5" strokeLinecap="round" />
           <line x1="50" y1="20" x2="50" y2="30" stroke={`url(#${gradientId})`} strokeWidth="2.5" strokeLinecap="round" />
@@ -114,7 +111,6 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           stroke={`url(#${gradientId})`}
           strokeWidth="1.5"
           strokeDasharray="5 5"
-          opacity="0.5"
         >
           {animated && (
             <animateTransform
@@ -128,7 +124,7 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           )}
         </circle>
         
-        <g opacity="0.6">
+        <g>
           <circle cx="30" cy="30" r="2" fill={`url(#${gradientId})`} />
           <circle cx="70" cy="30" r="2" fill={`url(#${gradientId})`} />
           <circle cx="30" cy="70" r="2" fill={`url(#${gradientId})`} />
@@ -140,7 +136,6 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           stroke={`url(#${gradientId})`}
           strokeWidth="1.5"
           strokeLinecap="round"
-          opacity="0.4"
         />
       </svg>
       {showText && (

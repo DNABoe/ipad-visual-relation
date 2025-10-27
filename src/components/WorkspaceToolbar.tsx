@@ -47,7 +47,7 @@ export function WorkspaceToolbar({
 }: WorkspaceToolbarProps) {
   return (
     <TooltipProvider>
-      <div className="border-b border-toolbar-border bg-toolbar-bg px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg backdrop-blur-sm">
+      <div className="border-b border-toolbar-border bg-toolbar-bg px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg">
         <div className="flex items-center gap-3">
           <Logo size={32} showText={false} />
           <h1 className="text-xl font-bold tracking-tight text-primary">NetEye</h1>
@@ -68,7 +68,7 @@ export function WorkspaceToolbar({
                 <TooltipContent>Right-click and "Save link as..." to download</TooltipContent>
               </Tooltip>
             ) : (
-              <span className="text-sm text-foreground/80 font-medium">{fileName}</span>
+              <span className="text-sm text-foreground font-medium">{fileName}</span>
             )}
           </div>
         </div>

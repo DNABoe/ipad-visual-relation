@@ -170,7 +170,8 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
       ctx.scale(scale, scale)
       
       if (format === 'jpeg') {
-        ctx.fillStyle = 'oklch(0.96 0.01 250)'
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim()
+        ctx.fillStyle = bgColor
         ctx.fillRect(0, 0, width, height)
       }
       
@@ -185,16 +186,16 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
       
       for (const group of groupsInBounds) {
         const colorMap: Record<string, string> = {
-          blue: 'oklch(0.55 0.15 250)',
-          purple: 'oklch(0.55 0.15 290)',
-          pink: 'oklch(0.70 0.15 340)',
-          yellow: 'oklch(0.75 0.15 90)',
-          teal: 'oklch(0.60 0.12 200)',
-          indigo: 'oklch(0.50 0.15 270)',
-          rose: 'oklch(0.65 0.15 10)',
-          emerald: 'oklch(0.60 0.15 160)',
-          amber: 'oklch(0.70 0.15 70)',
-          cyan: 'oklch(0.65 0.15 210)',
+          blue: getComputedStyle(document.documentElement).getPropertyValue('--group-blue').trim(),
+          purple: getComputedStyle(document.documentElement).getPropertyValue('--group-purple').trim(),
+          pink: getComputedStyle(document.documentElement).getPropertyValue('--group-pink').trim(),
+          yellow: getComputedStyle(document.documentElement).getPropertyValue('--group-yellow').trim(),
+          teal: getComputedStyle(document.documentElement).getPropertyValue('--group-teal').trim(),
+          indigo: getComputedStyle(document.documentElement).getPropertyValue('--group-indigo').trim(),
+          rose: getComputedStyle(document.documentElement).getPropertyValue('--group-rose').trim(),
+          emerald: getComputedStyle(document.documentElement).getPropertyValue('--group-emerald').trim(),
+          amber: getComputedStyle(document.documentElement).getPropertyValue('--group-amber').trim(),
+          cyan: getComputedStyle(document.documentElement).getPropertyValue('--group-cyan').trim(),
         }
         
         const color = colorMap[group.color] || colorMap.blue
@@ -213,7 +214,8 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.restore()
         
         ctx.save()
-        ctx.fillStyle = 'oklch(0.20 0.02 250)'
+        const cardColor = getComputedStyle(document.documentElement).getPropertyValue('--card').trim()
+        ctx.fillStyle = cardColor
         ctx.font = '600 14px Inter, sans-serif'
         ctx.fillText(group.name, group.x + 12, group.y + 24)
         ctx.restore()
@@ -242,8 +244,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         const toY = toPerson.y + NODE_HEIGHT / 2
         
         ctx.save()
-        ctx.strokeStyle = 'oklch(0.35 0.02 250)'
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
+        ctx.strokeStyle = primaryColor
         ctx.lineWidth = 2.5
+        ctx.globalAlpha = 0.6
         ctx.beginPath()
         ctx.moveTo(fromX, fromY)
         ctx.lineTo(toX, toY)
@@ -253,16 +257,17 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
       
       for (const person of personsInBounds) {
         const frameColorMap: Record<string, string> = {
-          red: 'oklch(0.60 0.20 25)',
-          green: 'oklch(0.65 0.18 145)',
-          orange: 'oklch(0.70 0.16 60)',
-          white: 'oklch(0.95 0.01 250)',
+          red: getComputedStyle(document.documentElement).getPropertyValue('--frame-red').trim(),
+          green: getComputedStyle(document.documentElement).getPropertyValue('--frame-green').trim(),
+          orange: getComputedStyle(document.documentElement).getPropertyValue('--frame-orange').trim(),
+          white: getComputedStyle(document.documentElement).getPropertyValue('--frame-white').trim(),
         }
         
         const frameColor = frameColorMap[person.frameColor] || frameColorMap.white
+        const cardColor = getComputedStyle(document.documentElement).getPropertyValue('--card').trim()
         
         ctx.save()
-        ctx.fillStyle = 'oklch(1 0 0)'
+        ctx.fillStyle = cardColor
         ctx.strokeStyle = frameColor
         ctx.lineWidth = 4
         
@@ -315,7 +320,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               ctx.arc(avatarX + avatarRadius, avatarY + avatarRadius, avatarRadius, 0, Math.PI * 2)
               ctx.fill()
               
-              ctx.fillStyle = person.frameColor === 'white' ? '#000' : '#fff'
+              ctx.fillStyle = person.frameColor === 'white' ? getComputedStyle(document.documentElement).getPropertyValue('--card').trim() : getComputedStyle(document.documentElement).getPropertyValue('--card-foreground').trim()
               ctx.font = 'bold 28px Inter, sans-serif'
               ctx.textAlign = 'center'
               ctx.textBaseline = 'middle'
@@ -331,7 +336,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           ctx.arc(avatarX + avatarRadius, avatarY + avatarRadius, avatarRadius, 0, Math.PI * 2)
           ctx.fill()
           
-          ctx.fillStyle = person.frameColor === 'white' ? '#000' : '#fff'
+          ctx.fillStyle = person.frameColor === 'white' ? getComputedStyle(document.documentElement).getPropertyValue('--card').trim() : getComputedStyle(document.documentElement).getPropertyValue('--card-foreground').trim()
           ctx.font = 'bold 28px Inter, sans-serif'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
@@ -347,8 +352,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           const badgeY = avatarY + avatarSize + 4
           
           ctx.save()
-          ctx.fillStyle = 'oklch(0.97 0 0)'
-          ctx.strokeStyle = 'oklch(0.88 0.01 250)'
+          const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
+          const primaryForegroundColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-foreground').trim()
+          ctx.fillStyle = primaryColor
+          ctx.strokeStyle = primaryColor
           ctx.lineWidth = 1
           const badgeRadius = 4
           ctx.beginPath()
@@ -365,7 +372,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           ctx.fill()
           ctx.stroke()
           
-          ctx.fillStyle = 'oklch(0.20 0.02 250)'
+          ctx.fillStyle = primaryForegroundColor
           ctx.font = 'bold 11px Inter, sans-serif'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
@@ -379,9 +386,11 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           
           ctx.save()
           let currentY = textStartY
+          const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim()
+          const mutedForegroundColor = getComputedStyle(document.documentElement).getPropertyValue('--muted-foreground').trim()
           
           if (includeName) {
-            ctx.fillStyle = 'oklch(0.20 0.02 250)'
+            ctx.fillStyle = foregroundColor
             ctx.font = '600 14px Inter, sans-serif'
             ctx.textBaseline = 'top'
             ctx.fillText(person.name, textX, currentY)
@@ -390,21 +399,21 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           
           if (includePosition) {
             if (person.position) {
-              ctx.fillStyle = 'oklch(0.50 0.02 250)'
+              ctx.fillStyle = mutedForegroundColor
               ctx.font = '400 12px Inter, sans-serif'
               ctx.fillText(person.position, textX, currentY)
               currentY += 16
             }
             
             if (person.position2) {
-              ctx.fillStyle = 'oklch(0.50 0.02 250)'
+              ctx.fillStyle = mutedForegroundColor
               ctx.font = '400 12px Inter, sans-serif'
               ctx.fillText(person.position2, textX, currentY)
               currentY += 16
             }
             
             if (person.position3) {
-              ctx.fillStyle = 'oklch(0.50 0.02 250)'
+              ctx.fillStyle = mutedForegroundColor
               ctx.font = '400 12px Inter, sans-serif'
               ctx.fillText(person.position3, textX, currentY)
             }

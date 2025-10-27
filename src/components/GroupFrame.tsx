@@ -81,8 +81,9 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
         width: group.width,
         height: group.height,
         borderColor: groupColor,
-        backgroundColor: group.solidBackground ? `color-mix(in oklch, ${groupColor} 25%, transparent)` : `color-mix(in oklch, ${groupColor} 8%, transparent)`,
-        boxShadow: group.solidBackground ? `inset 0 0 50px color-mix(in oklch, ${groupColor} 12%, transparent)` : 'none',
+        backgroundColor: group.solidBackground 
+          ? `color-mix(in oklch, ${groupColor} 25%, var(--card))` 
+          : `color-mix(in oklch, ${groupColor} 8%, transparent)`,
         ...style,
       }}
       onClick={onClick}
@@ -116,10 +117,11 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
           />
         ) : (
           <div
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg border-2 text-card-foreground"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg border-2"
             style={{
               backgroundColor: groupColor,
               borderColor: groupColor,
+              color: 'var(--card-foreground)',
             }}
             onMouseDown={(e) => {
               if (onDragStart) {
@@ -134,7 +136,10 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-5 w-5 p-0 hover:bg-background/25 rounded-md transition-colors"
+                  className="h-5 w-5 p-0 rounded-md transition-colors"
+                  style={{
+                    backgroundColor: 'color-mix(in oklch, var(--background) 25%, transparent)',
+                  }}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
@@ -145,7 +150,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 align="start" 
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
-                className="bg-card/98 backdrop-blur-md border-border"
+                className="bg-card border-border"
               >
                 <DropdownMenuLabel className="text-foreground">Edit Group</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -154,7 +159,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
                 </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="cursor-pointer">Change Color</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="bg-card/98 backdrop-blur-md border-border">
+                  <DropdownMenuSubContent className="bg-card border-border">
                     {GROUP_COLOR_NAMES.map((colorName) => (
                       <DropdownMenuItem
                         key={colorName}

@@ -161,11 +161,10 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <a
                 href={createdNetwork.downloadUrl}
                 download={createdNetwork.fileName}
-                className="flex items-center justify-center gap-2 w-full h-14 bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground rounded-xl font-medium hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group"
+                className="flex items-center justify-center gap-2 w-full h-14 bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all duration-300 active:scale-[0.98]"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-background/0 via-background/10 to-background/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                <DownloadSimple size={22} weight="bold" className="relative" />
-                <span className="relative">Download {createdNetwork.fileName}</span>
+                <DownloadSimple size={22} weight="bold" />
+                <span>Download {createdNetwork.fileName}</span>
               </a>
 
               <p className="text-xs text-muted-foreground text-center px-4">
@@ -213,7 +212,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-primary/8 to-accent/12">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-background">
       <div className="w-full max-w-md space-y-12 animate-fade-in-up">
         <div className="text-center space-y-6">
           <Logo size={120} showText={true} className="justify-center" />
@@ -222,30 +221,28 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="space-y-5">
           <Button
             onClick={() => setShowNewDialog(true)}
-            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 shadow-[0_8px_24px_-4px_var(--primary)] hover:shadow-[0_12px_32px_-4px_var(--primary)] transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
+            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-background/0 via-background/10 to-background/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <FilePlus size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
             Generate New Network
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 shadow-[0_8px_24px_-4px_var(--primary)] hover:shadow-[0_12px_32px_-4px_var(--primary)] transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
+            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-background/0 via-background/10 to-background/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
             Load Existing Network
           </Button>
         </div>
 
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card/80 backdrop-blur-sm shadow-lg shadow-black/20 text-sm text-muted-foreground">
+          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card shadow-lg text-sm text-muted-foreground">
             <span className="text-accent text-base">🔒</span>
             <div className="text-left">
-              <div className="font-medium text-foreground/90">AES-256-GCM encryption</div>
+              <div className="font-medium text-foreground">AES-256-GCM encryption</div>
               <div className="text-xs">All data stored locally, nothing in the cloud</div>
             </div>
           </div>

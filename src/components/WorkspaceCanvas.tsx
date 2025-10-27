@@ -256,7 +256,7 @@ export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: 
   return (
     <div
       ref={controller.canvasRef}
-      className={`flex-1 relative overflow-hidden bg-background ${showGrid ? 'canvas-grid' : ''}`}
+      className={`flex-1 relative overflow-hidden bg-canvas-bg ${showGrid ? 'canvas-grid' : ''}`}
       style={showGrid ? { '--grid-size': `${gridSize}px` } as React.CSSProperties : undefined}
       onMouseDown={controller.handlers.handleCanvasMouseDown}
       onMouseMove={handleMouseMove}
@@ -390,6 +390,7 @@ export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: 
                     stroke={accentColor}
                     strokeWidth="3"
                     strokeDasharray="5,5"
+                    opacity="0.8"
                   />
                   <circle
                     cx={toX}

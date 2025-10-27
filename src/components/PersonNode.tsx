@@ -36,14 +36,13 @@ export function PersonNode({
       <Card
         className={cn(
           'cursor-grab select-none transition-all duration-200 border-[3px] bg-card shadow-lg',
-          'hover:shadow-xl hover:shadow-primary/20 hover:border-primary/50',
-          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl shadow-accent/40 border-accent/60',
+          'hover:shadow-xl hover:border-primary',
+          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl border-accent',
           isDragging && 'node-dragging shadow-2xl'
         )}
         style={{
           ...style,
           borderColor: frameColor,
-          opacity: 1,
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}

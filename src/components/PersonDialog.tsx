@@ -137,8 +137,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="absolute inset-0 rounded-full bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
-                  <Upload className="text-white" size={36} weight="duotone" />
+                <div className="absolute inset-0 rounded-full bg-card opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                  <Upload className="text-foreground" size={36} weight="duotone" />
                 </div>
               </div>
               <div className="flex gap-2">
@@ -187,7 +187,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           type="button"
                           onClick={() => setFrameColor(color as FrameColor)}
                           className={`w-14 h-14 rounded-xl border-2 transition-all shadow-lg ${
-                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl border-accent' : 'hover:scale-105 border-border/60 hover:border-border'
+                            frameColor === color ? 'ring-2 ring-accent ring-offset-2 ring-offset-background scale-110 shadow-xl border-accent' : 'hover:scale-105 border-border hover:border-border'
                           }`}
                           style={{ 
                             backgroundColor: FRAME_COLORS[color],

@@ -102,7 +102,7 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
                 key={person.id}
                 variant="ghost"
                 className={cn(
-                  'w-full justify-start h-auto p-3 hover:bg-accent/50',
+                  'w-full justify-start h-auto p-3 hover:bg-toolbar-hover',
                   isSelected && 'bg-accent text-accent-foreground'
                 )}
                 onClick={() => onPersonClick(person.id)}
