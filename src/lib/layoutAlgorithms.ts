@@ -105,10 +105,10 @@ export function organizeByImportance(
 
   const rings = [
     { score: 1, radius: 0 },
-    { score: 2, radius: 320 },
-    { score: 3, radius: 560 },
-    { score: 4, radius: 800 },
-    { score: 5, radius: 1040 },
+    { score: 2, radius: 240 },
+    { score: 3, radius: 420 },
+    { score: 4, radius: 600 },
+    { score: 5, radius: 780 },
   ]
 
   rings.forEach(({ score, radius }) => {
@@ -120,7 +120,7 @@ export function organizeByImportance(
         group[0].x = 0
         group[0].y = 0
       } else {
-        const smallRadius = 120
+        const smallRadius = 100
         group.forEach((person, index) => {
           const angle = (index / group.length) * 2 * Math.PI - Math.PI / 2
           person.x = Math.cos(angle) * smallRadius
@@ -136,7 +136,7 @@ export function organizeByImportance(
     }
   })
 
-  const maxIterations = 60
+  const maxIterations = 80
   for (let iter = 0; iter < maxIterations; iter++) {
     result.forEach(person => {
       const connectedIds = Array.from(connectionMap.get(person.id) || [])
@@ -146,7 +146,7 @@ export function organizeByImportance(
       const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
       const avgY = connected.reduce((sum, p) => sum + p.y, 0) / connected.length
 
-      const pullStrength = person.score === 1 ? 0.05 : 0.2
+      const pullStrength = person.score === 1 ? 0.04 : 0.25
       const dx = avgX - person.x
       const dy = avgY - person.y
       
@@ -158,8 +158,8 @@ export function organizeByImportance(
       
       if (currentDist > 10) {
         const radiusScale = targetRadius / currentDist
-        person.x *= (1 - pullStrength) + pullStrength * radiusScale
-        person.y *= (1 - pullStrength) + pullStrength * radiusScale
+        person.x *= (1 - pullStrength * 0.5) + pullStrength * 0.5 * radiusScale
+        person.y *= (1 - pullStrength * 0.5) + pullStrength * 0.5 * radiusScale
       }
     })
   }
@@ -205,7 +205,7 @@ export function hierarchicalFromSelected(
   })
 
   rootPerson.x = 0
-  rootPerson.y = -600
+  rootPerson.y = -400
 
   const connectedToRoot = connectionMap.get(selectedPersonId) || []
   const connectedIds = new Set(connectedToRoot.map(c => c.connectedId))
@@ -230,8 +230,8 @@ export function hierarchicalFromSelected(
   })
 
   const layers: Person[][] = []
-  const layerHeight = 220
-  let currentY = -320
+  const layerHeight = 180
+  let currentY = -200
   
   const personsPerLayer = [3, 5, 7, 9, 11]
   let layerIndex = 0
@@ -255,7 +255,7 @@ export function hierarchicalFromSelected(
 
   layers.forEach((layer, idx) => {
     const y = currentY + (idx + 1) * layerHeight
-    const width = Math.min(1800, 280 + layer.length * 90)
+    const width = Math.min(1400, 280 + layer.length * 70)
     const spacing = layer.length > 1 ? width / (layer.length - 1) : 0
     const startX = -width / 2
     
@@ -265,7 +265,7 @@ export function hierarchicalFromSelected(
     })
   })
 
-  const maxIterations = 40
+  const maxIterations = 50
   for (let iter = 0; iter < maxIterations; iter++) {
     result.forEach(person => {
       if (person.id === selectedPersonId) return
@@ -276,7 +276,7 @@ export function hierarchicalFromSelected(
       const connected = result.filter(p => connectedIds.includes(p.id))
       const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
 
-      const pullStrength = 0.15
+      const pullStrength = 0.18
       const dx = avgX - person.x
       
       person.x += dx * pullStrength
@@ -322,7 +322,7 @@ export function tightenNetwork(
     ? connectionLengths.reduce((sum, len) => sum + len, 0) / connectionLengths.length
     : 400
 
-  const targetLength = avgConnectionLength * 0.6
+  const targetLength = avgConnectionLength * 0.5
 
   result.forEach(person => {
     const dx = person.x - centerX
@@ -330,13 +330,13 @@ export function tightenNetwork(
     const currentDist = Math.sqrt(dx * dx + dy * dy)
     
     if (currentDist > 1) {
-      const scale = 0.7
+      const scale = 0.65
       person.x = centerX + dx * scale
       person.y = centerY + dy * scale
     }
   })
 
-  const maxIterations = 50
+  const maxIterations = 70
   for (let iter = 0; iter < maxIterations; iter++) {
     result.forEach(person => {
       const connectedIds = Array.from(connectionMap.get(person.id) || [])
@@ -361,7 +361,7 @@ export function tightenNetwork(
         }
       })
 
-      const pullStrength = 0.15
+      const pullStrength = 0.18
       person.x += totalPullX * pullStrength
       person.y += totalPullY * pullStrength
     })
@@ -401,7 +401,7 @@ export function smartArrange(
     centerPersons[0].x = 0
     centerPersons[0].y = 0
   } else {
-    const centerRadius = 120
+    const centerRadius = 100
     centerPersons.forEach((person, i) => {
       const angle = (i / centerPersons.length) * 2 * Math.PI - Math.PI / 2
       person.x = Math.cos(angle) * centerRadius
@@ -428,7 +428,7 @@ export function smartArrange(
     return bConns.length - aConns.length
   })
 
-  const ringRadii = [320, 560, 800, 1040]
+  const ringRadii = [240, 420, 600, 780]
   
   toPlace.forEach(person => {
     const connectedIds = Array.from(connectionMap.get(person.id) || [])
@@ -459,14 +459,14 @@ export function smartArrange(
       person.y = targetY * scale
     }
 
-    const jitter = 40
+    const jitter = 30
     person.x += (Math.random() - 0.5) * jitter
     person.y += (Math.random() - 0.5) * jitter
     
     placed.add(person.id)
   })
 
-  const maxIterations = 100
+  const maxIterations = 120
   for (let iter = 0; iter < maxIterations; iter++) {
     result.forEach(person => {
       if (person.score === 1) return
@@ -481,7 +481,7 @@ export function smartArrange(
       const currentDist = Math.sqrt(person.x ** 2 + person.y ** 2)
       const targetAngle = Math.atan2(person.y, person.x)
       
-      const pullStrength = 0.2
+      const pullStrength = 0.25
       const dx = avgX - person.x
       const dy = avgY - person.y
       

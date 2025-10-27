@@ -235,8 +235,13 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     })
     
     workspaceState.updatePersonsInBulk(updates)
+    
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+    
     toast.success('Organized by importance score')
-  }, [workspaceState])
+  }, [workspaceState, handleZoomToFit])
 
   const handleHierarchicalView = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
@@ -261,8 +266,13 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     })
     
     workspaceState.updatePersonsInBulk(updates)
+    
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+    
     toast.success('Hierarchical view created from selected person')
-  }, [workspaceState, selection.selectedPersons])
+  }, [workspaceState, selection.selectedPersons, handleZoomToFit])
 
   const handleTightenNetwork = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
@@ -281,8 +291,13 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     })
     
     workspaceState.updatePersonsInBulk(updates)
+    
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+    
     toast.success('Network tightened')
-  }, [workspaceState])
+  }, [workspaceState, handleZoomToFit])
 
   const handleSmartArrange = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
@@ -301,8 +316,13 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     })
     
     workspaceState.updatePersonsInBulk(updates)
+    
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+    
     toast.success('Smart arrangement applied')
-  }, [workspaceState])
+  }, [workspaceState, handleZoomToFit])
 
   return {
     workspace: workspaceState.workspace,
