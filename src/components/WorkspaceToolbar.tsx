@@ -1,3 +1,4 @@
+import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -30,8 +31,6 @@ interface WorkspaceToolbarProps {
   fileName: string
   downloadUrl: string | null
   controller: ReturnType<typeof useWorkspaceController>
-  showGrid: boolean
-  setShowGrid: (show: boolean) => void
   showListPanel: boolean
   setShowListPanel: (show: boolean) => void
 }
@@ -40,11 +39,29 @@ export function WorkspaceToolbar({
   fileName,
   downloadUrl,
   controller,
-  showGrid,
-  setShowGrid,
   showListPanel,
   setShowListPanel,
 }: WorkspaceToolbarProps) {
+  const [settings, setSettings] = useKV<{
+    username: string
+    passwordHash: string
+    showGrid: boolean
+    snapToGrid: boolean
+    gridSize: number
+    showMinimap: boolean
+  }>('app-settings', {
+    username: 'admin',
+    passwordHash: '',
+    showGrid: true,
+    snapToGrid: false,
+    gridSize: 20,
+    showMinimap: true,
+  })
+
+  const showGrid = settings?.showGrid ?? true
+  const setShowGrid = (show: boolean) => {
+    setSettings((current) => ({ ...current!, showGrid: show }))
+  }
   return (
     <TooltipProvider>
       <div className="px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg bg-toolbar-bg border-b border-toolbar-border">

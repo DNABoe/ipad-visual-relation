@@ -41,7 +41,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     showMinimap: true,
   })
 
-  const [showGrid, setShowGrid] = useState(settings?.showGrid ?? true)
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
 
@@ -53,12 +52,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   useEffect(() => {
     setWorkspace(controller.workspace)
   }, [controller.workspace, setWorkspace])
-
-  useEffect(() => {
-    if (settings?.showGrid !== undefined) {
-      setShowGrid(settings.showGrid)
-    }
-  }, [settings?.showGrid])
 
   useEffect(() => {
     const createDownloadUrl = async () => {
@@ -129,8 +122,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         fileName={fileName}
         downloadUrl={downloadUrl}
         controller={controller}
-        showGrid={showGrid}
-        setShowGrid={setShowGrid}
         showListPanel={showListPanel}
         setShowListPanel={setShowListPanel}
       />
@@ -147,7 +138,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
         <WorkspaceCanvas
           controller={controller}
-          showGrid={showGrid}
         />
       </div>
 

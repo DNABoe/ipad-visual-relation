@@ -10,10 +10,9 @@ import { toast } from 'sonner'
 
 interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
-  showGrid: boolean
 }
 
-export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) {
+export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
   const [settings] = useKV<{
     username: string
     passwordHash: string
@@ -271,6 +270,7 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
   }, [controller])
 
   const gridSize = settings?.gridSize ?? 20
+  const showGrid = settings?.showGrid ?? true
 
   return (
     <div
