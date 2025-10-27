@@ -89,7 +89,7 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
         height: group.height,
         borderColor: groupColor,
         backgroundColor: getBackgroundColor(),
-        transition: isDragging ? 'none' : undefined,
+        transition: 'none',
         ...style,
       }}
       onClick={onClick}

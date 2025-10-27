@@ -38,7 +38,7 @@ export function PersonNode({
         left: person.x, 
         top: person.y, 
         width: 260,
-        transition: isDragging ? 'none' : undefined,
+        transition: 'none',
       }}
     >
       <Card
