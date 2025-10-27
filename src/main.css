@@ -1,1 +1,191 @@
 @import 'tailwindcss';
+@import "tw-animate-css";
+
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: Poppins, var(--font-sans);
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  
+  --background: oklch(0.15 0.02 240);
+  --foreground: oklch(1 0 0);
+
+  --card: oklch(0.21 0.03 230);
+  --card-foreground: oklch(1 0 0);
+  
+  --popover: oklch(0.21 0.03 230);
+  --popover-foreground: oklch(1 0 0);
+
+  --primary: oklch(0.65 0.11 185);
+  --primary-foreground: oklch(0.15 0.02 240);
+
+  --secondary: oklch(0.3 0.04 230);
+  --secondary-foreground: oklch(1 0 0);
+
+  --muted: oklch(0.21 0.03 230);
+  --muted-foreground: oklch(0.78 0.01 240);
+
+  --accent: oklch(0.88 0.18 185);
+  --accent-foreground: oklch(0.15 0.02 240);
+
+  --destructive: oklch(0.6 0.25 15);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.3 0.04 230);
+  --input: oklch(0.3 0.04 230);
+  --ring: oklch(0.88 0.18 185);
+
+  --radius: 6px;
+
+  --toolbar-bg: oklch(0.21 0.03 230);
+  --toolbar-border: oklch(0.3 0.04 230);
+  --toolbar-hover: oklch(0.3 0.04 230);
+  --toolbar-active: oklch(0.88 0.18 185);
+  
+  --canvas-grid: oklch(0.88 0.18 185 / 0.15);
+  --canvas-bg: oklch(0.15 0.02 240);
+  
+  --frame-red: oklch(0.6 0.25 15);
+  --frame-green: oklch(0.78 0.25 165);
+  --frame-orange: oklch(0.72 0.18 45);
+  --frame-white: oklch(1 0 0);
+  
+  --group-blue: oklch(0.65 0.11 185);
+  --group-purple: oklch(0.63 0.24 290);
+  --group-pink: oklch(0.65 0.24 350);
+  --group-yellow: oklch(0.72 0.18 75);
+  --group-teal: oklch(0.68 0.15 180);
+  --group-indigo: oklch(0.6 0.22 275);
+  --group-rose: oklch(0.6 0.25 15);
+  --group-emerald: oklch(0.78 0.25 165);
+  --group-amber: oklch(0.82 0.16 85);
+  --group-cyan: oklch(0.88 0.18 185);
+
+  --success: oklch(0.78 0.25 165);
+  --success-foreground: oklch(0.15 0.02 240);
+  
+  --warning: oklch(0.72 0.18 45);
+  --warning-foreground: oklch(1 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  #root {
+    min-height: 100vh;
+    background-color: var(--background);
+  }
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-toolbar-bg: var(--toolbar-bg);
+  --color-toolbar-border: var(--toolbar-border);
+  --color-toolbar-hover: var(--toolbar-hover);
+  --color-toolbar-active: var(--toolbar-active);
+  --color-canvas-bg: var(--canvas-bg);
+  --color-canvas-grid: var(--canvas-grid);
+  --color-frame-red: var(--frame-red);
+  --color-frame-green: var(--frame-green);
+  --color-frame-orange: var(--frame-orange);
+  --color-frame-white: var(--frame-white);
+  --color-group-blue: var(--group-blue);
+  --color-group-purple: var(--group-purple);
+  --color-group-pink: var(--group-pink);
+  --color-group-yellow: var(--group-yellow);
+  --color-group-teal: var(--group-teal);
+  --color-group-indigo: var(--group-indigo);
+  --color-group-rose: var(--group-rose);
+  --color-group-emerald: var(--group-emerald);
+  --color-group-amber: var(--group-amber);
+  --color-group-cyan: var(--group-cyan);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 3);
+  --radius-full: 9999px;
+}
+
+.canvas-grid {
+  --grid-size: 20px;
+  background-color: var(--canvas-bg);
+  background-image: 
+    linear-gradient(to right, var(--canvas-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--canvas-grid) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  background-position: 0 0;
+}
+
+.node-dragging {
+  opacity: 0.95;
+  transform: scale(1.02);
+}
+
+.selection-rect {
+  background: oklch(0.88 0.18 185 / 0.15);
+  border: 2px solid oklch(0.88 0.18 185 / 0.8);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.glow-accent {
+  box-shadow: 0 0 10px oklch(0.88 0.18 185 / 0.3);
+}
+
+.glow-accent-strong {
+  box-shadow: 0 0 20px oklch(0.88 0.18 185 / 0.5);
+}
