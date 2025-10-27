@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,12 +26,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [defaultHash, setDefaultHash] = useState<PasswordHash | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
-  useEffect(() => {
-    getDefaultPasswordHash().then(setDefaultHash)
-  }, [])
+  const defaultHash = getDefaultPasswordHash()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,9 +119,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <Eye size={20} weight="regular" />
-                  ) : (
                     <EyeSlash size={20} weight="regular" />
+                  ) : (
+                    <Eye size={20} weight="regular" />
                   )}
                 </button>
               </div>

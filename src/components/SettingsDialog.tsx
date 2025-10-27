@@ -36,16 +36,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [defaultHash, setDefaultHash] = useState<PasswordHash | null>(null)
 
-  useEffect(() => {
-    getDefaultPasswordHash().then(setDefaultHash)
-  }, [])
+  const defaultHash = getDefaultPasswordHash()
 
   useEffect(() => {
     if (settings) {
       setUsername(settings.username || DEFAULT_USERNAME)
-    } else if (!settings && defaultHash) {
+    } else if (!settings) {
       setSettings({
         username: DEFAULT_USERNAME,
         passwordHash: defaultHash,
@@ -55,7 +52,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
         showMinimap: true,
       })
     }
-  }, [settings, defaultHash, setSettings])
+  }, [settings, setSettings])
 
   const handleSave = async () => {
     if (!username.trim()) {
