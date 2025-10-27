@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { encryptData, decryptData, type EncryptedData } from '@/lib/encryption'
-import { FilePlus, FolderOpen, DownloadSimple } from '@phosphor-icons/react'
+import { FilePlus, FolderOpen, DownloadSimple, UsersThree } from '@phosphor-icons/react'
 import { Logo } from './Logo'
 import type { Workspace } from '@/lib/types'
 import { toast } from 'sonner'
@@ -224,7 +224,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
             className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
-            <FilePlus size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
+            <UsersThree size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
             Generate New Network
           </Button>
 

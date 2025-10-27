@@ -141,7 +141,7 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
       {showText && (
         <div className="flex flex-col items-start">
           <span className="text-5xl font-bold tracking-tight leading-none bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent drop-shadow-lg">RelEye</span>
-          <span className="text-sm text-muted-foreground tracking-[0.15em] uppercase leading-tight mt-2 font-medium">
+          <span className="text-sm text-muted-foreground tracking-[0.15em] uppercase leading-tight mt-2 font-medium text-left">
             Relationship<br/>Network
           </span>
         </div>
