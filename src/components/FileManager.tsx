@@ -217,28 +217,25 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <div className="w-full max-w-md space-y-12 animate-fade-in-up">
         <div className="text-center space-y-6">
           <Logo size={80} showText={true} className="justify-center" />
-          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
-            Create and visualize professional relationships with military-grade encryption
-          </p>
         </div>
 
         <div className="space-y-4">
           <Button
             onClick={() => setShowNewDialog(true)}
-            className="w-full h-20 text-lg bg-gradient-to-r from-primary via-primary/95 to-accent hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
+            className="w-full h-20 text-lg bg-[oklch(0.42_0.12_250)] hover:bg-[oklch(0.38_0.14_250)] hover:shadow-xl hover:shadow-[oklch(0.42_0.12_250)]/30 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden text-white"
             size="lg"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <FilePlus size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            Create New Network
+            Generate New Network
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            variant="outline"
-            className="w-full h-20 text-lg border-2 border-border/70 hover:border-primary/60 hover:bg-primary/8 hover:shadow-lg transition-all duration-300 active:scale-[0.98] group backdrop-blur-sm bg-card/30"
+            className="w-full h-20 text-lg bg-[oklch(0.42_0.12_250)] hover:bg-[oklch(0.38_0.14_250)] hover:shadow-xl hover:shadow-[oklch(0.42_0.12_250)]/30 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden text-white"
             size="lg"
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
             Load Existing Network
           </Button>
@@ -247,7 +244,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/60 backdrop-blur-sm border border-border text-xs text-muted-foreground">
             <span className="text-accent">🔒</span>
-            <span>All data is encrypted locally in your browser</span>
+            <span>AES-256-GCM encryption with PBKDF2 key derivation (100,000 iterations)</span>
           </div>
         </div>
       </div>
