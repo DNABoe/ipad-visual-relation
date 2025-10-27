@@ -501,7 +501,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md shadow-2xl border-border">
+      <DialogContent className="max-w-md shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -527,7 +527,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   <div className="text-xs text-muted-foreground">Lossless, transparent background</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary hover:bg-muted transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg hover:border-primary hover:bg-muted transition-colors cursor-pointer">
                 <RadioGroupItem value="jpeg" id="format-jpeg" />
                 <Label htmlFor="format-jpeg" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium">JPEG</div>
@@ -542,14 +542,14 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           <div className="space-y-3">
             <Label className="text-sm font-medium">Export Mode</Label>
             <RadioGroup value={mode} onValueChange={(v) => setMode(v as ExportMode)} className="space-y-2">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary hover:bg-muted transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg hover:border-primary hover:bg-muted transition-colors cursor-pointer">
                 <RadioGroupItem value="all" id="mode-all" />
                 <Label htmlFor="mode-all" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium">Entire Canvas</div>
                   <div className="text-xs text-muted-foreground">Export everything</div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary hover:bg-muted transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 rounded-lg hover:border-primary hover:bg-muted transition-colors cursor-pointer">
                 <RadioGroupItem value="selection" id="mode-selection" />
                 <Label htmlFor="mode-selection" className="font-normal cursor-pointer flex-1">
                   <div className="font-medium">Selected Area</div>
@@ -573,7 +573,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm bg-primary/20 border border-primary rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm bg-primary/20 rounded-lg p-3">
                       <CheckCircle size={18} weight="fill" className="text-accent flex-shrink-0" />
                       <div>
                         <div className="font-medium">Area selected</div>
@@ -612,7 +612,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
           <div className="space-y-3">
             <Label className="text-sm font-medium">Include in Export</Label>
-            <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+            <div className="space-y-2 rounded-lg bg-card p-4">
               <div className="flex items-center space-x-3">
                 <Checkbox 
                   id="include-name" 

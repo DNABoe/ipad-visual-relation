@@ -144,9 +144,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-2xl p-8 space-y-6 shadow-2xl">
+          <div className="bg-card rounded-2xl p-8 space-y-6 shadow-2xl">
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 border border-primary/30 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                     <FilePlus size={24} className="text-white" weight="duotone" />
@@ -173,7 +173,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               </p>
             </div>
 
-            <div className="border-t border-border pt-6 space-y-4">
+            <div className="pt-6 space-y-4">
               <h3 className="text-sm font-medium flex items-center gap-2">
                 <span className="text-accent">🔒</span>
                 Security & Important Information
@@ -242,7 +242,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         </div>
 
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-lg shadow-black/20 text-sm text-muted-foreground">
+          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card/80 backdrop-blur-sm shadow-lg shadow-black/20 text-sm text-muted-foreground">
             <span className="text-accent text-base">🔒</span>
             <div className="text-left">
               <div className="font-medium text-foreground/90">AES-256-GCM encryption</div>
@@ -253,7 +253,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md shadow-2xl border-border">
+        <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -323,7 +323,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-muted border border-border">
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-muted">
               <Checkbox
                 id="include-sample"
                 checked={includeSampleData}
@@ -347,7 +347,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="sm:max-w-md shadow-2xl border-border">
+        <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -397,7 +397,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               />
             </div>
 
-            <div className="text-center p-4 rounded-xl bg-muted border border-border">
+            <div className="text-center p-4 rounded-xl bg-muted">
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                 <span className="text-accent text-sm">🔒</span>
                 <span>All decryption happens locally in your browser</span>

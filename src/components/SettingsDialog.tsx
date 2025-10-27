@@ -62,7 +62,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border-border">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl">Settings</DialogTitle>
           <DialogDescription>
@@ -78,7 +78,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           <TabsContent value="system" className="space-y-5 py-4">
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Canvas Settings</h3>
-              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+              <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="snap-toggle" className="text-sm font-medium cursor-pointer">Snap to Grid</Label>
@@ -118,7 +118,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           <TabsContent value="user" className="space-y-5 py-4">
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Account</h3>
-              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+              <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                   <Input

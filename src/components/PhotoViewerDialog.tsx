@@ -86,7 +86,7 @@ export function PhotoViewerDialog({ open, onOpenChange, photoUrl, personName }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={contentRef}
-        className="p-0 overflow-hidden border border-border select-none bg-card shadow-2xl"
+        className="p-0 overflow-hidden select-none bg-card shadow-2xl"
         style={{
           width: size.width,
           height: size.height,

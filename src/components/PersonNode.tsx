@@ -35,7 +35,7 @@ export function PersonNode({
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
-          'cursor-grab select-none transition-all duration-200 border-[3px] bg-card',
+          'cursor-grab select-none transition-all duration-200 border-[3px]',
           'hover:shadow-xl hover:shadow-primary/20 hover:border-primary/50',
           isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-background shadow-2xl shadow-accent/40 border-accent/60',
           isDragging && 'node-dragging shadow-2xl'
@@ -43,7 +43,6 @@ export function PersonNode({
         style={{
           ...style,
           borderColor: frameColor,
-          opacity: 1,
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
