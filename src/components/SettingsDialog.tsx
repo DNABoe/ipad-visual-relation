@@ -33,8 +33,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     gridSize: 20,
     showMinimap: true,
   })
-
-  const [authConfig, setAuthConfig] = useKV<{ hasCredentials: boolean }>('auth-config', { hasCredentials: false })
   
   const [userCredentials, setUserCredentials] = useKV<{
     username: string
@@ -49,8 +47,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-
-  const hasCredentials = authConfig?.hasCredentials ?? false
 
   useEffect(() => {
     if (userCredentials) {
@@ -77,7 +73,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     setIsSaving(true)
 
     try {
-      if (hasCredentials && newPassword) {
+      if (newPassword) {
         if (!currentPassword) {
           toast.error('Please enter your current password to change it')
           setIsSaving(false)
@@ -104,26 +100,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
         })
 
         toast.success('Username and password updated successfully')
-      } else if (!hasCredentials && newPassword) {
-        const newHash = await hashPassword(newPassword)
-        await setUserCredentials({
-          username: username.trim(),
-          passwordHash: newHash,
-        })
-        await setAuthConfig({ hasCredentials: true })
-
-        toast.success('Credentials set successfully. You will need to login next time.')
-      } else if (hasCredentials) {
+      } else {
         await setUserCredentials((current) => ({
           ...current!,
           username: username.trim(),
         }))
 
         toast.success('Username updated successfully')
-      } else {
-        toast.error('Please set a password to enable authentication')
-        setIsSaving(false)
-        return
       }
 
       setCurrentPassword('')
@@ -202,17 +185,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Account Security</h3>
               
-              {!hasCredentials && (
-                <div className="rounded-lg bg-accent/10 border border-accent/20 p-3 mb-4">
-                  <p className="text-xs text-muted-foreground flex items-start gap-2">
-                    <span className="text-accent text-sm mt-0.5">ℹ️</span>
-                    <span>
-                      <strong className="text-foreground">First Time Setup:</strong> Set a username and password to secure your application. Once set, you'll need these credentials to login.
-                    </span>
-                  </p>
-                </div>
-              )}
-              
               <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
@@ -234,40 +206,38 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <h4 className="text-sm font-medium">{hasCredentials ? 'Change Password' : 'Set Password'}</h4>
+                    <h4 className="text-sm font-medium">Change Password</h4>
                     <p className="text-xs text-muted-foreground">
-                      {hasCredentials ? 'Leave blank to keep your current password' : 'Create a secure password to protect your account'}
+                      Leave blank to keep your current password
                     </p>
                   </div>
 
-                  {hasCredentials && (
-                    <div className="space-y-2">
-                      <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="currentPassword"
-                          type={showCurrentPassword ? "text" : "password"}
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          placeholder="Enter current password"
-                          autoComplete="current-password"
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          tabIndex={-1}
-                        >
-                          {showCurrentPassword ? (
-                            <Eye size={20} weight="regular" />
-                          ) : (
-                            <EyeSlash size={20} weight="regular" />
-                          )}
-                        </button>
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="currentPassword"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Enter current password"
+                        autoComplete="current-password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showCurrentPassword ? (
+                          <Eye size={20} weight="regular" />
+                        ) : (
+                          <EyeSlash size={20} weight="regular" />
+                        )}
+                      </button>
                     </div>
-                  )}
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>

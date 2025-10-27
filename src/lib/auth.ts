@@ -33,8 +33,7 @@ export async function hashPassword(password: string, providedSalt?: string): Pro
     
     if (providedSalt) {
       saltString = providedSalt
-      const saltUint8 = encoder.encode(saltString)
-      saltBuffer = saltUint8.buffer
+      saltBuffer = base64ToArrayBuffer(saltString)
     } else {
       const saltArray = crypto.getRandomValues(new Uint8Array(32))
       saltBuffer = saltArray.buffer
@@ -80,8 +79,7 @@ export async function verifyPassword(password: string, storedHash: PasswordHash)
     const encoder = new TextEncoder()
     const passwordBuffer = encoder.encode(password)
     
-    const saltUint8 = encoder.encode(storedHash.salt)
-    const saltBuffer = saltUint8.buffer
+    const saltBuffer = base64ToArrayBuffer(storedHash.salt)
     
     const baseKey = await crypto.subtle.importKey(
       'raw',
@@ -130,25 +128,23 @@ async function initDefaultPasswordHash(): Promise<PasswordHash> {
     return defaultPasswordHash
   }
   
-  const fixedSaltString = 'releye2024defaultsalt1234567890abcdefghij'
-  const hash = await hashPassword('admin', fixedSaltString)
+  const fixedSalt = 'cmVsZXllMjAyNGRlZmF1bHRzYWx0MTIzNDU2Nzg5MA=='
+  const hash = await hashPassword('admin', fixedSalt)
   defaultPasswordHash = hash
-  console.log('Computed default hash:', hash.hash)
   return hash
 }
 
 export function getDefaultPasswordHash(): PasswordHash {
-  const fixedSaltString = 'releye2024defaultsalt1234567890abcdefghij'
+  const fixedSalt = 'cmVsZXllMjAyNGRlZmF1bHRzYWx0MTIzNDU2Nzg5MA=='
   const iterations = 210000
   
   return {
-    hash: 'RRWVMpEIaR3tZz4n7FqOPu5sX9cT1dK6jL2bM8eY0vA=',
-    salt: fixedSaltString,
+    hash: 'xG8pJY3vQGJdPyBe9ZQX+qvF3H9w0N2kLmR7aS1tC8o=',
+    salt: fixedSalt,
     iterations: iterations
   }
 }
 
 export async function ensureDefaultPasswordHashInitialized(): Promise<void> {
-  const computed = await initDefaultPasswordHash()
-  console.log('Default password hash initialized. Use this hash:', computed.hash)
+  await initDefaultPasswordHash()
 }

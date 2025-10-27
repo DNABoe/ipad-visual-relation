@@ -4,10 +4,15 @@ import { Toaster } from '@/components/ui/sonner'
 import { WorkspaceView } from './components/WorkspaceView2'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
+import { getDefaultPasswordHash, type PasswordHash } from './lib/auth'
 import type { Workspace } from './lib/types'
 
 function App() {
-  const [authSettings] = useKV<{ hasCredentials: boolean }>('auth-config', { hasCredentials: false })
+  const [userCredentials, setUserCredentials] = useKV<{
+    username: string
+    passwordHash: PasswordHash
+  } | null>('user-credentials', null)
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
@@ -16,13 +21,18 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
-    if (authSettings) {
-      if (!authSettings.hasCredentials) {
-        setIsAuthenticated(true)
+    const initializeAuth = async () => {
+      if (!userCredentials) {
+        await setUserCredentials({
+          username: 'admin',
+          passwordHash: getDefaultPasswordHash()
+        })
       }
       setIsCheckingAuth(false)
     }
-  }, [authSettings])
+    
+    initializeAuth()
+  }, [userCredentials, setUserCredentials])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)

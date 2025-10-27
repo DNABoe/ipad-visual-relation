@@ -30,18 +30,18 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
     try {
       if (!userSettings || !userSettings.username || !userSettings.passwordHash) {
-        setError('No credentials configured')
+        setError('System error: credentials not initialized')
         setIsLoading(false)
         return
       }
 
       if (!isPasswordHash(userSettings.passwordHash)) {
-        setError('Invalid credentials configuration')
+        setError('System error: invalid credentials format')
         setIsLoading(false)
         return
       }
 
-      if (username !== userSettings.username) {
+      if (username.trim() !== userSettings.username) {
         setError('Invalid username or password')
         setIsLoading(false)
         return
@@ -56,7 +56,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError('Invalid username or password')
+      setError('An error occurred during login')
     } finally {
       setIsLoading(false)
     }
