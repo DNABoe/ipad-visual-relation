@@ -139,7 +139,7 @@ export function getDefaultPasswordHash(): PasswordHash {
   const iterations = 210000
   
   return {
-    hash: 'RRWVMpEIaR3tZz4n7FqOPu5sX9cT1dK6jL2bM8eY0vA=',
+    hash: 'V/wPGKfN7VgqxJ5h5fDYu4mXSUQj3+r3WZgW7KYPdWE=',
     salt: fixedSaltString,
     iterations: iterations
   }
