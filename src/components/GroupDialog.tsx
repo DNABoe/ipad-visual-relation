@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -17,8 +17,18 @@ interface GroupDialogProps {
 }
 
 export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }: GroupDialogProps) {
-  const [name, setName] = useState(editGroup?.name || '')
-  const [color, setColor] = useState<GroupColor>(editGroup?.color || 'blue')
+  const [name, setName] = useState('')
+  const [color, setColor] = useState<GroupColor>('blue')
+
+  useEffect(() => {
+    if (open) {
+      setName(editGroup?.name || '')
+      setColor(editGroup?.color || 'blue')
+    } else {
+      setName('')
+      setColor('blue')
+    }
+  }, [open, editGroup])
 
   const handleSave = () => {
     if (!name.trim()) return
@@ -36,11 +46,6 @@ export function GroupDialog({ open, onOpenChange, onSave, onRemove, editGroup }:
 
     onSave(group)
     onOpenChange(false)
-    
-    if (!editGroup) {
-      setName('')
-      setColor('blue')
-    }
   }
 
   const handleRemove = () => {

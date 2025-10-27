@@ -20,17 +20,11 @@ interface PersonDialogProps {
 }
 
 export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson }: PersonDialogProps) {
-  const [name, setName] = useState(editPerson?.name || '')
-  const [position, setPosition] = useState(() => {
-    if (editPerson) {
-      const lines = [editPerson.position, editPerson.position2, editPerson.position3].filter(Boolean)
-      return lines.join('\n')
-    }
-    return ''
-  })
-  const [score, setScore] = useState(editPerson?.score || 3)
-  const [frameColor, setFrameColor] = useState<FrameColor>(editPerson?.frameColor || 'white')
-  const [photo, setPhoto] = useState<string | undefined>(editPerson?.photo)
+  const [name, setName] = useState('')
+  const [position, setPosition] = useState('')
+  const [score, setScore] = useState(3)
+  const [frameColor, setFrameColor] = useState<FrameColor>('white')
+  const [photo, setPhoto] = useState<string | undefined>(undefined)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -41,6 +35,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setScore(editPerson?.score || 3)
       setFrameColor(editPerson?.frameColor || 'white')
       setPhoto(editPerson?.photo)
+    } else {
+      setName('')
+      setPosition('')
+      setScore(3)
+      setFrameColor('white')
+      setPhoto(undefined)
     }
   }, [open, editPerson])
 
@@ -84,14 +84,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
     onSave(person)
     onOpenChange(false)
-    
-    if (!editPerson) {
-      setName('')
-      setPosition('')
-      setScore(3)
-      setFrameColor('white')
-      setPhoto(undefined)
-    }
   }
 
   const handleDelete = () => {
