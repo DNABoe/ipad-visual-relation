@@ -111,12 +111,13 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
   )
 }
 
-const DEFAULT_PASSWORD_HASH: PasswordHash = {
-  hash: 'YjE5ZTQxYzg4ZjI5NzQzYjMyNDRmNmYyMzE5YzIzNjJhZTQ4YzIyOGU4NjU4YTQ4YTY3YzA2YThhNzBmNDZmNg==',
-  salt: 'ZGVmYXVsdC1zYWx0LWZvci1hZG1pbi1wYXNzd29yZC0yMDI0LXNlY3VyZS1zYWx0LWhlcmU=',
-  iterations: 210000
-}
+let cachedDefaultHash: PasswordHash | null = null
 
 export async function getDefaultPasswordHash(): Promise<PasswordHash> {
-  return DEFAULT_PASSWORD_HASH
+  if (cachedDefaultHash) {
+    return cachedDefaultHash
+  }
+  
+  cachedDefaultHash = await hashPassword('admin')
+  return cachedDefaultHash
 }
