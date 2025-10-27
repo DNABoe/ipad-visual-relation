@@ -59,10 +59,12 @@ export function PersonNode({
             <Avatar className="h-20 w-20 flex-shrink-0 border-2 border-border/40 shadow-md">
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback 
-                className="text-xl font-bold"
+                className={cn(
+                  "text-xl font-bold",
+                  person.frameColor === 'white' ? 'text-card' : 'text-card-foreground'
+                )}
                 style={{ 
                   backgroundColor: frameColor,
-                  color: person.frameColor === 'white' ? 'oklch(0.18 0.028 248)' : 'oklch(0.95 0.01 250)'
                 }}
               >
                 {getInitials(person.name)}

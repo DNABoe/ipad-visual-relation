@@ -132,12 +132,49 @@ Shadows should use the component's color with transparency:
 - Use Tailwind color classes: `bg-primary`, `text-foreground`, `border-border`
 - Use design tokens for consistency
 - Reference frame/group colors from constants with CSS variables
+- For dynamic colors on colored backgrounds, use Tailwind classes like `text-card-foreground` or `text-primary-foreground`
+- Use `cn()` utility to conditionally apply Tailwind color classes based on logic
 
 ### DON'T ❌
 - Never use hardcoded hex colors (#fff, #000, etc.)
-- Never use hardcoded oklch values directly in components
+- Never use hardcoded oklch values directly in components (e.g., `color: 'oklch(0.18 0.028 248)'`)
 - Never use arbitrary color values in className
-- Never use inline styles for colors (except when referencing CSS variables)
+- Never use inline styles for colors (except when referencing CSS variables with `var(--color-name)`)
+- Never use hardcoded color names like `text-white` or `text-black` - use design system equivalents
+
+### Common Patterns
+
+#### Conditional Text Colors on Dynamic Backgrounds
+```tsx
+// ❌ WRONG - Hardcoded colors
+<AvatarFallback style={{ color: frameColor === 'white' ? 'oklch(0.18 0.028 248)' : 'oklch(0.95 0.01 250)' }}>
+
+// ✅ CORRECT - Design system classes
+<AvatarFallback className={cn(
+  frameColor === 'white' ? 'text-card' : 'text-card-foreground'
+)} style={{ backgroundColor: frameColor }}>
+```
+
+#### Text on Gradient Backgrounds
+```tsx
+// ❌ WRONG
+<div className="bg-gradient-to-r from-primary to-accent">
+  <Icon className="text-white" />
+</div>
+
+// ✅ CORRECT
+<div className="bg-gradient-to-r from-primary to-accent">
+  <Icon className="text-primary-foreground" />
+</div>
+```
+
+#### Getting CSS Variables in JavaScript
+```tsx
+// ✅ CORRECT - For canvas or SVG rendering
+const accentColor = getComputedStyle(document.documentElement)
+  .getPropertyValue('--accent')
+  .trim()
+```
 
 ## Component Patterns
 

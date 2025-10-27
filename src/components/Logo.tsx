@@ -30,7 +30,7 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
             <stop offset="0%" stopColor="var(--accent)" />
             <stop offset="40%" stopColor="var(--primary)" />
             <stop offset="70%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="oklch(0.30 0.15 260)" />
+            <stop offset="100%" stopColor="var(--secondary)" />
           </radialGradient>
           <filter id={glowId}>
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>

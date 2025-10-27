@@ -376,6 +376,10 @@ export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: 
               const toX = controller.interaction.dragState.mouseX || 0
               const toY = controller.interaction.dragState.mouseY || 0
 
+              const accentColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--accent')
+                .trim()
+
               return (
                 <>
                   <line
@@ -383,7 +387,7 @@ export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: 
                     y1={fromY}
                     x2={toX}
                     y2={toY}
-                    stroke="oklch(0.65 0.15 200)"
+                    stroke={accentColor}
                     strokeWidth="3"
                     strokeDasharray="5,5"
                   />
@@ -391,7 +395,7 @@ export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: 
                     cx={toX}
                     cy={toY}
                     r="6"
-                    fill="oklch(0.65 0.15 200)"
+                    fill={accentColor}
                   />
                 </>
               )

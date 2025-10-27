@@ -9,6 +9,7 @@ import type { Person, FrameColor } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
 import { Upload, X, Trash } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils'
 
 interface PersonDialogProps {
   open: boolean
@@ -124,10 +125,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
                   ) : (
                     <AvatarFallback 
-                      className="text-4xl font-bold"
+                      className={cn(
+                        "text-4xl font-bold",
+                        frameColor === 'white' ? 'text-card' : 'text-card-foreground'
+                      )}
                       style={{ 
                         backgroundColor: FRAME_COLORS[frameColor], 
-                        color: frameColor === 'white' ? 'oklch(0.18 0.028 248)' : 'oklch(0.95 0.01 250)' 
                       }}
                     >
                       {name ? getInitials(name) : '?'}

@@ -116,10 +116,9 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
           />
         ) : (
           <div
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg border-2"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-move shadow-lg border-2 text-card-foreground"
             style={{
               backgroundColor: groupColor,
-              color: 'oklch(0.95 0.01 250)',
               borderColor: groupColor,
             }}
             onMouseDown={(e) => {
