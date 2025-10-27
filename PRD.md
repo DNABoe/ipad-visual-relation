@@ -88,80 +88,87 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 ## Design Direction
 
-The design should feel like a professional, secure data visualization tool—clean, sophisticated, and trustworthy with a **dark, modern aesthetic**. Privacy and security are paramount, communicated through clear messaging about local-only storage and encryption. The dark theme reduces eye strain during extended use and provides excellent contrast for network visualization. The interface should balance the complexity of a network graph with the approachability of consumer software, using subtle depth, generous whitespace, and purposeful color to create visual hierarchy without overwhelming users.
+The design follows the **AetherLink UI System** - a dark, modern design system for relationship network visualization that feels sleek, tech-oriented, and trustworthy. It balances analytical precision with emotional warmth through cool tones, glowing blues and purples on dark graphite backgrounds, with smooth gradients and subtle motion for hover states. The interface should communicate security and professionalism while remaining approachable, using glassmorphism subtly in overlays and cyan-tinted glows for depth.
 
 ## Color Selection
 
-**Triadic dark color scheme** with vibrant, distinct colors for high visual separation between groups and states, maintaining a dark canvas background for reduced eye strain and professional appearance.
+**AetherLink Color System** with cool tones creating a tech-oriented, trustworthy aesthetic that balances analytical precision with warmth.
 
-- **Primary Color**: Vibrant Blue `oklch(0.55 0.18 250)` — Represents authority and stability; used for primary actions (Add Person, Save, Login)
+- **Primary Color**: Muted Cyan-Blue `oklch(0.658 0.096 196)` / #45A29E — Primary actions and highlights; represents stability and trust
 - **Secondary Colors**: 
-  - Dark Slate `oklch(0.25 0.03 250)` for secondary UI elements and toolbar backgrounds
-  - Very Dark Blue `oklch(0.12 0.02 250)` for main background providing deep contrast
-- **Accent Color**: Bright Cyan `oklch(0.65 0.15 200)` — Highlights active connections, selected nodes, and interactive states
+  - Charcoal Gray-Blue `oklch(0.204 0.019 228)` / #1F2833 for panels and cards
+  - Deep Black `oklch(0.078 0.013 240)` / #0B0C10 for main background with soft blue tint
+  - Neutral Slate `oklch(0.315 0.030 228)` / #2E3B4E for surfaces and containers
+- **Accent Color**: Bright Glowing Cyan `oklch(0.788 0.106 192)` / #66FCF1 — Hover/active states and connection highlights
+- **Accent Purple**: `oklch(0.542 0.150 286)` / #8B5CF6 — Node highlights and visualization vibrancy
+- **Success Green**: `oklch(0.788 0.106 154)` / #00FFB3 — Positive states
+- **Error Red**: `oklch(0.627 0.221 14)` / #FF3C64 — Alerts and warnings
 - **Foreground/Background Pairings**:
-  - Background (Very Dark `oklch(0.12 0.02 250)`): Light text `oklch(0.95 0.01 250)` - Ratio 14.5:1 ✓
-  - Card (Dark Slate `oklch(0.18 0.02 250)`): Light text `oklch(0.95 0.01 250)` - Ratio 12.1:1 ✓
-  - Primary (Vibrant Blue `oklch(0.55 0.18 250)`): White text `oklch(0.98 0 0)` - Ratio 5.8:1 ✓
-  - Secondary (Dark Slate `oklch(0.25 0.03 250)`): Light text `oklch(0.95 0.01 250)` - Ratio 9.2:1 ✓
-  - Accent (Bright Cyan `oklch(0.65 0.15 200)`): White text `oklch(0.98 0 0)` - Ratio 4.9:1 ✓
-  - Muted (Dark `oklch(0.20 0.02 250)`): Muted text `oklch(0.60 0.02 250)` - Ratio 4.5:1 ✓
-  - Node Frame Colors (user-selectable):
-    - Red `oklch(0.55 0.22 25)`: White text - Ratio 5.3:1 ✓
-    - Green `oklch(0.68 0.18 145)`: White text - Ratio 5.1:1 ✓
-    - Orange `oklch(0.72 0.16 60)`: White text - Ratio 6.2:1 ✓
-    - Slate `oklch(0.65 0.12 250)`: White text - Ratio 4.8:1 ✓
+  - Background (Deep Black #0B0C10): White text (#FFFFFF) - Ratio 21:1 ✓
+  - Card (Charcoal #1F2833): White text (#FFFFFF) - Ratio 14.8:1 ✓
+  - Primary (Cyan-Blue #45A29E): Deep Black text (#0B0C10) - Ratio 8.2:1 ✓
+  - Secondary (Slate #2E3B4E): White text (#FFFFFF) - Ratio 9.5:1 ✓
+  - Accent (Bright Cyan #66FCF1): Deep Black text (#0B0C10) - Ratio 12.5:1 ✓
+  - Text Secondary: Cool Gray (#C5C6C7) on backgrounds - Ratio 11.2:1 ✓
 
 ## Font Selection
 
-**Inter** for its exceptional legibility at all sizes, geometric precision that complements technical diagrams, and comprehensive weight range for clear hierarchy. The slightly condensed letterforms maximize space efficiency in node labels.
+**Poppins** for titles (geometric, futuristic), **Inter** for UI text (clean, legible), and **IBM Plex Mono** for data values (technical precision).
 
 - **Typographic Hierarchy**:
-  - H1 (App Title): Inter SemiBold / 24px / -0.02em letter-spacing / 1.2 line-height
-  - H2 (Panel Headers): Inter Medium / 16px / -0.01em / 1.3
-  - H3 (Node Names): Inter SemiBold / 14px / 0em / 1.2
-  - Body (Position, Labels): Inter Regular / 13px / 0em / 1.4
-  - Small (Metadata, Counts): Inter Medium / 11px / 0.01em / 1.3
-  - Score Badges: Inter Bold / 12px / 0em / 1.0
+  - Title / App Name: Poppins Bold / 32-40px / -0.02em letter-spacing
+  - Section Heading: Inter SemiBold / 24px / -0.01em
+  - H3 (Node Names): Inter SemiBold / 16px / 0em
+  - Body Text: Inter Regular / 16px / 0em / 1.5 line-height
+  - Small / Label: Inter Medium / 13px / 0.01em
+  - Data Values: IBM Plex Mono Medium / 14px / 0em
 
 ## Animations
 
-Animations should feel responsive and physics-based, reinforcing the spatial nature of the network. Motion communicates relationships—nodes moving together show grouping, edges flexing show connections, and smooth zoom transitions maintain spatial context.
+Animations follow AetherLink motion principles: smooth transitions with ease-in-out 0.2-0.3s, subtle glows and 2px lifts on hover, and physics-based spatial motion that reinforces relationships.
 
-- **Purposeful Meaning**: Use spring physics for node dragging (slight overshoot/settle), linear easing for zoom (predictable), and gentle ease-out for panel slides
+- **Purposeful Meaning**: 
+  - Hover states softly glow (cyan-tinted shadow: `0 0 10px rgba(102,252,241,0.3)`) or shift up by 2px
+  - Network graph edges animate slightly on hover or update
+  - Dialogs slide in with fade from bottom (opacity 0 → 1, Y +10px → 0)
+  - Use spring physics for node dragging, linear easing for zoom, gentle ease-out for panels
 - **Hierarchy of Movement**:
-  1. **Critical**: Node drag (instant follow, 0ms), zoom (150ms), pan (200ms)
-  2. **Feedback**: Selection state (100ms), hover highlights (80ms), button presses (120ms)
-  3. **Delight**: Panel open/close (250ms), score badge pop (180ms), connection draw (300ms)
+  1. **Critical**: Node drag (instant, 0ms), zoom (150ms linear), pan (200ms ease-out)
+  2. **Feedback**: Selection state (100ms), hover highlights (80ms, glow effect), button presses (120ms with scale)
+  3. **Delight**: Panel open/close (250ms), connection draw (300ms), score badge pop (180ms)
 
 ## Component Selection
 
 - **Components**: 
-  - Dialog (add/edit person modal)
-  - Card (node representation with custom styling)
-  - Button (toolbar actions, primary/secondary/ghost variants)
-  - Input, Label, Select (form fields)
-  - Popover (context menus on nodes)
+  - Dialog (add/edit person modal with slide-in fade animation)
+  - Card (node representation with gradient backgrounds from #1F2833 → #0B0C10)
+  - Button (Primary: bg #45A29E text #0B0C10 hover #66FCF1, Secondary: outline border #45A29E, 6px radius)
+  - Input (bg #1F2833, border 1px solid #2E3B4E, focus glow border #66FCF1, placeholder #707070)
+  - Label, Select (form fields)
+  - Popover (context menus)
   - Separator (divide toolbar sections)
   - Badge (score display)
   - Avatar (person photos with fallback)
-  - Sheet (side panel for list view)
+  - Sheet (side panel with #0B0C10 background)
   - Scroll Area (list panel content)
   - Tooltip (toolbar hints)
-  - Sonner (toast notifications for saves/errors)
+  - Sonner (toast notifications)
 
 - **Customizations**:
-  - Custom Canvas component using HTML5 Canvas for edge rendering (performance)
-  - Custom DraggableNode component with React state and CSS transforms
+  - Custom Canvas component using HTML5 Canvas for edge rendering (semi-transparent blue edges: `rgba(102,252,241,0.4)`)
+  - Custom DraggableNode component with gradient card backgrounds
   - Custom GroupFrame component with resize handles
-  - Custom Minimap component showing viewport bounds
+  - Custom Minimap component
   - Custom ColorPicker for frame and group colors
+  - Graph nodes use accent colors: User (#66FCF1), Organization (#8B5CF6), Team (#45A29E)
+  - Hover glow effect using outer ring highlight on nodes
 
 - **States**:
-  - Buttons: default/hover (scale 1.02)/active (scale 0.98)/disabled (opacity 0.5)
-  - Nodes: default/hover (subtle shadow)/selected (accent border + shadow)/dragging (elevation + opacity 0.9)
-  - Edges: default (muted gray)/hover (accent color)/selected (accent + thicker)
-  - Groups: default (subtle fill)/hover (border highlight)/selected (accent border)
+  - Buttons: default / hover (glow shadow `0 0 10px rgba(102,252,241,0.3)`, shift up 2px) / active / disabled
+  - Inputs: default / focus (glow border #66FCF1)
+  - Nodes: default / hover (cyan glow) / selected (accent border + glow) / dragging (elevation + opacity 0.95)
+  - Edges: semi-transparent blue (rgba(102,252,241,0.4)) / hover (bright cyan) / selected (accent + thicker)
+  - Navigation: active link highlight bar #66FCF1, icons white with blue hover tint
 
 - **Icon Selection**:
   - FilePlus (new network)
@@ -181,12 +188,14 @@ Animations should feel responsive and physics-based, reinforcing the spatial nat
   - DotsThree (context menu)
 
 - **Spacing**:
+  - Base unit: 8px (8, 16, 24, 32, 48)
   - Toolbar padding: p-2
-  - Node card padding: p-3
+  - Node card padding: p-3 (16-24px per AetherLink spec)
   - Panel padding: p-4
   - Button spacing: gap-2
   - Node gap from edges: 12px minimum
   - Grid snapping: 20px intervals
+  - Rounded corners: 6px (AetherLink standard)
 
 - **Mobile**:
   - Hide minimap on screens < 1024px
