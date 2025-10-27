@@ -274,7 +274,7 @@ export function WorkspaceCanvas({ controller, showGrid }: WorkspaceCanvasProps) 
     <div
       ref={controller.canvasRef}
       className={`flex-1 relative overflow-hidden bg-canvas-bg ${showGrid ? 'canvas-grid' : ''}`}
-      style={showGrid ? { '--grid-size': `${gridSize}px` } as React.CSSProperties : undefined}
+      style={{ '--grid-size': `${gridSize}px` } as React.CSSProperties}
       onMouseDown={controller.handlers.handleCanvasMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
