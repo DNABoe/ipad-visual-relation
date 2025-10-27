@@ -10,6 +10,12 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
   const irisGradientId = `irisGradient-${Math.random().toString(36).substr(2, 9)}`
   const glowId = `glow-${Math.random().toString(36).substr(2, 9)}`
   
+  const primaryColor = 'oklch(0.628 0.088 196)'
+  const accentColor = 'oklch(0.875 0.125 192)'
+  const secondaryColor = 'oklch(0.235 0.030 228)'
+  const backgroundColor = 'oklch(0.065 0.018 240)'
+  const foregroundColor = 'oklch(0.98 0 0)'
+  
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <svg
@@ -22,15 +28,15 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="50%" stopColor="var(--accent)" />
-            <stop offset="100%" stopColor="var(--accent)" />
+            <stop offset="0%" stopColor={primaryColor} />
+            <stop offset="50%" stopColor={accentColor} />
+            <stop offset="100%" stopColor={accentColor} />
           </linearGradient>
           <radialGradient id={irisGradientId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="var(--accent)" />
-            <stop offset="40%" stopColor="var(--primary)" />
-            <stop offset="70%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--secondary)" />
+            <stop offset="0%" stopColor={accentColor} />
+            <stop offset="40%" stopColor={primaryColor} />
+            <stop offset="70%" stopColor={primaryColor} />
+            <stop offset="100%" stopColor={secondaryColor} />
           </radialGradient>
           <filter id={glowId}>
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
@@ -74,14 +80,14 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           cx="50"
           cy="50"
           r="9"
-          fill="var(--background)"
+          fill={backgroundColor}
         />
         
         <circle
           cx="45"
           cy="45"
           r="3.5"
-          fill="var(--foreground)"
+          fill={foregroundColor}
           opacity="0.9"
         />
         
@@ -89,7 +95,7 @@ export function Logo({ size = 48, showText = true, className = '', animated = tr
           cx="48"
           cy="48"
           r="1.5"
-          fill="var(--foreground)"
+          fill={foregroundColor}
           opacity="0.6"
         />
         
