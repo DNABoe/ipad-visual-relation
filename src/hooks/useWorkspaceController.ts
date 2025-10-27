@@ -10,7 +10,7 @@ import { generateId, getBounds, snapToGrid as snapValue } from '@/lib/helpers'
 import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 import { 
   organizeByImportance, 
-  organizeMinimalOverlap, 
+  hierarchicalFromSelected, 
   tightenNetwork,
   smartArrange
 } from '@/lib/layoutAlgorithms'
@@ -238,15 +238,21 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     toast.success('Organized by importance score')
   }, [workspaceState])
 
-  const handleMinimalOverlap = useCallback(() => {
+  const handleHierarchicalView = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
       toast.info('No persons to organize')
       return
     }
 
-    const organized = organizeMinimalOverlap(
+    if (selection.selectedPersons.length !== 1) {
+      toast.info('Please select exactly one person to use as the root')
+      return
+    }
+
+    const organized = hierarchicalFromSelected(
       workspaceState.workspace.persons,
-      workspaceState.workspace.connections
+      workspaceState.workspace.connections,
+      selection.selectedPersons[0]
     )
     
     const updates = new Map<string, Partial<Person>>()
@@ -255,8 +261,8 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     })
     
     workspaceState.updatePersonsInBulk(updates)
-    toast.success('Minimized overlap and connection length')
-  }, [workspaceState])
+    toast.success('Hierarchical view created from selected person')
+  }, [workspaceState, selection.selectedPersons])
 
   const handleTightenNetwork = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
@@ -325,7 +331,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleFocusPerson,
       handleCanvasMouseDown,
       handleOrganizeByImportance,
-      handleMinimalOverlap,
+      handleHierarchicalView,
       handleTightenNetwork,
       handleSmartArrange,
       undo: workspaceState.undo,

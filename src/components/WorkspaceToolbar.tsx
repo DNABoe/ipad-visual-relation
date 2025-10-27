@@ -184,11 +184,11 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleMinimalOverlap} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <CirclesThree size={18} weight="duotone" className="text-accent" />
+              <Button variant="outline" size="sm" onClick={controller.handlers.handleHierarchicalView} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <TreeStructure size={18} weight="duotone" className="text-accent" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Minimize Overlap & Connections</TooltipContent>
+            <TooltipContent>Hierarchical View (Select 1 Person First)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
