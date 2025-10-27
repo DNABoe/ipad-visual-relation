@@ -501,11 +501,11 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md !bg-card border-border !opacity-100" style={{ opacity: 1, backgroundColor: 'oklch(0.22 0.025 250)' }}>
+      <DialogContent className="max-w-md bg-card border-border shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <ExportIcon size={18} className="text-white" weight="duotone" />
+              <ExportIcon size={18} className="text-primary-foreground" weight="duotone" />
             </div>
             Export Canvas
           </DialogTitle>

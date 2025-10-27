@@ -86,15 +86,13 @@ export function PhotoViewerDialog({ open, onOpenChange, photoUrl, personName }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={contentRef}
-        className="p-0 overflow-hidden border-2 select-none !opacity-100"
+        className="p-0 overflow-hidden border-2 border-border select-none bg-card shadow-2xl"
         style={{
           width: size.width,
           height: size.height,
           maxWidth: 'none',
           transform: `translate(${position.x}px, ${position.y}px)`,
           cursor: isDragging ? 'grabbing' : 'grab',
-          opacity: 1,
-          backgroundColor: 'oklch(0.22 0.025 250)'
         }}
         onMouseDown={handleMouseDown}
       >
@@ -102,14 +100,14 @@ export function PhotoViewerDialog({ open, onOpenChange, photoUrl, personName }: 
           <Button
             size="icon"
             variant="secondary"
-            className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
+            className="h-8 w-8 rounded-full bg-background/80 hover:bg-background backdrop-blur-sm shadow-lg"
             onClick={() => onOpenChange(false)}
           >
             <X size={16} />
           </Button>
         </div>
 
-        <div className="w-full h-full flex items-center justify-center bg-background/95">
+        <div className="w-full h-full flex items-center justify-center bg-background">
           <img
             src={photoUrl}
             alt={personName}
@@ -122,7 +120,7 @@ export function PhotoViewerDialog({ open, onOpenChange, photoUrl, personName }: 
           className="resize-handle absolute bottom-0 right-0 w-8 h-8 cursor-nwse-resize"
           onMouseDown={handleResizeMouseDown}
         >
-          <div className="absolute bottom-1 right-1 text-muted-foreground hover:text-foreground">
+          <div className="absolute bottom-1 right-1 text-muted-foreground hover:text-accent">
             <ArrowsOutSimple size={20} />
           </div>
         </div>

@@ -27,18 +27,18 @@ export function UnsavedChangesDialog({
 }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="!bg-card border-border !opacity-100" style={{ opacity: 1, backgroundColor: 'oklch(0.22 0.025 250)' }}>
+      <AlertDialogContent className="bg-card border-border shadow-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
           <AlertDialogDescription className="space-y-3">
             <p>You have unsaved changes. Would you like to save before continuing?</p>
             {downloadUrl && (
-              <div className="bg-muted p-3 rounded-md">
-                <p className="text-sm font-medium mb-2">To save your work:</p>
+              <div className="bg-secondary p-3 rounded-lg border border-border">
+                <p className="text-sm font-medium mb-2 text-foreground">To save your work:</p>
                 <a
                   href={downloadUrl}
                   download={`${fileName}.enc.json`}
-                  className="text-sm text-primary hover:underline font-medium inline-flex items-center gap-1.5"
+                  className="text-sm text-accent hover:underline font-medium inline-flex items-center gap-1.5"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DownloadSimple size={16} weight="bold" />

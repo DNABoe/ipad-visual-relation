@@ -102,7 +102,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto !bg-card border-border !opacity-100" style={{ opacity: 1, backgroundColor: 'oklch(0.22 0.025 250)' }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-card border-border shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{editPerson ? 'Edit Person' : 'Add Person'}</DialogTitle>
           <DialogDescription className="text-muted-foreground">

@@ -253,11 +253,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </div>
 
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md !bg-card border-border !opacity-100" style={{ opacity: 1, backgroundColor: 'oklch(0.22 0.025 250)' }}>
+        <DialogContent className="sm:max-w-md bg-card border-border shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <FilePlus size={20} className="text-white" weight="duotone" />
+                <FilePlus size={20} className="text-primary-foreground" weight="duotone" />
               </div>
               Create New Network
             </DialogTitle>
@@ -348,11 +348,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
       </Dialog>
 
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="sm:max-w-md !bg-card border-border !opacity-100" style={{ opacity: 1, backgroundColor: 'oklch(0.22 0.025 250)' }}>
+        <DialogContent className="sm:max-w-md bg-card border-border shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <FolderOpen size={20} className="text-white" weight="duotone" />
+                <FolderOpen size={20} className="text-primary-foreground" weight="duotone" />
               </div>
               Load Existing Network
             </DialogTitle>
