@@ -46,10 +46,12 @@ export function useInteractionState() {
   }, [])
 
   const startPersonDrag = useCallback((personId: string, multi: boolean = false) => {
+    dragAccumulator.current = { x: 0, y: 0 }
     setDragState({ type: 'person', id: personId })
   }, [])
 
   const startGroupDrag = useCallback((groupId: string) => {
+    dragAccumulator.current = { x: 0, y: 0 }
     setDragState({ type: 'group', id: groupId })
   }, [])
 
