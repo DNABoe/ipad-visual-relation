@@ -276,6 +276,7 @@ export function WorkspaceCanvas({ controller, showGrid, gridSize, snapToGrid }: 
             key={group.id}
             group={group}
             isSelected={controller.selection.selectedGroups.includes(group.id)}
+            isDragging={controller.interaction.dragState.type === 'group' && controller.interaction.dragState.id === group.id}
             onClick={(e) => {
               e.stopPropagation()
               controller.handlers.handleGroupClick(group.id, e.shiftKey)

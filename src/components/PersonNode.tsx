@@ -35,7 +35,8 @@ export function PersonNode({
     <div className="absolute" style={{ left: person.x, top: person.y, width: 260 }}>
       <Card
         className={cn(
-          'cursor-grab select-none transition-all duration-200 border-[3px] shadow-lg backdrop-blur-none',
+          'cursor-grab select-none border-[3px] shadow-lg backdrop-blur-none',
+          !isDragging && 'transition-all duration-200',
           'hover:shadow-xl hover:border-primary',
           isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl border-accent glow-accent',
           isDragging && 'node-dragging shadow-2xl'

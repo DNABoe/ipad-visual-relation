@@ -20,6 +20,7 @@ import { DotsThree } from '@phosphor-icons/react'
 interface GroupFrameProps {
   group: Group
   isSelected: boolean
+  isDragging?: boolean
   onClick: (e: React.MouseEvent) => void
   onUpdate: (updates: Partial<Group>) => void
   onRemove?: (groupId: string) => void
@@ -28,7 +29,7 @@ interface GroupFrameProps {
   style?: React.CSSProperties
 }
 
-export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onDragStart, onResizeStart, style }: GroupFrameProps) {
+export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, onRemove, onDragStart, onResizeStart, style }: GroupFrameProps) {
   const groupColor = GROUP_COLORS[group.color]
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(group.name)
@@ -78,7 +79,7 @@ export function GroupFrame({ group, isSelected, onClick, onUpdate, onRemove, onD
     <div
       className={cn(
         'absolute rounded-xl border-[3px] group/frame cursor-move',
-        'transition-all duration-200',
+        !isDragging && 'transition-all duration-200',
         group.solidBackground ? 'border-solid' : 'border-dashed',
         isSelected && 'ring-2 ring-offset-2 shadow-xl glow-accent ring-accent'
       )}
