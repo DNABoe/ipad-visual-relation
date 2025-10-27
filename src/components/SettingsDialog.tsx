@@ -10,6 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { hashPassword } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
+import { APP_VERSION } from '@/lib/version'
 
 interface SettingsDialogProps {
   open: boolean
@@ -73,9 +74,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="system" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
             <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
+            <TabsTrigger value="about" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">About</TabsTrigger>
           </TabsList>
           
           <TabsContent value="system" className="space-y-5 py-4">
@@ -146,6 +148,51 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   <p className="text-xs text-muted-foreground">
                     Only enter a new password if you want to change it
                   </p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="about" className="space-y-5 py-4">
+            <div className="space-y-6">
+              <div className="text-center space-y-4 py-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent mb-2">
+                  <span className="text-3xl">👁️</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    RelEye
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">Relationship Network Visualizer</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-card p-5 space-y-4 text-center">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Version</p>
+                  <p className="text-xl font-semibold text-primary">{APP_VERSION}</p>
+                </div>
+
+                <div className="h-px bg-border my-4"></div>
+
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Made with ❤️ by</p>
+                  <p className="text-lg font-semibold text-foreground">D Boestad</p>
+                </div>
+
+                <div className="h-px bg-border my-4"></div>
+
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    A secure, privacy-focused tool for visualizing and managing relationship networks. 
+                    All data is encrypted and stored locally on your device.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <span className="text-accent">🔒</span>
+                    <span>AES-256-GCM Encryption</span>
+                    <span>•</span>
+                    <span>Local Storage Only</span>
+                  </div>
                 </div>
               </div>
             </div>

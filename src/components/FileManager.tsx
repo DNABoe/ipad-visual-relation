@@ -10,6 +10,7 @@ import { Logo } from './Logo'
 import type { Workspace } from '@/lib/types'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
+import { APP_VERSION } from '@/lib/version'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -238,13 +239,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
           </Button>
         </div>
 
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-card shadow-lg text-sm text-muted-foreground">
             <span className="text-accent text-base">🔒</span>
             <div className="text-left">
               <div className="font-medium text-foreground">AES-256-GCM encryption</div>
               <div className="text-xs">All data stored locally, nothing in the cloud</div>
             </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {APP_VERSION}
           </div>
         </div>
       </div>
