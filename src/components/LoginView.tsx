@@ -98,6 +98,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck="false"
               />
             </div>
             <div className="space-y-2">
@@ -119,9 +122,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeSlash size={20} weight="regular" />
-                  ) : (
                     <Eye size={20} weight="regular" />
+                  ) : (
+                    <EyeSlash size={20} weight="regular" />
                   )}
                 </button>
               </div>
