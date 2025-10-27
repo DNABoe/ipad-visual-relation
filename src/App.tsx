@@ -71,6 +71,14 @@ function App() {
     }
   }, [])
 
+  const handleLogout = useCallback(() => {
+    setIsAuthenticated(false)
+    setWorkspace(null)
+    setFileName('')
+    setPassword('')
+    setShowFileManager(true)
+  }, [])
+
   if (isCheckingAuth) {
     return null
   }
@@ -102,6 +110,7 @@ function App() {
         password={password}
         onNewNetwork={handleNewNetwork}
         onLoadNetwork={handleLoadNetwork}
+        onLogout={handleLogout}
       />
       <Toaster />
     </>

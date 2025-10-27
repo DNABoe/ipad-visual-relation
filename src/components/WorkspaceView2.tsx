@@ -21,9 +21,10 @@ interface WorkspaceViewProps {
   password: string
   onNewNetwork: () => void
   onLoadNetwork: () => void
+  onLogout?: () => void
 }
 
-export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork }: WorkspaceViewProps) {
+export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
   const [settings] = useKV<{
     username: string
     passwordHash: string
@@ -168,6 +169,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         }}
         workspace={controller.workspace}
         onImport={controller.handlers.replaceWorkspace}
+        onLogout={onLogout}
       />
 
       {controller.dialogs.photoViewer.photoUrl && (

@@ -12,16 +12,17 @@ import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut } from '@phosphor-icons/react'
 
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   workspace: Workspace
   onImport: (workspace: Workspace) => void
+  onLogout?: () => void
 }
 
-export function SettingsDialog({ open, onOpenChange, workspace, onImport }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<{
     showGrid: boolean
     snapToGrid: boolean
@@ -314,6 +315,38 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   </span>
                 </p>
               </div>
+
+              {onLogout && (
+                <>
+                  <div className="h-px bg-border my-4"></div>
+                  
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm">Session</h3>
+                    <div className="rounded-xl bg-card p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">Log Out</p>
+                          <p className="text-xs text-muted-foreground">
+                            End your current session and return to login
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            onOpenChange(false)
+                            onLogout()
+                          }}
+                          className="gap-2"
+                        >
+                          <SignOut size={16} weight="regular" />
+                          Log Out
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </TabsContent>
 
