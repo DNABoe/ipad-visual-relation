@@ -23,9 +23,10 @@ function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       if (!userCredentials) {
+        const defaultHash = await getDefaultPasswordHash()
         await setUserCredentials({
           username: 'admin',
-          passwordHash: getDefaultPasswordHash()
+          passwordHash: defaultHash
         })
       }
       setIsCheckingAuth(false)

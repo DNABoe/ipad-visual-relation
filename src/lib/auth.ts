@@ -120,32 +120,18 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
   )
 }
 
-let defaultPasswordHash: PasswordHash | null = null
+const DEFAULT_USERNAME = 'admin'
+const DEFAULT_PASSWORD = 'admin'
+const DEFAULT_SALT = 'cmVsZXllMjAyNGRlZmF1bHRzYWx0MTIzNDU2Nzg5MGFiY2RlZmdoaWo='
+const DEFAULT_ITERATIONS = 210000
 
-async function initDefaultPasswordHash(): Promise<PasswordHash> {
-  if (defaultPasswordHash) {
-    return defaultPasswordHash
+let computedDefaultHash: PasswordHash | null = null
+
+export async function getDefaultPasswordHash(): Promise<PasswordHash> {
+  if (computedDefaultHash) {
+    return computedDefaultHash
   }
   
-  const fixedSaltString = 'releye2024defaultsalt1234567890abcdefghij'
-  const hash = await hashPassword('admin', fixedSaltString)
-  defaultPasswordHash = hash
-  console.log('Computed default hash:', hash.hash)
-  return hash
-}
-
-export function getDefaultPasswordHash(): PasswordHash {
-  const fixedSaltString = 'releye2024defaultsalt1234567890abcdefghij'
-  const iterations = 210000
-  
-  return {
-    hash: 'V/wPGKfN7VgqxJ5h5fDYu4mXSUQj3+r3WZgW7KYPdWE=',
-    salt: fixedSaltString,
-    iterations: iterations
-  }
-}
-
-export async function ensureDefaultPasswordHashInitialized(): Promise<void> {
-  const computed = await initDefaultPasswordHash()
-  console.log('Default password hash initialized. Use this hash:', computed.hash)
+  computedDefaultHash = await hashPassword(DEFAULT_PASSWORD, DEFAULT_SALT)
+  return computedDefaultHash
 }
