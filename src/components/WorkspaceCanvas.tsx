@@ -29,10 +29,12 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
     showMinimap: true,
   })
 
+  const snapToGrid = settings?.snapToGrid ?? false
+  const gridSize = settings?.gridSize ?? 20
+  const showGrid = settings?.showGrid ?? true
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
-    const snapToGrid = settings?.snapToGrid ?? false
-    const gridSize = settings?.gridSize ?? 20
 
     if (interaction.dragState.type === 'connection') {
       const rect = controller.canvasRef.current?.getBoundingClientRect()
@@ -170,7 +172,7 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
 
       interaction.updateSelectionDrag(currentX, currentY)
     }
-  }, [controller, settings])
+  }, [controller, snapToGrid, gridSize])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     const { interaction, workspace, transform, selection, handlers } = controller
@@ -268,9 +270,6 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
     window.addEventListener('mouseup', handleGlobalMouseUp)
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
   }, [controller])
-
-  const gridSize = settings?.gridSize ?? 20
-  const showGrid = settings?.showGrid ?? true
 
   return (
     <div
