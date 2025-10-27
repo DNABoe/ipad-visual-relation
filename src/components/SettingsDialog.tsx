@@ -7,12 +7,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
-import { hashPassword, getDefaultPasswordHash, type PasswordHash, verifyPassword } from '@/lib/auth'
+import { hashPassword, type PasswordHash, verifyPassword } from '@/lib/auth'
 import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { DEFAULT_USERNAME } from '@/lib/constants'
+import { Eye, EyeSlash } from '@phosphor-icons/react'
 
 interface SettingsDialogProps {
   open: boolean
@@ -21,45 +21,46 @@ interface SettingsDialogProps {
   onImport: (workspace: Workspace) => void
 }
 
-const DEFAULT_SETTINGS = {
-  username: DEFAULT_USERNAME,
-  passwordHash: getDefaultPasswordHash(),
-  showGrid: true,
-  snapToGrid: false,
-  gridSize: 20,
-  showMinimap: true,
-}
-
 export function SettingsDialog({ open, onOpenChange, workspace, onImport }: SettingsDialogProps) {
-  const [settings, setSettings] = useKV<{
-    username: string
-    passwordHash: PasswordHash
+  const [appSettings, setAppSettings] = useKV<{
     showGrid: boolean
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
-  }>('app-settings', DEFAULT_SETTINGS)
+  }>('app-settings', {
+    showGrid: true,
+    snapToGrid: false,
+    gridSize: 20,
+    showMinimap: true,
+  })
+
+  const [authConfig, setAuthConfig] = useKV<{ hasCredentials: boolean }>('auth-config', { hasCredentials: false })
+  
+  const [userCredentials, setUserCredentials] = useKV<{
+    username: string
+    passwordHash: PasswordHash
+  } | null>('user-credentials', null)
 
   const [username, setUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
+  const hasCredentials = authConfig?.hasCredentials ?? false
+
   useEffect(() => {
-    if (settings) {
-      setUsername(settings.username || DEFAULT_USERNAME)
+    if (userCredentials) {
+      setUsername(userCredentials.username || '')
     }
-  }, [settings])
+  }, [userCredentials])
 
   const handleSave = async () => {
     if (!username.trim()) {
       toast.error('Username cannot be empty')
-      return
-    }
-
-    if (newPassword && !currentPassword) {
-      toast.error('Please enter your current password to change it')
       return
     }
 
@@ -76,15 +77,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     setIsSaving(true)
 
     try {
-      if (newPassword && currentPassword) {
-        const storedHash = settings?.passwordHash || DEFAULT_SETTINGS.passwordHash
-        if (!storedHash) {
+      if (hasCredentials && newPassword) {
+        if (!currentPassword) {
+          toast.error('Please enter your current password to change it')
+          setIsSaving(false)
+          return
+        }
+
+        if (!userCredentials?.passwordHash) {
           toast.error('Unable to verify current password')
           setIsSaving(false)
           return
         }
 
-        const isCurrentPasswordValid = await verifyPassword(currentPassword, storedHash)
+        const isCurrentPasswordValid = await verifyPassword(currentPassword, userCredentials.passwordHash)
         if (!isCurrentPasswordValid) {
           toast.error('Current password is incorrect')
           setIsSaving(false)
@@ -92,20 +98,32 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
         }
 
         const newHash = await hashPassword(newPassword)
-        setSettings((current) => ({
-          ...current!,
+        await setUserCredentials({
           username: username.trim(),
           passwordHash: newHash,
-        }))
+        })
 
         toast.success('Username and password updated successfully')
-      } else {
-        setSettings((current) => ({
+      } else if (!hasCredentials && newPassword) {
+        const newHash = await hashPassword(newPassword)
+        await setUserCredentials({
+          username: username.trim(),
+          passwordHash: newHash,
+        })
+        await setAuthConfig({ hasCredentials: true })
+
+        toast.success('Credentials set successfully. You will need to login next time.')
+      } else if (hasCredentials) {
+        await setUserCredentials((current) => ({
           ...current!,
           username: username.trim(),
         }))
 
         toast.success('Username updated successfully')
+      } else {
+        toast.error('Please set a password to enable authentication')
+        setIsSaving(false)
+        return
       }
 
       setCurrentPassword('')
@@ -149,9 +167,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   </div>
                   <Switch
                     id="snap-toggle"
-                    checked={settings?.snapToGrid ?? false}
+                    checked={appSettings?.snapToGrid ?? false}
                     onCheckedChange={async (checked) => {
-                      await setSettings((current) => ({ ...current!, snapToGrid: checked }))
+                      await setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
                     }}
                   />
                 </div>
@@ -159,16 +177,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{settings?.gridSize ?? 20}px</span>
+                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridSize ?? 20}px</span>
                   </div>
                   <Slider
                     id="grid-size"
                     min={10}
                     max={50}
                     step={10}
-                    value={[settings?.gridSize ?? 20]}
+                    value={[appSettings?.gridSize ?? 20]}
                     onValueChange={async (value) => {
-                      await setSettings((current) => ({ ...current!, gridSize: value[0] }))
+                      await setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
                     }}
                     className="w-full"
                   />
@@ -183,6 +201,18 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
           <TabsContent value="user" className="space-y-5 py-4">
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Account Security</h3>
+              
+              {!hasCredentials && (
+                <div className="rounded-lg bg-accent/10 border border-accent/20 p-3 mb-4">
+                  <p className="text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="text-accent text-sm mt-0.5">ℹ️</span>
+                    <span>
+                      <strong className="text-foreground">First Time Setup:</strong> Set a username and password to secure your application. Once set, you'll need these credentials to login.
+                    </span>
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
@@ -191,6 +221,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter username"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck="false"
                   />
                   <p className="text-xs text-muted-foreground">
                     Used for authentication to access the application
@@ -201,46 +234,93 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <h4 className="text-sm font-medium">Change Password</h4>
+                    <h4 className="text-sm font-medium">{hasCredentials ? 'Change Password' : 'Set Password'}</h4>
                     <p className="text-xs text-muted-foreground">
-                      Leave blank to keep your current password
+                      {hasCredentials ? 'Leave blank to keep your current password' : 'Create a secure password to protect your account'}
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter current password"
-                      autoComplete="current-password"
-                    />
-                  </div>
+                  {hasCredentials && (
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="currentPassword"
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder="Enter current password"
+                          autoComplete="current-password"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showCurrentPassword ? (
+                            <Eye size={20} weight="regular" />
+                          ) : (
+                            <EyeSlash size={20} weight="regular" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password (min 8 characters)"
-                      autoComplete="new-password"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password (min 8 characters)"
+                        autoComplete="new-password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showNewPassword ? (
+                          <Eye size={20} weight="regular" />
+                        ) : (
+                          <EyeSlash size={20} weight="regular" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
-                      autoComplete="new-password"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        autoComplete="new-password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? (
+                          <Eye size={20} weight="regular" />
+                        ) : (
+                          <EyeSlash size={20} weight="regular" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 space-y-2">

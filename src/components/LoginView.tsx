@@ -1,35 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { verifyPassword, getDefaultPasswordHash, ensureDefaultPasswordHashInitialized, type PasswordHash, isPasswordHash } from '@/lib/auth'
-import { DEFAULT_USERNAME } from '@/lib/constants'
+import { verifyPassword, type PasswordHash, isPasswordHash } from '@/lib/auth'
 import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
 
 interface LoginViewProps {
   onLogin: () => void
 }
 
-const DEFAULT_SETTINGS = {
-  username: DEFAULT_USERNAME,
-  passwordHash: getDefaultPasswordHash(),
-  showGrid: true,
-  snapToGrid: false,
-  gridSize: 20,
-  showMinimap: true,
-}
-
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [settings, setSettings] = useKV<{
+  const [userSettings] = useKV<{
     username: string
     passwordHash: PasswordHash
-    showGrid: boolean
-    snapToGrid: boolean
-    gridSize: number
-    showMinimap: boolean
-  }>('app-settings', DEFAULT_SETTINGS)
+  } | null>('user-credentials', null)
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -37,38 +23,31 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  useEffect(() => {
-    const initAuth = async () => {
-      await ensureDefaultPasswordHashInitialized()
-      if (!settings) {
-        setSettings(DEFAULT_SETTINGS)
-      }
-    }
-    initAuth()
-  }, [settings, setSettings])
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
 
     try {
-      const storedUsername = settings?.username || DEFAULT_USERNAME
-      const storedPasswordHash = settings?.passwordHash || DEFAULT_SETTINGS.passwordHash
+      if (!userSettings || !userSettings.username || !userSettings.passwordHash) {
+        setError('No credentials configured')
+        setIsLoading(false)
+        return
+      }
 
-      if (!storedPasswordHash || !isPasswordHash(storedPasswordHash)) {
+      if (!isPasswordHash(userSettings.passwordHash)) {
         setError('Invalid credentials configuration')
         setIsLoading(false)
         return
       }
 
-      if (username !== storedUsername) {
+      if (username !== userSettings.username) {
         setError('Invalid username or password')
         setIsLoading(false)
         return
       }
 
-      const isValid = await verifyPassword(password, storedPasswordHash)
+      const isValid = await verifyPassword(password, userSettings.passwordHash)
       
       if (isValid) {
         onLogin()
@@ -92,7 +71,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
               <UserCircle size={40} className="text-primary" weight="duotone" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-semibold">Visual Relationship Network</CardTitle>
+          <CardTitle className="text-2xl font-semibold">RelEye</CardTitle>
           <CardDescription>Sign in to access your workspace</CardDescription>
         </CardHeader>
         <CardContent>
