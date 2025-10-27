@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,15 +12,24 @@ interface LoginViewProps {
   onLogin: () => void
 }
 
+const DEFAULT_SETTINGS = {
+  username: DEFAULT_USERNAME,
+  passwordHash: getDefaultPasswordHash(),
+  showGrid: true,
+  snapToGrid: false,
+  gridSize: 20,
+  showMinimap: true,
+}
+
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [settings] = useKV<{
+  const [settings, setSettings] = useKV<{
     username: string
     passwordHash: PasswordHash
     showGrid: boolean
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
-  }>('app-settings', undefined)
+  }>('app-settings', DEFAULT_SETTINGS)
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -28,7 +37,11 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const defaultHash = getDefaultPasswordHash()
+  useEffect(() => {
+    if (!settings) {
+      setSettings(DEFAULT_SETTINGS)
+    }
+  }, [settings, setSettings])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,15 +50,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
     try {
       const storedUsername = settings?.username || DEFAULT_USERNAME
-      const storedPasswordHash = settings?.passwordHash || defaultHash
+      const storedPasswordHash = settings?.passwordHash || DEFAULT_SETTINGS.passwordHash
 
-      if (!storedPasswordHash) {
-        setError('System initializing, please try again')
-        setIsLoading(false)
-        return
-      }
-
-      if (!isPasswordHash(storedPasswordHash)) {
+      if (!storedPasswordHash || !isPasswordHash(storedPasswordHash)) {
         setError('Invalid credentials configuration')
         setIsLoading(false)
         return

@@ -112,11 +112,11 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
 }
 
 const DEFAULT_PASSWORD_HASH: PasswordHash = {
-  hash: 'jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=',
-  salt: 'YnJpZ2h0c2VjdXJlc2FsdGZvcmRlZmF1bHRwYXNzd29yZA==',
+  hash: 'sDhBPr/3VBEYl2xZEfGGPYmEzGcqDqJCqN8W3c0tLCk=',
+  salt: 'cmVsZXllZGVmYXVsdHNhbHQxMjM0NTY3ODkwYWJjZGVm',
   iterations: 210000
 }
 
 export function getDefaultPasswordHash(): PasswordHash {
-  return DEFAULT_PASSWORD_HASH
+  return { ...DEFAULT_PASSWORD_HASH }
 }

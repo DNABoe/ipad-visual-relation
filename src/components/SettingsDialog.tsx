@@ -21,6 +21,15 @@ interface SettingsDialogProps {
   onImport: (workspace: Workspace) => void
 }
 
+const DEFAULT_SETTINGS = {
+  username: DEFAULT_USERNAME,
+  passwordHash: getDefaultPasswordHash(),
+  showGrid: true,
+  snapToGrid: false,
+  gridSize: 20,
+  showMinimap: true,
+}
+
 export function SettingsDialog({ open, onOpenChange, workspace, onImport }: SettingsDialogProps) {
   const [settings, setSettings] = useKV<{
     username: string
@@ -29,7 +38,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
-  }>('app-settings', undefined)
+  }>('app-settings', DEFAULT_SETTINGS)
 
   const [username, setUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
@@ -37,22 +46,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
-  const defaultHash = getDefaultPasswordHash()
-
   useEffect(() => {
     if (settings) {
       setUsername(settings.username || DEFAULT_USERNAME)
-    } else if (!settings) {
-      setSettings({
-        username: DEFAULT_USERNAME,
-        passwordHash: defaultHash,
-        showGrid: true,
-        snapToGrid: false,
-        gridSize: 20,
-        showMinimap: true,
-      })
     }
-  }, [settings, setSettings])
+  }, [settings])
 
   const handleSave = async () => {
     if (!username.trim()) {
@@ -79,7 +77,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
 
     try {
       if (newPassword && currentPassword) {
-        const storedHash = settings?.passwordHash || defaultHash
+        const storedHash = settings?.passwordHash || DEFAULT_SETTINGS.passwordHash
         if (!storedHash) {
           toast.error('Unable to verify current password')
           setIsSaving(false)

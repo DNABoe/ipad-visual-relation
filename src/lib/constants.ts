@@ -24,6 +24,7 @@ export const FRAME_COLOR_NAMES: FrameColor[] = ['red', 'green', 'orange', 'white
 export const GROUP_COLOR_NAMES: GroupColor[] = ['blue', 'purple', 'pink', 'yellow', 'teal', 'indigo', 'rose', 'emerald', 'amber', 'cyan']
 
 export const DEFAULT_USERNAME = 'admin'
+export const DEFAULT_PASSWORD = 'admin'
 
 export const NODE_WIDTH = 260
 export const NODE_HEIGHT = 100
