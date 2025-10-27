@@ -45,16 +45,19 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
     }
   }, [settings])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!username.trim()) return
 
-    setSettings((current) => ({
+    await setSettings((current) => ({
       ...current!,
       username: username.trim(),
       ...(newPassword ? { passwordHash: hashPassword(newPassword) } : {}),
     }))
 
-    toast.success('Settings saved')
+    setTimeout(() => {
+      toast.success('Settings saved')
+    }, 50)
+    
     setCurrentPassword('')
     setNewPassword('')
     onOpenChange(false)
@@ -89,7 +92,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                   <Switch
                     id="snap-toggle"
                     checked={settings?.snapToGrid ?? false}
-                    onCheckedChange={(checked) => setSettings((current) => ({ ...current!, snapToGrid: checked }))}
+                    onCheckedChange={async (checked) => {
+                      await setSettings((current) => ({ ...current!, snapToGrid: checked }))
+                    }}
                   />
                 </div>
                 
@@ -104,7 +109,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport }: Sett
                     max={50}
                     step={10}
                     value={[settings?.gridSize ?? 20]}
-                    onValueChange={(value) => setSettings((current) => ({ ...current!, gridSize: value[0] }))}
+                    onValueChange={async (value) => {
+                      await setSettings((current) => ({ ...current!, gridSize: value[0] }))
+                    }}
                     className="w-full"
                   />
                   <div className="text-xs text-muted-foreground pl-1">
