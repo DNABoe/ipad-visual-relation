@@ -74,7 +74,7 @@ export function WorkspaceToolbar({
       <div className="px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg bg-toolbar-bg border-b border-toolbar-border">
         <div className="flex items-center gap-3">
           <Logo size={32} showText={false} />
-          <h1 className="text-xl font-bold tracking-tight text-primary">NetEye</h1>
+          <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">RelEye</h1>
           <Separator orientation="vertical" className="h-6 bg-border" />
           <div className="flex items-center gap-2">
             {downloadUrl ? (
