@@ -1,23 +1,147 @@
-# ✨ Welcome to Your Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+# RelEye - Relationship Network Visualization
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+RelEye is a secure, privacy-focused relationship network visualization tool that helps you map and understand connections between people, teams, and organizations.
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+## 🔒 Security & Privacy
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+- **Strong Encryption**: AES-256-GCM encryption for all stored data
+- **Local Storage Only**: All data stored locally on your device - nothing in the cloud
+- **Zero Server Dependencies**: Complete client-side application
+- **Password Protected**: Secure authentication with bcrypt hashing
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
+## ✨ Features
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+- **Interactive Network Canvas**: Drag-and-drop interface for building relationship networks
+- **Person Cards**: Visual cards with photos, importance scores, and relationship details
+- **Connection Management**: Define relationships with attributes (positive/neutral/negative)
+- **Smart Organization Tools**:
+  - Organize by Importance: Centers most important connections
+  - Smart Arrange: Optimizes layout to minimize connection lengths
+  - Compact Layout: Tightens network while preserving relationships
+  - Hierarchy View: Organizes network from a selected person's perspective
+- **Grouping**: Color-coded groups for organizing related people
+- **Export/Import**: Encrypted file-based storage for your networks
+- **Photo Management**: Add photos to person cards for easy visual identification
 
-📄 License For Spark Template Resources 
+## 🚀 Deployment
+
+This application is configured for automatic deployment to your custom domain `releye.boestad.com` via GitHub Pages.
+
+### Automatic Deployment
+
+Every push to the `main` branch automatically:
+1. Builds the application
+2. Deploys to GitHub Pages
+3. Serves at your custom domain
+
+### Setup Instructions
+
+1. **Enable GitHub Pages**:
+   - Go to your repository Settings → Pages
+   - Source: Deploy from a branch
+   - Branch: `gh-pages` (will be created automatically by the workflow)
+   - Folder: `/ (root)`
+
+2. **Custom Domain** (already configured):
+   - CNAME file is already set to `releye.boestad.com`
+   - Configure DNS:
+     - Add a CNAME record pointing `releye.boestad.com` to `[your-github-username].github.io`
+     - Or add A records pointing to GitHub Pages IPs:
+       - `185.199.108.153`
+       - `185.199.109.153`
+       - `185.199.110.153`
+       - `185.199.111.153`
+
+3. **Verify Deployment**:
+   - Check Actions tab for deployment status
+   - Visit `https://releye.boestad.com` once DNS propagates
+
+### Manual Deployment
+
+To build and deploy manually:
+
+```bash
+npm install
+npm run build
+```
+
+The built files will be in the `dist/` directory.
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Node.js 20+ 
+- npm
+
+### Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+## 📁 Project Structure
+
+```
+.
+├── src/
+│   ├── components/        # React components
+│   │   ├── ui/           # shadcn components
+│   │   ├── WorkspaceView2.tsx
+│   │   ├── PersonNode.tsx
+│   │   └── ...
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Utilities and types
+│   ├── App.tsx           # Main app component
+│   └── index.css         # Design system & styles
+├── .github/
+│   └── workflows/
+│       └── deploy.yml    # Auto-deployment workflow
+├── CNAME                 # Custom domain configuration
+├── index.html
+├── vite.config.ts
+└── package.json
+```
+
+## 🎨 Design System
+
+RelEye uses a custom dark theme design system with:
+- **Primary Colors**: Muted cyan-blue accents (#45A29E, #66FCF1)
+- **Background**: Deep charcoal with blue tints
+- **Typography**: Inter for UI, Poppins for headings, IBM Plex Mono for data
+- **Motion**: Smooth 200-300ms transitions with ease-in-out
+
+## 🔐 Default Credentials
+
+First-time login:
+- Username: `admin`
+- Password: `admin`
+
+**Important**: Change these immediately in Settings → User after first login.
+
+## 📄 License
 
 The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
+
+## 👤 Author
+
+Made by D Boestad
+
+---
+
+**Version**: Beta 0.5

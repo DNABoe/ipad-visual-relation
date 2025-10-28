@@ -27,10 +27,12 @@ export default defineConfig({
   },
 
   build: {
-    outDir: "dist", // GitHub Pages letar här
-    sourcemap: false, // kan sättas till true för felsökning
-    emptyOutDir: true, // rensar dist före varje build
+    outDir: "dist",
+    sourcemap: false,
+    emptyOutDir: true,
   },
+
+  publicDir: "public",
 
   server: {
     port: 5173, // för lokal utveckling
