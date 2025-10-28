@@ -37,39 +37,41 @@ export function PersonNode({
       style={{ 
         left: person.x, 
         top: person.y, 
-        width: 260,
+        width: 280,
         transition: 'none',
       }}
     >
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] shadow-lg backdrop-blur-none',
-          'hover:shadow-xl hover:border-primary',
-          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg shadow-2xl border-accent glow-accent',
-          isDragging && 'node-dragging shadow-2xl'
+          'cursor-grab select-none border-[3px] backdrop-blur-none',
+          'hover:shadow-lg hover:border-primary transition-shadow',
+          isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg border-accent glow-accent',
+          isDragging && 'node-dragging'
         )}
         style={{
           ...style,
           borderColor: frameColor,
           backgroundColor: 'oklch(0.21 0.03 230)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >
-        <div className="flex items-center gap-3 p-3">
+        <div className="flex items-start gap-3.5 p-3.5">
           <div 
+            className="cursor-pointer"
             onDoubleClick={(e) => {
               e.stopPropagation()
               onPhotoDoubleClick?.(e)
             }}
           >
-            <Avatar className="h-20 w-20 flex-shrink-0 border-0 shadow-md">
+            <Avatar className="h-24 w-24 flex-shrink-0 border-0 ring-1 ring-border" style={{ boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)' }}>
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback 
                 className={cn(
-                  "text-xl font-bold",
+                  "text-2xl font-bold",
                   person.frameColor === 'white' ? 'text-background' : 'text-foreground'
                 )}
                 style={{ 
@@ -80,11 +82,11 @@ export function PersonNode({
               </AvatarFallback>
             </Avatar>
           </div>
-          <div className="flex-1 min-w-0 space-y-0.5">
+          <div className="flex-1 min-w-0 space-y-1 pt-1">
             <h3 className="font-semibold text-sm leading-tight break-words tracking-tight text-foreground">{person.name}</h3>
             {person.position && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position}</p>}
           </div>
-          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1 border-0 shadow-md bg-primary text-primary-foreground">
+          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1.5 border-0 bg-primary text-primary-foreground mt-1" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>
             {person.score}
           </Badge>
         </div>
