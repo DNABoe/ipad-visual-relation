@@ -203,7 +203,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
   }, [workspaceState.workspace.persons, transform, selection])
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    if (e.button === 1 || (e.button === 0 && e.altKey) || (e.button === 0 && interaction.isSpacebarPressed)) {
       e.preventDefault()
       transform.startPanning()
     } else if (e.button === 0 && !interaction.isConnecting) {
@@ -216,7 +216,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       interaction.startSelectionDrag(x, y)
       selection.clearSelection()
     }
-  }, [interaction.isConnecting, transform, interaction, selection])
+  }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction, selection])
 
   const handleOrganizeByImportance = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {

@@ -32,6 +32,7 @@ export function useInteractionState() {
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([])
+  const [isSpacebarPressed, setIsSpacebarPressed] = useState(false)
   const dragAccumulator = useRef({ x: 0, y: 0 })
 
   const enableSelectMode = useCallback(() => {
@@ -113,6 +114,10 @@ export function useInteractionState() {
     setAlignmentGuides(guides)
   }, [])
 
+  const setSpacebarPressed = useCallback((pressed: boolean) => {
+    setIsSpacebarPressed(pressed)
+  }, [])
+
   return {
     mode,
     enableSelectMode,
@@ -124,6 +129,8 @@ export function useInteractionState() {
     selectionRect,
     alignmentGuides,
     dragAccumulator,
+    isSpacebarPressed,
+    setSpacebarPressed,
     startPersonDrag,
     startGroupDrag,
     startConnectionDrag,

@@ -301,15 +301,44 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
       controller.transform.stopPanning()
     }
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault()
+        controller.interaction.setSpacebarPressed(true)
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault()
+        controller.interaction.setSpacebarPressed(false)
+        controller.transform.stopPanning()
+      }
+    }
+
     window.addEventListener('mouseup', handleGlobalMouseUp)
-    return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp)
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
   }, [controller])
 
   return (
     <div
       ref={controller.canvasRef}
       className={`flex-1 relative overflow-hidden bg-canvas-bg ${showGrid ? 'canvas-grid' : ''}`}
-      style={{ '--grid-size': `${gridSize}px` } as React.CSSProperties}
+      style={{ 
+        '--grid-size': `${gridSize}px`,
+        cursor: controller.transform.isPanning 
+          ? 'grabbing' 
+          : controller.interaction.isSpacebarPressed 
+            ? 'grab' 
+            : 'default',
+      } as React.CSSProperties}
       onMouseDown={controller.handlers.handleCanvasMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
