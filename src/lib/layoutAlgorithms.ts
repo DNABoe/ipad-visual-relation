@@ -109,7 +109,7 @@ export function organizeByImportance(
     importantPersons[0].x = 0
     importantPersons[0].y = 0
   } else if (importantPersons.length > 1) {
-    const smallRadius = 120
+    const smallRadius = 150
     importantPersons.forEach((person, index) => {
       const angle = (index / importantPersons.length) * 2 * Math.PI
       person.x = Math.cos(angle) * smallRadius
@@ -118,10 +118,10 @@ export function organizeByImportance(
   }
 
   const rings = [
-    { score: 2, radius: 350 },
-    { score: 3, radius: 550 },
-    { score: 4, radius: 750 },
-    { score: 5, radius: 950 },
+    { score: 2, radius: 400 },
+    { score: 3, radius: 650 },
+    { score: 4, radius: 900 },
+    { score: 5, radius: 1150 },
   ]
 
   rings.forEach(({ score, radius }) => {
@@ -134,7 +134,7 @@ export function organizeByImportance(
       
       let targetAngle: number
       
-      if (connectedImportant.length > 0) {
+      if (connectedImportant.length > 0 && importantPersons.length > 0) {
         const connectedPositions = connectedImportant
           .map(id => importantPersons.find(p => p.id === id))
           .filter(p => p !== undefined) as Person[]
@@ -155,7 +155,7 @@ export function organizeByImportance(
     })
   })
 
-  const maxIterations = 100
+  const maxIterations = 80
   for (let iter = 0; iter < maxIterations; iter++) {
     result.forEach(person => {
       if (person.score === 1) return
@@ -167,7 +167,7 @@ export function organizeByImportance(
       const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
       const avgY = connected.reduce((sum, p) => sum + p.y, 0) / connected.length
 
-      const pullStrength = 0.15
+      const pullStrength = 0.12
       const dx = avgX - person.x
       const dy = avgY - person.y
       
@@ -175,11 +175,11 @@ export function organizeByImportance(
       person.y += dy * pullStrength
 
       const currentDist = Math.sqrt(person.x ** 2 + person.y ** 2)
-      const targetRadius = rings.find(r => r.score === person.score)?.radius || 350
+      const targetRadius = rings.find(r => r.score === person.score)?.radius || 400
       
       if (currentDist > 10) {
         const radiusScale = targetRadius / currentDist
-        const radiusStrength = 0.3
+        const radiusStrength = 0.35
         person.x = person.x * (1 - radiusStrength) + (person.x * radiusScale) * radiusStrength
         person.y = person.y * (1 - radiusStrength) + (person.y * radiusScale) * radiusStrength
       }
@@ -188,8 +188,8 @@ export function organizeByImportance(
 
   const finalResult = resolveOverlaps(result)
   
-  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
-  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  const centerX = importantPersons.reduce((sum, p) => sum + p.x, 0) / Math.max(importantPersons.length, 1)
+  const centerY = importantPersons.reduce((sum, p) => sum + p.y, 0) / Math.max(importantPersons.length, 1)
   
   finalResult.forEach(person => {
     person.x -= centerX
