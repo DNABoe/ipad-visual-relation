@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import type { Person } from '@/lib/types'
+import type { AlignmentGuide } from '@/lib/alignment'
 
 export type InteractionMode = 'select' | 'connect' | 'pan'
 
@@ -30,6 +31,7 @@ export function useInteractionState() {
   const [resizeState, setResizeState] = useState<ResizeState | null>(null)
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([])
   const dragAccumulator = useRef({ x: 0, y: 0 })
 
   const enableSelectMode = useCallback(() => {
@@ -86,6 +88,7 @@ export function useInteractionState() {
   const endDrag = useCallback(() => {
     setDragState({ type: null })
     setSelectionRect(null)
+    setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
   }, [])
 
@@ -102,7 +105,12 @@ export function useInteractionState() {
     setResizeState(null)
     setConnectFrom(null)
     setSelectionRect(null)
+    setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
+  }, [])
+
+  const updateAlignmentGuides = useCallback((guides: AlignmentGuide[]) => {
+    setAlignmentGuides(guides)
   }, [])
 
   return {
@@ -114,6 +122,7 @@ export function useInteractionState() {
     resizeState,
     connectFrom,
     selectionRect,
+    alignmentGuides,
     dragAccumulator,
     startPersonDrag,
     startGroupDrag,
@@ -126,6 +135,7 @@ export function useInteractionState() {
     endResize,
     setConnectFromPerson,
     resetInteraction,
+    updateAlignmentGuides,
     isDragging: dragState.type !== null,
     isResizing: resizeState !== null,
     isConnecting: mode === 'connect',

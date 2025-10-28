@@ -6,6 +6,7 @@ import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 import { ZOOM_STEP } from '@/lib/constants'
+import { calculateAlignment } from '@/lib/alignment'
 import { toast } from 'sonner'
 
 interface WorkspaceCanvasProps {
@@ -90,14 +91,30 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
           interaction.dragAccumulator.current = { x: newAccX, y: newAccY }
         }
       } else {
+        const movingPersons = controller.selection.selectedPersons
+          .map(id => controller.workspace.persons.find(p => p.id === id))
+          .filter((p): p is typeof controller.workspace.persons[0] => p !== undefined)
+          .map(p => ({ ...p, x: p.x + dx, y: p.y + dy }))
+        
+        const staticPersons = controller.workspace.persons.filter(
+          p => !controller.selection.selectedPersons.includes(p.id)
+        )
+        
+        const alignment = calculateAlignment(movingPersons, staticPersons)
+        
         const updates = new Map()
+        const finalDx = dx + (alignment?.x || 0)
+        const finalDy = dy + (alignment?.y || 0)
+        
         controller.selection.selectedPersons.forEach(personId => {
           const person = controller.workspace.persons.find(p => p.id === personId)
           if (person) {
-            updates.set(personId, { x: person.x + dx, y: person.y + dy })
+            updates.set(personId, { x: person.x + finalDx, y: person.y + finalDy })
           }
         })
         handlers.updatePersonsInBulk(updates)
+        
+        interaction.updateAlignmentGuides(alignment?.guides || [])
       }
     } else if (interaction.dragState.type === 'group') {
       const dx = e.movementX / transform.transform.scale
@@ -391,6 +408,34 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
             }}
           />
         )}
+
+        {controller.interaction.alignmentGuides.map((guide, index) => (
+          <div
+            key={`${guide.orientation}-${guide.position}-${index}`}
+            className="absolute pointer-events-none"
+            style={{
+              position: 'absolute',
+              backgroundColor: 'oklch(0.88 0.18 185)',
+              ...(guide.orientation === 'horizontal'
+                ? {
+                    left: 0,
+                    right: 0,
+                    top: guide.position,
+                    height: '1px',
+                    width: '100%',
+                  }
+                : {
+                    top: 0,
+                    bottom: 0,
+                    left: guide.position,
+                    width: '1px',
+                    height: '100%',
+                  }),
+              opacity: 0.6,
+              zIndex: 1000,
+            }}
+          />
+        ))}
 
         {controller.interaction.dragState.type === 'connection' && (
           <svg
