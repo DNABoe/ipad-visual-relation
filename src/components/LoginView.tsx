@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { verifyPassword, type PasswordHash, isPasswordHash } from '@/lib/auth'
+import { verifyPassword, getDefaultPasswordHash, type PasswordHash, isPasswordHash } from '@/lib/auth'
 import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
 
 interface LoginViewProps {
@@ -12,7 +12,7 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [userSettings] = useKV<{
+  const [userSettings, setUserSettings] = useKV<{
     username: string
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
@@ -22,6 +22,22 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true)
+
+  useEffect(() => {
+    const initializeCredentials = async () => {
+      if (!userSettings) {
+        const defaultHash = await getDefaultPasswordHash()
+        await setUserSettings({
+          username: 'admin',
+          passwordHash: defaultHash
+        })
+      }
+      setIsInitializing(false)
+    }
+    
+    initializeCredentials()
+  }, [userSettings, setUserSettings])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,7 +46,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
     try {
       if (!userSettings || !userSettings.username || !userSettings.passwordHash) {
-        setError('System error: credentials not initialized')
+        setError('System error: credentials not initialized. Please refresh the page.')
         setIsLoading(false)
         return
       }
@@ -60,6 +76,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground">Initializing...</div>
+      </div>
+    )
   }
 
   return (
