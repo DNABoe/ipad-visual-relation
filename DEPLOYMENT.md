@@ -52,13 +52,13 @@ Build script: `"build": "tsc -b --noCheck && vite build"`
 
 1. Go to **Settings** → **Pages**
 2. Under "Build and deployment":
-   - **Source**: Deploy from a branch
-   - **Branch**: `gh-pages` (select `/ (root)`)
+   - **Source**: **GitHub Actions** (NOT "Deploy from a branch")
    
-   Note: The `gh-pages` branch will be created automatically by the first successful workflow run.
+   ⚠️ **CRITICAL**: Must select "GitHub Actions" as the source. This is the most common mistake that causes a black screen!
 
 3. Under "Custom domain":
    - Enter: `releye.boestad.com`
+   - Click **Save**
    - ✅ Enforce HTTPS (will be enabled after DNS verification)
 
 ### Step 3: Configure DNS

@@ -25,47 +25,67 @@ RelEye is a secure, privacy-focused relationship network visualization tool that
 
 ## 🚀 Deployment
 
-This application is configured for automatic deployment to your custom domain `releye.boestad.com` via GitHub Pages.
+This application is configured for automatic deployment to `releye.boestad.com` via GitHub Pages.
+
+### Quick Start
+
+**See `DEPLOYMENT_START_HERE.md` for complete deployment help.**
+
+**Having a black screen?** → Read `FIX_BLACK_SCREEN.md` immediately!
 
 ### Automatic Deployment
 
 Every push to the `main` branch automatically:
 1. Builds the application
-2. Deploys to GitHub Pages
-3. Serves at your custom domain
+2. Deploys to GitHub Pages  
+3. Serves at https://releye.boestad.com
 
-### Setup Instructions
+### Essential Setup (First Time)
 
-1. **Enable GitHub Pages**:
-   - Go to your repository Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: `gh-pages` (will be created automatically by the workflow)
-   - Folder: `/ (root)`
+1. **Configure GitHub Pages** ⚠️ **CRITICAL**:
+   - Go to repository Settings → Pages
+   - **Source**: Select **"GitHub Actions"** (NOT "Deploy from a branch")
+   - Custom domain: `releye.boestad.com`
+   - Save
 
-2. **Custom Domain** (already configured):
-   - CNAME file is already set to `releye.boestad.com`
-   - Configure DNS:
-     - Add a CNAME record pointing `releye.boestad.com` to `[your-github-username].github.io`
-     - Or add A records pointing to GitHub Pages IPs:
-       - `185.199.108.153`
-       - `185.199.109.153`
-       - `185.199.110.153`
-       - `185.199.111.153`
+2. **Configure DNS** at your domain registrar:
+   - Add CNAME record: `releye` → `[your-github-username].github.io`
+   - Or add A records to GitHub IPs (see `QUICKSTART_DEPLOY.md`)
 
-3. **Verify Deployment**:
-   - Check Actions tab for deployment status
-   - Visit `https://releye.boestad.com` once DNS propagates
+3. **Trigger Deployment**:
+   ```bash
+   git push origin main
+   ```
 
-### Manual Deployment
+4. **Verify**: 
+   - Check Actions tab (should complete in ~3 minutes)
+   - Visit https://releye.boestad.com
 
-To build and deploy manually:
+### Deployment Documentation
+
+- 📄 `DEPLOYMENT_START_HERE.md` - Overview of all deployment docs
+- 📄 `FIX_BLACK_SCREEN.md` - Troubleshoot black screen issues
+- 📄 `QUICKSTART_DEPLOY.md` - 3-minute setup guide  
+- 📄 `PAGES_DEPLOYMENT_CHECKLIST.md` - Step-by-step checklist
+- 📄 `DEPLOYMENT.md` - Comprehensive guide
+
+### Verify Deployment Prerequisites
+
+```bash
+# Linux/Mac
+bash verify-deployment.sh
+
+# Windows
+verify-deployment.bat
+```
+
+### Local Build & Test
 
 ```bash
 npm install
 npm run build
+npm run preview  # Visit http://localhost:4173
 ```
-
-The built files will be in the `dist/` directory.
 
 ## 🛠️ Development
 

@@ -8,10 +8,10 @@
    Settings → Actions → General → "Read and write permissions" ✅
 
 2. **Enable Pages**  
-   Settings → Pages → Source: "Deploy from a branch" → Branch: `gh-pages` / `(root)`
+   Settings → Pages → Source: **"GitHub Actions"** (NOT "Deploy from a branch")
 
 3. **Set Custom Domain**  
-   Settings → Pages → Custom domain: `releye.boestad.com`
+   Settings → Pages → Custom domain: `releye.boestad.com` → Save
 
 ### Step 2: Configure DNS (1 minute)
 
