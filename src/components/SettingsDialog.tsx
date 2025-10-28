@@ -28,11 +28,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
+    organicLines: boolean
   }>('app-settings', {
     showGrid: true,
     snapToGrid: false,
     gridSize: 20,
     showMinimap: true,
+    organicLines: false,
   })
   
   const [userCredentials, setUserCredentials] = useKV<{
@@ -177,6 +179,25 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <div className="text-xs text-muted-foreground pl-1">
                     Controls both grid spacing and snap increment
                   </div>
+                </div>
+              </div>
+
+              <h3 className="font-semibold text-sm pt-2">Connection Style</h3>
+              <div className="space-y-4 rounded-xl bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="organic-toggle" className="text-sm font-medium cursor-pointer">Organic Lines</Label>
+                    <div className="text-xs text-muted-foreground">
+                      Use curved bezier connections for a more organic feel
+                    </div>
+                  </div>
+                  <Switch
+                    id="organic-toggle"
+                    checked={appSettings?.organicLines ?? false}
+                    onCheckedChange={async (checked) => {
+                      await setAppSettings((current) => ({ ...current!, organicLines: checked }))
+                    }}
+                  />
                 </div>
               </div>
             </div>

@@ -79,6 +79,7 @@ interface CanvasEdgesProps {
   selectionRect?: { x: number; y: number; width: number; height: number } | null
   onConnectionClick?: (connectionId: string, e: React.MouseEvent) => void
   onConnectionContextMenu?: (connectionId: string, e: React.MouseEvent) => void
+  organicLines?: boolean
 }
 
 export function CanvasEdges({ 
@@ -89,6 +90,7 @@ export function CanvasEdges({
   selectionRect,
   onConnectionClick,
   onConnectionContextMenu,
+  organicLines = false,
 }: CanvasEdgesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const hitCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -145,7 +147,32 @@ export function CanvasEdges({
 
       ctx.beginPath()
       ctx.moveTo(fromX, fromY)
-      ctx.lineTo(toX, toY)
+      
+      if (organicLines) {
+        const dx = toX - fromX
+        const dy = toY - fromY
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        const curvature = Math.min(distance * 0.25, 150)
+        
+        const midX = (fromX + toX) / 2
+        const midY = (fromY + toY) / 2
+        
+        const perpX = -dy / distance
+        const perpY = dx / distance
+        
+        const offsetX = perpX * curvature * 0.3
+        const offsetY = perpY * curvature * 0.3
+        
+        const cp1X = fromX + dx * 0.25 + offsetX
+        const cp1Y = fromY + dy * 0.25 + offsetY
+        const cp2X = fromX + dx * 0.75 + offsetX
+        const cp2Y = fromY + dy * 0.75 + offsetY
+        
+        ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
+      } else {
+        ctx.lineTo(toX, toY)
+      }
+      
       ctx.strokeStyle = isSelected ? accentColor : edgeColor
       ctx.lineWidth = isSelected ? 3 : 2
       ctx.globalAlpha = isSelected ? 1 : 1
@@ -155,7 +182,25 @@ export function CanvasEdges({
       const arrowSize = 8
       const dx = toX - fromX
       const dy = toY - fromY
-      const angle = Math.atan2(dy, dx)
+      let angle: number
+      
+      if (organicLines) {
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        const curvature = Math.min(distance * 0.25, 150)
+        const perpX = -dy / distance
+        const perpY = dx / distance
+        const offsetX = perpX * curvature * 0.3
+        const offsetY = perpY * curvature * 0.3
+        
+        const cp2X = fromX + dx * 0.75 + offsetX
+        const cp2Y = fromY + dy * 0.75 + offsetY
+        
+        const tdx = toX - cp2X
+        const tdy = toY - cp2Y
+        angle = Math.atan2(tdy, tdx)
+      } else {
+        angle = Math.atan2(dy, dx)
+      }
 
       ctx.beginPath()
       ctx.moveTo(toX, toY)
@@ -176,7 +221,29 @@ export function CanvasEdges({
       
       hitCtx.beginPath()
       hitCtx.moveTo(fromX, fromY)
-      hitCtx.lineTo(toX, toY)
+      
+      if (organicLines) {
+        const dx = toX - fromX
+        const dy = toY - fromY
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        const curvature = Math.min(distance * 0.25, 150)
+        
+        const perpX = -dy / distance
+        const perpY = dx / distance
+        
+        const offsetX = perpX * curvature * 0.3
+        const offsetY = perpY * curvature * 0.3
+        
+        const cp1X = fromX + dx * 0.25 + offsetX
+        const cp1Y = fromY + dy * 0.25 + offsetY
+        const cp2X = fromX + dx * 0.75 + offsetX
+        const cp2Y = fromY + dy * 0.75 + offsetY
+        
+        hitCtx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
+      } else {
+        hitCtx.lineTo(toX, toY)
+      }
+      
       hitCtx.strokeStyle = hitColor
       hitCtx.lineWidth = 10
       hitCtx.stroke()
@@ -184,7 +251,7 @@ export function CanvasEdges({
 
     ctx.restore()
     hitCtx.restore()
-  }, [persons, connections, transform, selectedConnections])
+  }, [persons, connections, transform, selectedConnections, organicLines])
 
   const getConnectionIdAtPosition = (clientX: number, clientY: number): string | null => {
     if (!hitCanvasRef.current) return null

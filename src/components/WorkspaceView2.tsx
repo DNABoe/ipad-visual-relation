@@ -32,6 +32,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
+    organicLines: boolean
   }>('app-settings', {
     username: 'admin',
     passwordHash: '',
@@ -39,6 +40,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     snapToGrid: false,
     gridSize: 20,
     showMinimap: true,
+    organicLines: false,
   })
 
   const [showListPanel, setShowListPanel] = useState(false)

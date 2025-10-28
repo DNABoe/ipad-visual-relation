@@ -21,6 +21,7 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
     snapToGrid: boolean
     gridSize: number
     showMinimap: boolean
+    organicLines: boolean
   }>('app-settings', {
     username: 'admin',
     passwordHash: '',
@@ -28,11 +29,13 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
     snapToGrid: false,
     gridSize: 20,
     showMinimap: true,
+    organicLines: false,
   })
 
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20
   const showGrid = settings?.showGrid ?? true
+  const organicLines = settings?.organicLines ?? false
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
@@ -522,6 +525,7 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
           transform={controller.transform.transform}
           selectedConnections={controller.selection.selectedConnections}
           selectionRect={controller.interaction.selectionRect}
+          organicLines={organicLines}
           onConnectionClick={(connectionId, e) => {
             e.stopPropagation()
             controller.handlers.handleConnectionClick(connectionId, e.shiftKey)

@@ -43,6 +43,7 @@ export interface AppSettings {
   showGrid: boolean
   snapToGrid: boolean
   showMinimap: boolean
+  organicLines: boolean
 }
 
 export interface Workspace {
