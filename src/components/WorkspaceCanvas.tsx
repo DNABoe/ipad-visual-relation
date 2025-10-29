@@ -479,14 +479,13 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                     top: 0,
                     bottom: 0,
                     left: guide.position,
-                    width: '2px',
                     height: '100%',
-                    backgroundImage: 'repeating-linear-gradient(0deg, oklch(0.72 0.18 45) 0, oklch(0.72 0.18 45) 8px, transparent 8px, transparent 16px)',
+                    height: '100%',radient(0deg, oklch(0.72 0.18 45) 0, oklch(0.72 0.18 45) 8px, transparent 8px, transparent 16px)',
                   }),
-              opacity: 0.8,
+                  }),
+              zIndex: 1000,
               zIndex: 1000,
             }}
-          />
         ))}
 
         {controller.interaction.dragState.type === 'connection' && (
