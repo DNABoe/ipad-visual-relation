@@ -11,8 +11,10 @@ import { PhotoViewerDialog } from './PhotoViewerDialog'
 import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 import { ExportDialog } from './ExportDialog'
 import { Toaster } from '@/components/ui/sonner'
+import { toast } from 'sonner'
 import type { Workspace } from '@/lib/types'
 import { encryptData } from '@/lib/encryption'
+import { searchPersons, findShortestPath, type SearchCriteria } from '@/lib/search'
 
 interface WorkspaceViewProps {
   workspace: Workspace
@@ -45,6 +47,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+  const [highlightedPersonIds, setHighlightedPersonIds] = useState<Set<string>>(new Set())
+  const [searchActive, setSearchActive] = useState(false)
 
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
@@ -121,6 +125,58 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     controller.dialogs.closeUnsavedDialog()
   }, [controller.dialogs, onNewNetwork, onLoadNetwork])
 
+  const handleSearch = useCallback((criteria: SearchCriteria) => {
+    const matches = searchPersons(controller.workspace.persons, criteria)
+    const matchIds = new Set(matches.map(p => p.id))
+    setHighlightedPersonIds(matchIds)
+    setSearchActive(true)
+    
+    if (matches.length === 0) {
+      toast.info('No persons match the search criteria')
+    } else {
+      toast.success(`Found ${matches.length} person${matches.length === 1 ? '' : 's'}`)
+    }
+  }, [controller.workspace.persons])
+
+  const handleClearSearch = useCallback(() => {
+    setHighlightedPersonIds(new Set())
+    setSearchActive(false)
+  }, [])
+
+  const handleFindPath = useCallback(() => {
+    if (controller.selection.selectedPersons.length !== 2) {
+      toast.error('Please select exactly 2 persons')
+      return
+    }
+
+    const [from, to] = controller.selection.selectedPersons
+    const path = findShortestPath(
+      from,
+      to,
+      controller.workspace.persons,
+      controller.workspace.connections
+    )
+
+    if (!path) {
+      toast.error('No path found between selected persons')
+    } else {
+      const pathIds = new Set(path)
+      setHighlightedPersonIds(pathIds)
+      setSearchActive(true)
+      
+      const fromPerson = controller.workspace.persons.find(p => p.id === from)
+      const toPerson = controller.workspace.persons.find(p => p.id === to)
+      
+      if (path.length === 2) {
+        toast.success(`${fromPerson?.name} and ${toPerson?.name} are directly connected`)
+      } else {
+        toast.success(`Found path with ${path.length - 1} connection${path.length - 1 === 1 ? '' : 's'} (${path.length} persons)`)
+      }
+    }
+  }, [controller.selection.selectedPersons, controller.workspace.persons, controller.workspace.connections])
+
+  const canFindPath = controller.selection.selectedPersons.length === 2
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <WorkspaceToolbar
@@ -129,6 +185,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         controller={controller}
         showListPanel={showListPanel}
         setShowListPanel={setShowListPanel}
+        onSearch={handleSearch}
+        onClearSearch={handleClearSearch}
+        onFindPath={handleFindPath}
+        canFindPath={canFindPath}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -143,6 +203,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
         <WorkspaceCanvas
           controller={controller}
+          highlightedPersonIds={highlightedPersonIds}
+          searchActive={searchActive}
         />
       </div>
 

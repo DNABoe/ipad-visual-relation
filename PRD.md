@@ -79,6 +79,27 @@ This is a full-featured network visualization tool with encrypted local file sto
   - **Smart Arrange (Recommended)** → Combines importance-based rings with connection optimization
 - **Success criteria**: All layouts ensure zero overlap between person cards; connections are visually clean; layouts complete within 1 second for 100+ person networks; undo restores previous positions
 
+### Advanced Search and Filtering
+- **Functionality**: Real-time fuzzy search with multi-criteria filtering (score range, position, group, frame color, advocate status) and visual highlighting of matches
+- **Purpose**: Quickly locate and focus on specific persons within large networks
+- **Trigger**: Type in search bar or open filter dropdown
+- **Progression**: Enter search query → Results highlight in real-time → Matching persons glow green and scale up → Non-matching persons fade out → Clear search to restore full view
+- **Success criteria**: Fuzzy search matches partial names and positions; filters combine using AND logic; highlighted persons remain interactive; search updates within 100ms of typing
+
+### Search History
+- **Functionality**: Dropdown showing last 10 search queries with criteria labels and timestamps
+- **Purpose**: Quickly re-apply complex filters without re-configuring
+- **Trigger**: Click history icon next to search bar
+- **Progression**: Click history → See list of recent searches → Select search → Criteria auto-populated and applied → Results highlight on canvas
+- **Success criteria**: History persists between sessions; shows human-readable labels (e.g., "score: 3-5 • advocates only"); clicking item instantly applies search; individual items can be deleted
+
+### Shortest Path Finder
+- **Functionality**: Find and highlight the shortest connection path between any two selected persons
+- **Purpose**: Understand relationship chains and identify key connectors in network
+- **Trigger**: Select exactly 2 persons → Click path finder button
+- **Progression**: Select person A → Shift-click person B → Click path icon → BFS algorithm calculates shortest path → All persons in path highlight → Toast shows path length
+- **Success criteria**: Uses breadth-first search for optimal path; handles disconnected persons gracefully with "No path found" message; highlights entire path chain; works on networks with 200+ persons/connections
+
 ### Legacy Import/Export
 - **Functionality**: Import unencrypted JSON workspace files from Settings dialog
 - **Purpose**: Migrate from older versions or share data in unencrypted format if needed
@@ -88,6 +109,9 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 ## Edge Case Handling
 
+- **No Search Results**: Show informative toast when no persons match search criteria; allow user to adjust filters
+- **Disconnected Network for Path Finding**: Show "No path found" message when selected persons are in separate network components
+- **Search on Empty Network**: Search bar disabled or shows "No persons to search" when workspace is empty
 - **Orphaned Connections**: When a person is deleted, all their connections are automatically removed
 - **Wrong Password**: Show clear error message when decryption fails; allow retry without losing file selection
 - **Missing Photos**: Display default avatar icon with person's initials

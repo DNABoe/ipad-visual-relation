@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Logo } from './Logo'
+import { SearchBar } from './SearchBar'
 import {
   Plus,
   UsersThree,
@@ -29,6 +30,7 @@ import {
   Crosshair,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
+import type { SearchCriteria } from '@/lib/search'
 
 interface WorkspaceToolbarProps {
   fileName: string
@@ -36,6 +38,10 @@ interface WorkspaceToolbarProps {
   controller: ReturnType<typeof useWorkspaceController>
   showListPanel: boolean
   setShowListPanel: (show: boolean) => void
+  onSearch: (criteria: SearchCriteria) => void
+  onClearSearch: () => void
+  onFindPath: () => void
+  canFindPath: boolean
 }
 
 export function WorkspaceToolbar({
@@ -44,6 +50,10 @@ export function WorkspaceToolbar({
   controller,
   showListPanel,
   setShowListPanel,
+  onSearch,
+  onClearSearch,
+  onFindPath,
+  canFindPath,
 }: WorkspaceToolbarProps) {
   const [settings, setSettings] = useKV<{
     username: string
@@ -74,7 +84,8 @@ export function WorkspaceToolbar({
   }
   return (
     <TooltipProvider>
-      <div className="px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-lg bg-toolbar-bg border-b border-toolbar-border">
+      <div className="px-4 py-3 space-y-3 shadow-lg bg-toolbar-bg border-b border-toolbar-border">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Logo size={32} showText={false} />
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">RelEye</h1>
@@ -331,6 +342,16 @@ export function WorkspaceToolbar({
             <TooltipContent>Settings</TooltipContent>
           </Tooltip>
         </div>
+        </div>
+
+        <SearchBar
+          persons={controller.workspace.persons}
+          groups={controller.workspace.groups}
+          onSearch={onSearch}
+          onClear={onClearSearch}
+          onFindPath={onFindPath}
+          canFindPath={canFindPath}
+        />
       </div>
     </TooltipProvider>
   )

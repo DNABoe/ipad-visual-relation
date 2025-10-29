@@ -11,9 +11,11 @@ import { toast } from 'sonner'
 
 interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
+  highlightedPersonIds?: Set<string>
+  searchActive?: boolean
 }
 
-export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
+export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive }: WorkspaceCanvasProps) {
   const [settings] = useKV<{
     username: string
     passwordHash: string
@@ -403,12 +405,18 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
           />
         ))}
 
-        {controller.workspace.persons.map(person => (
+        {controller.workspace.persons.map(person => {
+          const isHighlighted = highlightedPersonIds?.has(person.id) ?? false
+          const isDimmed = searchActive && highlightedPersonIds && highlightedPersonIds.size > 0 && !isHighlighted
+          
+          return (
           <PersonNode
             key={person.id}
             person={person}
             isSelected={controller.selection.selectedPersons.includes(person.id)}
             isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id}
+            isHighlighted={isHighlighted}
+            isDimmed={isDimmed}
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return
@@ -437,7 +445,8 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
             }}
             style={{ pointerEvents: 'auto' }}
           />
-        ))}
+          )
+        })}
 
         {controller.interaction.selectionRect && (
           <div

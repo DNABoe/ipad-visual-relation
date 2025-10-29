@@ -11,6 +11,8 @@ interface PersonNodeProps {
   person: Person
   isSelected: boolean
   isDragging: boolean
+  isHighlighted?: boolean
+  isDimmed?: boolean
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
@@ -23,6 +25,8 @@ export function PersonNode({
   person,
   isSelected,
   isDragging,
+  isHighlighted,
+  isDimmed,
   onMouseDown,
   onClick,
   onDoubleClick,
@@ -44,16 +48,20 @@ export function PersonNode({
     >
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none relative',
-          'hover:shadow-lg hover:border-primary transition-shadow',
+          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200',
+          'hover:shadow-lg hover:border-primary',
           isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg border-accent glow-accent',
-          isDragging && 'node-dragging'
+          isDragging && 'node-dragging',
+          isHighlighted && 'ring-2 ring-success ring-offset-2 ring-offset-canvas-bg glow-accent-strong scale-105',
+          isDimmed && 'opacity-30 grayscale'
         )}
         style={{
           ...style,
           borderColor: frameColor,
           backgroundColor: 'oklch(0.21 0.03 230)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
+          boxShadow: isHighlighted 
+            ? '0 4px 20px rgba(0, 255, 128, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)' 
+            : '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
