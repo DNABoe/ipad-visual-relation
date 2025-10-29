@@ -316,6 +316,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         )}
 
         <WorkspaceCanvas
+          key={`canvas-${settings?.showGrid}-${settings?.gridSize}-${settings?.gridOpacity}-${settings?.organicLines}-${settings?.snapToGrid}`}
           controller={controller}
           highlightedPersonIds={highlightedPersonIds}
           searchActive={searchActive}

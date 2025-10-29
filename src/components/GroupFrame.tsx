@@ -91,7 +91,7 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
         backgroundColor: getBackgroundColor(),
         transition: 'none',
         boxShadow: isSelected
-          ? `0 0 0 4px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.6), 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)`
+          ? `0 0 0 5px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.8), 0 6px 20px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.4)`
           : '0 2px 8px rgba(0, 0, 0, 0.2)',
         ...style,
       }}

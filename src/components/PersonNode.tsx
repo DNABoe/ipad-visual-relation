@@ -60,7 +60,7 @@ export function PersonNode({
           borderColor: frameColor,
           backgroundColor: 'oklch(0.21 0.03 230)',
           boxShadow: isSelected
-            ? '0 0 0 4px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.6), 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)'
+            ? `0 0 0 5px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.8), 0 6px 20px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.4)`
             : isHighlighted 
             ? '0 4px 20px rgba(0, 255, 128, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)' 
             : '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
