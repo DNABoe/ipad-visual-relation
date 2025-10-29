@@ -151,11 +151,6 @@
   background-image: 
     linear-gradient(to bottom, oklch(0.88 0.18 185 / var(--grid-opacity, 0.15)) 1px, transparent 1px);
 }
-}
-
-  opacity: 0.95;
-  transform: scale(1.02);
-}
 
 .selection-rect {
   background: oklch(0.88 0.18 185 / 0.15);
