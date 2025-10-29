@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
-import { WorkspaceView } from './components/WorkspaceView2'
+import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { getDefaultPasswordHash, type PasswordHash } from './lib/auth'
