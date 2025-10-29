@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Logo } from './Logo'
-import { SearchBar } from './SearchBar'
+import { SearchBar, type SearchBarRef } from './SearchBar'
 import {
   Plus,
   UsersThree,
@@ -42,6 +42,7 @@ interface WorkspaceToolbarProps {
   onClearSearch: () => void
   onFindPath: () => void
   canFindPath: boolean
+  searchBarRef: React.RefObject<SearchBarRef>
 }
 
 export function WorkspaceToolbar({
@@ -54,6 +55,7 @@ export function WorkspaceToolbar({
   onClearSearch,
   onFindPath,
   canFindPath,
+  searchBarRef,
 }: WorkspaceToolbarProps) {
   const [settings, setSettings] = useKV<{
     username: string
@@ -345,6 +347,7 @@ export function WorkspaceToolbar({
         </div>
 
         <SearchBar
+          ref={searchBarRef}
           persons={controller.workspace.persons}
           groups={controller.workspace.groups}
           onSearch={onSearch}

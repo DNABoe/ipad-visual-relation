@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +33,11 @@ interface SearchBarProps {
   className?: string
 }
 
-export function SearchBar({
+export interface SearchBarRef {
+  focus: () => void
+}
+
+export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
   persons,
   groups,
   onSearch,
@@ -41,7 +45,7 @@ export function SearchBar({
   onFindPath,
   canFindPath,
   className,
-}: SearchBarProps) {
+}, ref) => {
   const [searchHistory, setSearchHistory] = useKV<SearchHistoryItem[]>('search-history', [])
   const [query, setQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -53,6 +57,12 @@ export function SearchBar({
   const [selectedFrameColors, setSelectedFrameColors] = useState<string[]>([])
   const [advocateOnly, setAdvocateOnly] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current?.focus()
+    }
+  }))
 
   const uniquePositions = Array.from(
     new Set(
@@ -161,7 +171,7 @@ export function SearchBar({
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Search persons (fuzzy)..."
+          placeholder="Search persons..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -467,4 +477,6 @@ export function SearchBar({
       </Button>
     </div>
   )
-}
+})
+
+SearchBar.displayName = 'SearchBar'

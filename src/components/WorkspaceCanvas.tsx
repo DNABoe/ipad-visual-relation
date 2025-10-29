@@ -428,7 +428,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             }}
             onClick={(e) => {
               e.stopPropagation()
-              controller.handlers.handlePersonClick(person.id, e.shiftKey)
+              controller.handlers.handlePersonClick(person.id, e.shiftKey || e.ctrlKey || e.metaKey)
             }}
             onDoubleClick={(e) => {
               e.stopPropagation()

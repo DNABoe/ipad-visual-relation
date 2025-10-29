@@ -324,10 +324,56 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     toast.success('Smart arrangement applied')
   }, [workspaceState, handleZoomToFit])
 
+  const addPersons = useCallback((persons: Person[]) => {
+    persons.forEach(person => {
+      workspaceState.addPerson(person)
+    })
+  }, [workspaceState])
+
+  const updatePersonsScore = useCallback((personIds: string[], score: number) => {
+    const updates = new Map<string, Partial<Person>>()
+    personIds.forEach(id => {
+      updates.set(id, { score })
+    })
+    workspaceState.updatePersonsInBulk(updates)
+  }, [workspaceState])
+
+  const nudgePersons = useCallback((personIds: string[], dx: number, dy: number) => {
+    const updates = new Map<string, Partial<Person>>()
+    personIds.forEach(id => {
+      const person = workspaceState.workspace.persons.find(p => p.id === id)
+      if (person) {
+        updates.set(id, { 
+          x: person.x + dx, 
+          y: person.y + dy 
+        })
+      }
+    })
+    workspaceState.updatePersonsInBulk(updates)
+  }, [workspaceState])
+
+  const zoomToArea = useCallback((centerX: number, centerY: number, width: number, height: number) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const scaleX = rect.width / width
+    const scaleY = rect.height / height
+    const scale = Math.min(scaleX, scaleY, 2)
+
+    transform.setTransform({
+      x: rect.width / 2 - centerX * scale,
+      y: rect.height / 2 - centerY * scale,
+      scale,
+    })
+  }, [transform])
+
   return {
     workspace: workspaceState.workspace,
     selection,
-    transform,
+    transform: {
+      ...transform,
+      zoomToArea,
+    },
     interaction,
     dialogs,
     canvasRef,
@@ -354,6 +400,9 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleHierarchicalView,
       handleTightenNetwork,
       handleSmartArrange,
+      addPersons,
+      updatePersonsScore,
+      nudgePersons,
       undo: workspaceState.undo,
       replaceWorkspace: workspaceState.replaceWorkspace,
       updatePersonsInBulk: workspaceState.updatePersonsInBulk,

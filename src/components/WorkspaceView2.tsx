@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
@@ -10,11 +10,14 @@ import { SettingsDialog } from './SettingsDialog'
 import { PhotoViewerDialog } from './PhotoViewerDialog'
 import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 import { ExportDialog } from './ExportDialog'
+import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
-import type { Workspace } from '@/lib/types'
+import type { Workspace, Person } from '@/lib/types'
 import { encryptData } from '@/lib/encryption'
 import { searchPersons, findShortestPath, type SearchCriteria } from '@/lib/search'
+import { generateId, getBounds } from '@/lib/helpers'
+import type { SearchBarRef } from './SearchBar'
 
 interface WorkspaceViewProps {
   workspace: Workspace
@@ -49,6 +52,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [highlightedPersonIds, setHighlightedPersonIds] = useState<Set<string>>(new Set())
   const [searchActive, setSearchActive] = useState(false)
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  const searchBarRef = useRef<SearchBarRef>(null!)
 
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
@@ -91,30 +96,153 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+
+      if (e.key === ' ' && !isInputFocused) {
+        e.preventDefault()
+        controller.interaction.setSpacebarPressed(true)
+        return
+      }
+
+      if (e.key === '?' && !isInputFocused) {
+        e.preventDefault()
+        setShowKeyboardShortcuts(true)
+        return
+      }
+
+      if (e.key === '/' && !isInputFocused) {
+        e.preventDefault()
+        searchBarRef.current?.focus()
+        return
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault()
         controller.handlers.undo()
-      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !isInputFocused) {
+        e.preventDefault()
+        if (controller.selection.selectedPersons.length > 0) {
+          const selectedPersons = controller.workspace.persons.filter(p => 
+            controller.selection.selectedPersons.includes(p.id)
+          )
+          
+          const duplicates: Person[] = selectedPersons.map(person => ({
+            ...person,
+            id: generateId(),
+            x: person.x + 50,
+            y: person.y + 50,
+            createdAt: Date.now(),
+          }))
+          
+          controller.handlers.addPersons(duplicates)
+          controller.selection.selectPersons(duplicates.map(p => p.id))
+          
+          toast.success(`Duplicated ${duplicates.length} person${duplicates.length === 1 ? '' : 's'}`)
+        }
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'g' && !isInputFocused) {
+        e.preventDefault()
+        if (controller.selection.selectedPersons.length > 1) {
+          controller.dialogs.openGroupDialog()
+        } else {
+          toast.error('Select at least 2 persons to create a group')
+        }
+        return
+      }
+
+      if (e.key === 'f' && !isInputFocused) {
+        e.preventDefault()
+        if (controller.selection.selectedPersons.length === 1) {
+          controller.handlers.handleFocusPerson(controller.selection.selectedPersons[0])
+        } else if (controller.selection.selectedPersons.length > 1) {
+          const selectedPersons = controller.workspace.persons.filter(p =>
+            controller.selection.selectedPersons.includes(p.id)
+          )
+          const bounds = getBounds(selectedPersons)
+          if (bounds) {
+            const centerX = (bounds.minX + bounds.maxX) / 2
+            const centerY = (bounds.minY + bounds.maxY) / 2
+            const width = bounds.maxX - bounds.minX + 200
+            const height = bounds.maxY - bounds.minY + 200
+            
+            controller.transform.zoomToArea(centerX, centerY, width, height)
+          }
+        }
+        return
+      }
+
+      if (['1', '2', '3', '4', '5'].includes(e.key) && !isInputFocused) {
+        const score = parseInt(e.key)
         if (controller.selection.selectedPersons.length > 0) {
           e.preventDefault()
-          controller.handlers.handleDeleteSelectedPersons()
-        } else if (controller.selection.selectedGroups.length > 0) {
-          e.preventDefault()
-          controller.handlers.handleDeleteSelectedGroups()
-        } else if (controller.selection.selectedConnections.length > 0) {
-          e.preventDefault()
-          controller.handlers.handleDeleteSelectedConnections()
+          controller.handlers.updatePersonsScore(controller.selection.selectedPersons, score)
+          toast.success(`Set score to ${score} for ${controller.selection.selectedPersons.length} person${controller.selection.selectedPersons.length === 1 ? '' : 's'}`)
         }
-      } else if (e.key === 'Escape') {
+        return
+      }
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !isInputFocused) {
+        if (controller.selection.selectedPersons.length > 0) {
+          e.preventDefault()
+          const gridSize = settings?.gridSize ?? 20
+          const nudgeAmount = e.shiftKey ? gridSize * 5 : gridSize
+          
+          let dx = 0
+          let dy = 0
+          
+          if (e.key === 'ArrowLeft') dx = -nudgeAmount
+          if (e.key === 'ArrowRight') dx = nudgeAmount
+          if (e.key === 'ArrowUp') dy = -nudgeAmount
+          if (e.key === 'ArrowDown') dy = nudgeAmount
+          
+          controller.handlers.nudgePersons(controller.selection.selectedPersons, dx, dy)
+        }
+        return
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!isInputFocused) {
+          if (controller.selection.selectedPersons.length > 0) {
+            e.preventDefault()
+            controller.handlers.handleDeleteSelectedPersons()
+          } else if (controller.selection.selectedGroups.length > 0) {
+            e.preventDefault()
+            controller.handlers.handleDeleteSelectedGroups()
+          } else if (controller.selection.selectedConnections.length > 0) {
+            e.preventDefault()
+            controller.handlers.handleDeleteSelectedConnections()
+          }
+        }
+        return
+      }
+
+      if (e.key === 'Escape') {
         controller.interaction.enableSelectMode()
         controller.interaction.setConnectFromPerson(null)
         controller.selection.clearSelection()
+        return
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === ' ') {
+        controller.interaction.setSpacebarPressed(false)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [controller])
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [controller, settings])
 
   const handleUnsavedAction = useCallback(() => {
     if (controller.dialogs.unsavedDialog.action === 'new') {
@@ -189,6 +317,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         onClearSearch={handleClearSearch}
         onFindPath={handleFindPath}
         canFindPath={canFindPath}
+        searchBarRef={searchBarRef}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -268,6 +397,11 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         transform={controller.transform.transform}
         canvasRef={controller.canvasRef}
         selectedPersons={controller.selection.selectedPersons}
+      />
+
+      <KeyboardShortcutsDialog
+        open={showKeyboardShortcuts}
+        onOpenChange={setShowKeyboardShortcuts}
       />
 
       <Toaster />
