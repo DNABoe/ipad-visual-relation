@@ -43,8 +43,10 @@ export interface AppSettings {
   passwordHash: string
   showGrid: boolean
   snapToGrid: boolean
+  gridSize: number
   showMinimap: boolean
   organicLines: boolean
+  gridOpacity: number
 }
 
 export interface Workspace {

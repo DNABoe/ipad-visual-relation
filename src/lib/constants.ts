@@ -1,4 +1,4 @@
-import type { FrameColor, GroupColor } from './types'
+import type { FrameColor, GroupColor, AppSettings } from './types'
 
 export const FRAME_COLORS: Record<FrameColor, string> = {
   red: 'oklch(0.6 0.25 15)',
@@ -32,3 +32,14 @@ export const GRID_SIZE = 20
 export const MIN_ZOOM = 0.25
 export const MAX_ZOOM = 3
 export const ZOOM_STEP = 0.1
+
+export const DEFAULT_APP_SETTINGS: AppSettings = {
+  username: 'admin',
+  passwordHash: '',
+  showGrid: true,
+  snapToGrid: false,
+  gridSize: 20,
+  showMinimap: true,
+  organicLines: false,
+  gridOpacity: 15,
+}

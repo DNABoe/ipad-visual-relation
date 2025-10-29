@@ -4,10 +4,10 @@ import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
 import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
-import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
-import { ZOOM_STEP } from '@/lib/constants'
+import { NODE_WIDTH, NODE_HEIGHT, ZOOM_STEP, DEFAULT_APP_SETTINGS } from '@/lib/constants'
 import { calculateAlignment } from '@/lib/alignment'
 import { toast } from 'sonner'
+import type { AppSettings } from '@/lib/types'
 
 interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
@@ -16,25 +16,7 @@ interface WorkspaceCanvasProps {
 }
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive }: WorkspaceCanvasProps) {
-  const [settings] = useKV<{
-    username: string
-    passwordHash: string
-    showGrid: boolean
-    snapToGrid: boolean
-    gridSize: number
-    showMinimap: boolean
-    organicLines: boolean
-    gridOpacity: number
-  }>('app-settings', {
-    username: 'admin',
-    passwordHash: '',
-    showGrid: true,
-    snapToGrid: false,
-    gridSize: 20,
-    showMinimap: true,
-    organicLines: false,
-    gridOpacity: 15,
-  })
+  const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20

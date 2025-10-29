@@ -31,6 +31,8 @@ import {
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
+import type { AppSettings } from '@/lib/types'
+import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
 
 interface WorkspaceToolbarProps {
   fileName: string
@@ -57,31 +59,13 @@ export function WorkspaceToolbar({
   canFindPath,
   searchBarRef,
 }: WorkspaceToolbarProps) {
-  const [settings, setSettings] = useKV<{
-    username: string
-    passwordHash: string
-    showGrid: boolean
-    snapToGrid: boolean
-    gridSize: number
-    showMinimap: boolean
-  }>('app-settings', {
-    username: 'admin',
-    passwordHash: '',
-    showGrid: true,
-    snapToGrid: false,
-    gridSize: 20,
-    showMinimap: true,
-  })
+  const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
   const showGrid = settings?.showGrid ?? true
   const setShowGrid = (show: boolean) => {
     setSettings((current) => ({
-      username: current?.username ?? 'admin',
-      passwordHash: current?.passwordHash ?? '',
+      ...current!,
       showGrid: show,
-      snapToGrid: current?.snapToGrid ?? false,
-      gridSize: current?.gridSize ?? 20,
-      showMinimap: current?.showMinimap ?? true,
     }))
   }
   return (

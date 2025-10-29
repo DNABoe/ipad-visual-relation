@@ -13,10 +13,11 @@ import { ExportDialog } from './ExportDialog'
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
-import type { Workspace, Person } from '@/lib/types'
+import type { Workspace, Person, AppSettings } from '@/lib/types'
 import { encryptData } from '@/lib/encryption'
 import { searchPersons, findShortestPath, type SearchCriteria } from '@/lib/search'
 import { generateId, getBounds } from '@/lib/helpers'
+import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
 import type { SearchBarRef } from './SearchBar'
 
 interface WorkspaceViewProps {
@@ -30,23 +31,7 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
-  const [settings] = useKV<{
-    username: string
-    passwordHash: string
-    showGrid: boolean
-    snapToGrid: boolean
-    gridSize: number
-    showMinimap: boolean
-    organicLines: boolean
-  }>('app-settings', {
-    username: 'admin',
-    passwordHash: '',
-    showGrid: true,
-    snapToGrid: false,
-    gridSize: 20,
-    showMinimap: true,
-    organicLines: false,
-  })
+  const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)

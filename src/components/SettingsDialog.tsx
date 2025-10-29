@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
 import { hashPassword, type PasswordHash, verifyPassword } from '@/lib/auth'
 import { toast } from 'sonner'
-import type { Workspace } from '@/lib/types'
+import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
 import { Eye, EyeSlash, SignOut } from '@phosphor-icons/react'
+import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
 
 interface SettingsDialogProps {
   open: boolean
@@ -23,21 +24,7 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout }: SettingsDialogProps) {
-  const [appSettings, setAppSettings] = useKV<{
-    showGrid: boolean
-    snapToGrid: boolean
-    gridSize: number
-    showMinimap: boolean
-    organicLines: boolean
-    gridOpacity: number
-  }>('app-settings', {
-    showGrid: true,
-    snapToGrid: false,
-    gridSize: 20,
-    showMinimap: true,
-    organicLines: false,
-    gridOpacity: 15,
-  })
+  const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [userCredentials, setUserCredentials] = useKV<{
     username: string
