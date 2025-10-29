@@ -136,6 +136,22 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
               <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
+                    <Label htmlFor="show-grid-toggle" className="text-sm font-medium cursor-pointer">Show Grid</Label>
+                    <div className="text-xs text-muted-foreground">
+                      Display grid lines on the canvas
+                    </div>
+                  </div>
+                  <Switch
+                    id="show-grid-toggle"
+                    checked={appSettings?.showGrid ?? true}
+                    onCheckedChange={async (checked) => {
+                      await setAppSettings((current) => ({ ...current!, showGrid: checked }))
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
                     <Label htmlFor="snap-toggle" className="text-sm font-medium cursor-pointer">Snap to Grid</Label>
                     <div className="text-xs text-muted-foreground">
                       Align cards and groups to grid when dragging

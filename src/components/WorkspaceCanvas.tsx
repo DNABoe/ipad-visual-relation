@@ -36,7 +36,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     } else {
       canvas.classList.remove('canvas-grid')
     }
-  }, [gridSize, showGrid, gridOpacity, controller.canvasRef])
+  }, [gridSize, showGrid, gridOpacity, controller.canvasRef, settings])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
@@ -47,7 +47,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     
     canvas.style.backgroundSize = `${scaledGridSize}px ${scaledGridSize}px`
     canvas.style.backgroundPosition = `${x}px ${y}px`
-  }, [controller.transform.transform, gridSize, controller.canvasRef])
+  }, [controller.transform.transform, gridSize, controller.canvasRef, settings])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
