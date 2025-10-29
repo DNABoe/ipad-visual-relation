@@ -43,6 +43,7 @@
   
   --canvas-grid: oklch(0.88 0.18 185 / 0.15);
   --canvas-bg: oklch(0.15 0.02 240);
+  --grid-opacity: 0.15;
   
   --frame-red: oklch(0.6 0.25 15);
   --frame-green: oklch(0.78 0.25 165);
@@ -148,8 +149,8 @@
 .canvas-grid {
   background-color: var(--canvas-bg);
   background-image: 
-    linear-gradient(to right, var(--canvas-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--canvas-grid) 1px, transparent 1px);
+    linear-gradient(to right, oklch(0.88 0.18 185 / var(--grid-opacity, 0.15)) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.88 0.18 185 / var(--grid-opacity, 0.15)) 1px, transparent 1px);
 }
 
 .node-dragging {

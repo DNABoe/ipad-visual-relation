@@ -22,6 +22,7 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
     gridSize: number
     showMinimap: boolean
     organicLines: boolean
+    gridOpacity: number
   }>('app-settings', {
     username: 'admin',
     passwordHash: '',
@@ -30,25 +31,28 @@ export function WorkspaceCanvas({ controller }: WorkspaceCanvasProps) {
     gridSize: 20,
     showMinimap: true,
     organicLines: false,
+    gridOpacity: 15,
   })
 
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20
   const showGrid = settings?.showGrid ?? true
   const organicLines = settings?.organicLines ?? false
+  const gridOpacity = settings?.gridOpacity ?? 15
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
     if (!canvas) return
 
     canvas.style.setProperty('--grid-size', `${gridSize}px`)
+    canvas.style.setProperty('--grid-opacity', `${gridOpacity / 100}`)
     
     if (showGrid) {
       canvas.classList.add('canvas-grid')
     } else {
       canvas.classList.remove('canvas-grid')
     }
-  }, [gridSize, showGrid, controller.canvasRef])
+  }, [gridSize, showGrid, gridOpacity, controller.canvasRef])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current

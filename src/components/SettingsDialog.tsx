@@ -29,12 +29,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
     gridSize: number
     showMinimap: boolean
     organicLines: boolean
+    gridOpacity: number
   }>('app-settings', {
     showGrid: true,
     snapToGrid: false,
     gridSize: 20,
     showMinimap: true,
     organicLines: false,
+    gridOpacity: 15,
   })
   
   const [userCredentials, setUserCredentials] = useKV<{
@@ -178,6 +180,27 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   />
                   <div className="text-xs text-muted-foreground pl-1">
                     Controls both grid spacing and snap increment
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="grid-opacity" className="text-sm font-medium">Grid Opacity</Label>
+                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridOpacity ?? 15}%</span>
+                  </div>
+                  <Slider
+                    id="grid-opacity"
+                    min={5}
+                    max={40}
+                    step={5}
+                    value={[appSettings?.gridOpacity ?? 15]}
+                    onValueChange={async (value) => {
+                      await setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
+                    }}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground pl-1">
+                    Adjust the visibility of the grid lines
                   </div>
                 </div>
               </div>
