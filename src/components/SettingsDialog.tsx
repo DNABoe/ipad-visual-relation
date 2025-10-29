@@ -44,6 +44,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
 
+  const [activeTab, setActiveTab] = useState('system')
   const [username, setUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -59,7 +60,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
     }
   }, [userCredentials])
 
-  const handleSave = async () => {
+  const handleSaveUserSettings = async () => {
     if (!username.trim()) {
       toast.error('Username cannot be empty')
       return
@@ -135,7 +136,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
             Manage your system preferences and account
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="system" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
             <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
@@ -462,15 +463,17 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
         </Tabs>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
-            Cancel
+            {activeTab === 'user' ? 'Cancel' : 'Close'}
           </Button>
-          <Button 
-            onClick={handleSave} 
-            className="bg-gradient-to-r from-primary to-accent shadow-lg"
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          {activeTab === 'user' && (
+            <Button 
+              onClick={handleSaveUserSettings} 
+              className="bg-gradient-to-r from-primary to-accent shadow-lg"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
