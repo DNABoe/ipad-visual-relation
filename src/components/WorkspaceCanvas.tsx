@@ -466,23 +466,21 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             className="absolute pointer-events-none"
             style={{
               position: 'absolute',
-              ...(guide.orientation === 'horizontal'
-                ? {
-                    left: 0,
-                    right: 0,
-                    top: guide.position,
-                    height: '2px',
-                    width: '100%',
-                    backgroundImage: 'repeating-linear-gradient(90deg, oklch(0.72 0.18 45) 0, oklch(0.72 0.18 45) 8px, transparent 8px, transparent 16px)',
-                  }
-                : {
-                    top: 0,
-                    bottom: 0,
-                    left: guide.position,
-                    width: '2px',
-                    height: '100%',
-                    backgroundImage: 'repeating-linear-gradient(0deg, oklch(0.72 0.18 45) 0, oklch(0.72 0.18 45) 8px, transparent 8px, transparent 16px)',
-                  }),
+              ...(guide.orientation === 'horizontal' ? {
+                left: 0,
+                right: 0,
+                top: guide.position,
+                height: '2px',
+                width: '100%',
+                backgroundImage: 'repeating-linear-gradient(90deg, oklch(0.72 0.18 45) 0, oklch(0.72 0.18 45) 8px, transparent 8px, transparent 16px)',
+              } : {
+                top: 0,
+                bottom: 0,
+                left: guide.position,
+                width: '2px',
+                height: '100%',
+                backgroundImage: 'repeating-linear-gradient(0deg, oklch(0.72 0.18 45) 0, oklch(0.72 0.18 45) 8px, transparent 8px, transparent 16px)',
+              }),
               zIndex: 1000,
             }}
           />
