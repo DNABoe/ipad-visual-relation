@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Checkbox } from '@/components/ui/checkbox'
 import type { Person, FrameColor } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
@@ -25,6 +26,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [score, setScore] = useState(3)
   const [frameColor, setFrameColor] = useState<FrameColor>('white')
   const [photo, setPhoto] = useState<string | undefined>(undefined)
+  const [advocate, setAdvocate] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -35,12 +37,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setScore(editPerson?.score || 3)
       setFrameColor(editPerson?.frameColor || 'white')
       setPhoto(editPerson?.photo)
+      setAdvocate(editPerson?.advocate || false)
     } else {
       setName('')
       setPosition('')
       setScore(3)
       setFrameColor('white')
       setPhoto(undefined)
+      setAdvocate(false)
     }
   }, [open, editPerson])
 
@@ -76,6 +80,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       score,
       frameColor,
       photo,
+      advocate,
       x: editPerson?.x || 100,
       y: editPerson?.y || 100,
       groupId: editPerson?.groupId,
@@ -241,6 +246,27 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               ))}
             </div>
             <p className="text-xs text-muted-foreground text-center">1 - High Importance, 5 - Lower Importance</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-3 rounded-lg border border-border bg-card p-4 hover:bg-muted/50 transition-colors">
+              <Checkbox 
+                id="advocate" 
+                checked={advocate}
+                onCheckedChange={(checked) => setAdvocate(checked === true)}
+                className="h-5 w-5"
+              />
+              <div className="flex-1">
+                <Label 
+                  htmlFor="advocate" 
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Advocate
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  This person actively promotes the messages
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         <DialogFooter className="gap-2">

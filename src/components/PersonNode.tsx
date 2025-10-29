@@ -5,6 +5,7 @@ import type { Person } from '@/lib/types'
 import { getInitials } from '@/lib/helpers'
 import { FRAME_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { Megaphone } from '@phosphor-icons/react'
 
 interface PersonNodeProps {
   person: Person
@@ -43,7 +44,7 @@ export function PersonNode({
     >
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none',
+          'cursor-grab select-none border-[3px] backdrop-blur-none relative',
           'hover:shadow-lg hover:border-primary transition-shadow',
           isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-canvas-bg border-accent glow-accent',
           isDragging && 'node-dragging'
@@ -59,6 +60,14 @@ export function PersonNode({
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >
+        {person.advocate && (
+          <div 
+            className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full p-1.5 shadow-lg border-2 border-card z-10"
+            title="Advocate - Actively promotes messages"
+          >
+            <Megaphone size={16} weight="fill" />
+          </div>
+        )}
         <div className="flex items-start gap-3.5 p-3.5">
           <div 
             className="cursor-pointer"
