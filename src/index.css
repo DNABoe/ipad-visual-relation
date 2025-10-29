@@ -149,11 +149,10 @@
 .canvas-grid {
   background-color: var(--canvas-bg);
   background-image: 
-    linear-gradient(to right, oklch(0.88 0.18 185 / var(--grid-opacity, 0.15)) 1px, transparent 1px),
     linear-gradient(to bottom, oklch(0.88 0.18 185 / var(--grid-opacity, 0.15)) 1px, transparent 1px);
 }
+}
 
-.node-dragging {
   opacity: 0.95;
   transform: scale(1.02);
 }
