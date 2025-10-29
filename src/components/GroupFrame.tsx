@@ -78,9 +78,9 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
   return (
     <div
       className={cn(
-        'absolute rounded-xl border-[3px] group/frame cursor-move',
+        'absolute rounded-xl border-[3px] group/frame cursor-move transition-all duration-200',
         group.solidBackground ? 'border-solid' : 'border-dashed',
-        isSelected && 'ring-2 ring-offset-2 shadow-xl glow-accent ring-accent'
+        isSelected && 'shadow-xl scale-[1.01]'
       )}
       style={{
         left: group.x,
@@ -90,6 +90,9 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
         borderColor: groupColor,
         backgroundColor: getBackgroundColor(),
         transition: 'none',
+        boxShadow: isSelected
+          ? `0 0 0 4px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.6), 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)`
+          : '0 2px 8px rgba(0, 0, 0, 0.2)',
         ...style,
       }}
       onClick={onClick}

@@ -28,26 +28,20 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const canvas = controller.canvasRef.current
     if (!canvas) return
 
+    const { x, y, scale } = controller.transform.transform
+    const scaledGridSize = gridSize * scale
+    
     canvas.style.setProperty('--grid-size', `${gridSize}px`)
     canvas.style.setProperty('--grid-opacity', `${gridOpacity / 100}`)
+    canvas.style.backgroundSize = `${scaledGridSize}px ${scaledGridSize}px`
+    canvas.style.backgroundPosition = `${x}px ${y}px`
     
     if (showGrid) {
       canvas.classList.add('canvas-grid')
     } else {
       canvas.classList.remove('canvas-grid')
     }
-  }, [gridSize, showGrid, gridOpacity, controller.canvasRef])
-
-  useEffect(() => {
-    const canvas = controller.canvasRef.current
-    if (!canvas) return
-
-    const { x, y, scale } = controller.transform.transform
-    const scaledGridSize = gridSize * scale
-    
-    canvas.style.backgroundSize = `${scaledGridSize}px ${scaledGridSize}px`
-    canvas.style.backgroundPosition = `${x}px ${y}px`
-  }, [controller.transform.transform, gridSize, controller.canvasRef])
+  }, [gridSize, showGrid, gridOpacity, controller.transform.transform, controller.canvasRef])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
@@ -328,7 +322,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   return (
     <div
       ref={controller.canvasRef}
-      className={`flex-1 relative overflow-hidden bg-canvas-bg ${showGrid ? 'canvas-grid' : ''}`}
+      className="flex-1 relative overflow-hidden bg-canvas-bg"
       style={{ 
         cursor: controller.transform.isPanning 
           ? 'grabbing' 
