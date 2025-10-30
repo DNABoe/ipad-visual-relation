@@ -436,7 +436,7 @@ export function CanvasEdges({
         animationFrameRef.current = null
       }
     }
-  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, shortestPathPersonIds])
+  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, JSON.stringify(shortestPathPersonIds)])
 
   useEffect(() => {
     const canvas = canvasRef.current
