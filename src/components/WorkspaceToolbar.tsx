@@ -76,10 +76,9 @@ export function WorkspaceToolbar({
   
   const toggleGrid = async () => {
     const newValue = !showGrid
-    const newSettings = { ...DEFAULT_APP_SETTINGS, ...settings, showGrid: newValue }
-    await setSettings(newSettings)
+    await setSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, showGrid: newValue }))
     await new Promise(resolve => setTimeout(resolve, 100))
-    window.dispatchEvent(new CustomEvent('settings-changed', { detail: { showGrid: newValue } }))
+    window.dispatchEvent(new CustomEvent('settings-changed'))
     onRefreshCanvas()
     toast.success(newValue ? 'Grid enabled' : 'Grid disabled')
   }
