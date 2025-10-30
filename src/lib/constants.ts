@@ -44,4 +44,5 @@ export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
   gridSize: 20,
   organicLines: false,
   gridOpacity: 15,
+  showGrid: true,
 }

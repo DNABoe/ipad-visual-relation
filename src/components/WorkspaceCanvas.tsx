@@ -23,6 +23,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const gridSize = workspaceSettings.gridSize
   const organicLines = workspaceSettings.organicLines
   const gridOpacity = workspaceSettings.gridOpacity
+  const showGrid = workspaceSettings.showGrid
 
   const collapsedBranchesMap = useMemo(() => {
     const map = new Map<string, { collapsedPersonIds: string[] }>()
@@ -51,8 +52,12 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     canvas.style.setProperty('--grid-x', `${x}px`)
     canvas.style.setProperty('--grid-y', `${y}px`)
     
-    canvas.classList.add('canvas-with-grid')
-  }, [gridSize, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
+    if (showGrid) {
+      canvas.classList.add('canvas-with-grid')
+    } else {
+      canvas.classList.remove('canvas-with-grid')
+    }
+  }, [gridSize, gridOpacity, showGrid, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
 
   const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
     const updates = new Map()

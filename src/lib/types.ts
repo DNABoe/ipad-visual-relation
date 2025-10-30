@@ -50,6 +50,7 @@ export interface WorkspaceSettings {
   gridSize: number
   organicLines: boolean
   gridOpacity: number
+  showGrid: boolean
 }
 
 export interface CollapsedBranch {
