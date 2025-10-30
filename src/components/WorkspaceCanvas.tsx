@@ -79,7 +79,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   
   useEffect(() => {
     if (settings) {
-      if (localShowGrid === null) setLocalShowGrid(settings.showGrid ?? DEFAULT_APP_SETTINGS.showGrid)
+      if (localShowGrid === null) {
+        const showGridValue = settings.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
+        setLocalShowGrid(showGridValue)
+        setPreviousShowGrid(showGridValue)
+      }
       if (localGridSize === null) setLocalGridSize(settings.gridSize ?? DEFAULT_APP_SETTINGS.gridSize)
       if (localGridOpacity === null) setLocalGridOpacity(settings.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity)
       if (localSnapToGrid === null) setLocalSnapToGrid(settings.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid)
@@ -110,12 +114,14 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           canvas.classList.remove('canvas-grid-fade-in')
         }, 350)
         
-        setPreviousShowGrid(showGrid)
+        setPreviousShowGrid(true)
         return () => clearTimeout(timeout)
+      } else if (previousShowGrid === undefined) {
+        canvas.classList.add('canvas-grid')
+        setPreviousShowGrid(true)
       } else {
         canvas.classList.add('canvas-grid')
         canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out')
-        setPreviousShowGrid(showGrid)
       }
     } else {
       if (previousShowGrid === true) {
@@ -125,11 +131,13 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           canvas.classList.remove('canvas-grid', 'canvas-grid-fade-out')
         }, 350)
         
-        setPreviousShowGrid(showGrid)
+        setPreviousShowGrid(false)
         return () => clearTimeout(timeout)
+      } else if (previousShowGrid === undefined) {
+        canvas.classList.remove('canvas-grid', 'canvas-grid-fade-in', 'canvas-grid-fade-out')
+        setPreviousShowGrid(false)
       } else {
         canvas.classList.remove('canvas-grid', 'canvas-grid-fade-in', 'canvas-grid-fade-out')
-        setPreviousShowGrid(showGrid)
       }
     }
   }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid, forceUpdateKey])
