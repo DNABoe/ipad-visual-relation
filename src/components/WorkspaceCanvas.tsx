@@ -90,7 +90,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       const dx = e.movementX / transform.transform.scale
       const dy = e.movementY / transform.transform.scale
 
-      if (magneticSnap) {
+      if (!magneticSnap) {
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
@@ -150,7 +150,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         )
       })
 
-      if (magneticSnap) {
+      if (!magneticSnap) {
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
