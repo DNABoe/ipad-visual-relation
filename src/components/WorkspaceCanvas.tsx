@@ -13,9 +13,11 @@ interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
   highlightedPersonIds?: Set<string>
   searchActive?: boolean
+  shortestPathPersonIds?: string[]
+  isShortestPathActive?: boolean
 }
 
-export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive }: WorkspaceCanvasProps) {
+export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
   const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   const [, forceUpdate] = useState({})
 
@@ -529,6 +531,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           selectedConnections={controller.selection.selectedConnections}
           selectionRect={controller.interaction.selectionRect}
           organicLines={organicLines}
+          shortestPathPersonIds={shortestPathPersonIds}
+          isShortestPathActive={isShortestPathActive}
           onConnectionClick={(connectionId, e) => {
             e.stopPropagation()
             controller.handlers.handleConnectionClick(connectionId, e.shiftKey)

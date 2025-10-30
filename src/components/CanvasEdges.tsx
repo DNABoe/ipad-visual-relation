@@ -80,6 +80,8 @@ interface CanvasEdgesProps {
   onConnectionClick?: (connectionId: string, e: React.MouseEvent) => void
   onConnectionContextMenu?: (connectionId: string, e: React.MouseEvent) => void
   organicLines?: boolean
+  shortestPathPersonIds?: string[]
+  isShortestPathActive?: boolean
 }
 
 export function CanvasEdges({ 
@@ -91,10 +93,14 @@ export function CanvasEdges({
   onConnectionClick,
   onConnectionContextMenu,
   organicLines = false,
+  shortestPathPersonIds = [],
+  isShortestPathActive = false,
 }: CanvasEdgesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const hitCanvasRef = useRef<HTMLCanvasElement>(null)
   const connectionColorMap = useRef<Map<string, string>>(new Map())
+  const animationFrameRef = useRef<number | null>(null)
+  const timeRef = useRef<number>(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -105,153 +111,216 @@ export function CanvasEdges({
     const hitCtx = hitCanvas.getContext('2d')
     if (!ctx || !hitCtx) return
 
-    const dpr = window.devicePixelRatio || 1
-    const rect = canvas.getBoundingClientRect()
+    const shortestPathConnectionIds = new Set<string>()
+    if (isShortestPathActive && shortestPathPersonIds.length >= 2) {
+      for (let i = 0; i < shortestPathPersonIds.length - 1; i++) {
+        const fromId = shortestPathPersonIds[i]
+        const toId = shortestPathPersonIds[i + 1]
+        const conn = connections.find(
+          c => (c.fromPersonId === fromId && c.toPersonId === toId) ||
+               (c.fromPersonId === toId && c.toPersonId === fromId)
+        )
+        if (conn) {
+          shortestPathConnectionIds.add(conn.id)
+        }
+      }
+    }
 
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
-    hitCanvas.width = rect.width * dpr
-    hitCanvas.height = rect.height * dpr
+    const drawFrame = (time: number) => {
+      const dpr = window.devicePixelRatio || 1
+      const rect = canvas.getBoundingClientRect()
 
-    ctx.scale(dpr, dpr)
-    hitCtx.scale(dpr, dpr)
-    ctx.clearRect(0, 0, rect.width, rect.height)
-    hitCtx.clearRect(0, 0, rect.width, rect.height)
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      hitCanvas.width = rect.width * dpr
+      hitCanvas.height = rect.height * dpr
 
-    ctx.save()
-    ctx.translate(transform.x, transform.y)
-    ctx.scale(transform.scale, transform.scale)
+      ctx.scale(dpr, dpr)
+      hitCtx.scale(dpr, dpr)
+      ctx.clearRect(0, 0, rect.width, rect.height)
+      hitCtx.clearRect(0, 0, rect.width, rect.height)
 
-    hitCtx.save()
-    hitCtx.translate(transform.x, transform.y)
-    hitCtx.scale(transform.scale, transform.scale)
+      ctx.save()
+      ctx.translate(transform.x, transform.y)
+      ctx.scale(transform.scale, transform.scale)
 
-    const personMap = new Map(persons.map(p => [p.id, p]))
-    connectionColorMap.current.clear()
+      hitCtx.save()
+      hitCtx.translate(transform.x, transform.y)
+      hitCtx.scale(transform.scale, transform.scale)
 
-    const accentColor = 'oklch(0.88 0.18 185)'
-    const edgeColor = 'oklch(0.88 0.18 185 / 0.4)'
+      const personMap = new Map(persons.map(p => [p.id, p]))
+      connectionColorMap.current.clear()
 
-    connections.forEach(conn => {
-      const from = personMap.get(conn.fromPersonId)
-      const to = personMap.get(conn.toPersonId)
+      const accentColor = 'oklch(0.88 0.18 185)'
+      const edgeColor = 'oklch(0.88 0.18 185 / 0.4)'
 
-      if (!from || !to) return
+      const pulsePhase = (time * 0.002) % (Math.PI * 2)
+      const pulseIntensity = (Math.sin(pulsePhase) + 1) * 0.5
 
-      const fromX = from.x + NODE_WIDTH / 2
-      const fromY = from.y + NODE_HEIGHT / 2
-      const toX = to.x + NODE_WIDTH / 2
-      const toY = to.y + NODE_HEIGHT / 2
+      connections.forEach(conn => {
+        const from = personMap.get(conn.fromPersonId)
+        const to = personMap.get(conn.toPersonId)
 
-      const isSelected = selectedConnections.includes(conn.id)
+        if (!from || !to) return
 
-      ctx.beginPath()
-      ctx.moveTo(fromX, fromY)
-      
-      if (organicLines) {
+        const fromX = from.x + NODE_WIDTH / 2
+        const fromY = from.y + NODE_HEIGHT / 2
+        const toX = to.x + NODE_WIDTH / 2
+        const toY = to.y + NODE_HEIGHT / 2
+
+        const isSelected = selectedConnections.includes(conn.id)
+        const isShortestPath = shortestPathConnectionIds.has(conn.id)
+
+        ctx.beginPath()
+        ctx.moveTo(fromX, fromY)
+        
+        if (organicLines) {
+          const dx = toX - fromX
+          const dy = toY - fromY
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          const curvature = Math.min(distance * 0.25, 150)
+          
+          const perpX = -dy / distance
+          const perpY = dx / distance
+          
+          const offsetX = perpX * curvature * 0.3
+          const offsetY = perpY * curvature * 0.3
+          
+          const cp1X = fromX + dx * 0.25 + offsetX
+          const cp1Y = fromY + dy * 0.25 + offsetY
+          const cp2X = fromX + dx * 0.75 + offsetX
+          const cp2Y = fromY + dy * 0.75 + offsetY
+          
+          ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
+        } else {
+          ctx.lineTo(toX, toY)
+        }
+        
+        if (isShortestPath) {
+          const glowIntensity = 0.6 + pulseIntensity * 0.4
+          ctx.strokeStyle = accentColor
+          ctx.lineWidth = 4 + pulseIntensity * 2
+          ctx.shadowColor = accentColor
+          ctx.shadowBlur = 15 + pulseIntensity * 10
+          ctx.globalAlpha = glowIntensity
+          ctx.stroke()
+          
+          ctx.shadowBlur = 0
+          ctx.globalAlpha = 1
+        } else {
+          ctx.strokeStyle = isSelected ? accentColor : edgeColor
+          ctx.lineWidth = isSelected ? 3 : 2
+          ctx.globalAlpha = isSelected ? 1 : 1
+          ctx.stroke()
+          ctx.globalAlpha = 1
+        }
+
+        const arrowSize = isShortestPath ? 10 : 8
         const dx = toX - fromX
         const dy = toY - fromY
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        const curvature = Math.min(distance * 0.25, 150)
+        let angle: number
         
-        const midX = (fromX + toX) / 2
-        const midY = (fromY + toY) / 2
+        if (organicLines) {
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          const curvature = Math.min(distance * 0.25, 150)
+          const perpX = -dy / distance
+          const perpY = dx / distance
+          const offsetX = perpX * curvature * 0.3
+          const offsetY = perpY * curvature * 0.3
+          
+          const cp2X = fromX + dx * 0.75 + offsetX
+          const cp2Y = fromY + dy * 0.75 + offsetY
+          
+          const tdx = toX - cp2X
+          const tdy = toY - cp2Y
+          angle = Math.atan2(tdy, tdx)
+        } else {
+          angle = Math.atan2(dy, dx)
+        }
+
+        ctx.beginPath()
+        ctx.moveTo(toX, toY)
+        ctx.lineTo(
+          toX - arrowSize * Math.cos(angle - Math.PI / 6),
+          toY - arrowSize * Math.sin(angle - Math.PI / 6)
+        )
+        ctx.lineTo(
+          toX - arrowSize * Math.cos(angle + Math.PI / 6),
+          toY - arrowSize * Math.sin(angle + Math.PI / 6)
+        )
+        ctx.closePath()
         
-        const perpX = -dy / distance
-        const perpY = dx / distance
+        if (isShortestPath) {
+          ctx.fillStyle = accentColor
+          ctx.shadowColor = accentColor
+          ctx.shadowBlur = 15 + pulseIntensity * 10
+          ctx.globalAlpha = 0.6 + pulseIntensity * 0.4
+          ctx.fill()
+          ctx.shadowBlur = 0
+          ctx.globalAlpha = 1
+        } else {
+          ctx.fillStyle = ctx.strokeStyle
+          ctx.fill()
+        }
+
+        const hitColor = `rgb(${(conn.id.charCodeAt(0) * 7) % 256}, ${(conn.id.charCodeAt(1) * 13) % 256}, ${(conn.id.charCodeAt(2) * 17) % 256})`
+        connectionColorMap.current.set(hitColor, conn.id)
         
-        const offsetX = perpX * curvature * 0.3
-        const offsetY = perpY * curvature * 0.3
+        hitCtx.beginPath()
+        hitCtx.moveTo(fromX, fromY)
         
-        const cp1X = fromX + dx * 0.25 + offsetX
-        const cp1Y = fromY + dy * 0.25 + offsetY
-        const cp2X = fromX + dx * 0.75 + offsetX
-        const cp2Y = fromY + dy * 0.75 + offsetY
+        if (organicLines) {
+          const dx = toX - fromX
+          const dy = toY - fromY
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          const curvature = Math.min(distance * 0.25, 150)
+          
+          const perpX = -dy / distance
+          const perpY = dx / distance
+          
+          const offsetX = perpX * curvature * 0.3
+          const offsetY = perpY * curvature * 0.3
+          
+          const cp1X = fromX + dx * 0.25 + offsetX
+          const cp1Y = fromY + dy * 0.25 + offsetY
+          const cp2X = fromX + dx * 0.75 + offsetX
+          const cp2Y = fromY + dy * 0.75 + offsetY
+          
+          hitCtx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
+        } else {
+          hitCtx.lineTo(toX, toY)
+        }
         
-        ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
-      } else {
-        ctx.lineTo(toX, toY)
+        hitCtx.strokeStyle = hitColor
+        hitCtx.lineWidth = 10
+        hitCtx.stroke()
+      })
+
+      ctx.restore()
+      hitCtx.restore()
+
+      if (isShortestPathActive && shortestPathConnectionIds.size > 0) {
+        animationFrameRef.current = requestAnimationFrame(drawFrame)
       }
-      
-      ctx.strokeStyle = isSelected ? accentColor : edgeColor
-      ctx.lineWidth = isSelected ? 3 : 2
-      ctx.globalAlpha = isSelected ? 1 : 1
-      ctx.stroke()
-      ctx.globalAlpha = 1
+    }
 
-      const arrowSize = 8
-      const dx = toX - fromX
-      const dy = toY - fromY
-      let angle: number
-      
-      if (organicLines) {
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        const curvature = Math.min(distance * 0.25, 150)
-        const perpX = -dy / distance
-        const perpY = dx / distance
-        const offsetX = perpX * curvature * 0.3
-        const offsetY = perpY * curvature * 0.3
-        
-        const cp2X = fromX + dx * 0.75 + offsetX
-        const cp2Y = fromY + dy * 0.75 + offsetY
-        
-        const tdx = toX - cp2X
-        const tdy = toY - cp2Y
-        angle = Math.atan2(tdy, tdx)
-      } else {
-        angle = Math.atan2(dy, dx)
+    if (isShortestPathActive && shortestPathConnectionIds.size > 0) {
+      const animate = (time: number) => {
+        timeRef.current = time
+        drawFrame(time)
       }
+      animationFrameRef.current = requestAnimationFrame(animate)
+    } else {
+      drawFrame(0)
+    }
 
-      ctx.beginPath()
-      ctx.moveTo(toX, toY)
-      ctx.lineTo(
-        toX - arrowSize * Math.cos(angle - Math.PI / 6),
-        toY - arrowSize * Math.sin(angle - Math.PI / 6)
-      )
-      ctx.lineTo(
-        toX - arrowSize * Math.cos(angle + Math.PI / 6),
-        toY - arrowSize * Math.sin(angle + Math.PI / 6)
-      )
-      ctx.closePath()
-      ctx.fillStyle = ctx.strokeStyle
-      ctx.fill()
-
-      const hitColor = `rgb(${(conn.id.charCodeAt(0) * 7) % 256}, ${(conn.id.charCodeAt(1) * 13) % 256}, ${(conn.id.charCodeAt(2) * 17) % 256})`
-      connectionColorMap.current.set(hitColor, conn.id)
-      
-      hitCtx.beginPath()
-      hitCtx.moveTo(fromX, fromY)
-      
-      if (organicLines) {
-        const dx = toX - fromX
-        const dy = toY - fromY
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        const curvature = Math.min(distance * 0.25, 150)
-        
-        const perpX = -dy / distance
-        const perpY = dx / distance
-        
-        const offsetX = perpX * curvature * 0.3
-        const offsetY = perpY * curvature * 0.3
-        
-        const cp1X = fromX + dx * 0.25 + offsetX
-        const cp1Y = fromY + dy * 0.25 + offsetY
-        const cp2X = fromX + dx * 0.75 + offsetX
-        const cp2Y = fromY + dy * 0.75 + offsetY
-        
-        hitCtx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
-      } else {
-        hitCtx.lineTo(toX, toY)
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
       }
-      
-      hitCtx.strokeStyle = hitColor
-      hitCtx.lineWidth = 10
-      hitCtx.stroke()
-    })
-
-    ctx.restore()
-    hitCtx.restore()
-  }, [persons, connections, transform, selectedConnections, organicLines])
+    }
+  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, shortestPathPersonIds])
 
   useEffect(() => {
     const canvas = canvasRef.current

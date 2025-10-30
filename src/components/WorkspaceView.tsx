@@ -41,6 +41,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [canvasKey, setCanvasKey] = useState(0)
   const searchBarRef = useRef<SearchBarRef>(null!)
+  const [shortestPathPersonIds, setShortestPathPersonIds] = useState<string[]>([])
+  const [isShortestPathActive, setIsShortestPathActive] = useState(false)
 
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
@@ -280,6 +282,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     setHighlightedPersonIds(new Set())
     setSearchActive(false)
     setSearchQuery('')
+    setIsShortestPathActive(false)
+    setShortestPathPersonIds([])
   }, [])
 
   const handleFindPath = useCallback(() => {
@@ -298,10 +302,14 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
     if (!path) {
       toast.error('No path found between selected persons')
+      setIsShortestPathActive(false)
+      setShortestPathPersonIds([])
     } else {
       const pathIds = new Set(path)
       setHighlightedPersonIds(pathIds)
       setSearchActive(true)
+      setIsShortestPathActive(true)
+      setShortestPathPersonIds(path)
       
       const fromPerson = controller.workspace.persons.find(p => p.id === from)
       const toPerson = controller.workspace.persons.find(p => p.id === to)
@@ -358,6 +366,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           controller={controller}
           highlightedPersonIds={highlightedPersonIds}
           searchActive={searchActive}
+          shortestPathPersonIds={shortestPathPersonIds}
+          isShortestPathActive={isShortestPathActive}
         />
       </div>
 
