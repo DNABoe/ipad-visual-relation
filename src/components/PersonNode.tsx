@@ -45,7 +45,7 @@ export function PersonNode({
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
   
-  const stackCount = Math.min(Math.floor(connectionCount / 3), 3)
+  const stackCount = hasCollapsedBranch ? Math.min(collapsedCount, 3) : 0
 
   if (person.hidden) {
     return null
@@ -77,52 +77,20 @@ export function PersonNode({
         willChange: isDragging ? 'transform' : 'auto',
       }}
     >
-      {hasCollapsedBranch && (
-        <>
-          <motion.div 
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 0.3, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-            className="absolute inset-0 rounded-lg pointer-events-none"
-            style={{
-              top: 6,
-              left: 3,
-              right: -3,
-              borderColor: frameColor,
-              backgroundColor: 'oklch(0.18 0.03 230)',
-              border: '3px solid',
-            }}
-          />
-          <motion.div 
-            initial={{ opacity: 0, y: -3 }}
-            animate={{ opacity: 0.5, y: 0 }}
-            transition={{ delay: 0.05, duration: 0.3 }}
-            className="absolute inset-0 rounded-lg pointer-events-none"
-            style={{
-              top: 3,
-              left: 1.5,
-              right: -1.5,
-              borderColor: frameColor,
-              backgroundColor: 'oklch(0.19 0.03 230)',
-              border: '3px solid',
-            }}
-          />
-        </>
-      )}
       {stackCount > 0 && Array.from({ length: stackCount }).map((_, index) => (
         <motion.div
           key={`stack-${index}`}
           initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 0.2 + (index * 0.15), y: 0 }}
+          animate={{ opacity: 0.2 + (index * 0.1), y: 0 }}
           transition={{ delay: 0.05 * (index + 1), duration: 0.3 }}
           className="absolute inset-0 rounded-lg pointer-events-none"
           style={{
-            top: (stackCount - index) * 2.5,
-            left: (stackCount - index) * 1.5,
-            right: -(stackCount - index) * 1.5,
+            top: (stackCount - index) * 3,
+            left: (stackCount - index) * 2,
+            right: -(stackCount - index) * 2,
             borderColor: frameColor,
             backgroundColor: 'oklch(0.18 0.03 230)',
-            border: '2px solid',
+            border: '3px solid',
             zIndex: -index - 1,
           }}
         />
@@ -160,18 +128,9 @@ export function PersonNode({
             <Megaphone size={16} weight="fill" />
           </div>
         )}
-        {connectionCount >= 3 && !hasCollapsedBranch && (
-          <div 
-            className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-10 flex items-center gap-1.5"
-            title={`${connectionCount} connection${connectionCount > 1 ? 's' : ''}`}
-          >
-            <Stack size={14} weight="fill" />
-            <span className="text-xs font-bold">{connectionCount}</span>
-          </div>
-        )}
         {hasCollapsedBranch && collapsedCount > 0 && (
           <div 
-            className="absolute -bottom-2 -left-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-10 flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform"
+            className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-10 flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
             onClick={(e) => {
               e.stopPropagation()
