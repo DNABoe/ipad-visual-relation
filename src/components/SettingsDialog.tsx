@@ -145,10 +145,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <Switch
                     id="show-grid-toggle"
                     checked={appSettings?.showGrid ?? true}
-                    onCheckedChange={async (checked) => {
-                      const newSettings = { ...appSettings!, showGrid: checked }
-                      await setAppSettings(newSettings)
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onCheckedChange={(checked) => {
+                      setAppSettings((current) => ({ ...current!, showGrid: checked }))
                     }}
                   />
                 </div>
@@ -163,10 +161,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <Switch
                     id="snap-toggle"
                     checked={appSettings?.snapToGrid ?? false}
-                    onCheckedChange={async (checked) => {
-                      const newSettings = { ...appSettings!, snapToGrid: checked }
-                      await setAppSettings(newSettings)
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onCheckedChange={(checked) => {
+                      setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
                     }}
                   />
                 </div>
@@ -182,10 +178,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     max={50}
                     step={10}
                     value={[appSettings?.gridSize ?? 20]}
-                    onValueChange={async (value) => {
-                      const newSettings = { ...appSettings!, gridSize: value[0] }
-                      await setAppSettings(newSettings)
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onValueChange={(value) => {
+                      setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
                     }}
                     className="w-full"
                   />
@@ -205,10 +199,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     max={40}
                     step={5}
                     value={[appSettings?.gridOpacity ?? 15]}
-                    onValueChange={async (value) => {
-                      const newSettings = { ...appSettings!, gridOpacity: value[0] }
-                      await setAppSettings(newSettings)
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onValueChange={(value) => {
+                      setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
                     }}
                     className="w-full"
                   />
@@ -230,10 +222,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <Switch
                     id="organic-toggle"
                     checked={appSettings?.organicLines ?? false}
-                    onCheckedChange={async (checked) => {
-                      const newSettings = { ...appSettings!, organicLines: checked }
-                      await setAppSettings(newSettings)
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onCheckedChange={(checked) => {
+                      setAppSettings((current) => ({ ...current!, organicLines: checked }))
                     }}
                   />
                 </div>
