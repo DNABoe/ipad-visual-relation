@@ -2,6 +2,7 @@ import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { toast } from 'sonner'
 import { Logo } from './Logo'
 import { SearchBar, type SearchBarRef } from './SearchBar'
 import {
@@ -74,12 +75,13 @@ export function WorkspaceToolbar({
   const showGrid = settings?.showGrid ?? true
   
   const toggleGrid = async () => {
-    const newSettings = { ...settings!, showGrid: !showGrid }
+    const newValue = !showGrid
+    const newSettings = { ...DEFAULT_APP_SETTINGS, ...settings, showGrid: newValue }
     await setSettings(newSettings)
-    setTimeout(() => {
-      onRefreshCanvas()
-      window.dispatchEvent(new CustomEvent('settings-changed'))
-    }, 50)
+    await new Promise(resolve => setTimeout(resolve, 100))
+    window.dispatchEvent(new CustomEvent('settings-changed', { detail: { showGrid: newValue } }))
+    onRefreshCanvas()
+    toast.success(newValue ? 'Grid enabled' : 'Grid disabled')
   }
 
   const handleSaveClick = () => {

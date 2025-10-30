@@ -5,13 +5,16 @@ import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { getDefaultPasswordHash, type PasswordHash } from './lib/auth'
-import type { Workspace } from './lib/types'
+import type { Workspace, AppSettings } from './lib/types'
+import { DEFAULT_APP_SETTINGS } from './lib/constants'
 
 function App() {
   const [userCredentials, setUserCredentials] = useKV<{
     username: string
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
+  
+  const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -36,6 +39,19 @@ function App() {
         } else {
           console.log('[App] Existing credentials found')
         }
+        
+        if (!appSettings || Object.keys(appSettings).length === 0) {
+          console.log('[App] No app settings found, initializing defaults...')
+          await setAppSettings(DEFAULT_APP_SETTINGS)
+          console.log('[App] Default app settings saved')
+        } else {
+          const mergedSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings }
+          if (JSON.stringify(mergedSettings) !== JSON.stringify(appSettings)) {
+            console.log('[App] Updating app settings with missing defaults...')
+            await setAppSettings(mergedSettings)
+          }
+        }
+        
         setIsCheckingAuth(false)
         console.log('[App] Auth check complete')
       } catch (error) {
@@ -45,7 +61,7 @@ function App() {
     }
     
     initializeAuth()
-  }, [userCredentials, setUserCredentials])
+  }, [userCredentials, setUserCredentials, appSettings, setAppSettings])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)

@@ -146,11 +146,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     id="show-grid-toggle"
                     checked={appSettings?.showGrid ?? true}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...current!, showGrid: checked }))
-                      setTimeout(() => {
-                        onRefreshCanvas?.()
-                        window.dispatchEvent(new CustomEvent('settings-changed'))
-                      }, 50)
+                      const newSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings, showGrid: checked }
+                      await setAppSettings(newSettings)
+                      await new Promise(resolve => setTimeout(resolve, 100))
+                      window.dispatchEvent(new CustomEvent('settings-changed', { detail: { showGrid: checked } }))
+                      onRefreshCanvas?.()
+                      toast.success(checked ? 'Grid enabled' : 'Grid disabled')
                     }}
                   />
                 </div>
@@ -166,11 +167,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     id="snap-toggle"
                     checked={appSettings?.snapToGrid ?? false}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
-                      setTimeout(() => {
-                        onRefreshCanvas?.()
-                        window.dispatchEvent(new CustomEvent('settings-changed'))
-                      }, 50)
+                      const newSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings, snapToGrid: checked }
+                      await setAppSettings(newSettings)
+                      await new Promise(resolve => setTimeout(resolve, 100))
+                      window.dispatchEvent(new CustomEvent('settings-changed', { detail: { snapToGrid: checked } }))
+                      onRefreshCanvas?.()
+                      toast.success(checked ? 'Snap to grid enabled' : 'Snap to grid disabled')
                     }}
                   />
                 </div>
@@ -187,11 +189,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     step={10}
                     value={[appSettings?.gridSize ?? 20]}
                     onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
-                      setTimeout(() => {
-                        onRefreshCanvas?.()
-                        window.dispatchEvent(new CustomEvent('settings-changed'))
-                      }, 50)
+                      const newSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings, gridSize: value[0] }
+                      await setAppSettings(newSettings)
+                      await new Promise(resolve => setTimeout(resolve, 100))
+                      window.dispatchEvent(new CustomEvent('settings-changed', { detail: { gridSize: value[0] } }))
+                      onRefreshCanvas?.()
                     }}
                     className="w-full"
                   />
@@ -212,11 +214,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     step={5}
                     value={[appSettings?.gridOpacity ?? 15]}
                     onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
-                      setTimeout(() => {
-                        onRefreshCanvas?.()
-                        window.dispatchEvent(new CustomEvent('settings-changed'))
-                      }, 50)
+                      const newSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings, gridOpacity: value[0] }
+                      await setAppSettings(newSettings)
+                      await new Promise(resolve => setTimeout(resolve, 100))
+                      window.dispatchEvent(new CustomEvent('settings-changed', { detail: { gridOpacity: value[0] } }))
+                      onRefreshCanvas?.()
                     }}
                     className="w-full"
                   />
@@ -239,11 +241,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     id="organic-toggle"
                     checked={appSettings?.organicLines ?? false}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...current!, organicLines: checked }))
-                      setTimeout(() => {
-                        onRefreshCanvas?.()
-                        window.dispatchEvent(new CustomEvent('settings-changed'))
-                      }, 50)
+                      const newSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings, organicLines: checked }
+                      await setAppSettings(newSettings)
+                      await new Promise(resolve => setTimeout(resolve, 100))
+                      window.dispatchEvent(new CustomEvent('settings-changed', { detail: { organicLines: checked } }))
+                      onRefreshCanvas?.()
+                      toast.success(checked ? 'Organic lines enabled' : 'Organic lines disabled')
                     }}
                   />
                 </div>

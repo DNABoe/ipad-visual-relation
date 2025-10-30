@@ -19,7 +19,6 @@ interface WorkspaceCanvasProps {
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
   const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
-  const [renderTrigger, setRenderTrigger] = useState(0)
   const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
 
   const snapToGrid = settings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid
@@ -29,12 +28,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
 
   useEffect(() => {
-    setRenderTrigger(prev => prev + 1)
-  }, [snapToGrid, gridSize, showGrid, organicLines, gridOpacity, isShortestPathActive, shortestPathPersonIds.length])
-
-  useEffect(() => {
-    const handleSettingsChange = () => {
-      setRenderTrigger(prev => prev + 1)
+    const handleSettingsChange = async () => {
+      await new Promise(resolve => setTimeout(resolve, 0))
     }
     
     window.addEventListener('settings-changed', handleSettingsChange)
@@ -88,7 +83,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     }
     
     setPreviousShowGrid(showGrid)
-  }, [settings, gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid])
+  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers, workspace, selection } = controller
