@@ -42,10 +42,12 @@ export interface Group {
 export interface AppSettings {
   username: string
   passwordHash: string
-  showGrid: boolean
-  snapToGrid: boolean
-  gridSize: number
   showMinimap: boolean
+}
+
+export interface WorkspaceSettings {
+  magneticSnap: boolean
+  gridSize: number
   organicLines: boolean
   gridOpacity: number
 }
@@ -61,6 +63,7 @@ export interface Workspace {
   connections: Connection[]
   groups: Group[]
   collapsedBranches?: CollapsedBranch[]
+  settings?: WorkspaceSettings
 }
 
 export interface ViewTransform {

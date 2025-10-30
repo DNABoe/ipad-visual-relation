@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
 import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
-import { NODE_WIDTH, NODE_HEIGHT, ZOOM_STEP, DEFAULT_APP_SETTINGS } from '@/lib/constants'
+import { NODE_WIDTH, NODE_HEIGHT, ZOOM_STEP, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { calculateAlignment } from '@/lib/alignment'
 import { toast } from 'sonner'
-import type { AppSettings, Person } from '@/lib/types'
+import type { Person } from '@/lib/types'
 
 interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
@@ -18,13 +17,12 @@ interface WorkspaceCanvasProps {
 }
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
-  const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
+  const workspaceSettings = controller.workspace.settings || DEFAULT_WORKSPACE_SETTINGS
   
-  const snapToGrid = settings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid
-  const gridSize = settings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize
-  const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
-  const organicLines = settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines
-  const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
+  const magneticSnap = workspaceSettings.magneticSnap
+  const gridSize = workspaceSettings.gridSize
+  const organicLines = workspaceSettings.organicLines
+  const gridOpacity = workspaceSettings.gridOpacity
 
   const collapsedBranchesMap = useMemo(() => {
     const map = new Map<string, { collapsedPersonIds: string[] }>()
@@ -53,12 +51,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     canvas.style.setProperty('--grid-x', `${x}px`)
     canvas.style.setProperty('--grid-y', `${y}px`)
     
-    if (showGrid) {
-      canvas.classList.add('canvas-with-grid')
-    } else {
-      canvas.classList.remove('canvas-with-grid')
-    }
-  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
+    canvas.classList.add('canvas-with-grid')
+  }, [gridSize, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
 
   const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
     const updates = new Map()
@@ -91,7 +85,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       const dx = e.movementX / transform.transform.scale
       const dy = e.movementY / transform.transform.scale
 
-      if (snapToGrid) {
+      if (magneticSnap) {
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
@@ -151,7 +145,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         )
       })
 
-      if (snapToGrid) {
+      if (magneticSnap) {
         const newAccX = interaction.dragAccumulator.current.x + dx
         const newAccY = interaction.dragAccumulator.current.y + dy
 
@@ -223,7 +217,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
 
       interaction.updateSelectionDrag(currentX, currentY)
     }
-  }, [controller, snapToGrid, gridSize])
+  }, [controller, magneticSnap, gridSize])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     const { interaction, workspace, transform, selection, handlers } = controller

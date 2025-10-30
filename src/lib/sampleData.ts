@@ -1,4 +1,5 @@
 import type { Person, Connection, Group, Workspace } from './types'
+import { DEFAULT_WORKSPACE_SETTINGS } from './constants'
 
 export function generateSampleData(): Workspace {
   const group1 = {
@@ -128,6 +129,7 @@ export function generateSampleData(): Workspace {
     persons, 
     connections, 
     groups: [group1, group2],
-    collapsedBranches: []
+    collapsedBranches: [],
+    settings: DEFAULT_WORKSPACE_SETTINGS
   }
 }

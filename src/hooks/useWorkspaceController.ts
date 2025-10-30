@@ -17,17 +17,9 @@ import {
 
 interface UseWorkspaceControllerOptions {
   initialWorkspace: Workspace
-  settings?: {
-    username: string
-    passwordHash: string
-    showGrid: boolean
-    snapToGrid: boolean
-    gridSize: number
-    showMinimap: boolean
-  }
 }
 
-export function useWorkspaceController({ initialWorkspace, settings }: UseWorkspaceControllerOptions) {
+export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControllerOptions) {
   const workspaceState = useWorkspaceState(initialWorkspace)
   const selection = useSelection()
   const transform = useCanvasTransform()
@@ -408,7 +400,6 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     interaction,
     dialogs,
     canvasRef,
-    settings,
     handlers: {
       handlePersonClick,
       handlePersonDoubleClick,

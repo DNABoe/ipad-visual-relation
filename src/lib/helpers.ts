@@ -1,4 +1,4 @@
-
+import { DEFAULT_WORKSPACE_SETTINGS } from './constants'
 
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -146,6 +146,10 @@ export function deserializeWorkspace(data: string): any {
   
   return {
     ...parsed,
-    collapsedBranches
+    collapsedBranches,
+    settings: {
+      ...DEFAULT_WORKSPACE_SETTINGS,
+      ...(parsed.settings || {})
+    }
   }
 }

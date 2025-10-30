@@ -1,4 +1,3 @@
-import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -12,7 +11,6 @@ import {
   MagnifyingGlassPlus,
   MagnifyingGlassMinus,
   ArrowsOut,
-  GridFour,
   List,
   Gear,
   X,
@@ -36,8 +34,6 @@ import {
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
-import type { AppSettings } from '@/lib/types'
-import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
 import { findAllDescendants } from '@/lib/helpers'
 
 interface WorkspaceToolbarProps {
@@ -67,15 +63,6 @@ export function WorkspaceToolbar({
   isShortestPathActive,
   searchBarRef,
 }: WorkspaceToolbarProps) {
-  const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
-
-  const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
-  
-  const toggleGrid = async () => {
-    const newValue = !showGrid
-    await setSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, showGrid: newValue }))
-    toast.success(newValue ? 'Grid enabled' : 'Grid disabled')
-  }
 
   const handleSaveClick = () => {
     if (downloadUrl) {
@@ -258,20 +245,6 @@ export function WorkspaceToolbar({
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6 bg-border" />
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={showGrid ? "default" : "outline"}
-                size="sm"
-                onClick={toggleGrid}
-                className={showGrid ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
-              >
-                <GridFour size={18} weight={showGrid ? "fill" : "duotone"} className={showGrid ? "" : "text-muted-foreground"} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle Grid</TooltipContent>
-          </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>

@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
 import { APP_VERSION } from '@/lib/version'
 import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
+import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -71,7 +72,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
     try {
       const newWorkspace: Workspace = includeSampleData
         ? generateSampleData()
-        : { persons: [], connections: [], groups: [], collapsedBranches: [] }
+        : { 
+            persons: [], 
+            connections: [], 
+            groups: [], 
+            collapsedBranches: [],
+            settings: DEFAULT_WORKSPACE_SETTINGS
+          }
 
       const workspaceJson = serializeWorkspace(newWorkspace)
       const encrypted = await encryptData(workspaceJson, newPassword)

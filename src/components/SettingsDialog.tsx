@@ -13,18 +13,18 @@ import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
 import { Eye, EyeSlash, SignOut } from '@phosphor-icons/react'
-import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
+import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   workspace: Workspace
-  onImport: (workspace: Workspace) => void
+  setWorkspace: (update: Workspace | ((current: Workspace) => Workspace)) => void
   onLogout?: () => void
 }
 
-export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, onLogout }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [userCredentials, setUserCredentials] = useKV<{
@@ -43,6 +43,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
   const [isSaving, setIsSaving] = useState(false)
   const [logoClicks, setLogoClicks] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+
+  const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
 
   useEffect(() => {
     if (userCredentials) {
@@ -166,42 +168,24 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
               <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="show-grid-toggle" className="text-sm font-medium cursor-pointer">Show Grid</Label>
-                    <div className="text-xs text-muted-foreground">
-                      Display grid lines on the canvas
-                    </div>
-                  </div>
-                  <Switch
-                    id="show-grid-toggle"
-                    checked={appSettings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid}
-                    onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ 
-                        ...DEFAULT_APP_SETTINGS, 
-                        ...current, 
-                        showGrid: checked 
-                      }))
-                      toast.success(checked ? 'Grid enabled' : 'Grid disabled')
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="snap-toggle" className="text-sm font-medium cursor-pointer">Snap to Grid</Label>
+                    <Label htmlFor="magnetic-snap-toggle" className="text-sm font-medium cursor-pointer">Magnetic Snap</Label>
                     <div className="text-xs text-muted-foreground">
                       Align cards and groups to grid when dragging
                     </div>
                   </div>
                   <Switch
-                    id="snap-toggle"
-                    checked={appSettings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid}
-                    onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ 
-                        ...DEFAULT_APP_SETTINGS, 
-                        ...current, 
-                        snapToGrid: checked 
+                    id="magnetic-snap-toggle"
+                    checked={workspaceSettings.magneticSnap}
+                    onCheckedChange={(checked) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        settings: {
+                          ...DEFAULT_WORKSPACE_SETTINGS,
+                          ...(current.settings || {}),
+                          magneticSnap: checked
+                        }
                       }))
-                      toast.success(checked ? 'Snap to grid enabled' : 'Snap to grid disabled')
+                      toast.success(checked ? 'Magnetic snap enabled' : 'Magnetic snap disabled')
                     }}
                   />
                 </div>
@@ -209,19 +193,22 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize}px</span>
+                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{workspaceSettings.gridSize}px</span>
                   </div>
                   <Slider
                     id="grid-size"
                     min={10}
                     max={50}
                     step={10}
-                    value={[appSettings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize]}
-                    onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ 
-                        ...DEFAULT_APP_SETTINGS, 
-                        ...current, 
-                        gridSize: value[0] 
+                    value={[workspaceSettings.gridSize]}
+                    onValueChange={(value) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        settings: {
+                          ...DEFAULT_WORKSPACE_SETTINGS,
+                          ...(current.settings || {}),
+                          gridSize: value[0]
+                        }
                       }))
                     }}
                     className="w-full"
@@ -234,19 +221,22 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="grid-opacity" className="text-sm font-medium">Grid Opacity</Label>
-                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity}%</span>
+                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{workspaceSettings.gridOpacity}%</span>
                   </div>
                   <Slider
                     id="grid-opacity"
                     min={5}
                     max={40}
                     step={5}
-                    value={[appSettings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity]}
-                    onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ 
-                        ...DEFAULT_APP_SETTINGS, 
-                        ...current, 
-                        gridOpacity: value[0] 
+                    value={[workspaceSettings.gridOpacity]}
+                    onValueChange={(value) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        settings: {
+                          ...DEFAULT_WORKSPACE_SETTINGS,
+                          ...(current.settings || {}),
+                          gridOpacity: value[0]
+                        }
                       }))
                     }}
                     className="w-full"
@@ -268,12 +258,15 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   </div>
                   <Switch
                     id="organic-toggle"
-                    checked={appSettings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines}
-                    onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ 
-                        ...DEFAULT_APP_SETTINGS, 
-                        ...current, 
-                        organicLines: checked 
+                    checked={workspaceSettings.organicLines}
+                    onCheckedChange={(checked) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        settings: {
+                          ...DEFAULT_WORKSPACE_SETTINGS,
+                          ...(current.settings || {}),
+                          organicLines: checked
+                        }
                       }))
                       toast.success(checked ? 'Organic lines enabled' : 'Organic lines disabled')
                     }}

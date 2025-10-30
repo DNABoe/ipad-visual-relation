@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
 import { WorkspaceCanvas } from './WorkspaceCanvas'
@@ -14,11 +13,11 @@ import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { CollapseBranchDialog } from './CollapseBranchDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
-import type { Workspace, Person, AppSettings } from '@/lib/types'
+import type { Workspace, Person } from '@/lib/types'
 import { encryptData } from '@/lib/encryption'
 import { searchPersons, findShortestPath, findLeafTerminatedBranches, type SearchCriteria } from '@/lib/search'
 import { generateId, getBounds, serializeWorkspace } from '@/lib/helpers'
-import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
+import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import type { SearchBarRef } from './SearchBar'
 
 interface WorkspaceViewProps {
@@ -32,8 +31,6 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
-  const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
-
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [highlightedPersonIds, setHighlightedPersonIds] = useState<Set<string>>(new Set())
@@ -47,7 +44,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
-    settings,
   })
 
   const currentWorkspaceStr = useMemo(() => serializeWorkspace(controller.workspace), [controller.workspace])
@@ -197,7 +193,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !isInputFocused) {
         if (controller.selection.selectedPersons.length > 0) {
           e.preventDefault()
-          const gridSize = settings?.gridSize ?? 20
+          const workspaceSettings = controller.workspace.settings || DEFAULT_WORKSPACE_SETTINGS
+          const gridSize = workspaceSettings.gridSize
           const nudgeAmount = e.shiftKey ? gridSize * 5 : gridSize
           
           let dx = 0
@@ -249,7 +246,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [controller, settings, downloadUrl, fileName])
+  }, [controller, downloadUrl, fileName])
 
   const handleUnsavedAction = useCallback(() => {
     if (controller.dialogs.unsavedDialog.action === 'new') {
@@ -408,7 +405,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           if (!open) controller.dialogs.closeSettingsDialog()
         }}
         workspace={controller.workspace}
-        onImport={controller.handlers.replaceWorkspace}
+        setWorkspace={controller.handlers.replaceWorkspace}
         onLogout={onLogout}
       />
 

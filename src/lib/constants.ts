@@ -1,4 +1,4 @@
-import type { FrameColor, GroupColor, AppSettings } from './types'
+import type { FrameColor, GroupColor, AppSettings, WorkspaceSettings } from './types'
 
 export const FRAME_COLORS: Record<FrameColor, string> = {
   red: 'oklch(0.6 0.25 15)',
@@ -36,10 +36,12 @@ export const ZOOM_STEP = 0.1
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   username: 'admin',
   passwordHash: '',
-  showGrid: true,
-  snapToGrid: false,
-  gridSize: 20,
   showMinimap: true,
+}
+
+export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
+  magneticSnap: true,
+  gridSize: 20,
   organicLines: false,
   gridOpacity: 15,
 }
