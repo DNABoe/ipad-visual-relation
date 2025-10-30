@@ -11,6 +11,7 @@ import type { Workspace } from '@/lib/types'
 import { toast } from 'sonner'
 import { generateSampleData } from '@/lib/sampleData'
 import { APP_VERSION } from '@/lib/version'
+import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -70,9 +71,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
     try {
       const newWorkspace: Workspace = includeSampleData
         ? generateSampleData()
-        : { persons: [], connections: [], groups: [] }
+        : { persons: [], connections: [], groups: [], collapsedBranches: new Map() }
 
-      const workspaceJson = JSON.stringify(newWorkspace)
+      const workspaceJson = serializeWorkspace(newWorkspace)
       const encrypted = await encryptData(workspaceJson, newPassword)
 
       const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' })
@@ -110,7 +111,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const fileContent = await loadingFile.text()
       const encrypted: EncryptedData = JSON.parse(fileContent)
       const decrypted = await decryptData(encrypted, loadPassword)
-      const workspace: Workspace = JSON.parse(decrypted)
+      const workspace: Workspace = deserializeWorkspace(decrypted)
 
       onLoad(workspace, loadingFile.name, loadPassword)
       toast.success('Network loaded successfully!')

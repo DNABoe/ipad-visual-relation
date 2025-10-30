@@ -103,6 +103,52 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     selection.selectConnection(connectionId, shiftKey)
   }, [selection])
 
+  const handleConnectionContextMenu = useCallback((connectionId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    selection.selectConnection(connectionId, false)
+  }, [selection])
+
+  const handleCollapseBranch = useCallback((connectionId: string) => {
+    const { findBranchNodesBelow } = require('@/lib/helpers')
+    const branchPersonIds = findBranchNodesBelow(
+      connectionId,
+      workspaceState.workspace.connections,
+      workspaceState.workspace.persons
+    )
+    
+    if (branchPersonIds.length === 0) {
+      toast.info('No branch to hide below this connection')
+      return
+    }
+    
+    workspaceState.collapseBranch(connectionId, branchPersonIds)
+    toast.success(`Hidden ${branchPersonIds.length} person${branchPersonIds.length > 1 ? 's' : ''} in branch`)
+  }, [workspaceState])
+
+  const handleExpandBranch = useCallback((connectionId: string) => {
+    const collapsedBranches = workspaceState.workspace.collapsedBranches || new Map()
+    const branchPersonIds = collapsedBranches.get(connectionId) || []
+    
+    if (branchPersonIds.length === 0) {
+      return
+    }
+    
+    workspaceState.expandBranch(connectionId)
+    toast.success(`Expanded ${branchPersonIds.length} person${branchPersonIds.length > 1 ? 's' : ''} in branch`)
+  }, [workspaceState])
+
+  const handleExpandBranchFromPerson = useCallback((personId: string) => {
+    const collapsedBranches = workspaceState.workspace.collapsedBranches || new Map()
+    
+    for (const [connectionId, branchPersonIds] of collapsedBranches.entries()) {
+      const connection = workspaceState.workspace.connections.find(c => c.id === connectionId)
+      if (connection && connection.toPersonId === personId) {
+        handleExpandBranch(connectionId)
+        return
+      }
+    }
+  }, [workspaceState.workspace.connections, workspaceState.workspace.collapsedBranches, handleExpandBranch])
+
   const handleGroupClick = useCallback((groupId: string, shiftKey: boolean) => {
     selection.selectGroup(groupId, shiftKey)
   }, [selection])
@@ -384,6 +430,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handlePhotoDoubleClick,
       handlePersonContextMenu,
       handleConnectionClick,
+      handleConnectionContextMenu,
       handleGroupClick,
       handleSavePerson,
       handleDeletePerson,
@@ -400,6 +447,9 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleHierarchicalView,
       handleTightenNetwork,
       handleSmartArrange,
+      handleCollapseBranch,
+      handleExpandBranch,
+      handleExpandBranchFromPerson,
       addPersons,
       updatePersonsScore,
       nudgePersons,

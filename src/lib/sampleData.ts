@@ -1,6 +1,6 @@
-import type { Person, Connection, Group } from './types'
+import type { Person, Connection, Group, Workspace } from './types'
 
-export function generateSampleData(): { persons: Person[]; connections: Connection[]; groups: Group[] } {
+export function generateSampleData(): Workspace {
   const group1 = {
     id: 'group-1',
     name: 'Leadership',
@@ -124,5 +124,10 @@ export function generateSampleData(): { persons: Person[]; connections: Connecti
     { id: 'conn-8', fromPersonId: 'person-5', toPersonId: 'person-7' },
   ]
 
-  return { persons, connections, groups: [group1, group2] }
+  return { 
+    persons, 
+    connections, 
+    groups: [group1, group2],
+    collapsedBranches: new Map()
+  }
 }

@@ -54,6 +54,7 @@ export interface Workspace {
   persons: Person[]
   connections: Connection[]
   groups: Group[]
+  collapsedBranches?: Map<string, string[]>
 }
 
 export interface ViewTransform {

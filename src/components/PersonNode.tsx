@@ -6,6 +6,7 @@ import { getInitials } from '@/lib/helpers'
 import { FRAME_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { Megaphone } from '@phosphor-icons/react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface PersonNodeProps {
   person: Person
@@ -13,11 +14,13 @@ interface PersonNodeProps {
   isDragging: boolean
   isHighlighted?: boolean
   isDimmed?: boolean
+  hasCollapsedBranch?: boolean
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
   onPhotoDoubleClick?: (e: React.MouseEvent) => void
   onContextMenu: (e: React.MouseEvent) => void
+  onExpandBranch?: (e: React.MouseEvent) => void
   style?: React.CSSProperties
 }
 
@@ -27,11 +30,13 @@ export function PersonNode({
   isDragging,
   isHighlighted,
   isDimmed,
+  hasCollapsedBranch,
   onMouseDown,
   onClick,
   onDoubleClick,
   onPhotoDoubleClick,
   onContextMenu,
+  onExpandBranch,
   style,
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
@@ -41,15 +46,61 @@ export function PersonNode({
   }
 
   return (
-    <div 
+    <motion.div 
       className="absolute" 
+      initial={false}
+      animate={{
+        left: person.x,
+        top: person.y,
+        opacity: 1,
+        scale: 1,
+      }}
+      exit={{
+        opacity: 0,
+        scale: 0.8,
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        opacity: { duration: 0.2 },
+      }}
       style={{ 
-        left: person.x, 
-        top: person.y, 
         width: 280,
-        transition: 'none',
       }}
     >
+      {hasCollapsedBranch && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 0.3, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+            className="absolute inset-0 rounded-lg pointer-events-none"
+            style={{
+              top: 6,
+              left: 3,
+              right: -3,
+              borderColor: frameColor,
+              backgroundColor: 'oklch(0.18 0.03 230)',
+              border: '3px solid',
+            }}
+          />
+          <motion.div 
+            initial={{ opacity: 0, y: -3 }}
+            animate={{ opacity: 0.5, y: 0 }}
+            transition={{ delay: 0.05, duration: 0.3 }}
+            className="absolute inset-0 rounded-lg pointer-events-none"
+            style={{
+              top: 3,
+              left: 1.5,
+              right: -1.5,
+              borderColor: frameColor,
+              backgroundColor: 'oklch(0.19 0.03 230)',
+              border: '3px solid',
+            }}
+          />
+        </>
+      )}
       <Card
         className={cn(
           'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200',
@@ -57,7 +108,8 @@ export function PersonNode({
           isSelected && 'scale-[1.02]',
           isDragging && 'node-dragging scale-[1.03]',
           isHighlighted && 'ring-2 ring-success ring-offset-2 ring-offset-canvas-bg glow-accent-strong scale-105',
-          isDimmed && 'opacity-30 grayscale'
+          isDimmed && 'opacity-30 grayscale',
+          hasCollapsedBranch && 'cursor-pointer relative z-10'
         )}
         style={{
           ...style,
@@ -70,7 +122,13 @@ export function PersonNode({
             : '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
         }}
         onMouseDown={onMouseDown}
-        onClick={onClick}
+        onClick={(e) => {
+          if (hasCollapsedBranch && onExpandBranch) {
+            onExpandBranch(e)
+          } else {
+            onClick(e)
+          }
+        }}
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >
@@ -114,6 +172,6 @@ export function PersonNode({
           </Badge>
         </div>
       </Card>
-    </div>
+    </motion.div>
   )
 }

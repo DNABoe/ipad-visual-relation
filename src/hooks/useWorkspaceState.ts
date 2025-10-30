@@ -280,6 +280,44 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     setUndoStack([])
   }, [])
 
+  const collapseBranch = useCallback((connectionId: string, branchPersonIds: string[]) => {
+    setWorkspace(prev => {
+      const collapsedBranches = prev.collapsedBranches || new Map()
+      const newCollapsed = new Map(collapsedBranches)
+      newCollapsed.set(connectionId, branchPersonIds)
+      
+      return {
+        ...prev,
+        collapsedBranches: newCollapsed,
+        persons: prev.persons.map(p => 
+          branchPersonIds.includes(p.id) 
+            ? { ...p, hidden: true }
+            : p
+        ),
+      }
+    })
+  }, [])
+
+  const expandBranch = useCallback((connectionId: string) => {
+    setWorkspace(prev => {
+      const collapsedBranches = prev.collapsedBranches || new Map()
+      const branchPersonIds = collapsedBranches.get(connectionId) || []
+      
+      const newCollapsed = new Map(collapsedBranches)
+      newCollapsed.delete(connectionId)
+      
+      return {
+        ...prev,
+        collapsedBranches: newCollapsed,
+        persons: prev.persons.map(p => 
+          branchPersonIds.includes(p.id) 
+            ? { ...p, hidden: false }
+            : p
+        ),
+      }
+    })
+  }, [])
+
   return {
     workspace,
     setWorkspace,
@@ -298,6 +336,8 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     undo,
     updatePersonsInBulk,
     replaceWorkspace,
+    collapseBranch,
+    expandBranch,
     hasUndo: undoStack.length > 0,
   }
 }

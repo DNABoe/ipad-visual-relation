@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import type { Workspace, Person, AppSettings } from '@/lib/types'
 import { encryptData } from '@/lib/encryption'
 import { searchPersons, findShortestPath, findLeafTerminatedBranches, type SearchCriteria } from '@/lib/search'
-import { generateId, getBounds } from '@/lib/helpers'
+import { generateId, getBounds, serializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
 import type { SearchBarRef } from './SearchBar'
 
@@ -51,7 +51,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     settings,
   })
 
-  const currentWorkspaceStr = useMemo(() => JSON.stringify(controller.workspace), [controller.workspace])
+  const currentWorkspaceStr = useMemo(() => serializeWorkspace(controller.workspace), [controller.workspace])
 
   useEffect(() => {
     let isMounted = true

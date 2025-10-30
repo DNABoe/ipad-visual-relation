@@ -57,3 +57,60 @@ export function rectsIntersect(
     r1.y + r1.height < r2.y
   )
 }
+
+export function findBranchNodesBelow(
+  connectionId: string,
+  connections: { id: string; fromPersonId: string; toPersonId: string }[],
+  persons: { id: string }[]
+): string[] {
+  const connection = connections.find(c => c.id === connectionId)
+  if (!connection) return []
+
+  const adjacencyMap = new Map<string, string[]>()
+  connections.forEach(conn => {
+    if (!adjacencyMap.has(conn.fromPersonId)) {
+      adjacencyMap.set(conn.fromPersonId, [])
+    }
+    adjacencyMap.get(conn.fromPersonId)!.push(conn.toPersonId)
+  })
+
+  const startNode = connection.toPersonId
+  const visited = new Set<string>()
+  const branchNodes: string[] = []
+
+  const dfs = (nodeId: string) => {
+    if (visited.has(nodeId)) return
+    visited.add(nodeId)
+    branchNodes.push(nodeId)
+
+    const neighbors = adjacencyMap.get(nodeId) || []
+    neighbors.forEach(neighborId => {
+      dfs(neighborId)
+    })
+  }
+
+  dfs(startNode)
+
+  branchNodes.shift()
+
+  return branchNodes
+}
+
+export function serializeWorkspace(workspace: any): string {
+  const serialized = {
+    ...workspace,
+    collapsedBranches: workspace.collapsedBranches 
+      ? Array.from(workspace.collapsedBranches.entries())
+      : []
+  }
+  return JSON.stringify(serialized)
+}
+
+export function deserializeWorkspace(data: string): any {
+  const parsed = JSON.parse(data)
+  const collapsedBranches = new Map(parsed.collapsedBranches || [])
+  return {
+    ...parsed,
+    collapsedBranches
+  }
+}

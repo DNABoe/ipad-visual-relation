@@ -423,6 +423,17 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           const isHighlighted = highlightedPersonIds?.has(person.id) ?? false
           const isDimmed = searchActive && highlightedPersonIds && highlightedPersonIds.size > 0 && !isHighlighted
           
+          const collapsedBranches = controller.workspace.collapsedBranches || new Map()
+          let hasCollapsedBranch = false
+          
+          for (const [connectionId, branchPersonIds] of collapsedBranches.entries()) {
+            const connection = controller.workspace.connections.find(c => c.id === connectionId)
+            if (connection && connection.toPersonId === person.id && branchPersonIds.length > 0) {
+              hasCollapsedBranch = true
+              break
+            }
+          }
+          
           return (
           <PersonNode
             key={person.id}
@@ -431,6 +442,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
+            hasCollapsedBranch={hasCollapsedBranch}
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return
@@ -461,6 +473,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               e.preventDefault()
               e.stopPropagation()
               controller.handlers.handlePersonContextMenu(person.id, e, e.ctrlKey || e.metaKey)
+            }}
+            onExpandBranch={(e) => {
+              e.stopPropagation()
+              controller.handlers.handleExpandBranchFromPerson(person.id)
             }}
             style={{ pointerEvents: 'auto' }}
           />
@@ -571,7 +587,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           onConnectionContextMenu={(connectionId, e) => {
             e.preventDefault()
             e.stopPropagation()
-            controller.selection.selectConnection(connectionId, false)
+            controller.handlers.handleConnectionContextMenu(connectionId, e)
           }}
         />
       </div>

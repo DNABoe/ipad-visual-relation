@@ -374,14 +374,62 @@ export function WorkspaceToolbar({
               )}
 
               {controller.selection.selectedConnections.length > 0 && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
-                      <LinkBreak size={18} weight="bold" className="text-destructive" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Delete Selected Connections</TooltipContent>
-                </Tooltip>
+                <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          if (controller.selection.selectedConnections.length === 1) {
+                            const connectionId = controller.selection.selectedConnections[0]
+                            const collapsedBranches = controller.workspace.collapsedBranches || new Map()
+                            
+                            if (collapsedBranches.has(connectionId)) {
+                              controller.handlers.handleExpandBranch(connectionId)
+                            } else {
+                              controller.handlers.handleCollapseBranch(connectionId)
+                            }
+                          }
+                        }}
+                        disabled={controller.selection.selectedConnections.length !== 1}
+                        className="hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
+                      >
+                        {(() => {
+                          if (controller.selection.selectedConnections.length === 1) {
+                            const connectionId = controller.selection.selectedConnections[0]
+                            const collapsedBranches = controller.workspace.collapsedBranches || new Map()
+                            const isCollapsed = collapsedBranches.has(connectionId)
+                            
+                            return isCollapsed ? (
+                              <Eye size={18} weight="duotone" className="text-success" />
+                            ) : (
+                              <EyeSlash size={18} weight="duotone" className="text-accent" />
+                            )
+                          }
+                          return <GitBranch size={18} weight="duotone" className="text-muted-foreground" />
+                        })()}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {controller.selection.selectedConnections.length === 1 
+                        ? (() => {
+                            const connectionId = controller.selection.selectedConnections[0]
+                            const collapsedBranches = controller.workspace.collapsedBranches || new Map()
+                            return collapsedBranches.has(connectionId) ? 'Expand Branch' : 'Hide Branch Below'
+                          })()
+                        : 'Select 1 connection to hide/show branch'}
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                        <LinkBreak size={18} weight="bold" className="text-destructive" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Selected Connections</TooltipContent>
+                  </Tooltip>
+                </>
               )}
             </>
           )}
