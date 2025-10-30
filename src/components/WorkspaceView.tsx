@@ -465,6 +465,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         }}
         connection={controller.dialogs.collapseBranchDialog.connection || null}
         persons={controller.workspace.persons}
+        connections={controller.workspace.connections}
         onConfirm={controller.handlers.handleCollapseBranch}
       />
 

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getInitials } from '@/lib/helpers'
+import { getInitials, findAllDescendants } from '@/lib/helpers'
 import type { Person, Connection } from '@/lib/types'
 
 interface CollapseBranchDialogProps {
@@ -19,6 +19,7 @@ interface CollapseBranchDialogProps {
   onOpenChange: (open: boolean) => void
   connection: Connection | null
   persons: Person[]
+  connections: Connection[]
   onConfirm: (parentId: string, childIds: string[]) => void
 }
 
@@ -27,6 +28,7 @@ export function CollapseBranchDialog({
   onOpenChange,
   connection,
   persons,
+  connections,
   onConfirm,
 }: CollapseBranchDialogProps) {
   const [selectedParentId, setSelectedParentId] = useState<string>('')
@@ -42,7 +44,8 @@ export function CollapseBranchDialog({
     if (!selectedParentId) return
 
     const childId = selectedParentId === fromPerson.id ? toPerson.id : fromPerson.id
-    onConfirm(selectedParentId, [childId])
+    const allDescendants = findAllDescendants(childId, connections)
+    onConfirm(selectedParentId, [childId, ...allDescendants])
     onOpenChange(false)
     setSelectedParentId('')
   }

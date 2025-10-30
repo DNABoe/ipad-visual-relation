@@ -96,6 +96,37 @@ export function findBranchNodesBelow(
   return branchNodes
 }
 
+export function findAllDescendants(
+  startPersonId: string,
+  connections: { fromPersonId: string; toPersonId: string }[]
+): string[] {
+  const adjacencyMap = new Map<string, string[]>()
+  connections.forEach(conn => {
+    if (!adjacencyMap.has(conn.fromPersonId)) {
+      adjacencyMap.set(conn.fromPersonId, [])
+    }
+    adjacencyMap.get(conn.fromPersonId)!.push(conn.toPersonId)
+  })
+
+  const visited = new Set<string>()
+  const descendants: string[] = []
+
+  const dfs = (nodeId: string) => {
+    if (visited.has(nodeId)) return
+    visited.add(nodeId)
+
+    const children = adjacencyMap.get(nodeId) || []
+    children.forEach(childId => {
+      descendants.push(childId)
+      dfs(childId)
+    })
+  }
+
+  dfs(startPersonId)
+
+  return descendants
+}
+
 export function serializeWorkspace(workspace: any): string {
   return JSON.stringify(workspace)
 }
