@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   MagnifyingGlass,
   X,
@@ -165,8 +166,9 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
   }, [query, minScore, maxScore, selectedPositions, selectedGroupIds, selectedFrameColors, advocateOnly])
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <div className="relative flex-1 max-w-md">
+    <TooltipProvider>
+      <div className={cn('flex items-center gap-2', className)}>
+        <div className="relative flex-1 max-w-md">
         <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input
           ref={inputRef}
@@ -466,16 +468,24 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
         </PopoverContent>
       </Popover>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onFindPath}
-        disabled={!canFindPath}
-        title={canFindPath ? 'Find shortest path between two selected persons' : 'Select exactly 2 persons'}
-      >
-        <Path size={18} weight="duotone" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onFindPath}
+            disabled={!canFindPath}
+            className="hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
+          >
+            <Path size={18} weight="duotone" className={canFindPath ? "text-accent" : "text-muted-foreground"} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {canFindPath ? 'Find Shortest Path' : 'Select 2 persons to find path'}
+        </TooltipContent>
+      </Tooltip>
     </div>
+    </TooltipProvider>
   )
 })
 
