@@ -39,6 +39,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [searchActive, setSearchActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  const [canvasKey, setCanvasKey] = useState(0)
   const searchBarRef = useRef<SearchBarRef>(null!)
 
   const controller = useWorkspaceController({
@@ -319,6 +320,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     if (showListPanel !== undefined) {
       const timeoutId = setTimeout(() => {
         window.dispatchEvent(new Event('resize'))
+        setCanvasKey(prev => prev + 1)
       }, 100)
       return () => clearTimeout(timeoutId)
     }
@@ -352,6 +354,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         )}
 
         <WorkspaceCanvas
+          key={canvasKey}
           controller={controller}
           highlightedPersonIds={highlightedPersonIds}
           searchActive={searchActive}

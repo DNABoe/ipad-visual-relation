@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
@@ -17,12 +17,17 @@ interface WorkspaceCanvasProps {
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive }: WorkspaceCanvasProps) {
   const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
+  const [, forceUpdate] = useState({})
 
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20
   const showGrid = settings?.showGrid ?? true
   const organicLines = settings?.organicLines ?? false
   const gridOpacity = settings?.gridOpacity ?? 15
+
+  useEffect(() => {
+    forceUpdate({})
+  }, [settings])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
