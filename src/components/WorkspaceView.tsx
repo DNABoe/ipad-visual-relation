@@ -292,6 +292,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       setShortestPathPersonIds([])
       setHighlightedPersonIds(new Set())
       setSearchActive(false)
+      setCanvasKey(prev => prev + 1)
       toast.info('Shortest path view cleared')
       return
     }
@@ -413,6 +414,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         workspace={controller.workspace}
         onImport={controller.handlers.replaceWorkspace}
         onLogout={onLogout}
+        onRefreshCanvas={handleRefreshCanvas}
       />
 
       {controller.dialogs.photoViewer.photoUrl && (

@@ -422,6 +422,11 @@ export function CanvasEdges({
       }
       animationFrameRef.current = requestAnimationFrame(animate)
     } else {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
+      }
+      particlesRef.current = []
       drawFrame(0)
     }
 

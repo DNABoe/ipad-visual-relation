@@ -29,7 +29,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
 
   useEffect(() => {
     forceUpdate({})
-  }, [settings])
+  }, [settings?.showGrid, settings?.gridSize, settings?.gridOpacity, settings?.snapToGrid, settings?.organicLines, isShortestPathActive, shortestPathPersonIds.length])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current

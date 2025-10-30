@@ -21,9 +21,10 @@ interface SettingsDialogProps {
   workspace: Workspace
   onImport: (workspace: Workspace) => void
   onLogout?: () => void
+  onRefreshCanvas?: () => void
 }
 
-export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout, onRefreshCanvas }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [userCredentials, setUserCredentials] = useKV<{
@@ -147,6 +148,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     onCheckedChange={async (checked) => {
                       const newSettings = { ...appSettings!, showGrid: checked }
                       await setAppSettings(newSettings)
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                   />
                 </div>
@@ -164,6 +166,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     onCheckedChange={async (checked) => {
                       const newSettings = { ...appSettings!, snapToGrid: checked }
                       await setAppSettings(newSettings)
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                   />
                 </div>
@@ -182,6 +185,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     onValueChange={async (value) => {
                       const newSettings = { ...appSettings!, gridSize: value[0] }
                       await setAppSettings(newSettings)
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                     className="w-full"
                   />
@@ -204,6 +208,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     onValueChange={async (value) => {
                       const newSettings = { ...appSettings!, gridOpacity: value[0] }
                       await setAppSettings(newSettings)
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                     className="w-full"
                   />
@@ -228,6 +233,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     onCheckedChange={async (checked) => {
                       const newSettings = { ...appSettings!, organicLines: checked }
                       await setAppSettings(newSettings)
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                   />
                 </div>
