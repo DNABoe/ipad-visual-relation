@@ -20,6 +20,7 @@ interface WorkspaceCanvasProps {
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
   const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   const [, forceUpdate] = useState({})
+  const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
 
   const snapToGrid = settings?.snapToGrid ?? false
   const gridSize = settings?.gridSize ?? 20
@@ -38,17 +39,47 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const { x, y, scale } = controller.transform.transform
     const scaledGridSize = gridSize * scale
     
-    canvas.style.setProperty('--grid-size', `${gridSize}px`)
+    canvas.style.setProperty('--grid-size', `${scaledGridSize}px`)
     canvas.style.setProperty('--grid-opacity', `${gridOpacity / 100}`)
-    canvas.style.backgroundSize = `${scaledGridSize}px ${scaledGridSize}px`
-    canvas.style.backgroundPosition = `${x}px ${y}px`
+    canvas.style.setProperty('--grid-x', `${x}px`)
+    canvas.style.setProperty('--grid-y', `${y}px`)
     
-    if (showGrid) {
-      canvas.classList.add('canvas-grid')
+    if (previousShowGrid !== undefined && previousShowGrid !== showGrid) {
+      canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out', 'canvas-grid')
+      
+      void canvas.offsetHeight
+      
+      if (showGrid) {
+        canvas.classList.add('canvas-grid')
+        requestAnimationFrame(() => {
+          canvas.classList.add('canvas-grid-fade-in')
+        })
+        
+        const timeout = setTimeout(() => {
+          canvas.classList.remove('canvas-grid-fade-in')
+        }, 450)
+        
+        return () => clearTimeout(timeout)
+      } else {
+        canvas.classList.add('canvas-grid', 'canvas-grid-fade-out')
+        
+        const timeout = setTimeout(() => {
+          canvas.classList.remove('canvas-grid', 'canvas-grid-fade-out')
+        }, 450)
+        
+        return () => clearTimeout(timeout)
+      }
     } else {
-      canvas.classList.remove('canvas-grid')
+      if (showGrid) {
+        canvas.classList.add('canvas-grid')
+        canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out')
+      } else {
+        canvas.classList.remove('canvas-grid', 'canvas-grid-fade-in', 'canvas-grid-fade-out')
+      }
     }
-  }, [settings, gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
+    
+    setPreviousShowGrid(showGrid)
+  }, [settings, gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller

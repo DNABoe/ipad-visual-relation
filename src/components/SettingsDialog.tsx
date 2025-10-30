@@ -147,6 +147,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     checked={appSettings?.showGrid ?? true}
                     onCheckedChange={(checked) => {
                       setAppSettings((current) => ({ ...current!, showGrid: checked }))
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                   />
                 </div>
@@ -163,6 +164,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     checked={appSettings?.snapToGrid ?? false}
                     onCheckedChange={(checked) => {
                       setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                   />
                 </div>
@@ -180,6 +182,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     value={[appSettings?.gridSize ?? 20]}
                     onValueChange={(value) => {
                       setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                     className="w-full"
                   />
@@ -201,6 +204,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     value={[appSettings?.gridOpacity ?? 15]}
                     onValueChange={(value) => {
                       setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                     className="w-full"
                   />
@@ -224,6 +228,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     checked={appSettings?.organicLines ?? false}
                     onCheckedChange={(checked) => {
                       setAppSettings((current) => ({ ...current!, organicLines: checked }))
+                      setTimeout(() => onRefreshCanvas?.(), 50)
                     }}
                   />
                 </div>
