@@ -18,7 +18,7 @@ interface WorkspaceCanvasProps {
 }
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
-  const [settings, , ] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
+  const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
   const [forceUpdateKey, setForceUpdateKey] = useState(0)
   
@@ -27,6 +27,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
   const organicLines = settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines
   const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
+
+  useEffect(() => {
+    console.log('[WorkspaceCanvas] Settings changed:', { showGrid, gridSize, gridOpacity, snapToGrid, organicLines })
+  }, [showGrid, gridSize, gridOpacity, snapToGrid, organicLines])
 
   const collapsedBranchesMap = useMemo(() => {
     const map = new Map<string, { collapsedPersonIds: string[] }>()
