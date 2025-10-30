@@ -63,11 +63,10 @@ export function WorkspaceToolbar({
   const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
   const showGrid = settings?.showGrid ?? true
-  const setShowGrid = (show: boolean) => {
-    setSettings((current) => ({
-      ...current!,
-      showGrid: show,
-    }))
+  
+  const toggleGrid = async () => {
+    const newSettings = { ...settings!, showGrid: !showGrid }
+    await setSettings(newSettings)
   }
 
   const handleSaveClick = () => {
@@ -248,7 +247,7 @@ export function WorkspaceToolbar({
               <Button
                 variant={showGrid ? "default" : "outline"}
                 size="sm"
-                onClick={() => setShowGrid(!showGrid)}
+                onClick={toggleGrid}
                 className={showGrid ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
               >
                 <GridFour size={18} weight={showGrid ? "fill" : "duotone"} className={showGrid ? "" : "text-muted-foreground"} />

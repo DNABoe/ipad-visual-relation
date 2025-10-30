@@ -145,7 +145,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     id="show-grid-toggle"
                     checked={appSettings?.showGrid ?? true}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...current!, showGrid: checked }))
+                      const newSettings = { ...appSettings!, showGrid: checked }
+                      await setAppSettings(newSettings)
                     }}
                   />
                 </div>
@@ -161,7 +162,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     id="snap-toggle"
                     checked={appSettings?.snapToGrid ?? false}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
+                      const newSettings = { ...appSettings!, snapToGrid: checked }
+                      await setAppSettings(newSettings)
                     }}
                   />
                 </div>
@@ -178,7 +180,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     step={10}
                     value={[appSettings?.gridSize ?? 20]}
                     onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
+                      const newSettings = { ...appSettings!, gridSize: value[0] }
+                      await setAppSettings(newSettings)
                     }}
                     className="w-full"
                   />
@@ -199,7 +202,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     step={5}
                     value={[appSettings?.gridOpacity ?? 15]}
                     onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
+                      const newSettings = { ...appSettings!, gridOpacity: value[0] }
+                      await setAppSettings(newSettings)
                     }}
                     className="w-full"
                   />
@@ -222,7 +226,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     id="organic-toggle"
                     checked={appSettings?.organicLines ?? false}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...current!, organicLines: checked }))
+                      const newSettings = { ...appSettings!, organicLines: checked }
+                      await setAppSettings(newSettings)
                     }}
                   />
                 </div>

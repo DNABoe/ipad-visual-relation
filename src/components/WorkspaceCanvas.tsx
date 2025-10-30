@@ -41,7 +41,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     } else {
       canvas.classList.remove('canvas-grid')
     }
-  }, [gridSize, showGrid, gridOpacity, controller.transform.transform, controller.canvasRef, settings])
+  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers } = controller
