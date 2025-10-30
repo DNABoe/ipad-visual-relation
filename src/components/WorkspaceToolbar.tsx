@@ -38,6 +38,7 @@ import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
 import type { AppSettings } from '@/lib/types'
 import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
+import { findAllDescendants } from '@/lib/helpers'
 
 interface WorkspaceToolbarProps {
   fileName: string
@@ -366,7 +367,18 @@ export function WorkspaceToolbar({
                             } else if (toBranch) {
                               controller.handlers.handleExpandBranch(connection.toPersonId)
                             } else {
-                              controller.dialogs.openCollapseBranchDialog(connection)
+                              const selectedPersonId = controller.selection.selectedPersons.length === 1 
+                                ? controller.selection.selectedPersons[0] 
+                                : null
+                              
+                              if (selectedPersonId && (selectedPersonId === connection.fromPersonId || selectedPersonId === connection.toPersonId)) {
+                                const parentId = selectedPersonId
+                                const childId = selectedPersonId === connection.fromPersonId ? connection.toPersonId : connection.fromPersonId
+                                const allDescendants = findAllDescendants(childId, controller.workspace.connections)
+                                controller.handlers.handleCollapseBranch(parentId, [childId, ...allDescendants])
+                              } else {
+                                controller.dialogs.openCollapseBranchDialog(connection)
+                              }
                             }
                           }
                         }}
