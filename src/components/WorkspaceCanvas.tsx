@@ -428,7 +428,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           
           for (const [connectionId, branchPersonIds] of collapsedBranches.entries()) {
             const connection = controller.workspace.connections.find(c => c.id === connectionId)
-            if (connection && connection.toPersonId === person.id && branchPersonIds.length > 0) {
+            if (connection && connection.fromPersonId === person.id && branchPersonIds.length > 0) {
               hasCollapsedBranch = true
               break
             }

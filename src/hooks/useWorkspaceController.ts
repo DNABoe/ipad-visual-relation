@@ -142,7 +142,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     
     for (const [connectionId, branchPersonIds] of collapsedBranches.entries()) {
       const connection = workspaceState.workspace.connections.find(c => c.id === connectionId)
-      if (connection && connection.toPersonId === personId) {
+      if (connection && connection.fromPersonId === personId) {
         handleExpandBranch(connectionId)
         return
       }

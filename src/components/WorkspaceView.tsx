@@ -43,8 +43,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const searchBarRef = useRef<SearchBarRef>(null!)
   const [shortestPathPersonIds, setShortestPathPersonIds] = useState<string[]>([])
   const [isShortestPathActive, setIsShortestPathActive] = useState(false)
-  const [leafBranchPersonIds, setLeafBranchPersonIds] = useState<string[]>([])
-  const [leafBranchesHidden, setLeafBranchesHidden] = useState(false)
 
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
@@ -341,66 +339,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     toast.success('Canvas refreshed')
   }, [])
 
-  const handleToggleLeafBranches = useCallback(() => {
-    if (controller.selection.selectedPersons.length !== 1) {
-      toast.error('Please select exactly 1 person')
-      return
-    }
-
-    const rootPersonId = controller.selection.selectedPersons[0]
-    const rootPerson = controller.workspace.persons.find(p => p.id === rootPersonId)
-
-    if (leafBranchesHidden) {
-      controller.handlers.setWorkspace((ws) => ({
-        ...ws,
-        persons: ws.persons.map(p => 
-          leafBranchPersonIds.includes(p.id) ? { ...p, hidden: false } : p
-        )
-      }))
-      setLeafBranchesHidden(false)
-      setLeafBranchPersonIds([])
-      toast.success('Leaf branches shown')
-    } else {
-      const leafIds = findLeafTerminatedBranches(
-        rootPersonId,
-        controller.workspace.persons,
-        controller.workspace.connections
-      )
-
-      if (leafIds.length === 0) {
-        toast.info(`${rootPerson?.name} has no leaf-terminated branches`)
-        return
-      }
-
-      controller.handlers.setWorkspace((ws) => ({
-        ...ws,
-        persons: ws.persons.map(p => 
-          leafIds.includes(p.id) ? { ...p, hidden: true } : p
-        )
-      }))
-      setLeafBranchPersonIds(leafIds)
-      setLeafBranchesHidden(true)
-      toast.success(`Hidden ${leafIds.length} person${leafIds.length === 1 ? '' : 's'} in leaf branches`)
-    }
-    
-    setCanvasKey(prev => prev + 1)
-  }, [controller, leafBranchesHidden, leafBranchPersonIds])
-
-  const hasLeafBranchesToToggle = controller.selection.selectedPersons.length === 1
-  
-  useEffect(() => {
-    if (controller.selection.selectedPersons.length !== 1) {
-      if (leafBranchesHidden) {
-        controller.handlers.setWorkspace((ws) => ({
-          ...ws,
-          persons: ws.persons.map(p => ({ ...p, hidden: false }))
-        }))
-        setLeafBranchesHidden(false)
-        setLeafBranchPersonIds([])
-      }
-    }
-  }, [controller.selection.selectedPersons.length, leafBranchesHidden, controller.handlers])
-
   useEffect(() => {
     if (showListPanel !== undefined) {
       const timeoutId = setTimeout(() => {
@@ -426,9 +364,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         isShortestPathActive={isShortestPathActive}
         searchBarRef={searchBarRef}
         onRefreshCanvas={handleRefreshCanvas}
-        onToggleLeafBranches={handleToggleLeafBranches}
-        hasLeafBranchesToToggle={hasLeafBranchesToToggle}
-        leafBranchesHidden={leafBranchesHidden}
       />
 
       <div className="flex-1 flex overflow-hidden">
