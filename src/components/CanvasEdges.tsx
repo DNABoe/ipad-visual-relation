@@ -253,6 +253,22 @@ export function CanvasEdges({
     hitCtx.restore()
   }, [persons, connections, transform, selectedConnections, organicLines])
 
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      const event = new Event('canvasResize')
+      canvas.dispatchEvent(event)
+    })
+
+    resizeObserver.observe(canvas)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [])
+
   const getConnectionIdAtPosition = (clientX: number, clientY: number): string | null => {
     if (!hitCanvasRef.current) return null
     

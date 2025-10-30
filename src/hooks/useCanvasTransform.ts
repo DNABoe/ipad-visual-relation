@@ -59,6 +59,22 @@ export function useCanvasTransform() {
     isPanning.current = false
   }, [])
 
+  const zoomToArea = useCallback((centerX: number, centerY: number, width: number, height: number) => {
+    const canvasWidth = window.innerWidth
+    const canvasHeight = window.innerHeight
+    
+    const scaleX = canvasWidth / width
+    const scaleY = canvasHeight / height
+    const targetScale = Math.min(scaleX, scaleY, MAX_ZOOM) * 0.8
+    
+    const finalScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, targetScale))
+    
+    const x = canvasWidth / 2 - centerX * finalScale
+    const y = canvasHeight / 2 - centerY * finalScale
+    
+    setTransform({ x, y, scale: finalScale })
+  }, [])
+
   return {
     transform,
     pan,
@@ -71,5 +87,6 @@ export function useCanvasTransform() {
     isPanning: isPanning.current,
     startPanning,
     stopPanning,
+    zoomToArea,
   }
 }

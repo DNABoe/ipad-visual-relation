@@ -15,11 +15,13 @@ interface ListPanelProps {
   groups: Group[]
   selectedPersons: string[]
   onPersonClick: (id: string) => void
+  searchQuery?: string
+  highlightedPersonIds?: Set<string>
 }
 
 type SortBy = 'name-asc' | 'name-desc' | 'position-asc' | 'position-desc' | 'score-asc' | 'score-desc' | 'created-new' | 'created-old'
 
-export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: ListPanelProps) {
+export function ListPanel({ persons, groups, selectedPersons, onPersonClick, searchQuery, highlightedPersonIds }: ListPanelProps) {
   const [sortBy, setSortBy] = useState<SortBy>('created-new')
   const [filterGroup, setFilterGroup] = useState<string>('all')
 
@@ -46,11 +48,15 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick }: L
     }
   })
 
-  const filteredPersons = filterGroup === 'all'
+  let filteredPersons = filterGroup === 'all'
     ? sortedPersons
     : filterGroup === 'none'
     ? sortedPersons.filter(p => !p.groupId)
     : sortedPersons.filter(p => p.groupId === filterGroup)
+
+  if (searchQuery && highlightedPersonIds && highlightedPersonIds.size > 0) {
+    filteredPersons = filteredPersons.filter(p => highlightedPersonIds.has(p.id))
+  }
 
   return (
     <div className="w-80 border-r flex flex-col" style={{ backgroundColor: '#1F2833', borderColor: '#2E3B4E' }}>

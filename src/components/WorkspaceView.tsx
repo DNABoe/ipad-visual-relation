@@ -37,6 +37,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [highlightedPersonIds, setHighlightedPersonIds] = useState<Set<string>>(new Set())
   const [searchActive, setSearchActive] = useState(false)
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const searchBarRef = useRef<SearchBarRef>(null!)
 
@@ -265,6 +266,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     const matchIds = new Set(matches.map(p => p.id))
     setHighlightedPersonIds(matchIds)
     setSearchActive(true)
+    setSearchQuery(criteria.query || '')
     
     if (matches.length === 0) {
       toast.info('No persons match the search criteria')
@@ -276,6 +278,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const handleClearSearch = useCallback(() => {
     setHighlightedPersonIds(new Set())
     setSearchActive(false)
+    setSearchQuery('')
   }, [])
 
   const handleFindPath = useCallback(() => {
@@ -312,6 +315,15 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   const canFindPath = controller.selection.selectedPersons.length === 2
 
+  useEffect(() => {
+    if (showListPanel !== undefined) {
+      const timeoutId = setTimeout(() => {
+        window.dispatchEvent(new Event('resize'))
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [showListPanel])
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <WorkspaceToolbar
@@ -334,6 +346,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
             groups={controller.workspace.groups}
             selectedPersons={controller.selection.selectedPersons}
             onPersonClick={(id) => controller.handlers.handleFocusPerson(id)}
+            searchQuery={searchQuery}
+            highlightedPersonIds={highlightedPersonIds}
           />
         )}
 
