@@ -161,15 +161,14 @@
   background-position: var(--grid-x, 0) var(--grid-y, 0);
   pointer-events: none;
   opacity: 1;
-  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .canvas-grid-fade-in::before {
-  animation: gridFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: gridFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .canvas-grid-fade-out::before {
-  animation: gridFadeOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: gridFadeOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes gridFadeIn {

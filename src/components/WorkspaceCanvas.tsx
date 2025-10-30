@@ -99,41 +99,39 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     canvas.style.setProperty('--grid-x', `${x}px`)
     canvas.style.setProperty('--grid-y', `${y}px`)
     
-    if (previousShowGrid !== undefined && previousShowGrid !== showGrid) {
-      canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out', 'canvas-grid')
-      
-      void canvas.offsetHeight
-      
-      if (showGrid) {
+    if (showGrid) {
+      if (previousShowGrid === false) {
+        canvas.classList.remove('canvas-grid-fade-out')
         canvas.classList.add('canvas-grid')
-        requestAnimationFrame(() => {
-          canvas.classList.add('canvas-grid-fade-in')
-        })
+        void canvas.offsetHeight
+        canvas.classList.add('canvas-grid-fade-in')
         
         const timeout = setTimeout(() => {
           canvas.classList.remove('canvas-grid-fade-in')
-        }, 450)
+        }, 350)
         
+        setPreviousShowGrid(showGrid)
         return () => clearTimeout(timeout)
       } else {
-        canvas.classList.add('canvas-grid', 'canvas-grid-fade-out')
+        canvas.classList.add('canvas-grid')
+        canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out')
+        setPreviousShowGrid(showGrid)
+      }
+    } else {
+      if (previousShowGrid === true) {
+        canvas.classList.add('canvas-grid-fade-out')
         
         const timeout = setTimeout(() => {
           canvas.classList.remove('canvas-grid', 'canvas-grid-fade-out')
-        }, 450)
+        }, 350)
         
+        setPreviousShowGrid(showGrid)
         return () => clearTimeout(timeout)
-      }
-    } else {
-      if (showGrid) {
-        canvas.classList.add('canvas-grid')
-        canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out')
       } else {
         canvas.classList.remove('canvas-grid', 'canvas-grid-fade-in', 'canvas-grid-fade-out')
+        setPreviousShowGrid(showGrid)
       }
     }
-    
-    setPreviousShowGrid(showGrid)
   }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid, forceUpdateKey])
 
   const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
