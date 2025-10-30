@@ -163,6 +163,8 @@ export function PersonNode({
           <div className="flex-1 min-w-0 space-y-1 pt-1">
             <h3 className="font-semibold text-sm leading-tight break-words tracking-tight text-foreground">{person.name}</h3>
             {person.position && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position}</p>}
+            {person.position2 && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position2}</p>}
+            {person.position3 && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position3}</p>}
           </div>
           <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1.5 border-0 bg-primary text-primary-foreground mt-1" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>
             {person.score}

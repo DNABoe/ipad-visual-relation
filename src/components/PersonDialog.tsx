@@ -69,14 +69,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const handleSave = () => {
     if (!name.trim()) return
 
-    const positionLines = position.split('\n').slice(0, 3)
+    const positionLines = position.split('\n').map(line => line.trim()).slice(0, 3)
     
     const person: Person = {
       id: editPerson?.id || generateId(),
       name: name.trim(),
-      position: positionLines[0]?.trim() || '',
-      position2: positionLines[1]?.trim() || undefined,
-      position3: positionLines[2]?.trim() || undefined,
+      position: positionLines[0] || '',
+      position2: positionLines[1] || undefined,
+      position3: positionLines[2] || undefined,
       score,
       frameColor,
       photo,
