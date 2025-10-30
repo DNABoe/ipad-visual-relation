@@ -402,14 +402,19 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               e.stopPropagation()
               if (e.button !== 0) return
               if (controller.interaction.isConnecting || controller.interaction.dragState.type === 'connection') return
-              controller.interaction.startPersonDrag(person.id)
-              if (!controller.selection.selectedPersons.includes(person.id)) {
+              
+              const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
+              
+              if (!isMultiSelect && !controller.selection.selectedPersons.includes(person.id)) {
                 controller.selection.selectPerson(person.id, false)
               }
+              
+              controller.interaction.startPersonDrag(person.id)
             }}
             onClick={(e) => {
               e.stopPropagation()
-              controller.handlers.handlePersonClick(person.id, e.shiftKey || e.ctrlKey || e.metaKey)
+              const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
+              controller.handlers.handlePersonClick(person.id, isMultiSelect)
             }}
             onDoubleClick={(e) => {
               e.stopPropagation()
