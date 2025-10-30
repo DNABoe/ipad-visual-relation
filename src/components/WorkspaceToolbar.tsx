@@ -219,17 +219,17 @@ export function WorkspaceToolbar({
                 variant={isShortestPathActive ? "default" : "outline"}
                 size="sm"
                 onClick={onFindPath}
-                disabled={!canFindPath}
+                disabled={!canFindPath && !isShortestPathActive}
                 className={isShortestPathActive 
                   ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
                   : "hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
                 }
               >
-                <Path size={18} weight={isShortestPathActive ? "fill" : "duotone"} className={canFindPath ? (isShortestPathActive ? "" : "text-warning") : "text-muted-foreground"} />
+                <Path size={18} weight={isShortestPathActive ? "fill" : "duotone"} className={canFindPath || isShortestPathActive ? (isShortestPathActive ? "" : "text-warning") : "text-muted-foreground"} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {canFindPath ? 'Find Shortest Path (Select 2 persons)' : 'Select 2 persons to find shortest path'}
+              {isShortestPathActive ? 'Clear Shortest Path' : (canFindPath ? 'Find Shortest Path (Select 2 persons)' : 'Select 2 persons to find shortest path')}
             </TooltipContent>
           </Tooltip>
 
