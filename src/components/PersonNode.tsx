@@ -126,13 +126,7 @@ export function PersonNode({
             : '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
         }}
         onMouseDown={onMouseDown}
-        onClick={(e) => {
-          if (hasCollapsedBranch && onExpandBranch) {
-            onExpandBranch(e)
-          } else {
-            onClick(e)
-          }
-        }}
+        onClick={onClick}
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}
       >

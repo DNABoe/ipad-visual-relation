@@ -53,6 +53,7 @@ export interface AppSettings {
 export interface CollapsedBranch {
   parentId: string
   collapsedPersonIds: string[]
+  parentPositionAtCollapse: { x: number; y: number }
 }
 
 export interface Workspace {

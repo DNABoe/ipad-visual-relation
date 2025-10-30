@@ -133,8 +133,19 @@ export function serializeWorkspace(workspace: any): string {
 
 export function deserializeWorkspace(data: string): any {
   const parsed = JSON.parse(data)
+  const collapsedBranches = (parsed.collapsedBranches || []).map((branch: any) => {
+    if (!branch.parentPositionAtCollapse) {
+      const parent = parsed.persons?.find((p: any) => p.id === branch.parentId)
+      return {
+        ...branch,
+        parentPositionAtCollapse: parent ? { x: parent.x, y: parent.y } : { x: 0, y: 0 }
+      }
+    }
+    return branch
+  })
+  
   return {
     ...parsed,
-    collapsedBranches: parsed.collapsedBranches || []
+    collapsedBranches
   }
 }

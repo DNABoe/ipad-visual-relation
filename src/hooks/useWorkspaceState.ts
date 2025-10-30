@@ -285,12 +285,17 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
       const collapsedBranches = prev.collapsedBranches || []
       const existingIndex = collapsedBranches.findIndex(b => b.parentId === parentId)
       
+      const parent = prev.persons.find(p => p.id === parentId)
+      if (!parent) return prev
+      
+      const parentPositionAtCollapse = { x: parent.x, y: parent.y }
+      
       let newCollapsed: typeof collapsedBranches
       if (existingIndex >= 0) {
         newCollapsed = [...collapsedBranches]
-        newCollapsed[existingIndex] = { parentId, collapsedPersonIds }
+        newCollapsed[existingIndex] = { parentId, collapsedPersonIds, parentPositionAtCollapse }
       } else {
-        newCollapsed = [...collapsedBranches, { parentId, collapsedPersonIds }]
+        newCollapsed = [...collapsedBranches, { parentId, collapsedPersonIds, parentPositionAtCollapse }]
       }
       
       return {
@@ -311,16 +316,25 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
       const branch = collapsedBranches.find(b => b.parentId === parentId)
       const branchPersonIds = branch?.collapsedPersonIds || []
       
+      if (!branch) return prev
+      
+      const parent = prev.persons.find(p => p.id === parentId)
+      if (!parent) return prev
+      
+      const dx = parent.x - branch.parentPositionAtCollapse.x
+      const dy = parent.y - branch.parentPositionAtCollapse.y
+      
       const newCollapsed = collapsedBranches.filter(b => b.parentId !== parentId)
       
       return {
         ...prev,
         collapsedBranches: newCollapsed,
-        persons: prev.persons.map(p => 
-          branchPersonIds.includes(p.id) 
-            ? { ...p, hidden: false }
-            : p
-        ),
+        persons: prev.persons.map(p => {
+          if (branchPersonIds.includes(p.id)) {
+            return { ...p, hidden: false, x: p.x + dx, y: p.y + dy }
+          }
+          return p
+        }),
       }
     })
   }, [])
