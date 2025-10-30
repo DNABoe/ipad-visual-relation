@@ -100,7 +100,11 @@ export function CanvasEdges({
   const hitCanvasRef = useRef<HTMLCanvasElement>(null)
   const connectionColorMap = useRef<Map<string, string>>(new Map())
   const animationFrameRef = useRef<number | null>(null)
-  const timeRef = useRef<number>(0)
+  const particlesRef = useRef<Array<{
+    connectionIndex: number
+    progress: number
+    speed: number
+  }>>([])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -112,6 +116,8 @@ export function CanvasEdges({
     if (!ctx || !hitCtx) return
 
     const shortestPathConnectionIds = new Set<string>()
+    const shortestPathConnections: Array<{ from: Person, to: Person, conn: Connection }> = []
+    
     if (isShortestPathActive && shortestPathPersonIds.length >= 2) {
       for (let i = 0; i < shortestPathPersonIds.length - 1; i++) {
         const fromId = shortestPathPersonIds[i]
@@ -122,8 +128,29 @@ export function CanvasEdges({
         )
         if (conn) {
           shortestPathConnectionIds.add(conn.id)
+          const personMap = new Map(persons.map(p => [p.id, p]))
+          const from = personMap.get(fromId)
+          const to = personMap.get(toId)
+          if (from && to) {
+            shortestPathConnections.push({ from, to, conn })
+          }
         }
       }
+      
+      if (particlesRef.current.length === 0 || particlesRef.current.length !== shortestPathConnections.length * 3) {
+        particlesRef.current = []
+        for (let i = 0; i < shortestPathConnections.length; i++) {
+          for (let j = 0; j < 3; j++) {
+            particlesRef.current.push({
+              connectionIndex: i,
+              progress: j * 0.33,
+              speed: 0.008 + Math.random() * 0.004,
+            })
+          }
+        }
+      }
+    } else {
+      particlesRef.current = []
     }
 
     const drawFrame = (time: number) => {
@@ -174,6 +201,8 @@ export function CanvasEdges({
         ctx.beginPath()
         ctx.moveTo(fromX, fromY)
         
+        let pathPoints: { x: number, y: number }[] = []
+        
         if (organicLines) {
           const dx = toX - fromX
           const dy = toY - fromY
@@ -192,8 +221,26 @@ export function CanvasEdges({
           const cp2Y = fromY + dy * 0.75 + offsetY
           
           ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, toX, toY)
+          
+          for (let t = 0; t <= 1; t += 0.01) {
+            const mt = 1 - t
+            const mt2 = mt * mt
+            const mt3 = mt2 * mt
+            const t2 = t * t
+            const t3 = t2 * t
+            
+            const x = mt3 * fromX + 3 * mt2 * t * cp1X + 3 * mt * t2 * cp2X + t3 * toX
+            const y = mt3 * fromY + 3 * mt2 * t * cp1Y + 3 * mt * t2 * cp2Y + t3 * toY
+            pathPoints.push({ x, y })
+          }
         } else {
           ctx.lineTo(toX, toY)
+          
+          for (let t = 0; t <= 1; t += 0.01) {
+            const x = fromX + (toX - fromX) * t
+            const y = fromY + (toY - fromY) * t
+            pathPoints.push({ x, y })
+          }
         }
         
         if (isShortestPath) {
@@ -296,6 +343,71 @@ export function CanvasEdges({
         hitCtx.stroke()
       })
 
+      if (isShortestPathActive && shortestPathConnections.length > 0) {
+        particlesRef.current.forEach(particle => {
+          const connData = shortestPathConnections[particle.connectionIndex]
+          if (!connData) return
+          
+          const { from, to } = connData
+          const fromX = from.x + NODE_WIDTH / 2
+          const fromY = from.y + NODE_HEIGHT / 2
+          const toX = to.x + NODE_WIDTH / 2
+          const toY = to.y + NODE_HEIGHT / 2
+          
+          let px: number, py: number
+          
+          if (organicLines) {
+            const dx = toX - fromX
+            const dy = toY - fromY
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            const curvature = Math.min(distance * 0.25, 150)
+            
+            const perpX = -dy / distance
+            const perpY = dx / distance
+            
+            const offsetX = perpX * curvature * 0.3
+            const offsetY = perpY * curvature * 0.3
+            
+            const cp1X = fromX + dx * 0.25 + offsetX
+            const cp1Y = fromY + dy * 0.25 + offsetY
+            const cp2X = fromX + dx * 0.75 + offsetX
+            const cp2Y = fromY + dy * 0.75 + offsetY
+            
+            const t = particle.progress
+            const mt = 1 - t
+            const mt2 = mt * mt
+            const mt3 = mt2 * mt
+            const t2 = t * t
+            const t3 = t2 * t
+            
+            px = mt3 * fromX + 3 * mt2 * t * cp1X + 3 * mt * t2 * cp2X + t3 * toX
+            py = mt3 * fromY + 3 * mt2 * t * cp1Y + 3 * mt * t2 * cp2Y + t3 * toY
+          } else {
+            px = fromX + (toX - fromX) * particle.progress
+            py = fromY + (toY - fromY) * particle.progress
+          }
+          
+          const particleSize = 6 + pulseIntensity * 2
+          const gradient = ctx.createRadialGradient(px, py, 0, px, py, particleSize)
+          gradient.addColorStop(0, 'oklch(1 0.3 185)')
+          gradient.addColorStop(0.5, accentColor)
+          gradient.addColorStop(1, 'oklch(0.88 0.18 185 / 0)')
+          
+          ctx.beginPath()
+          ctx.arc(px, py, particleSize, 0, Math.PI * 2)
+          ctx.fillStyle = gradient
+          ctx.shadowColor = accentColor
+          ctx.shadowBlur = 10
+          ctx.fill()
+          ctx.shadowBlur = 0
+          
+          particle.progress += particle.speed
+          if (particle.progress > 1) {
+            particle.progress = 0
+          }
+        })
+      }
+
       ctx.restore()
       hitCtx.restore()
 
@@ -306,7 +418,6 @@ export function CanvasEdges({
 
     if (isShortestPathActive && shortestPathConnectionIds.size > 0) {
       const animate = (time: number) => {
-        timeRef.current = time
         drawFrame(time)
       }
       animationFrameRef.current = requestAnimationFrame(animate)

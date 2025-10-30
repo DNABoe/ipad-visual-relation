@@ -28,6 +28,7 @@ import {
   CirclesThree,
   ArrowsInCardinal,
   Crosshair,
+  Path,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -44,6 +45,7 @@ interface WorkspaceToolbarProps {
   onClearSearch: () => void
   onFindPath: () => void
   canFindPath: boolean
+  isShortestPathActive: boolean
   searchBarRef: React.RefObject<SearchBarRef>
 }
 
@@ -57,6 +59,7 @@ export function WorkspaceToolbar({
   onClearSearch,
   onFindPath,
   canFindPath,
+  isShortestPathActive,
   searchBarRef,
 }: WorkspaceToolbarProps) {
   const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
@@ -208,6 +211,26 @@ export function WorkspaceToolbar({
             <TooltipContent>Tighten Network</TooltipContent>
           </Tooltip>
 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={isShortestPathActive ? "default" : "outline"}
+                size="sm"
+                onClick={onFindPath}
+                disabled={!canFindPath}
+                className={isShortestPathActive 
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                  : "hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
+                }
+              >
+                <Path size={18} weight={isShortestPathActive ? "fill" : "duotone"} className={canFindPath ? (isShortestPathActive ? "" : "text-warning") : "text-muted-foreground"} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {canFindPath ? 'Find Shortest Path (Select 2 persons)' : 'Select 2 persons to find shortest path'}
+            </TooltipContent>
+          </Tooltip>
+
           <Separator orientation="vertical" className="h-6 bg-border" />
 
           <Tooltip>
@@ -349,8 +372,6 @@ export function WorkspaceToolbar({
           groups={controller.workspace.groups}
           onSearch={onSearch}
           onClear={onClearSearch}
-          onFindPath={onFindPath}
-          canFindPath={canFindPath}
         />
       </div>
     </TooltipProvider>

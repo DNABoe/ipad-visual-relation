@@ -16,7 +16,6 @@ import {
   Funnel,
   ClockCounterClockwise,
   Trash,
-  Path,
 } from '@phosphor-icons/react'
 import type { Person, Group } from '@/lib/types'
 import type { SearchCriteria, SearchHistoryItem } from '@/lib/search'
@@ -29,8 +28,6 @@ interface SearchBarProps {
   groups: Group[]
   onSearch: (criteria: SearchCriteria) => void
   onClear: () => void
-  onFindPath: () => void
-  canFindPath: boolean
   className?: string
 }
 
@@ -43,8 +40,6 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
   groups,
   onSearch,
   onClear,
-  onFindPath,
-  canFindPath,
   className,
 }, ref) => {
   const [searchHistory, setSearchHistory] = useKV<SearchHistoryItem[]>('search-history', [])
@@ -467,23 +462,6 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
           </div>
         </PopoverContent>
       </Popover>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onFindPath}
-            disabled={!canFindPath}
-            className="hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
-          >
-            <Path size={18} weight="duotone" className={canFindPath ? "text-accent" : "text-muted-foreground"} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {canFindPath ? 'Find Shortest Path' : 'Select 2 persons to find path'}
-        </TooltipContent>
-      </Tooltip>
     </div>
     </TooltipProvider>
   )

@@ -346,6 +346,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         onClearSearch={handleClearSearch}
         onFindPath={handleFindPath}
         canFindPath={canFindPath}
+        isShortestPathActive={isShortestPathActive}
         searchBarRef={searchBarRef}
       />
 
