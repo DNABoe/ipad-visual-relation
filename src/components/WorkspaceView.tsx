@@ -255,6 +255,11 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
     controller.dialogs.closeUnsavedDialog()
   }, [controller.dialogs, onNewNetwork, onLoadNetwork])
 
+  const handleSaveAndContinue = useCallback(() => {
+    toast.success('Network saved successfully!')
+    handleUnsavedAction()
+  }, [handleUnsavedAction])
+
   const handleSearch = useCallback((criteria: SearchCriteria) => {
     const matches = searchPersons(controller.workspace.persons, criteria)
     const matchIds = new Set(matches.map(p => p.id))
@@ -385,6 +390,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
           if (!open) controller.dialogs.closeUnsavedDialog()
         }}
         onDiscard={handleUnsavedAction}
+        onSaveAndContinue={handleSaveAndContinue}
         fileName={fileName}
         downloadUrl={downloadUrl}
       />
