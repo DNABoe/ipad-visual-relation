@@ -192,34 +192,25 @@ export function WorkspaceToolbar({
                 <Crosshair size={18} weight="duotone" className="text-success" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Smart Arrange</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleOrganizeByImportance} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Target size={18} weight="duotone" className="text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Organize by Importance</TooltipContent>
+            <TooltipContent>Force-Directed Layout (Minimizes connection length)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={controller.handlers.handleHierarchicalView} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <TreeStructure size={18} weight="duotone" className="text-accent" />
+                <TreeStructure size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Hierarchical View</TooltipContent>
+            <TooltipContent>Hierarchical Tree Layout (Top-down structure)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={controller.handlers.handleTightenNetwork} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <ArrowsInCardinal size={18} weight="duotone" className="text-accent" />
+                <CirclesThree size={18} weight="duotone" className="text-accent" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Tighten Network</TooltipContent>
+            <TooltipContent>Circular Cluster Layout (Groups connected nodes)</TooltipContent>
           </Tooltip>
 
           <Tooltip>

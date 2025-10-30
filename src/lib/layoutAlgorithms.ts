@@ -2,7 +2,7 @@ import type { Person, Connection, FrameColor } from './types'
 
 const CARD_WIDTH = 280
 const CARD_HEIGHT = 160
-const MIN_SPACING = 40
+const MIN_SPACING = 50
 
 interface Point {
   x: number
@@ -32,13 +32,13 @@ function checkOverlap(p1: Person, p2: Person, padding = MIN_SPACING): boolean {
   )
 }
 
-function resolveOverlaps(persons: Person[]): Person[] {
+function resolveOverlaps(persons: Person[], iterations = 150): Person[] {
   const result = [...persons]
-  const maxIterations = 100
   let iteration = 0
 
-  while (iteration < maxIterations) {
+  while (iteration < iterations) {
     let hasOverlap = false
+    let moved = false
 
     for (let i = 0; i < result.length; i++) {
       for (let j = i + 1; j < result.length; j++) {
@@ -50,11 +50,14 @@ function resolveOverlaps(persons: Person[]): Person[] {
           const dist = Math.sqrt(dx * dx + dy * dy)
           
           const minDist = CARD_WIDTH + MIN_SPACING
-          const pushDistance = (minDist - dist) / 2 + 5
+          const pushDistance = (minDist - dist) / 2 + 10
           
           if (dist < 0.01) {
-            result[i].x -= 20
-            result[j].x += 20
+            result[i].x -= 25
+            result[j].x += 25
+            result[i].y += (Math.random() - 0.5) * 20
+            result[j].y += (Math.random() - 0.5) * 20
+            moved = true
           } else {
             const pushX = (dx / dist) * pushDistance
             const pushY = (dy / dist) * pushDistance
@@ -63,133 +66,144 @@ function resolveOverlaps(persons: Person[]): Person[] {
             result[i].y -= pushY
             result[j].x += pushX
             result[j].y += pushY
+            moved = true
           }
         }
       }
     }
 
-    if (!hasOverlap) break
+    if (!hasOverlap || !moved) break
     iteration++
   }
 
   return result
 }
 
-export function organizeByImportance(
+function buildAdjacencyMap(connections: Connection[]): Map<string, Set<string>> {
+  const map = new Map<string, Set<string>>()
+  
+  connections.forEach(conn => {
+    if (!map.has(conn.fromPersonId)) {
+      map.set(conn.fromPersonId, new Set())
+    }
+    if (!map.has(conn.toPersonId)) {
+      map.set(conn.toPersonId, new Set())
+    }
+    map.get(conn.fromPersonId)!.add(conn.toPersonId)
+    map.get(conn.toPersonId)!.add(conn.fromPersonId)
+  })
+  
+  return map
+}
+
+export function forceDirectedLayout(
   persons: Person[],
   connections: Connection[]
 ): Person[] {
   if (persons.length === 0) return []
+  if (persons.length === 1) {
+    const result = [{ ...persons[0], x: 0, y: 0 }]
+    return result
+  }
 
   const result = persons.map(p => ({ ...p }))
-  
-  const connectionMap = new Map<string, Set<string>>()
-  connections.forEach(conn => {
-    if (!connectionMap.has(conn.fromPersonId)) {
-      connectionMap.set(conn.fromPersonId, new Set())
-    }
-    if (!connectionMap.has(conn.toPersonId)) {
-      connectionMap.set(conn.toPersonId, new Set())
-    }
-    connectionMap.get(conn.fromPersonId)!.add(conn.toPersonId)
-    connectionMap.get(conn.toPersonId)!.add(conn.fromPersonId)
-  })
-  
-  const scoreGroups = {
-    1: result.filter(p => p.score === 1),
-    2: result.filter(p => p.score === 2),
-    3: result.filter(p => p.score === 3),
-    4: result.filter(p => p.score === 4),
-    5: result.filter(p => p.score === 5),
-  }
+  const adjacency = buildAdjacencyMap(connections)
 
-  const importantPersons = scoreGroups[1]
-  
-  if (importantPersons.length === 1) {
-    importantPersons[0].x = 0
-    importantPersons[0].y = 0
-  } else if (importantPersons.length > 1) {
-    const smallRadius = 150
-    importantPersons.forEach((person, index) => {
-      const angle = (index / importantPersons.length) * 2 * Math.PI
-      person.x = Math.cos(angle) * smallRadius
-      person.y = Math.sin(angle) * smallRadius
-    })
-  }
+  const OPTIMAL_DISTANCE = 350
+  const REPULSION_STRENGTH = 80000
+  const ATTRACTION_STRENGTH = 0.08
+  const DAMPING = 0.85
+  const MAX_ITERATIONS = 200
+  const VELOCITY_THRESHOLD = 0.5
 
-  const rings = [
-    { score: 2, radius: 400 },
-    { score: 3, radius: 650 },
-    { score: 4, radius: 900 },
-    { score: 5, radius: 1150 },
-  ]
+  const velocities = new Map<string, { vx: number; vy: number }>()
+  result.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
 
-  rings.forEach(({ score, radius }) => {
-    const group = scoreGroups[score as keyof typeof scoreGroups]
-    if (group.length === 0) return
+  for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    const forces = new Map<string, { fx: number; fy: number }>()
+    result.forEach(p => forces.set(p.id, { fx: 0, fy: 0 }))
 
-    group.forEach((person, index) => {
-      const connectedImportant = Array.from(connectionMap.get(person.id) || [])
-        .filter(id => importantPersons.some(p => p.id === id))
-      
-      let targetAngle: number
-      
-      if (connectedImportant.length > 0 && importantPersons.length > 0) {
-        const connectedPositions = connectedImportant
-          .map(id => importantPersons.find(p => p.id === id))
-          .filter(p => p !== undefined) as Person[]
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const p1 = result[i]
+        const p2 = result[j]
         
-        const avgX = connectedPositions.reduce((sum, p) => sum + p.x, 0) / connectedPositions.length
-        const avgY = connectedPositions.reduce((sum, p) => sum + p.y, 0) / connectedPositions.length
-        targetAngle = Math.atan2(avgY, avgX)
-      } else {
-        targetAngle = (index / group.length) * 2 * Math.PI
-      }
-      
-      const angleSpread = (2 * Math.PI) / group.length
-      const jitter = (Math.random() - 0.5) * angleSpread * 0.3
-      targetAngle += jitter
-      
-      person.x = Math.cos(targetAngle) * radius
-      person.y = Math.sin(targetAngle) * radius
-    })
-  })
+        const dx = p2.x - p1.x
+        const dy = p2.y - p1.y
+        const distSq = dx * dx + dy * dy
+        const dist = Math.sqrt(distSq)
+        
+        if (dist < 1) continue
 
-  const maxIterations = 80
-  for (let iter = 0; iter < maxIterations; iter++) {
+        const repulsion = REPULSION_STRENGTH / distSq
+        const fx = (dx / dist) * repulsion
+        const fy = (dy / dist) * repulsion
+        
+        const f1 = forces.get(p1.id)!
+        const f2 = forces.get(p2.id)!
+        f1.fx -= fx
+        f1.fy -= fy
+        f2.fx += fx
+        f2.fy += fy
+      }
+    }
+
+    connections.forEach(conn => {
+      const p1 = result.find(p => p.id === conn.fromPersonId)
+      const p2 = result.find(p => p.id === conn.toPersonId)
+      
+      if (!p1 || !p2) return
+      
+      const dx = p2.x - p1.x
+      const dy = p2.y - p1.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      
+      if (dist < 1) return
+      
+      const displacement = dist - OPTIMAL_DISTANCE
+      const force = displacement * ATTRACTION_STRENGTH
+      
+      const fx = (dx / dist) * force
+      const fy = (dy / dist) * force
+      
+      const f1 = forces.get(p1.id)!
+      const f2 = forces.get(p2.id)!
+      f1.fx += fx
+      f1.fy += fy
+      f2.fx -= fx
+      f2.fy -= fy
+    })
+
+    let maxVelocity = 0
     result.forEach(person => {
-      if (person.score === 1) return
-
-      const connectedIds = Array.from(connectionMap.get(person.id) || [])
-      if (connectedIds.length === 0) return
-
-      const connected = result.filter(p => connectedIds.includes(p.id))
-      const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
-      const avgY = connected.reduce((sum, p) => sum + p.y, 0) / connected.length
-
-      const pullStrength = 0.12
-      const dx = avgX - person.x
-      const dy = avgY - person.y
+      const force = forces.get(person.id)!
+      const vel = velocities.get(person.id)!
       
-      person.x += dx * pullStrength
-      person.y += dy * pullStrength
-
-      const currentDist = Math.sqrt(person.x ** 2 + person.y ** 2)
-      const targetRadius = rings.find(r => r.score === person.score)?.radius || 400
+      vel.vx = (vel.vx + force.fx) * DAMPING
+      vel.vy = (vel.vy + force.fy) * DAMPING
       
-      if (currentDist > 10) {
-        const radiusScale = targetRadius / currentDist
-        const radiusStrength = 0.35
-        person.x = person.x * (1 - radiusStrength) + (person.x * radiusScale) * radiusStrength
-        person.y = person.y * (1 - radiusStrength) + (person.y * radiusScale) * radiusStrength
+      const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy)
+      maxVelocity = Math.max(maxVelocity, speed)
+      
+      const maxSpeed = 50
+      if (speed > maxSpeed) {
+        vel.vx = (vel.vx / speed) * maxSpeed
+        vel.vy = (vel.vy / speed) * maxSpeed
       }
+      
+      person.x += vel.vx
+      person.y += vel.vy
     })
+
+    if (maxVelocity < VELOCITY_THRESHOLD) {
+      break
+    }
   }
 
-  const finalResult = resolveOverlaps(result)
+  const finalResult = resolveOverlaps(result, 100)
   
-  const centerX = importantPersons.reduce((sum, p) => sum + p.x, 0) / Math.max(importantPersons.length, 1)
-  const centerY = importantPersons.reduce((sum, p) => sum + p.y, 0) / Math.max(importantPersons.length, 1)
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
   
   finalResult.forEach(person => {
     person.x -= centerX
@@ -199,123 +213,123 @@ export function organizeByImportance(
   return finalResult
 }
 
-export function hierarchicalFromSelected(
+export function hierarchicalTreeLayout(
   persons: Person[],
-  connections: Connection[],
-  selectedPersonId: string | null
+  connections: Connection[]
 ): Person[] {
   if (persons.length === 0) return []
-  if (!selectedPersonId) return persons.map(p => ({ ...p }))
-
-  const result = persons.map(p => ({ ...p }))
-  const rootPerson = result.find(p => p.id === selectedPersonId)
-  
-  if (!rootPerson) return result
-
-  const connectionMap = new Map<string, { connectedId: string, attitude: FrameColor }[]>()
-  connections.forEach(conn => {
-    const from = result.find(p => p.id === conn.fromPersonId)
-    const to = result.find(p => p.id === conn.toPersonId)
-    
-    if (from && to) {
-      if (!connectionMap.has(conn.fromPersonId)) {
-        connectionMap.set(conn.fromPersonId, [])
-      }
-      if (!connectionMap.has(conn.toPersonId)) {
-        connectionMap.set(conn.toPersonId, [])
-      }
-      
-      connectionMap.get(conn.fromPersonId)!.push({ 
-        connectedId: conn.toPersonId, 
-        attitude: to.frameColor 
-      })
-      connectionMap.get(conn.toPersonId)!.push({ 
-        connectedId: conn.fromPersonId, 
-        attitude: from.frameColor 
-      })
-    }
-  })
-
-  rootPerson.x = 0
-  rootPerson.y = -400
-
-  const connectedToRoot = connectionMap.get(selectedPersonId) || []
-  const connectedIds = new Set(connectedToRoot.map(c => c.connectedId))
-  
-  const remainingPersons = result.filter(p => p.id !== selectedPersonId)
-  
-  const attitudePriority = { 'green': 0, 'white': 1, 'orange': 2, 'red': 3 }
-  
-  remainingPersons.sort((a, b) => {
-    const aConnected = connectedIds.has(a.id)
-    const bConnected = connectedIds.has(b.id)
-    
-    if (aConnected && !bConnected) return -1
-    if (!aConnected && bConnected) return 1
-    
-    if (a.score !== b.score) return a.score - b.score
-    
-    const aAttitude = attitudePriority[a.frameColor as keyof typeof attitudePriority] ?? 4
-    const bAttitude = attitudePriority[b.frameColor as keyof typeof attitudePriority] ?? 4
-    
-    return aAttitude - bAttitude
-  })
-
-  const layers: Person[][] = []
-  const layerHeight = 180
-  let currentY = -200
-  
-  const personsPerLayer = [3, 5, 7, 9, 11]
-  let layerIndex = 0
-  let currentLayer: Person[] = []
-  
-  remainingPersons.forEach(person => {
-    currentLayer.push(person)
-    
-    const targetCount = personsPerLayer[Math.min(layerIndex, personsPerLayer.length - 1)]
-    
-    if (currentLayer.length >= targetCount) {
-      layers.push([...currentLayer])
-      currentLayer = []
-      layerIndex++
-    }
-  })
-  
-  if (currentLayer.length > 0) {
-    layers.push(currentLayer)
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
   }
 
-  layers.forEach((layer, idx) => {
-    const y = currentY + (idx + 1) * layerHeight
-    const width = Math.min(1400, 280 + layer.length * 70)
-    const spacing = layer.length > 1 ? width / (layer.length - 1) : 0
-    const startX = -width / 2
+  const result = persons.map(p => ({ ...p }))
+  const adjacency = buildAdjacencyMap(connections)
+
+  const connectionCounts = new Map<string, number>()
+  result.forEach(p => {
+    connectionCounts.set(p.id, (adjacency.get(p.id)?.size || 0))
+  })
+
+  result.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score
+    const countA = connectionCounts.get(a.id) || 0
+    const countB = connectionCounts.get(b.id) || 0
+    return countB - countA
+  })
+
+  const rootPerson = result[0]
+  
+  const layers = new Map<string, number>()
+  const visited = new Set<string>()
+  const queue: Array<{ id: string; layer: number }> = [{ id: rootPerson.id, layer: 0 }]
+  
+  while (queue.length > 0) {
+    const { id, layer } = queue.shift()!
     
-    layer.forEach((person, personIdx) => {
-      person.x = layer.length === 1 ? 0 : startX + personIdx * spacing
+    if (visited.has(id)) continue
+    visited.add(id)
+    layers.set(id, layer)
+    
+    const neighbors = adjacency.get(id) || new Set()
+    neighbors.forEach(neighborId => {
+      if (!visited.has(neighborId)) {
+        queue.push({ id: neighborId, layer: layer + 1 })
+      }
+    })
+  }
+
+  result.forEach(p => {
+    if (!layers.has(p.id)) {
+      layers.set(p.id, result.length)
+    }
+  })
+
+  const layerGroups = new Map<number, Person[]>()
+  result.forEach(person => {
+    const layer = layers.get(person.id) || 0
+    if (!layerGroups.has(layer)) {
+      layerGroups.set(layer, [])
+    }
+    layerGroups.get(layer)!.push(person)
+  })
+
+  const sortedLayers = Array.from(layerGroups.keys()).sort((a, b) => a - b)
+  const LAYER_HEIGHT = 220
+  const MIN_NODE_SPACING = 320
+
+  sortedLayers.forEach((layerNum, layerIndex) => {
+    const layerPersons = layerGroups.get(layerNum)!
+    const y = layerIndex * LAYER_HEIGHT
+    
+    layerPersons.sort((a, b) => {
+      const aNeighbors = Array.from(adjacency.get(a.id) || [])
+        .map(id => result.find(p => p.id === id))
+        .filter(p => p && (layers.get(p.id) || 0) < layerNum)
+      
+      const bNeighbors = Array.from(adjacency.get(b.id) || [])
+        .map(id => result.find(p => p.id === id))
+        .filter(p => p && (layers.get(p.id) || 0) < layerNum)
+      
+      if (aNeighbors.length === 0 && bNeighbors.length === 0) return 0
+      if (aNeighbors.length === 0) return 1
+      if (bNeighbors.length === 0) return -1
+      
+      const aAvgX = aNeighbors.reduce((sum, p) => sum + (p?.x || 0), 0) / aNeighbors.length
+      const bAvgX = bNeighbors.reduce((sum, p) => sum + (p?.x || 0), 0) / bNeighbors.length
+      
+      return aAvgX - bAvgX
+    })
+    
+    const totalWidth = Math.max(layerPersons.length * MIN_NODE_SPACING, 800)
+    const spacing = layerPersons.length > 1 ? totalWidth / (layerPersons.length - 1) : 0
+    const startX = -totalWidth / 2
+    
+    layerPersons.forEach((person, index) => {
+      person.x = layerPersons.length === 1 ? 0 : startX + index * spacing
       person.y = y
     })
   })
 
-  const maxIterations = 50
-  for (let iter = 0; iter < maxIterations; iter++) {
-    result.forEach(person => {
-      if (person.id === selectedPersonId) return
-
-      const connectedIds = Array.from(connectionMap.get(person.id) || []).map(c => c.connectedId)
-      if (connectedIds.length === 0) return
-
-      const connected = result.filter(p => connectedIds.includes(p.id))
-      const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
-
-      const pullStrength = 0.18
-      const dx = avgX - person.x
+  for (let iter = 0; iter < 60; iter++) {
+    sortedLayers.forEach((layerNum) => {
+      const layerPersons = layerGroups.get(layerNum)!
       
-      person.x += dx * pullStrength
+      layerPersons.forEach(person => {
+        const neighbors = Array.from(adjacency.get(person.id) || [])
+          .map(id => result.find(p => p.id === id))
+          .filter(p => p !== undefined) as Person[]
+        
+        if (neighbors.length === 0) return
+        
+        const avgX = neighbors.reduce((sum, p) => sum + p.x, 0) / neighbors.length
+        const dx = avgX - person.x
+        
+        person.x += dx * 0.15
+      })
     })
   }
 
-  const finalResult = resolveOverlaps(result)
+  const finalResult = resolveOverlaps(result, 100)
   
   const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
   const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
@@ -328,231 +342,148 @@ export function hierarchicalFromSelected(
   return finalResult
 }
 
-export function tightenNetwork(
+export function circularClusterLayout(
   persons: Person[],
   connections: Connection[]
 ): Person[] {
   if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
 
   const result = persons.map(p => ({ ...p }))
-  
-  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
-  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
+  const adjacency = buildAdjacencyMap(connections)
 
-  const connectionMap = new Map<string, Set<string>>()
-  connections.forEach(conn => {
-    if (!connectionMap.has(conn.fromPersonId)) {
-      connectionMap.set(conn.fromPersonId, new Set())
-    }
-    if (!connectionMap.has(conn.toPersonId)) {
-      connectionMap.set(conn.toPersonId, new Set())
-    }
-    connectionMap.get(conn.fromPersonId)!.add(conn.toPersonId)
-    connectionMap.get(conn.toPersonId)!.add(conn.fromPersonId)
-  })
-
-  const connectionLengths = connections
-    .map(conn => {
-      const from = result.find(p => p.id === conn.fromPersonId)
-      const to = result.find(p => p.id === conn.toPersonId)
-      if (!from || !to) return 0
-      return distance(from, to)
-    })
-    .filter(len => len > 0)
-
-  const avgConnectionLength = connectionLengths.length > 0
-    ? connectionLengths.reduce((sum, len) => sum + len, 0) / connectionLengths.length
-    : 400
-
-  const targetLength = avgConnectionLength * 0.5
+  const clusters: Set<string>[] = []
+  const personToCluster = new Map<string, number>()
 
   result.forEach(person => {
-    const dx = person.x - centerX
-    const dy = person.y - centerY
-    const currentDist = Math.sqrt(dx * dx + dy * dy)
+    if (personToCluster.has(person.id)) return
     
-    if (currentDist > 1) {
-      const scale = 0.65
-      person.x = centerX + dx * scale
-      person.y = centerY + dy * scale
-    }
-  })
-
-  const maxIterations = 70
-  for (let iter = 0; iter < maxIterations; iter++) {
-    result.forEach(person => {
-      const connectedIds = Array.from(connectionMap.get(person.id) || [])
-      if (connectedIds.length === 0) return
-
-      const connected = result.filter(p => connectedIds.includes(p.id))
+    const cluster = new Set<string>()
+    const queue = [person.id]
+    
+    while (queue.length > 0) {
+      const currentId = queue.shift()!
+      if (cluster.has(currentId)) continue
       
-      let totalPullX = 0
-      let totalPullY = 0
+      cluster.add(currentId)
+      personToCluster.set(currentId, clusters.length)
       
-      connected.forEach(other => {
-        const dx = other.x - person.x
-        const dy = other.y - person.y
-        const currentDist = Math.sqrt(dx * dx + dy * dy)
-        
-        if (currentDist > 1) {
-          const diff = currentDist - targetLength
-          const force = diff / currentDist
-          
-          totalPullX += dx * force
-          totalPullY += dy * force
+      const neighbors = adjacency.get(currentId) || new Set()
+      neighbors.forEach(neighborId => {
+        if (!cluster.has(neighborId) && !personToCluster.has(neighborId)) {
+          queue.push(neighborId)
         }
       })
-
-      const pullStrength = 0.18
-      person.x += totalPullX * pullStrength
-      person.y += totalPullY * pullStrength
-    })
-  }
-
-  const finalResult = resolveOverlaps(result)
-  
-  const finalCenterX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
-  const finalCenterY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
-  
-  finalResult.forEach(person => {
-    person.x -= finalCenterX
-    person.y -= finalCenterY
-  })
-
-  return finalResult
-}
-
-export function smartArrange(
-  persons: Person[],
-  connections: Connection[]
-): Person[] {
-  if (persons.length === 0) return []
-
-  const result = persons.map(p => ({ ...p }))
-  
-  const connectionMap = new Map<string, Set<string>>()
-  connections.forEach(conn => {
-    if (!connectionMap.has(conn.fromPersonId)) {
-      connectionMap.set(conn.fromPersonId, new Set())
-    }
-    if (!connectionMap.has(conn.toPersonId)) {
-      connectionMap.set(conn.toPersonId, new Set())
-    }
-    connectionMap.get(conn.fromPersonId)!.add(conn.toPersonId)
-    connectionMap.get(conn.toPersonId)!.add(conn.fromPersonId)
-  })
-
-  const centerPersons = result.filter(p => p.score === 1)
-  const otherPersons = result.filter(p => p.score > 1)
-
-  if (centerPersons.length === 0) {
-    return organizeByImportance(persons, connections)
-  }
-
-  if (centerPersons.length === 1) {
-    centerPersons[0].x = 0
-    centerPersons[0].y = 0
-  } else {
-    const centerRadius = 100
-    centerPersons.forEach((person, i) => {
-      const angle = (i / centerPersons.length) * 2 * Math.PI - Math.PI / 2
-      person.x = Math.cos(angle) * centerRadius
-      person.y = Math.sin(angle) * centerRadius
-    })
-  }
-
-  const placed = new Set<string>(centerPersons.map(p => p.id))
-  const toPlace = [...otherPersons]
-
-  toPlace.sort((a, b) => {
-    if (a.score !== b.score) return a.score - b.score
-    
-    const aConns = Array.from(connectionMap.get(a.id) || [])
-    const bConns = Array.from(connectionMap.get(b.id) || [])
-    
-    const aConnectedToPlaced = aConns.filter(id => placed.has(id)).length
-    const bConnectedToPlaced = bConns.filter(id => placed.has(id)).length
-    
-    if (aConnectedToPlaced !== bConnectedToPlaced) {
-      return bConnectedToPlaced - aConnectedToPlaced
     }
     
-    return bConns.length - aConns.length
+    clusters.push(cluster)
   })
 
-  const ringRadii = [240, 420, 600, 780]
-  
-  toPlace.forEach(person => {
-    const connectedIds = Array.from(connectionMap.get(person.id) || [])
-    const placedConnected = result.filter(p => 
-      placed.has(p.id) && connectedIds.includes(p.id)
+  const clusterGroups: Person[][] = clusters.map(() => [])
+  result.forEach(person => {
+    const clusterIndex = personToCluster.get(person.id)
+    if (clusterIndex !== undefined) {
+      clusterGroups[clusterIndex].push(person)
+    }
+  })
+
+  clusterGroups.sort((a, b) => b.length - a.length)
+
+  if (clusterGroups.length === 1) {
+    const cluster = clusterGroups[0]
+    const clusterAdjacency = buildAdjacencyMap(
+      connections.filter(c => 
+        cluster.some(p => p.id === c.fromPersonId) && 
+        cluster.some(p => p.id === c.toPersonId)
+      )
     )
-
-    let targetX = 0
-    let targetY = 0
     
-    if (placedConnected.length > 0) {
-      targetX = placedConnected.reduce((sum, p) => sum + p.x, 0) / placedConnected.length
-      targetY = placedConnected.reduce((sum, p) => sum + p.y, 0) / placedConnected.length
-    }
-
-    const ringIndex = Math.min(person.score - 2, ringRadii.length - 1)
-    const targetRadius = ringRadii[Math.max(0, ringIndex)]
-
-    const currentDist = Math.sqrt(targetX ** 2 + targetY ** 2)
+    const sortedPersons = [...cluster].sort((a, b) => {
+      const aConns = clusterAdjacency.get(a.id)?.size || 0
+      const bConns = clusterAdjacency.get(b.id)?.size || 0
+      if (aConns !== bConns) return bConns - aConns
+      return a.score - b.score
+    })
     
-    if (currentDist < 1) {
-      const randomAngle = Math.random() * 2 * Math.PI
-      person.x = Math.cos(randomAngle) * targetRadius
-      person.y = Math.sin(randomAngle) * targetRadius
-    } else {
-      const scale = targetRadius / currentDist
-      person.x = targetX * scale
-      person.y = targetY * scale
-    }
-
-    const jitter = 30
-    person.x += (Math.random() - 0.5) * jitter
-    person.y += (Math.random() - 0.5) * jitter
+    const center = sortedPersons[0]
+    center.x = 0
+    center.y = 0
     
-    placed.add(person.id)
-  })
-
-  const maxIterations = 120
-  for (let iter = 0; iter < maxIterations; iter++) {
-    result.forEach(person => {
-      if (person.score === 1) return
-
-      const connectedIds = Array.from(connectionMap.get(person.id) || [])
-      if (connectedIds.length === 0) return
-
-      const connected = result.filter(p => connectedIds.includes(p.id))
-      const avgX = connected.reduce((sum, p) => sum + p.x, 0) / connected.length
-      const avgY = connected.reduce((sum, p) => sum + p.y, 0) / connected.length
-
-      const currentDist = Math.sqrt(person.x ** 2 + person.y ** 2)
-      const targetAngle = Math.atan2(person.y, person.x)
+    const remaining = sortedPersons.slice(1)
+    const baseRadius = 400
+    const ringsNeeded = Math.ceil(remaining.length / 8)
+    
+    let personIndex = 0
+    for (let ring = 0; ring < ringsNeeded && personIndex < remaining.length; ring++) {
+      const radius = baseRadius + ring * 280
+      const personsInRing = Math.min(8 + ring * 4, remaining.length - personIndex)
       
-      const pullStrength = 0.25
-      const dx = avgX - person.x
-      const dy = avgY - person.y
+      for (let i = 0; i < personsInRing && personIndex < remaining.length; i++) {
+        const angle = (i / personsInRing) * 2 * Math.PI - Math.PI / 2
+        const person = remaining[personIndex]
+        person.x = Math.cos(angle) * radius
+        person.y = Math.sin(angle) * radius
+        personIndex++
+      }
+    }
+  } else {
+    const clusterRadius = 300
+    const mainRadius = Math.max(500, clusterGroups.length * 200)
+    
+    clusterGroups.forEach((cluster, clusterIndex) => {
+      const clusterAngle = (clusterIndex / clusterGroups.length) * 2 * Math.PI
+      const clusterCenterX = Math.cos(clusterAngle) * mainRadius
+      const clusterCenterY = Math.sin(clusterAngle) * mainRadius
       
-      person.x += dx * pullStrength
-      person.y += dy * pullStrength
-
-      if (currentDist > 10) {
-        const newDist = Math.sqrt(person.x ** 2 + person.y ** 2)
-        const ringIndex = Math.min(person.score - 2, ringRadii.length - 1)
-        const targetRadius = ringRadii[Math.max(0, ringIndex)]
-        const scale = targetRadius / newDist
-        
-        person.x *= (1 - pullStrength * 0.5) + (pullStrength * 0.5) * scale
-        person.y *= (1 - pullStrength * 0.5) + (pullStrength * 0.5) * scale
+      const clusterAdjacency = buildAdjacencyMap(
+        connections.filter(c => 
+          cluster.some(p => p.id === c.fromPersonId) && 
+          cluster.some(p => p.id === c.toPersonId)
+        )
+      )
+      
+      const sortedCluster = [...cluster].sort((a, b) => {
+        const aConns = clusterAdjacency.get(a.id)?.size || 0
+        const bConns = clusterAdjacency.get(b.id)?.size || 0
+        if (aConns !== bConns) return bConns - aConns
+        return a.score - b.score
+      })
+      
+      if (sortedCluster.length === 1) {
+        sortedCluster[0].x = clusterCenterX
+        sortedCluster[0].y = clusterCenterY
+      } else {
+        sortedCluster.forEach((person, index) => {
+          const personAngle = (index / sortedCluster.length) * 2 * Math.PI
+          person.x = clusterCenterX + Math.cos(personAngle) * clusterRadius
+          person.y = clusterCenterY + Math.sin(personAngle) * clusterRadius
+        })
       }
     })
   }
 
-  const finalResult = resolveOverlaps(result)
+  for (let iter = 0; iter < 80; iter++) {
+    result.forEach(person => {
+      const neighbors = Array.from(adjacency.get(person.id) || [])
+        .map(id => result.find(p => p.id === id))
+        .filter(p => p !== undefined) as Person[]
+      
+      if (neighbors.length === 0) return
+      
+      const avgX = neighbors.reduce((sum, p) => sum + p.x, 0) / neighbors.length
+      const avgY = neighbors.reduce((sum, p) => sum + p.y, 0) / neighbors.length
+      
+      const dx = avgX - person.x
+      const dy = avgY - person.y
+      
+      person.x += dx * 0.12
+      person.y += dy * 0.12
+    })
+  }
+
+  const finalResult = resolveOverlaps(result, 100)
   
   const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
   const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
@@ -564,3 +495,8 @@ export function smartArrange(
 
   return finalResult
 }
+
+export const organizeByImportance = forceDirectedLayout
+export const hierarchicalFromSelected = hierarchicalTreeLayout
+export const tightenNetwork = circularClusterLayout
+export const smartArrange = forceDirectedLayout

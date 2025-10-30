@@ -277,7 +277,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleZoomToFit()
     }, 50)
     
-    toast.success('Organized by importance score')
+    toast.success('Force-directed layout applied - connections minimized')
   }, [workspaceState, handleZoomToFit])
 
   const handleHierarchicalView = useCallback(() => {
@@ -286,15 +286,9 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       return
     }
 
-    if (selection.selectedPersons.length !== 1) {
-      toast.info('Please select exactly one person to use as the root')
-      return
-    }
-
     const organized = hierarchicalFromSelected(
       workspaceState.workspace.persons,
-      workspaceState.workspace.connections,
-      selection.selectedPersons[0]
+      workspaceState.workspace.connections
     )
     
     const updates = new Map<string, Partial<Person>>()
@@ -308,8 +302,8 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleZoomToFit()
     }, 50)
     
-    toast.success('Hierarchical view created from selected person')
-  }, [workspaceState, selection.selectedPersons, handleZoomToFit])
+    toast.success('Hierarchical tree layout applied')
+  }, [workspaceState, handleZoomToFit])
 
   const handleTightenNetwork = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
@@ -333,7 +327,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleZoomToFit()
     }, 50)
     
-    toast.success('Network tightened')
+    toast.success('Circular cluster layout applied')
   }, [workspaceState, handleZoomToFit])
 
   const handleSmartArrange = useCallback(() => {
@@ -358,7 +352,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       handleZoomToFit()
     }, 50)
     
-    toast.success('Smart arrangement applied')
+    toast.success('Force-directed layout applied - connections minimized')
   }, [workspaceState, handleZoomToFit])
 
   const addPersons = useCallback((persons: Person[]) => {
