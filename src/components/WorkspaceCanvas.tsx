@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
@@ -26,6 +26,21 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
   const organicLines = settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines
   const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
+
+  const collapsedBranchesMap = useMemo(() => {
+    const map = new Map<string, { collapsedPersonIds: string[] }>()
+    const branches = controller.workspace.collapsedBranches || []
+    branches.forEach(branch => {
+      if (branch.collapsedPersonIds && branch.collapsedPersonIds.length > 0) {
+        map.set(branch.parentId, branch)
+      }
+    })
+    return map
+  }, [controller.workspace.collapsedBranches])
+
+  const visiblePersons = useMemo(() => {
+    return controller.workspace.persons.filter(p => !p.hidden)
+  }, [controller.workspace.persons])
 
   useEffect(() => {
     const handleSettingsChange = async () => {
@@ -85,6 +100,22 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     setPreviousShowGrid(showGrid)
   }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid])
 
+  const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
+    const updates = new Map()
+    const personsMap = new Map(controller.workspace.persons.map(p => [p.id, p]))
+    
+    for (const personId of personIds) {
+      const person = personsMap.get(personId)
+      if (person) {
+        updates.set(personId, { x: person.x + dx, y: person.y + dy })
+      }
+    }
+    
+    if (updates.size > 0) {
+      controller.handlers.updatePersonsInBulk(updates)
+    }
+  }, [controller.workspace.persons, controller.handlers])
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers, workspace, selection } = controller
 
@@ -111,20 +142,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           const moveX = gridStepsX * gridSize
           const moveY = gridStepsY * gridSize
 
-          const updates = new Map()
-          const selectedIds = selection.selectedPersons
-          const personsMap = new Map(workspace.persons.map(p => [p.id, p]))
-          
-          for (const personId of selectedIds) {
-            const person = personsMap.get(personId)
-            if (person) {
-              updates.set(personId, { x: person.x + moveX, y: person.y + moveY })
-            }
-          }
-          
-          if (updates.size > 0) {
-            handlers.updatePersonsInBulk(updates)
-          }
+          updatePersonPositions(selection.selectedPersons, moveX, moveY)
 
           interaction.dragAccumulator.current = { x: newAccX - moveX, y: newAccY - moveY }
         } else {
@@ -148,20 +166,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         
         const alignment = calculateAlignment(movingPersons, staticPersons)
         
-        const updates = new Map()
         const finalDx = dx + (alignment?.x || 0)
         const finalDy = dy + (alignment?.y || 0)
         
-        for (const id of selectedIds) {
-          const person = personsMap.get(id)
-          if (person) {
-            updates.set(id, { x: person.x + finalDx, y: person.y + finalDy })
-          }
-        }
-        
-        if (updates.size > 0) {
-          handlers.updatePersonsInBulk(updates)
-        }
+        updatePersonPositions(selectedIds, finalDx, finalDy)
         
         interaction.updateAlignmentGuides(alignment?.guides || [])
       }
@@ -438,18 +446,13 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           />
         ))}
 
-        {controller.workspace.persons.map(person => {
+        {visiblePersons.map(person => {
           const isHighlighted = highlightedPersonIds?.has(person.id) ?? false
           const isDimmed = searchActive && highlightedPersonIds && highlightedPersonIds.size > 0 && !isHighlighted
           
-          const collapsedBranches = controller.workspace.collapsedBranches || []
-          const branch = collapsedBranches.find(b => b.parentId === person.id)
-          const hasCollapsedBranch = branch && branch.collapsedPersonIds.length > 0
+          const branch = collapsedBranchesMap.get(person.id)
+          const hasCollapsedBranch = !!branch
           const collapsedCount = branch?.collapsedPersonIds.length || 0
-          
-          const connectionCount = controller.workspace.connections.filter(c => 
-            c.fromPersonId === person.id || c.toPersonId === person.id
-          ).length
           
           return (
           <PersonNode
@@ -459,9 +462,9 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
-            hasCollapsedBranch={!!hasCollapsedBranch}
+            hasCollapsedBranch={hasCollapsedBranch}
             collapsedCount={collapsedCount}
-            connectionCount={connectionCount}
+            connectionCount={0}
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return

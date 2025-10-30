@@ -112,13 +112,13 @@ export function findAllDescendants(
   const descendants: string[] = []
 
   const dfs = (nodeId: string) => {
-    if (visited.has(nodeId)) return
-    visited.add(nodeId)
-
     const children = adjacencyMap.get(nodeId) || []
     children.forEach(childId => {
-      descendants.push(childId)
-      dfs(childId)
+      if (!visited.has(childId)) {
+        visited.add(childId)
+        descendants.push(childId)
+        dfs(childId)
+      }
     })
   }
 

@@ -283,19 +283,28 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   const collapseBranch = useCallback((parentId: string, collapsedPersonIds: string[]) => {
     setWorkspace(prev => {
       const collapsedBranches = prev.collapsedBranches || []
-      const existingIndex = collapsedBranches.findIndex(b => b.parentId === parentId)
+      
+      const existingBranchIndex = collapsedBranches.findIndex(b => b.parentId === parentId)
       
       const parent = prev.persons.find(p => p.id === parentId)
       if (!parent) return prev
       
       const parentPositionAtCollapse = { x: parent.x, y: parent.y }
       
+      const newBranch = { parentId, collapsedPersonIds, parentPositionAtCollapse }
+      
       let newCollapsed: typeof collapsedBranches
-      if (existingIndex >= 0) {
+      if (existingBranchIndex >= 0) {
         newCollapsed = [...collapsedBranches]
-        newCollapsed[existingIndex] = { parentId, collapsedPersonIds, parentPositionAtCollapse }
+        const existingIds = new Set(collapsedBranches[existingBranchIndex].collapsedPersonIds)
+        const newIds = collapsedPersonIds.filter(id => !existingIds.has(id))
+        
+        newCollapsed[existingBranchIndex] = {
+          ...newBranch,
+          collapsedPersonIds: [...collapsedBranches[existingBranchIndex].collapsedPersonIds, ...newIds]
+        }
       } else {
-        newCollapsed = [...collapsedBranches, { parentId, collapsedPersonIds, parentPositionAtCollapse }]
+        newCollapsed = [...collapsedBranches, newBranch]
       }
       
       return {

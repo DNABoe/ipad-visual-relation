@@ -45,7 +45,8 @@ export function CollapseBranchDialog({
 
     const childId = selectedParentId === fromPerson.id ? toPerson.id : fromPerson.id
     const allDescendants = findAllDescendants(childId, connections)
-    onConfirm(selectedParentId, [childId, ...allDescendants])
+    const collapsedIds = [childId, ...allDescendants]
+    onConfirm(selectedParentId, collapsedIds)
     onOpenChange(false)
     setSelectedParentId('')
   }

@@ -45,11 +45,7 @@ export function PersonNode({
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
   
-  const stackCount = hasCollapsedBranch ? Math.min(collapsedCount, 3) : 0
-
-  if (person.hidden) {
-    return null
-  }
+  const stackCount = (hasCollapsedBranch && collapsedCount > 0) ? Math.min(collapsedCount, 3) : 0
 
   return (
     <motion.div 
