@@ -14,6 +14,7 @@ import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
 import { Eye, EyeSlash, SignOut } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS } from '@/lib/constants'
+import { motion } from 'framer-motion'
 
 interface SettingsDialogProps {
   open: boolean
@@ -41,6 +42,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [logoClicks, setLogoClicks] = useState(0)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
     if (userCredentials) {
@@ -113,6 +116,33 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleLogoClick = () => {
+    setLogoClicks(prev => prev + 1)
+    setIsAnimating(true)
+    
+    const messages = [
+      '👁️ Looking good!',
+      '✨ Eyes on you!',
+      '🎨 Nice click!',
+      '🔮 Keeping an eye out!',
+      '⚡ Eye see what you did there!',
+      '🌟 Spectacular vision!',
+      '💫 You found the secret!',
+      '🎯 Bulls-eye!',
+      '👀 I spy with my little eye...',
+      '🚀 To infinity and beyond!'
+    ]
+    
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)]
+    toast.success(randomMessage, {
+      duration: 2000,
+    })
+    
+    setTimeout(() => {
+      setIsAnimating(false)
+    }, 1000)
   }
 
   return (
@@ -420,7 +450,44 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
           <TabsContent value="about" className="space-y-5 py-4">
             <div className="space-y-6">
               <div className="flex flex-col items-center text-center space-y-4 py-6">
-                <Logo size={64} showText={false} animated={true} />
+                <motion.div
+                  onClick={handleLogoClick}
+                  className="cursor-pointer"
+                  animate={isAnimating ? {
+                    rotate: [0, -10, 10, -10, 10, 0],
+                    scale: [1, 1.2, 0.9, 1.15, 0.95, 1],
+                    y: [0, -20, 0, -10, 0],
+                  } : {}}
+                  transition={{
+                    duration: 1,
+                    ease: "easeInOut",
+                  }}
+                  whileHover={{
+                    scale: 1.1,
+                    rotate: 5,
+                  }}
+                  whileTap={{
+                    scale: 0.95,
+                  }}
+                >
+                  <motion.div
+                    animate={isAnimating ? {
+                      filter: [
+                        'drop-shadow(0 0 0px oklch(0.88 0.18 185))',
+                        'drop-shadow(0 0 20px oklch(0.88 0.18 185))',
+                        'drop-shadow(0 0 40px oklch(0.88 0.18 185))',
+                        'drop-shadow(0 0 20px oklch(0.88 0.18 185))',
+                        'drop-shadow(0 0 0px oklch(0.88 0.18 185))',
+                      ]
+                    } : {}}
+                    transition={{
+                      duration: 1,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <Logo size={64} showText={false} animated={true} />
+                  </motion.div>
+                </motion.div>
                 <div>
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">
                     RelEye
