@@ -293,6 +293,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       setShortestPathPersonIds([])
       setHighlightedPersonIds(new Set())
       setSearchActive(false)
+      controller.selection.clearSelection()
       setCanvasKey(prev => prev + 1)
       toast.info('Shortest path view cleared')
       return
@@ -331,7 +332,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         toast.success(`Found path with ${path.length - 1} connection${path.length - 1 === 1 ? '' : 's'} (${path.length} persons)`)
       }
     }
-  }, [isShortestPathActive, controller.selection.selectedPersons, controller.workspace.persons, controller.workspace.connections, setCanvasKey])
+  }, [isShortestPathActive, controller.selection, controller.workspace.persons, controller.workspace.connections, setCanvasKey])
 
   const canFindPath = controller.selection.selectedPersons.length === 2
 

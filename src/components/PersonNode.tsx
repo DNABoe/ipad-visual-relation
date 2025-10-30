@@ -16,6 +16,7 @@ interface PersonNodeProps {
   isDimmed?: boolean
   hasCollapsedBranch?: boolean
   collapsedCount?: number
+  connectionCount?: number
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
@@ -33,6 +34,7 @@ export function PersonNode({
   isDimmed,
   hasCollapsedBranch,
   collapsedCount = 0,
+  connectionCount = 0,
   onMouseDown,
   onClick,
   onDoubleClick,
@@ -42,6 +44,8 @@ export function PersonNode({
   style,
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
+  
+  const stackCount = Math.min(Math.floor(connectionCount / 3), 3)
 
   if (person.hidden) {
     return null
@@ -105,6 +109,24 @@ export function PersonNode({
           />
         </>
       )}
+      {stackCount > 0 && Array.from({ length: stackCount }).map((_, index) => (
+        <motion.div
+          key={`stack-${index}`}
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 0.2 + (index * 0.15), y: 0 }}
+          transition={{ delay: 0.05 * (index + 1), duration: 0.3 }}
+          className="absolute inset-0 rounded-lg pointer-events-none"
+          style={{
+            top: (stackCount - index) * 2.5,
+            left: (stackCount - index) * 1.5,
+            right: -(stackCount - index) * 1.5,
+            borderColor: frameColor,
+            backgroundColor: 'oklch(0.18 0.03 230)',
+            border: '2px solid',
+            zIndex: -index - 1,
+          }}
+        />
+      ))}
       <Card
         className={cn(
           'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200',
@@ -136,6 +158,15 @@ export function PersonNode({
             title="Advocate - Actively promotes messages"
           >
             <Megaphone size={16} weight="fill" />
+          </div>
+        )}
+        {connectionCount >= 3 && !hasCollapsedBranch && (
+          <div 
+            className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-10 flex items-center gap-1.5"
+            title={`${connectionCount} connection${connectionCount > 1 ? 's' : ''}`}
+          >
+            <Stack size={14} weight="fill" />
+            <span className="text-xs font-bold">{connectionCount}</span>
           </div>
         )}
         {hasCollapsedBranch && collapsedCount > 0 && (

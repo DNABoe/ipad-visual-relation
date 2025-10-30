@@ -452,6 +452,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           const hasCollapsedBranch = branch && branch.collapsedPersonIds.length > 0
           const collapsedCount = branch?.collapsedPersonIds.length || 0
           
+          const connectionCount = controller.workspace.connections.filter(c => 
+            c.fromPersonId === person.id || c.toPersonId === person.id
+          ).length
+          
           return (
           <PersonNode
             key={person.id}
@@ -462,6 +466,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             isDimmed={isDimmed}
             hasCollapsedBranch={!!hasCollapsedBranch}
             collapsedCount={collapsedCount}
+            connectionCount={connectionCount}
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return
