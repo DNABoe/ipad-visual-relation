@@ -29,6 +29,7 @@ import {
   ArrowsInCardinal,
   Crosshair,
   Path,
+  ArrowsClockwise,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -47,6 +48,7 @@ interface WorkspaceToolbarProps {
   canFindPath: boolean
   isShortestPathActive: boolean
   searchBarRef: React.RefObject<SearchBarRef>
+  onRefreshCanvas: () => void
 }
 
 export function WorkspaceToolbar({
@@ -61,6 +63,7 @@ export function WorkspaceToolbar({
   canFindPath,
   isShortestPathActive,
   searchBarRef,
+  onRefreshCanvas,
 }: WorkspaceToolbarProps) {
   const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
@@ -229,6 +232,15 @@ export function WorkspaceToolbar({
             <TooltipContent>
               {canFindPath ? 'Find Shortest Path (Select 2 persons)' : 'Select 2 persons to find shortest path'}
             </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={onRefreshCanvas} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <ArrowsClockwise size={18} weight="duotone" className="text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refresh Canvas</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6 bg-border" />

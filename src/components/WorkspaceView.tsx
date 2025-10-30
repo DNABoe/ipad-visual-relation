@@ -287,6 +287,15 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   }, [])
 
   const handleFindPath = useCallback(() => {
+    if (isShortestPathActive) {
+      setIsShortestPathActive(false)
+      setShortestPathPersonIds([])
+      setHighlightedPersonIds(new Set())
+      setSearchActive(false)
+      toast.info('Shortest path view cleared')
+      return
+    }
+
     if (controller.selection.selectedPersons.length !== 2) {
       toast.error('Please select exactly 2 persons')
       return
@@ -320,9 +329,14 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         toast.success(`Found path with ${path.length - 1} connection${path.length - 1 === 1 ? '' : 's'} (${path.length} persons)`)
       }
     }
-  }, [controller.selection.selectedPersons, controller.workspace.persons, controller.workspace.connections])
+  }, [isShortestPathActive, controller.selection.selectedPersons, controller.workspace.persons, controller.workspace.connections])
 
   const canFindPath = controller.selection.selectedPersons.length === 2
+
+  const handleRefreshCanvas = useCallback(() => {
+    setCanvasKey(prev => prev + 1)
+    toast.success('Canvas refreshed')
+  }, [])
 
   useEffect(() => {
     if (showListPanel !== undefined) {
@@ -348,6 +362,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         canFindPath={canFindPath}
         isShortestPathActive={isShortestPathActive}
         searchBarRef={searchBarRef}
+        onRefreshCanvas={handleRefreshCanvas}
       />
 
       <div className="flex-1 flex overflow-hidden">
