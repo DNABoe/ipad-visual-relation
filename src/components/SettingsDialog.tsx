@@ -168,30 +168,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               <div className="space-y-4 rounded-xl bg-card p-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label htmlFor="show-grid-toggle" className="text-sm font-medium cursor-pointer">Show Grid</Label>
-                    <div className="text-xs text-muted-foreground">
-                      Display grid lines on the canvas
-                    </div>
-                  </div>
-                  <Switch
-                    id="show-grid-toggle"
-                    checked={workspaceSettings.showGrid}
-                    onCheckedChange={(checked) => {
-                      setWorkspace((current) => ({
-                        ...current,
-                        settings: {
-                          ...DEFAULT_WORKSPACE_SETTINGS,
-                          ...(current.settings || {}),
-                          showGrid: checked
-                        }
-                      }))
-                      toast.success(checked ? 'Grid visible' : 'Grid hidden')
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
                     <Label htmlFor="magnetic-snap-toggle" className="text-sm font-medium cursor-pointer">Magnetic Snap</Label>
                     <div className="text-xs text-muted-foreground">
                       Align cards and groups to grid when dragging
@@ -213,37 +189,36 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     }}
                   />
                 </div>
+              </div>
+
+              <h3 className="font-semibold text-sm pt-2">Grid Settings</h3>
+              <div className="space-y-4 rounded-xl bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="show-grid-toggle" className="text-sm font-medium cursor-pointer">Show Grid</Label>
+                    <div className="text-xs text-muted-foreground">
+                      Display grid lines on the canvas
+                    </div>
+                  </div>
+                  <Switch
+                    id="show-grid-toggle"
+                    checked={workspaceSettings.showGrid}
+                    onCheckedChange={(checked) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        settings: {
+                          ...DEFAULT_WORKSPACE_SETTINGS,
+                          ...(current.settings || {}),
+                          showGrid: checked
+                        }
+                      }))
+                      toast.success(checked ? 'Grid visible' : 'Grid hidden')
+                    }}
+                  />
+                </div>
                 
                 {workspaceSettings.showGrid && (
                   <>
-                    <div className="space-y-3 pt-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                        <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{workspaceSettings.gridSize}px</span>
-                      </div>
-                      <Slider
-                        id="grid-size"
-                        min={10}
-                        max={50}
-                        step={10}
-                        value={[workspaceSettings.gridSize]}
-                        onValueChange={(value) => {
-                          setWorkspace((current) => ({
-                            ...current,
-                            settings: {
-                              ...DEFAULT_WORKSPACE_SETTINGS,
-                              ...(current.settings || {}),
-                              gridSize: value[0]
-                            }
-                          }))
-                        }}
-                        className="w-full"
-                      />
-                      <div className="text-xs text-muted-foreground pl-1">
-                        Controls both grid spacing and snap increment
-                      </div>
-                    </div>
-
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="grid-opacity" className="text-sm font-medium">Grid Opacity</Label>
@@ -269,6 +244,34 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       />
                       <div className="text-xs text-muted-foreground pl-1">
                         Adjust the visibility of the grid lines
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
+                        <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{workspaceSettings.gridSize}px</span>
+                      </div>
+                      <Slider
+                        id="grid-size"
+                        min={10}
+                        max={50}
+                        step={10}
+                        value={[workspaceSettings.gridSize]}
+                        onValueChange={(value) => {
+                          setWorkspace((current) => ({
+                            ...current,
+                            settings: {
+                              ...DEFAULT_WORKSPACE_SETTINGS,
+                              ...(current.settings || {}),
+                              gridSize: value[0]
+                            }
+                          }))
+                        }}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-muted-foreground pl-1">
+                        Controls both grid spacing and snap increment
                       </div>
                     </div>
                   </>
