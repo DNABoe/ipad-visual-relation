@@ -336,11 +336,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   const canFindPath = controller.selection.selectedPersons.length === 2
 
-  const handleRefreshCanvas = useCallback(() => {
-    setCanvasKey(prev => prev + 1)
-    toast.success('Canvas refreshed')
-  }, [])
-
   useEffect(() => {
     if (showListPanel !== undefined) {
       const timeoutId = setTimeout(() => {
@@ -365,7 +360,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         canFindPath={canFindPath}
         isShortestPathActive={isShortestPathActive}
         searchBarRef={searchBarRef}
-        onRefreshCanvas={handleRefreshCanvas}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -416,7 +410,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         workspace={controller.workspace}
         onImport={controller.handlers.replaceWorkspace}
         onLogout={onLogout}
-        onRefreshCanvas={handleRefreshCanvas}
       />
 
       {controller.dialogs.photoViewer.photoUrl && (

@@ -19,18 +19,12 @@ interface WorkspaceCanvasProps {
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
   const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
-  const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
-  const [forceUpdateKey, setForceUpdateKey] = useState(0)
   
   const snapToGrid = settings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid
   const gridSize = settings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize
   const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
   const organicLines = settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines
   const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
-
-  useEffect(() => {
-    console.log('[WorkspaceCanvas] Settings changed:', { showGrid, gridSize, gridOpacity, snapToGrid, organicLines })
-  }, [showGrid, gridSize, gridOpacity, snapToGrid, organicLines])
 
   const collapsedBranchesMap = useMemo(() => {
     const map = new Map<string, { collapsedPersonIds: string[] }>()
@@ -46,19 +40,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const visiblePersons = useMemo(() => {
     return controller.workspace.persons.filter(p => !p.hidden)
   }, [controller.workspace.persons])
-  
-  useEffect(() => {
-    const handleSettingsChange = () => {
-      setForceUpdateKey(prev => prev + 1)
-    }
-    
-    window.addEventListener('settings-changed', handleSettingsChange)
-    return () => window.removeEventListener('settings-changed', handleSettingsChange)
-  }, [])
-  
-  useEffect(() => {
-    setForceUpdateKey(prev => prev + 1)
-  }, [settings?.showGrid, settings?.gridSize, settings?.gridOpacity, settings?.snapToGrid, settings?.organicLines])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
@@ -73,43 +54,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     canvas.style.setProperty('--grid-y', `${y}px`)
     
     if (showGrid) {
-      if (previousShowGrid === false) {
-        canvas.classList.remove('canvas-grid-fade-out')
-        canvas.classList.add('canvas-grid')
-        void canvas.offsetHeight
-        canvas.classList.add('canvas-grid-fade-in')
-        
-        const timeout = setTimeout(() => {
-          canvas.classList.remove('canvas-grid-fade-in')
-        }, 350)
-        
-        setPreviousShowGrid(true)
-        return () => clearTimeout(timeout)
-      } else if (previousShowGrid === undefined) {
-        canvas.classList.add('canvas-grid')
-        setPreviousShowGrid(true)
-      } else {
-        canvas.classList.add('canvas-grid')
-        canvas.classList.remove('canvas-grid-fade-in', 'canvas-grid-fade-out')
-      }
+      canvas.classList.add('canvas-with-grid')
     } else {
-      if (previousShowGrid === true) {
-        canvas.classList.add('canvas-grid-fade-out')
-        
-        const timeout = setTimeout(() => {
-          canvas.classList.remove('canvas-grid', 'canvas-grid-fade-out')
-        }, 350)
-        
-        setPreviousShowGrid(false)
-        return () => clearTimeout(timeout)
-      } else if (previousShowGrid === undefined) {
-        canvas.classList.remove('canvas-grid', 'canvas-grid-fade-in', 'canvas-grid-fade-out')
-        setPreviousShowGrid(false)
-      } else {
-        canvas.classList.remove('canvas-grid', 'canvas-grid-fade-in', 'canvas-grid-fade-out')
-      }
+      canvas.classList.remove('canvas-with-grid')
     }
-  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid, forceUpdateKey])
+  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
 
   const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
     const updates = new Map()

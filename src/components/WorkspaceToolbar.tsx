@@ -30,7 +30,6 @@ import {
   ArrowsInCardinal,
   Crosshair,
   Path,
-  ArrowsClockwise,
   GitBranch,
   Eye,
   EyeSlash,
@@ -53,7 +52,6 @@ interface WorkspaceToolbarProps {
   canFindPath: boolean
   isShortestPathActive: boolean
   searchBarRef: React.RefObject<SearchBarRef>
-  onRefreshCanvas: () => void
 }
 
 export function WorkspaceToolbar({
@@ -68,18 +66,14 @@ export function WorkspaceToolbar({
   canFindPath,
   isShortestPathActive,
   searchBarRef,
-  onRefreshCanvas,
 }: WorkspaceToolbarProps) {
   const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
-  const showGrid = settings?.showGrid ?? true
+  const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
   
   const toggleGrid = async () => {
     const newValue = !showGrid
     await setSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, showGrid: newValue }))
-    await new Promise(resolve => setTimeout(resolve, 100))
-    window.dispatchEvent(new CustomEvent('settings-changed'))
-    onRefreshCanvas()
     toast.success(newValue ? 'Grid enabled' : 'Grid disabled')
   }
 
@@ -232,15 +226,6 @@ export function WorkspaceToolbar({
             <TooltipContent>
               {isShortestPathActive ? 'Clear Shortest Path' : (canFindPath ? 'Find Shortest Path (Select 2 persons)' : 'Select 2 persons to find shortest path')}
             </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={onRefreshCanvas} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <ArrowsClockwise size={18} weight="duotone" className="text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Refresh Canvas</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6 bg-border" />

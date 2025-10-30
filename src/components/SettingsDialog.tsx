@@ -22,10 +22,9 @@ interface SettingsDialogProps {
   workspace: Workspace
   onImport: (workspace: Workspace) => void
   onLogout?: () => void
-  onRefreshCanvas?: () => void
 }
 
-export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout, onRefreshCanvas }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogout }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [userCredentials, setUserCredentials] = useKV<{
@@ -174,11 +173,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   </div>
                   <Switch
                     id="show-grid-toggle"
-                    checked={appSettings?.showGrid ?? true}
+                    checked={appSettings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, showGrid: checked }))
-                      window.dispatchEvent(new CustomEvent('settings-changed'))
-                      onRefreshCanvas?.()
+                      await setAppSettings((current) => ({ 
+                        ...DEFAULT_APP_SETTINGS, 
+                        ...current, 
+                        showGrid: checked 
+                      }))
                       toast.success(checked ? 'Grid enabled' : 'Grid disabled')
                     }}
                   />
@@ -193,11 +194,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   </div>
                   <Switch
                     id="snap-toggle"
-                    checked={appSettings?.snapToGrid ?? false}
+                    checked={appSettings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, snapToGrid: checked }))
-                      window.dispatchEvent(new CustomEvent('settings-changed'))
-                      onRefreshCanvas?.()
+                      await setAppSettings((current) => ({ 
+                        ...DEFAULT_APP_SETTINGS, 
+                        ...current, 
+                        snapToGrid: checked 
+                      }))
                       toast.success(checked ? 'Snap to grid enabled' : 'Snap to grid disabled')
                     }}
                   />
@@ -206,18 +209,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridSize ?? 20}px</span>
+                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize}px</span>
                   </div>
                   <Slider
                     id="grid-size"
                     min={10}
                     max={50}
                     step={10}
-                    value={[appSettings?.gridSize ?? 20]}
+                    value={[appSettings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize]}
                     onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, gridSize: value[0] }))
-                      window.dispatchEvent(new CustomEvent('settings-changed'))
-                      onRefreshCanvas?.()
+                      await setAppSettings((current) => ({ 
+                        ...DEFAULT_APP_SETTINGS, 
+                        ...current, 
+                        gridSize: value[0] 
+                      }))
                     }}
                     className="w-full"
                   />
@@ -229,18 +234,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="grid-opacity" className="text-sm font-medium">Grid Opacity</Label>
-                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridOpacity ?? 15}%</span>
+                    <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{appSettings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity}%</span>
                   </div>
                   <Slider
                     id="grid-opacity"
                     min={5}
                     max={40}
                     step={5}
-                    value={[appSettings?.gridOpacity ?? 15]}
+                    value={[appSettings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity]}
                     onValueChange={async (value) => {
-                      await setAppSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, gridOpacity: value[0] }))
-                      window.dispatchEvent(new CustomEvent('settings-changed'))
-                      onRefreshCanvas?.()
+                      await setAppSettings((current) => ({ 
+                        ...DEFAULT_APP_SETTINGS, 
+                        ...current, 
+                        gridOpacity: value[0] 
+                      }))
                     }}
                     className="w-full"
                   />
@@ -261,11 +268,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   </div>
                   <Switch
                     id="organic-toggle"
-                    checked={appSettings?.organicLines ?? false}
+                    checked={appSettings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines}
                     onCheckedChange={async (checked) => {
-                      await setAppSettings((current) => ({ ...DEFAULT_APP_SETTINGS, ...current, organicLines: checked }))
-                      window.dispatchEvent(new CustomEvent('settings-changed'))
-                      onRefreshCanvas?.()
+                      await setAppSettings((current) => ({ 
+                        ...DEFAULT_APP_SETTINGS, 
+                        ...current, 
+                        organicLines: checked 
+                      }))
                       toast.success(checked ? 'Organic lines enabled' : 'Organic lines disabled')
                     }}
                   />
