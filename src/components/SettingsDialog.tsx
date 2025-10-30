@@ -145,9 +145,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <Switch
                     id="show-grid-toggle"
                     checked={appSettings?.showGrid ?? true}
-                    onCheckedChange={(checked) => {
-                      setAppSettings((current) => ({ ...current!, showGrid: checked }))
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onCheckedChange={async (checked) => {
+                      await setAppSettings((current) => ({ ...current!, showGrid: checked }))
+                      setTimeout(() => {
+                        onRefreshCanvas?.()
+                        window.dispatchEvent(new CustomEvent('settings-changed'))
+                      }, 50)
                     }}
                   />
                 </div>
@@ -162,9 +165,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <Switch
                     id="snap-toggle"
                     checked={appSettings?.snapToGrid ?? false}
-                    onCheckedChange={(checked) => {
-                      setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onCheckedChange={async (checked) => {
+                      await setAppSettings((current) => ({ ...current!, snapToGrid: checked }))
+                      setTimeout(() => {
+                        onRefreshCanvas?.()
+                        window.dispatchEvent(new CustomEvent('settings-changed'))
+                      }, 50)
                     }}
                   />
                 </div>
@@ -180,9 +186,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     max={50}
                     step={10}
                     value={[appSettings?.gridSize ?? 20]}
-                    onValueChange={(value) => {
-                      setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onValueChange={async (value) => {
+                      await setAppSettings((current) => ({ ...current!, gridSize: value[0] }))
+                      setTimeout(() => {
+                        onRefreshCanvas?.()
+                        window.dispatchEvent(new CustomEvent('settings-changed'))
+                      }, 50)
                     }}
                     className="w-full"
                   />
@@ -202,9 +211,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                     max={40}
                     step={5}
                     value={[appSettings?.gridOpacity ?? 15]}
-                    onValueChange={(value) => {
-                      setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onValueChange={async (value) => {
+                      await setAppSettings((current) => ({ ...current!, gridOpacity: value[0] }))
+                      setTimeout(() => {
+                        onRefreshCanvas?.()
+                        window.dispatchEvent(new CustomEvent('settings-changed'))
+                      }, 50)
                     }}
                     className="w-full"
                   />
@@ -226,9 +238,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, onImport, onLogo
                   <Switch
                     id="organic-toggle"
                     checked={appSettings?.organicLines ?? false}
-                    onCheckedChange={(checked) => {
-                      setAppSettings((current) => ({ ...current!, organicLines: checked }))
-                      setTimeout(() => onRefreshCanvas?.(), 50)
+                    onCheckedChange={async (checked) => {
+                      await setAppSettings((current) => ({ ...current!, organicLines: checked }))
+                      setTimeout(() => {
+                        onRefreshCanvas?.()
+                        window.dispatchEvent(new CustomEvent('settings-changed'))
+                      }, 50)
                     }}
                   />
                 </div>

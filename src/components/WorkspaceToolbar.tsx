@@ -75,7 +75,10 @@ export function WorkspaceToolbar({
   const toggleGrid = async () => {
     const newSettings = { ...settings!, showGrid: !showGrid }
     await setSettings(newSettings)
-    setTimeout(() => onRefreshCanvas(), 50)
+    setTimeout(() => {
+      onRefreshCanvas()
+      window.dispatchEvent(new CustomEvent('settings-changed'))
+    }, 50)
   }
 
   const handleSaveClick = () => {

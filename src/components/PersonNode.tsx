@@ -49,7 +49,7 @@ export function PersonNode({
     <motion.div 
       className="absolute" 
       initial={false}
-      animate={{
+      animate={isDragging ? undefined : {
         left: person.x,
         top: person.y,
         opacity: 1,
@@ -59,7 +59,7 @@ export function PersonNode({
         opacity: 0,
         scale: 0.8,
       }}
-      transition={{
+      transition={isDragging ? { duration: 0 } : {
         type: 'spring',
         stiffness: 300,
         damping: 30,
@@ -67,6 +67,7 @@ export function PersonNode({
       }}
       style={{ 
         width: 280,
+        ...(isDragging ? { left: person.x, top: person.y } : {}),
       }}
     >
       {hasCollapsedBranch && (

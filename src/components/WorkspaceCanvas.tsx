@@ -7,7 +7,7 @@ import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { NODE_WIDTH, NODE_HEIGHT, ZOOM_STEP, DEFAULT_APP_SETTINGS } from '@/lib/constants'
 import { calculateAlignment } from '@/lib/alignment'
 import { toast } from 'sonner'
-import type { AppSettings } from '@/lib/types'
+import type { AppSettings, Person } from '@/lib/types'
 
 interface WorkspaceCanvasProps {
   controller: ReturnType<typeof useWorkspaceController>
@@ -19,7 +19,7 @@ interface WorkspaceCanvasProps {
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
   const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
-  const [, forceUpdate] = useState({})
+  const [renderTrigger, setRenderTrigger] = useState(0)
   const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
 
   const snapToGrid = settings?.snapToGrid ?? false
@@ -29,8 +29,17 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const gridOpacity = settings?.gridOpacity ?? 15
 
   useEffect(() => {
-    forceUpdate({})
-  }, [settings, isShortestPathActive, shortestPathPersonIds.length])
+    setRenderTrigger(prev => prev + 1)
+  }, [settings?.snapToGrid, settings?.gridSize, settings?.showGrid, settings?.organicLines, settings?.gridOpacity, isShortestPathActive, shortestPathPersonIds.length])
+
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      setRenderTrigger(prev => prev + 1)
+    }
+    
+    window.addEventListener('settings-changed', handleSettingsChange)
+    return () => window.removeEventListener('settings-changed', handleSettingsChange)
+  }, [])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
@@ -82,7 +91,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   }, [settings, gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const { interaction, transform, handlers } = controller
+    const { interaction, transform, handlers, workspace, selection } = controller
 
     if (interaction.dragState.type === 'connection') {
       const rect = controller.canvasRef.current?.getBoundingClientRect()
@@ -108,26 +117,38 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           const moveY = gridStepsY * gridSize
 
           const updates = new Map()
-          controller.selection.selectedPersons.forEach(personId => {
-            const person = controller.workspace.persons.find(p => p.id === personId)
+          const selectedIds = selection.selectedPersons
+          const personsMap = new Map(workspace.persons.map(p => [p.id, p]))
+          
+          for (const personId of selectedIds) {
+            const person = personsMap.get(personId)
             if (person) {
               updates.set(personId, { x: person.x + moveX, y: person.y + moveY })
             }
-          })
-          handlers.updatePersonsInBulk(updates)
+          }
+          
+          if (updates.size > 0) {
+            handlers.updatePersonsInBulk(updates)
+          }
 
           interaction.dragAccumulator.current = { x: newAccX - moveX, y: newAccY - moveY }
         } else {
           interaction.dragAccumulator.current = { x: newAccX, y: newAccY }
         }
       } else {
-        const movingPersons = controller.selection.selectedPersons
-          .map(id => controller.workspace.persons.find(p => p.id === id))
-          .filter((p): p is typeof controller.workspace.persons[0] => p !== undefined)
-          .map(p => ({ ...p, x: p.x + dx, y: p.y + dy }))
+        const selectedIds = selection.selectedPersons
+        const personsMap = new Map(workspace.persons.map(p => [p.id, p]))
         
-        const staticPersons = controller.workspace.persons.filter(
-          p => !controller.selection.selectedPersons.includes(p.id)
+        const movingPersons: Person[] = []
+        for (const id of selectedIds) {
+          const person = personsMap.get(id)
+          if (person) {
+            movingPersons.push({ ...person, x: person.x + dx, y: person.y + dy })
+          }
+        }
+        
+        const staticPersons = workspace.persons.filter(
+          p => !selectedIds.includes(p.id)
         )
         
         const alignment = calculateAlignment(movingPersons, staticPersons)
@@ -136,13 +157,16 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         const finalDx = dx + (alignment?.x || 0)
         const finalDy = dy + (alignment?.y || 0)
         
-        controller.selection.selectedPersons.forEach(personId => {
-          const person = controller.workspace.persons.find(p => p.id === personId)
+        for (const id of selectedIds) {
+          const person = personsMap.get(id)
           if (person) {
-            updates.set(personId, { x: person.x + finalDx, y: person.y + finalDy })
+            updates.set(id, { x: person.x + finalDx, y: person.y + finalDy })
           }
-        })
-        handlers.updatePersonsInBulk(updates)
+        }
+        
+        if (updates.size > 0) {
+          handlers.updatePersonsInBulk(updates)
+        }
         
         interaction.updateAlignmentGuides(alignment?.guides || [])
       }
