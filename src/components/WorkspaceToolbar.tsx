@@ -28,7 +28,6 @@ import {
   CirclesThree,
   ArrowsInCardinal,
   Crosshair,
-  FloppyDisk,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -99,23 +98,6 @@ export function WorkspaceToolbar({
         <div className="flex items-center gap-2 flex-wrap">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSaveClick}
-                disabled={!downloadUrl}
-                className="hover:bg-toolbar-hover hover:border-success/50 disabled:opacity-40"
-              >
-                <FloppyDisk size={18} weight="duotone" className={downloadUrl ? "text-success" : "text-muted-foreground"} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
-          </Tooltip>
-
-          <Separator orientation="vertical" className="h-6 bg-border" />
-
-          <Tooltip>
-            <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <FilePlus size={18} className="text-success" />
               </Button>
@@ -130,6 +112,21 @@ export function WorkspaceToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Load Network</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveClick}
+                disabled={!downloadUrl}
+                className="hover:bg-toolbar-hover hover:border-success/50 disabled:opacity-40"
+              >
+                <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-6 bg-border" />
