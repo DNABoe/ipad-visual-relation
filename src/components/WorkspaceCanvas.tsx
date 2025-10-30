@@ -18,14 +18,21 @@ interface WorkspaceCanvasProps {
 }
 
 export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive, shortestPathPersonIds = [], isShortestPathActive = false }: WorkspaceCanvasProps) {
-  const [settings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
+  const [settings, , ] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
-
-  const snapToGrid = settings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid
-  const gridSize = settings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize
-  const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
-  const organicLines = settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines
-  const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
+  const [forceUpdateKey, setForceUpdateKey] = useState(0)
+  
+  const [localShowGrid, setLocalShowGrid] = useState<boolean | null>(null)
+  const [localGridSize, setLocalGridSize] = useState<number | null>(null)
+  const [localGridOpacity, setLocalGridOpacity] = useState<number | null>(null)
+  const [localSnapToGrid, setLocalSnapToGrid] = useState<boolean | null>(null)
+  const [localOrganicLines, setLocalOrganicLines] = useState<boolean | null>(null)
+  
+  const snapToGrid = localSnapToGrid !== null ? localSnapToGrid : (settings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid)
+  const gridSize = localGridSize !== null ? localGridSize : (settings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize)
+  const showGrid = localShowGrid !== null ? localShowGrid : (settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid)
+  const organicLines = localOrganicLines !== null ? localOrganicLines : (settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines)
+  const gridOpacity = localGridOpacity !== null ? localGridOpacity : (settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity)
 
   const collapsedBranchesMap = useMemo(() => {
     const map = new Map<string, { collapsedPersonIds: string[] }>()
@@ -41,15 +48,44 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const visiblePersons = useMemo(() => {
     return controller.workspace.persons.filter(p => !p.hidden)
   }, [controller.workspace.persons])
-
+  
   useEffect(() => {
-    const handleSettingsChange = async () => {
-      await new Promise(resolve => setTimeout(resolve, 0))
+    const handleSettingsChange = (e: Event) => {
+      const customEvent = e as CustomEvent
+      const detail = customEvent.detail
+      
+      if (detail.showGrid !== undefined) {
+        setLocalShowGrid(detail.showGrid)
+      }
+      if (detail.snapToGrid !== undefined) {
+        setLocalSnapToGrid(detail.snapToGrid)
+      }
+      if (detail.gridSize !== undefined) {
+        setLocalGridSize(detail.gridSize)
+      }
+      if (detail.gridOpacity !== undefined) {
+        setLocalGridOpacity(detail.gridOpacity)
+      }
+      if (detail.organicLines !== undefined) {
+        setLocalOrganicLines(detail.organicLines)
+      }
+      
+      setForceUpdateKey(prev => prev + 1)
     }
     
     window.addEventListener('settings-changed', handleSettingsChange)
     return () => window.removeEventListener('settings-changed', handleSettingsChange)
   }, [])
+  
+  useEffect(() => {
+    if (settings) {
+      if (localShowGrid === null) setLocalShowGrid(settings.showGrid ?? DEFAULT_APP_SETTINGS.showGrid)
+      if (localGridSize === null) setLocalGridSize(settings.gridSize ?? DEFAULT_APP_SETTINGS.gridSize)
+      if (localGridOpacity === null) setLocalGridOpacity(settings.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity)
+      if (localSnapToGrid === null) setLocalSnapToGrid(settings.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid)
+      if (localOrganicLines === null) setLocalOrganicLines(settings.organicLines ?? DEFAULT_APP_SETTINGS.organicLines)
+    }
+  }, [settings])
 
   useEffect(() => {
     const canvas = controller.canvasRef.current
@@ -98,7 +134,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     }
     
     setPreviousShowGrid(showGrid)
-  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid])
+  }, [gridSize, showGrid, gridOpacity, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef, previousShowGrid, forceUpdateKey])
 
   const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
     const updates = new Map()
