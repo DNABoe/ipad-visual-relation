@@ -28,6 +28,7 @@ import {
   CirclesThree,
   ArrowsInCardinal,
   Crosshair,
+  FloppyDisk,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -68,6 +69,21 @@ export function WorkspaceToolbar({
       showGrid: show,
     }))
   }
+
+  const handleSaveClick = () => {
+    if (downloadUrl) {
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      const downloadFileName = fileName.endsWith('.enc.json') 
+        ? fileName 
+        : `${fileName}.enc.json`
+      link.download = downloadFileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
   return (
     <TooltipProvider>
       <div className="px-4 py-3 space-y-3 shadow-lg bg-toolbar-bg border-b border-toolbar-border">
@@ -77,27 +93,28 @@ export function WorkspaceToolbar({
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">RelEye</h1>
           <Separator orientation="vertical" className="h-6 bg-border" />
           <div className="flex items-center gap-2 bg-card/50 px-3 py-1.5 rounded-md border border-primary/30">
-            {downloadUrl ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href={downloadUrl}
-                    download={`${fileName}.enc.json`}
-                    className="text-base hover:underline font-semibold inline-flex items-center gap-2 transition-colors text-accent"
-                  >
-                    {fileName}
-                    <DownloadSimple size={16} weight="bold" className="text-success" />
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent>Click to save network file</TooltipContent>
-              </Tooltip>
-            ) : (
-              <span className="text-base font-semibold text-foreground">{fileName}</span>
-            )}
+            <span className="text-base font-semibold text-foreground">{fileName.replace('.enc.json', '')}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveClick}
+                disabled={!downloadUrl}
+                className="hover:bg-toolbar-hover hover:border-success/50 disabled:opacity-40"
+              >
+                <FloppyDisk size={18} weight="duotone" className={downloadUrl ? "text-success" : "text-muted-foreground"} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
+          </Tooltip>
+
+          <Separator orientation="vertical" className="h-6 bg-border" />
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')} className="hover:bg-toolbar-hover hover:border-primary/50">

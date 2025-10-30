@@ -77,7 +77,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
       const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
-      const fullFileName = `${trimmedFileName}.enc.json`
+      const fullFileName = trimmedFileName.endsWith('.enc.json')
+        ? trimmedFileName
+        : `${trimmedFileName}.enc.json`
 
       setCreatedNetwork({
         workspace: newWorkspace,
@@ -283,7 +285,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 }}
               />
               <p className="text-xs text-muted-foreground pl-1">
-                Will be saved as: <span className="font-mono text-foreground">{newFileName.trim() || 'my-network'}.enc.json</span>
+                Will be saved as: <span className="font-mono text-foreground">{(newFileName.trim() || 'my-network').endsWith('.enc.json') ? newFileName.trim() || 'my-network' : `${newFileName.trim() || 'my-network'}.enc.json`}</span>
               </p>
             </div>
 

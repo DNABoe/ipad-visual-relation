@@ -29,6 +29,12 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
 
   const sections: ShortcutSection[] = [
     {
+      title: 'File Operations',
+      shortcuts: [
+        { keys: [isMac ? 'Cmd' : 'Ctrl', '+', 'S'], description: 'Save network file' },
+      ],
+    },
+    {
       title: 'Navigation',
       shortcuts: [
         { keys: ['Space', '+', 'Drag'], description: 'Pan canvas' },

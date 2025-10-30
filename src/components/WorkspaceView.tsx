@@ -102,6 +102,23 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         return
       }
 
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (downloadUrl) {
+          const link = document.createElement('a')
+          link.href = downloadUrl
+          const downloadFileName = fileName.endsWith('.enc.json') 
+            ? fileName 
+            : `${fileName}.enc.json`
+          link.download = downloadFileName
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          toast.success('Network saved successfully!')
+        }
+        return
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault()
         controller.handlers.undo()
@@ -227,7 +244,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [controller, settings])
+  }, [controller, settings, downloadUrl, fileName])
 
   const handleUnsavedAction = useCallback(() => {
     if (controller.dialogs.unsavedDialog.action === 'new') {
