@@ -30,6 +30,9 @@ import {
   Crosshair,
   Path,
   ArrowsClockwise,
+  GitBranch,
+  Eye,
+  EyeSlash,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -49,6 +52,9 @@ interface WorkspaceToolbarProps {
   isShortestPathActive: boolean
   searchBarRef: React.RefObject<SearchBarRef>
   onRefreshCanvas: () => void
+  onToggleLeafBranches: () => void
+  hasLeafBranchesToToggle: boolean
+  leafBranchesHidden: boolean
 }
 
 export function WorkspaceToolbar({
@@ -64,6 +70,9 @@ export function WorkspaceToolbar({
   isShortestPathActive,
   searchBarRef,
   onRefreshCanvas,
+  onToggleLeafBranches,
+  hasLeafBranchesToToggle,
+  leafBranchesHidden,
 }: WorkspaceToolbarProps) {
   const [settings, setSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
 
@@ -232,6 +241,32 @@ export function WorkspaceToolbar({
             </TooltipTrigger>
             <TooltipContent>
               {canFindPath ? 'Find Shortest Path (Select 2 persons)' : 'Select 2 persons to find shortest path'}
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={leafBranchesHidden ? "default" : "outline"}
+                size="sm"
+                onClick={onToggleLeafBranches}
+                disabled={!hasLeafBranchesToToggle}
+                className={leafBranchesHidden 
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                  : "hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
+                }
+              >
+                {leafBranchesHidden ? (
+                  <Eye size={18} weight="duotone" />
+                ) : (
+                  <EyeSlash size={18} weight="duotone" className={hasLeafBranchesToToggle ? "text-accent" : "text-muted-foreground"} />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {hasLeafBranchesToToggle 
+                ? (leafBranchesHidden ? 'Show Leaf Branches' : 'Hide Leaf Branches (Select 1 person)')
+                : 'Select 1 person to hide/show leaf branches'}
             </TooltipContent>
           </Tooltip>
 

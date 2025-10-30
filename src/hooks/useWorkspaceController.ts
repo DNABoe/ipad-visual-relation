@@ -409,6 +409,7 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
       updatePerson: workspaceState.updatePerson,
       updateGroup: workspaceState.updateGroup,
       addConnection: workspaceState.addConnection,
+      setWorkspace: workspaceState.setWorkspace,
     },
     hasUndo: workspaceState.hasUndo,
   }

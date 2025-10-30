@@ -15,6 +15,7 @@ export interface Person {
   y: number
   groupId?: string
   advocate?: boolean
+  hidden?: boolean
   createdAt: number
 }
 

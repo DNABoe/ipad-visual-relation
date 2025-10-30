@@ -36,6 +36,10 @@ export function PersonNode({
 }: PersonNodeProps) {
   const frameColor = FRAME_COLORS[person.frameColor]
 
+  if (person.hidden) {
+    return null
+  }
+
   return (
     <div 
       className="absolute" 

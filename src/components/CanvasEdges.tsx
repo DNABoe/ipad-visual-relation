@@ -56,7 +56,7 @@ export function getConnectionsInRect(
     const from = personMap.get(conn.fromPersonId)
     const to = personMap.get(conn.toPersonId)
 
-    if (!from || !to) return
+    if (!from || !to || from.hidden || to.hidden) return
 
     const fromX = from.x + NODE_WIDTH / 2
     const fromY = from.y + NODE_HEIGHT / 2
@@ -188,7 +188,7 @@ export function CanvasEdges({
         const from = personMap.get(conn.fromPersonId)
         const to = personMap.get(conn.toPersonId)
 
-        if (!from || !to) return
+        if (!from || !to || from.hidden || to.hidden) return
 
         const fromX = from.x + NODE_WIDTH / 2
         const fromY = from.y + NODE_HEIGHT / 2

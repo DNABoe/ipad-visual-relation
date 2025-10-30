@@ -175,3 +175,54 @@ export function formatSearchCriteriaLabel(criteria: SearchCriteria): string {
   
   return parts.length > 0 ? parts.join(' • ') : 'All persons'
 }
+
+export function findLeafTerminatedBranches(
+  rootPersonId: string,
+  persons: Person[],
+  connections: Connection[]
+): string[] {
+  const adjacencyList = new Map<string, string[]>()
+  persons.forEach(p => adjacencyList.set(p.id, []))
+  
+  connections.forEach(conn => {
+    const from = adjacencyList.get(conn.fromPersonId)
+    const to = adjacencyList.get(conn.toPersonId)
+    if (from && to) {
+      from.push(conn.toPersonId)
+      to.push(conn.fromPersonId)
+    }
+  })
+  
+  const visited = new Set<string>()
+  const leafBranches = new Set<string>()
+  
+  function dfs(nodeId: string, parent: string | null): boolean {
+    visited.add(nodeId)
+    const neighbors = adjacencyList.get(nodeId) || []
+    const unvisitedNeighbors = neighbors.filter(n => !visited.has(n) && n !== parent)
+    
+    if (unvisitedNeighbors.length === 0 && nodeId !== rootPersonId) {
+      leafBranches.add(nodeId)
+      return true
+    }
+    
+    let allChildrenAreLeaves = true
+    for (const neighbor of unvisitedNeighbors) {
+      const isLeafBranch = dfs(neighbor, nodeId)
+      if (!isLeafBranch) {
+        allChildrenAreLeaves = false
+      }
+    }
+    
+    if (allChildrenAreLeaves && unvisitedNeighbors.length > 0 && nodeId !== rootPersonId) {
+      leafBranches.add(nodeId)
+      return true
+    }
+    
+    return false
+  }
+  
+  dfs(rootPersonId, null)
+  
+  return Array.from(leafBranches)
+}
