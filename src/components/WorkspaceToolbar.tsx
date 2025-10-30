@@ -354,12 +354,19 @@ export function WorkspaceToolbar({
                         onClick={() => {
                           if (controller.selection.selectedConnections.length === 1) {
                             const connectionId = controller.selection.selectedConnections[0]
-                            const collapsedBranches = controller.workspace.collapsedBranches || new Map()
+                            const connection = controller.workspace.connections.find(c => c.id === connectionId)
+                            if (!connection) return
+
+                            const collapsedBranches = controller.workspace.collapsedBranches || []
+                            const fromBranch = collapsedBranches.find(b => b.parentId === connection.fromPersonId && b.collapsedPersonIds.includes(connection.toPersonId))
+                            const toBranch = collapsedBranches.find(b => b.parentId === connection.toPersonId && b.collapsedPersonIds.includes(connection.fromPersonId))
                             
-                            if (collapsedBranches.has(connectionId)) {
-                              controller.handlers.handleExpandBranch(connectionId)
+                            if (fromBranch) {
+                              controller.handlers.handleExpandBranch(connection.fromPersonId)
+                            } else if (toBranch) {
+                              controller.handlers.handleExpandBranch(connection.toPersonId)
                             } else {
-                              controller.handlers.handleCollapseBranch(connectionId)
+                              controller.dialogs.openCollapseBranchDialog(connection)
                             }
                           }
                         }}
@@ -369,13 +376,18 @@ export function WorkspaceToolbar({
                         {(() => {
                           if (controller.selection.selectedConnections.length === 1) {
                             const connectionId = controller.selection.selectedConnections[0]
-                            const collapsedBranches = controller.workspace.collapsedBranches || new Map()
-                            const isCollapsed = collapsedBranches.has(connectionId)
+                            const connection = controller.workspace.connections.find(c => c.id === connectionId)
+                            if (!connection) return <GitBranch size={18} weight="duotone" className="text-muted-foreground" />
+
+                            const collapsedBranches = controller.workspace.collapsedBranches || []
+                            const fromBranch = collapsedBranches.find(b => b.parentId === connection.fromPersonId && b.collapsedPersonIds.includes(connection.toPersonId))
+                            const toBranch = collapsedBranches.find(b => b.parentId === connection.toPersonId && b.collapsedPersonIds.includes(connection.fromPersonId))
+                            const isCollapsed = fromBranch || toBranch
                             
                             return isCollapsed ? (
                               <Eye size={18} weight="duotone" className="text-success" />
                             ) : (
-                              <EyeSlash size={18} weight="duotone" className="text-accent" />
+                              <GitBranch size={18} weight="duotone" className="text-accent" />
                             )
                           }
                           return <GitBranch size={18} weight="duotone" className="text-muted-foreground" />
@@ -386,10 +398,15 @@ export function WorkspaceToolbar({
                       {controller.selection.selectedConnections.length === 1 
                         ? (() => {
                             const connectionId = controller.selection.selectedConnections[0]
-                            const collapsedBranches = controller.workspace.collapsedBranches || new Map()
-                            return collapsedBranches.has(connectionId) ? 'Expand Branch' : 'Hide Branch Below'
+                            const connection = controller.workspace.connections.find(c => c.id === connectionId)
+                            if (!connection) return 'Collapse/Expand Branch'
+
+                            const collapsedBranches = controller.workspace.collapsedBranches || []
+                            const fromBranch = collapsedBranches.find(b => b.parentId === connection.fromPersonId && b.collapsedPersonIds.includes(connection.toPersonId))
+                            const toBranch = collapsedBranches.find(b => b.parentId === connection.toPersonId && b.collapsedPersonIds.includes(connection.fromPersonId))
+                            return (fromBranch || toBranch) ? 'Expand Branch' : 'Collapse Branch'
                           })()
-                        : 'Select 1 connection to hide/show branch'}
+                        : 'Select 1 connection to collapse/expand'}
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>

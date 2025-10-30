@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import type { Person } from '@/lib/types'
+import type { Person, Connection } from '@/lib/types'
 
 export function useDialogState() {
   const [personDialog, setPersonDialog] = useState<{ open: boolean; editPerson?: Person }>({ open: false })
@@ -8,6 +8,7 @@ export function useDialogState() {
   const [photoViewer, setPhotoViewer] = useState<{ open: boolean; photoUrl?: string; name?: string }>({ open: false })
   const [exportDialog, setExportDialog] = useState(false)
   const [unsavedDialog, setUnsavedDialog] = useState<{ open: boolean; action?: 'new' | 'load' }>({ open: false })
+  const [collapseBranchDialog, setCollapseBranchDialog] = useState<{ open: boolean; connection?: Connection }>({ open: false })
 
   const openPersonDialog = useCallback((editPerson?: Person) => {
     setPersonDialog({ open: true, editPerson })
@@ -57,6 +58,14 @@ export function useDialogState() {
     setUnsavedDialog({ open: false })
   }, [])
 
+  const openCollapseBranchDialog = useCallback((connection: Connection) => {
+    setCollapseBranchDialog({ open: true, connection })
+  }, [])
+
+  const closeCollapseBranchDialog = useCallback(() => {
+    setCollapseBranchDialog({ open: false })
+  }, [])
+
   return {
     personDialog,
     groupDialog,
@@ -64,6 +73,7 @@ export function useDialogState() {
     photoViewer,
     exportDialog,
     unsavedDialog,
+    collapseBranchDialog,
     openPersonDialog,
     closePersonDialog,
     openGroupDialog,
@@ -76,5 +86,7 @@ export function useDialogState() {
     closeExportDialog,
     openUnsavedDialog,
     closeUnsavedDialog,
+    openCollapseBranchDialog,
+    closeCollapseBranchDialog,
   }
 }

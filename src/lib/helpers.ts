@@ -97,20 +97,13 @@ export function findBranchNodesBelow(
 }
 
 export function serializeWorkspace(workspace: any): string {
-  const serialized = {
-    ...workspace,
-    collapsedBranches: workspace.collapsedBranches 
-      ? Array.from(workspace.collapsedBranches.entries())
-      : []
-  }
-  return JSON.stringify(serialized)
+  return JSON.stringify(workspace)
 }
 
 export function deserializeWorkspace(data: string): any {
   const parsed = JSON.parse(data)
-  const collapsedBranches = new Map(parsed.collapsedBranches || [])
   return {
     ...parsed,
-    collapsedBranches
+    collapsedBranches: parsed.collapsedBranches || []
   }
 }

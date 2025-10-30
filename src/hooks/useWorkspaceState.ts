@@ -280,17 +280,24 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     setUndoStack([])
   }, [])
 
-  const collapseBranch = useCallback((connectionId: string, branchPersonIds: string[]) => {
+  const collapseBranch = useCallback((parentId: string, collapsedPersonIds: string[]) => {
     setWorkspace(prev => {
-      const collapsedBranches = prev.collapsedBranches || new Map()
-      const newCollapsed = new Map(collapsedBranches)
-      newCollapsed.set(connectionId, branchPersonIds)
+      const collapsedBranches = prev.collapsedBranches || []
+      const existingIndex = collapsedBranches.findIndex(b => b.parentId === parentId)
+      
+      let newCollapsed: typeof collapsedBranches
+      if (existingIndex >= 0) {
+        newCollapsed = [...collapsedBranches]
+        newCollapsed[existingIndex] = { parentId, collapsedPersonIds }
+      } else {
+        newCollapsed = [...collapsedBranches, { parentId, collapsedPersonIds }]
+      }
       
       return {
         ...prev,
         collapsedBranches: newCollapsed,
         persons: prev.persons.map(p => 
-          branchPersonIds.includes(p.id) 
+          collapsedPersonIds.includes(p.id) 
             ? { ...p, hidden: true }
             : p
         ),
@@ -298,13 +305,13 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     })
   }, [])
 
-  const expandBranch = useCallback((connectionId: string) => {
+  const expandBranch = useCallback((parentId: string) => {
     setWorkspace(prev => {
-      const collapsedBranches = prev.collapsedBranches || new Map()
-      const branchPersonIds = collapsedBranches.get(connectionId) || []
+      const collapsedBranches = prev.collapsedBranches || []
+      const branch = collapsedBranches.find(b => b.parentId === parentId)
+      const branchPersonIds = branch?.collapsedPersonIds || []
       
-      const newCollapsed = new Map(collapsedBranches)
-      newCollapsed.delete(connectionId)
+      const newCollapsed = collapsedBranches.filter(b => b.parentId !== parentId)
       
       return {
         ...prev,

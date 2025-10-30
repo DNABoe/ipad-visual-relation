@@ -22,15 +22,15 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const [renderTrigger, setRenderTrigger] = useState(0)
   const [previousShowGrid, setPreviousShowGrid] = useState<boolean | undefined>(undefined)
 
-  const snapToGrid = settings?.snapToGrid ?? false
-  const gridSize = settings?.gridSize ?? 20
-  const showGrid = settings?.showGrid ?? true
-  const organicLines = settings?.organicLines ?? false
-  const gridOpacity = settings?.gridOpacity ?? 15
+  const snapToGrid = settings?.snapToGrid ?? DEFAULT_APP_SETTINGS.snapToGrid
+  const gridSize = settings?.gridSize ?? DEFAULT_APP_SETTINGS.gridSize
+  const showGrid = settings?.showGrid ?? DEFAULT_APP_SETTINGS.showGrid
+  const organicLines = settings?.organicLines ?? DEFAULT_APP_SETTINGS.organicLines
+  const gridOpacity = settings?.gridOpacity ?? DEFAULT_APP_SETTINGS.gridOpacity
 
   useEffect(() => {
     setRenderTrigger(prev => prev + 1)
-  }, [settings?.snapToGrid, settings?.gridSize, settings?.showGrid, settings?.organicLines, settings?.gridOpacity, isShortestPathActive, shortestPathPersonIds.length])
+  }, [snapToGrid, gridSize, showGrid, organicLines, gridOpacity, isShortestPathActive, shortestPathPersonIds.length])
 
   useEffect(() => {
     const handleSettingsChange = () => {
@@ -447,16 +447,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           const isHighlighted = highlightedPersonIds?.has(person.id) ?? false
           const isDimmed = searchActive && highlightedPersonIds && highlightedPersonIds.size > 0 && !isHighlighted
           
-          const collapsedBranches = controller.workspace.collapsedBranches || new Map()
-          let hasCollapsedBranch = false
-          
-          for (const [connectionId, branchPersonIds] of collapsedBranches.entries()) {
-            const connection = controller.workspace.connections.find(c => c.id === connectionId)
-            if (connection && connection.fromPersonId === person.id && branchPersonIds.length > 0) {
-              hasCollapsedBranch = true
-              break
-            }
-          }
+          const collapsedBranches = controller.workspace.collapsedBranches || []
+          const branch = collapsedBranches.find(b => b.parentId === person.id)
+          const hasCollapsedBranch = branch && branch.collapsedPersonIds.length > 0
+          const collapsedCount = branch?.collapsedPersonIds.length || 0
           
           return (
           <PersonNode
@@ -466,7 +460,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
-            hasCollapsedBranch={hasCollapsedBranch}
+            hasCollapsedBranch={!!hasCollapsedBranch}
+            collapsedCount={collapsedCount}
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return

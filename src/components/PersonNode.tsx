@@ -5,7 +5,7 @@ import type { Person } from '@/lib/types'
 import { getInitials } from '@/lib/helpers'
 import { FRAME_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import { Megaphone } from '@phosphor-icons/react'
+import { Megaphone, Stack } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface PersonNodeProps {
@@ -15,6 +15,7 @@ interface PersonNodeProps {
   isHighlighted?: boolean
   isDimmed?: boolean
   hasCollapsedBranch?: boolean
+  collapsedCount?: number
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
@@ -31,6 +32,7 @@ export function PersonNode({
   isHighlighted,
   isDimmed,
   hasCollapsedBranch,
+  collapsedCount = 0,
   onMouseDown,
   onClick,
   onDoubleClick,
@@ -49,7 +51,7 @@ export function PersonNode({
     <motion.div 
       className="absolute" 
       initial={false}
-      animate={isDragging ? undefined : {
+      animate={isDragging ? { left: person.x, top: person.y } : {
         left: person.x,
         top: person.y,
         opacity: 1,
@@ -59,15 +61,16 @@ export function PersonNode({
         opacity: 0,
         scale: 0.8,
       }}
-      transition={isDragging ? { duration: 0 } : {
+      transition={isDragging ? { duration: 0, type: 'tween' } : {
         type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        opacity: { duration: 0.2 },
+        stiffness: 400,
+        damping: 35,
+        mass: 0.5,
+        opacity: { duration: 0.15 },
       }}
       style={{ 
         width: 280,
-        ...(isDragging ? { left: person.x, top: person.y } : {}),
+        willChange: isDragging ? 'transform' : 'auto',
       }}
     >
       {hasCollapsedBranch && (
@@ -139,6 +142,19 @@ export function PersonNode({
             title="Advocate - Actively promotes messages"
           >
             <Megaphone size={16} weight="fill" />
+          </div>
+        )}
+        {hasCollapsedBranch && collapsedCount > 0 && (
+          <div 
+            className="absolute -bottom-2 -left-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-10 flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform"
+            title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onExpandBranch?.(e)
+            }}
+          >
+            <Stack size={14} weight="fill" />
+            <span className="text-xs font-bold">{collapsedCount}</span>
           </div>
         )}
         <div className="flex items-start gap-3.5 p-3.5">

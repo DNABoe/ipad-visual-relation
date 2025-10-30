@@ -50,11 +50,16 @@ export interface AppSettings {
   gridOpacity: number
 }
 
+export interface CollapsedBranch {
+  parentId: string
+  collapsedPersonIds: string[]
+}
+
 export interface Workspace {
   persons: Person[]
   connections: Connection[]
   groups: Group[]
-  collapsedBranches?: Map<string, string[]>
+  collapsedBranches?: CollapsedBranch[]
 }
 
 export interface ViewTransform {

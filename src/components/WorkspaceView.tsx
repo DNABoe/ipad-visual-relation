@@ -11,6 +11,7 @@ import { PhotoViewerDialog } from './PhotoViewerDialog'
 import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 import { ExportDialog } from './ExportDialog'
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
+import { CollapseBranchDialog } from './CollapseBranchDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import type { Workspace, Person, AppSettings } from '@/lib/types'
@@ -455,6 +456,16 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       <KeyboardShortcutsDialog
         open={showKeyboardShortcuts}
         onOpenChange={setShowKeyboardShortcuts}
+      />
+
+      <CollapseBranchDialog
+        open={controller.dialogs.collapseBranchDialog.open}
+        onOpenChange={(open) => {
+          if (!open) controller.dialogs.closeCollapseBranchDialog()
+        }}
+        connection={controller.dialogs.collapseBranchDialog.connection || null}
+        persons={controller.workspace.persons}
+        onConfirm={controller.handlers.handleCollapseBranch}
       />
 
       <Toaster />

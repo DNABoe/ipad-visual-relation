@@ -128,6 +128,6 @@ export function generateSampleData(): Workspace {
     persons, 
     connections, 
     groups: [group1, group2],
-    collapsedBranches: new Map()
+    collapsedBranches: []
   }
 }

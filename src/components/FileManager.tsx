@@ -71,7 +71,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     try {
       const newWorkspace: Workspace = includeSampleData
         ? generateSampleData()
-        : { persons: [], connections: [], groups: [], collapsedBranches: new Map() }
+        : { persons: [], connections: [], groups: [], collapsedBranches: [] }
 
       const workspaceJson = serializeWorkspace(newWorkspace)
       const encrypted = await encryptData(workspaceJson, newPassword)

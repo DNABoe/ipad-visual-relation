@@ -108,46 +108,37 @@ export function useWorkspaceController({ initialWorkspace, settings }: UseWorksp
     selection.selectConnection(connectionId, false)
   }, [selection])
 
-  const handleCollapseBranch = useCallback((connectionId: string) => {
-    const { findBranchNodesBelow } = require('@/lib/helpers')
-    const branchPersonIds = findBranchNodesBelow(
-      connectionId,
-      workspaceState.workspace.connections,
-      workspaceState.workspace.persons
-    )
-    
-    if (branchPersonIds.length === 0) {
-      toast.info('No branch to hide below this connection')
+  const handleCollapseBranch = useCallback((parentId: string, childIds: string[]) => {
+    if (childIds.length === 0) {
+      toast.info('No persons to collapse')
       return
     }
     
-    workspaceState.collapseBranch(connectionId, branchPersonIds)
-    toast.success(`Hidden ${branchPersonIds.length} person${branchPersonIds.length > 1 ? 's' : ''} in branch`)
+    workspaceState.collapseBranch(parentId, childIds)
+    toast.success(`Collapsed ${childIds.length} person${childIds.length > 1 ? 's' : ''} under parent`)
   }, [workspaceState])
 
-  const handleExpandBranch = useCallback((connectionId: string) => {
-    const collapsedBranches = workspaceState.workspace.collapsedBranches || new Map()
-    const branchPersonIds = collapsedBranches.get(connectionId) || []
+  const handleExpandBranch = useCallback((parentId: string) => {
+    const collapsedBranches = workspaceState.workspace.collapsedBranches || []
+    const branch = collapsedBranches.find(b => b.parentId === parentId)
+    const childIds = branch?.collapsedPersonIds || []
     
-    if (branchPersonIds.length === 0) {
+    if (childIds.length === 0) {
       return
     }
     
-    workspaceState.expandBranch(connectionId)
-    toast.success(`Expanded ${branchPersonIds.length} person${branchPersonIds.length > 1 ? 's' : ''} in branch`)
+    workspaceState.expandBranch(parentId)
+    toast.success(`Expanded ${childIds.length} person${childIds.length > 1 ? 's' : ''} from stack`)
   }, [workspaceState])
 
   const handleExpandBranchFromPerson = useCallback((personId: string) => {
-    const collapsedBranches = workspaceState.workspace.collapsedBranches || new Map()
+    const collapsedBranches = workspaceState.workspace.collapsedBranches || []
+    const branch = collapsedBranches.find(b => b.parentId === personId)
     
-    for (const [connectionId, branchPersonIds] of collapsedBranches.entries()) {
-      const connection = workspaceState.workspace.connections.find(c => c.id === connectionId)
-      if (connection && connection.fromPersonId === personId) {
-        handleExpandBranch(connectionId)
-        return
-      }
+    if (branch) {
+      handleExpandBranch(personId)
     }
-  }, [workspaceState.workspace.connections, workspaceState.workspace.collapsedBranches, handleExpandBranch])
+  }, [workspaceState.workspace.collapsedBranches, handleExpandBranch])
 
   const handleGroupClick = useCallback((groupId: string, shiftKey: boolean) => {
     selection.selectGroup(groupId, shiftKey)
