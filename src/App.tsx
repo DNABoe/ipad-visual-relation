@@ -22,14 +22,26 @@ function App() {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      if (!userCredentials) {
-        const defaultHash = await getDefaultPasswordHash()
-        await setUserCredentials({
-          username: 'admin',
-          passwordHash: defaultHash
-        })
+      try {
+        console.log('[App] Initializing auth...', { userCredentials })
+        if (!userCredentials) {
+          console.log('[App] No credentials found, creating defaults...')
+          const defaultHash = await getDefaultPasswordHash()
+          console.log('[App] Default hash generated:', defaultHash)
+          await setUserCredentials({
+            username: 'admin',
+            passwordHash: defaultHash
+          })
+          console.log('[App] Default credentials saved')
+        } else {
+          console.log('[App] Existing credentials found')
+        }
+        setIsCheckingAuth(false)
+        console.log('[App] Auth check complete')
+      } catch (error) {
+        console.error('[App] Auth initialization error:', error)
+        setIsCheckingAuth(false)
       }
-      setIsCheckingAuth(false)
     }
     
     initializeAuth()
@@ -80,10 +92,19 @@ function App() {
   }, [])
 
   if (isCheckingAuth) {
-    return null
+    console.log('[App] Still checking auth...')
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-2">Initializing RelEye...</div>
+          <div className="text-xs text-muted-foreground/60">Checking authentication</div>
+        </div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {
+    console.log('[App] Not authenticated, showing login view')
     return (
       <>
         <LoginView onLogin={handleLogin} />
@@ -93,6 +114,7 @@ function App() {
   }
 
   if (showFileManager || !workspace) {
+    console.log('[App] Showing file manager', { showFileManager, hasWorkspace: !!workspace })
     return (
       <>
         <FileManager onLoad={handleLoad} />
@@ -101,6 +123,7 @@ function App() {
     )
   }
 
+  console.log('[App] Showing workspace view')
   return (
     <>
       <WorkspaceView
