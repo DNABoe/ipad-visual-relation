@@ -356,9 +356,10 @@ export function CanvasEdges({
           
           let px: number, py: number
           
+          const dx = toX - fromX
+          const dy = toY - fromY
+          
           if (organicLines) {
-            const dx = toX - fromX
-            const dy = toY - fromY
             const distance = Math.sqrt(dx * dx + dy * dy)
             const curvature = Math.min(distance * 0.25, 150)
             
@@ -383,8 +384,8 @@ export function CanvasEdges({
             px = mt3 * fromX + 3 * mt2 * t * cp1X + 3 * mt * t2 * cp2X + t3 * toX
             py = mt3 * fromY + 3 * mt2 * t * cp1Y + 3 * mt * t2 * cp2Y + t3 * toY
           } else {
-            px = fromX + (toX - fromX) * particle.progress
-            py = fromY + (toY - fromY) * particle.progress
+            px = fromX + dx * particle.progress
+            py = fromY + dy * particle.progress
           }
           
           const particleSize = 6 + pulseIntensity * 2
