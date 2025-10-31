@@ -1,6 +1,12 @@
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { Logo } from './Logo'
 import { SearchBar, type SearchBarRef } from './SearchBar'
@@ -31,6 +37,7 @@ import {
   GitBranch,
   Eye,
   EyeSlash,
+  Question,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -48,6 +55,7 @@ interface WorkspaceToolbarProps {
   canFindPath: boolean
   isShortestPathActive: boolean
   searchBarRef: React.RefObject<SearchBarRef>
+  onShowKeyboardShortcuts: () => void
 }
 
 export function WorkspaceToolbar({
@@ -62,6 +70,7 @@ export function WorkspaceToolbar({
   canFindPath,
   isShortestPathActive,
   searchBarRef,
+  onShowKeyboardShortcuts,
 }: WorkspaceToolbarProps) {
 
   const handleSaveClick = () => {
@@ -92,41 +101,6 @@ export function WorkspaceToolbar({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <FilePlus size={18} className="text-success" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>New Network</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('load')} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <FolderOpen size={18} className="text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Load Network</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSaveClick}
-                disabled={!downloadUrl}
-                className="hover:bg-toolbar-hover hover:border-success/50 disabled:opacity-40"
-              >
-                <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
-          </Tooltip>
-
-          <Separator orientation="vertical" className="h-6 bg-border" />
-
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
@@ -168,32 +142,41 @@ export function WorkspaceToolbar({
 
           <Separator orientation="vertical" className="h-6 bg-border" />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleSmartArrange} className="hover:bg-toolbar-hover hover:border-primary/50">
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="hover:bg-toolbar-hover hover:border-primary/50">
+                    <ArrowsInCardinal size={18} weight="duotone" className="text-accent" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Layout Tools</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuItem onClick={controller.handlers.handleSmartArrange} className="cursor-pointer gap-3 py-2.5">
                 <Crosshair size={18} weight="duotone" className="text-success" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Force-Directed Layout (Minimizes connection length)</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleHierarchicalView} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Force-Directed Layout</span>
+                  <span className="text-xs text-muted-foreground">Minimizes connection length</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={controller.handlers.handleHierarchicalView} className="cursor-pointer gap-3 py-2.5">
                 <TreeStructure size={18} weight="duotone" className="text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Hierarchical Tree Layout (Top-down structure)</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={controller.handlers.handleTightenNetwork} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Hierarchical Tree Layout</span>
+                  <span className="text-xs text-muted-foreground">Top-down structure</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={controller.handlers.handleTightenNetwork} className="cursor-pointer gap-3 py-2.5">
                 <CirclesThree size={18} weight="duotone" className="text-accent" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Circular Cluster Layout (Groups connected nodes)</TooltipContent>
-          </Tooltip>
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Circular Cluster Layout</span>
+                  <span className="text-xs text-muted-foreground">Groups connected nodes</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -246,33 +229,8 @@ export function WorkspaceToolbar({
 
           <Separator orientation="vertical" className="h-6 bg-border" />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={showListPanel ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowListPanel(!showListPanel)}
-                className={showListPanel ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
-              >
-                <List size={18} weight={showListPanel ? "fill" : "duotone"} className={showListPanel ? "" : "text-muted-foreground"} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle List</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Export size={18} weight="duotone" className="text-warning" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Export Canvas</TooltipContent>
-          </Tooltip>
-
           {(controller.selection.selectedPersons.length > 0 || controller.selection.selectedGroups.length > 0 || controller.selection.selectedConnections.length > 0) && (
             <>
-              <Separator orientation="vertical" className="h-6 bg-border" />
-
               {controller.selection.selectedPersons.length > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -381,10 +339,10 @@ export function WorkspaceToolbar({
                   </Tooltip>
                 </>
               )}
+
+              <Separator orientation="vertical" className="h-6 bg-border" />
             </>
           )}
-
-          <Separator orientation="vertical" className="h-6 bg-border" />
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -403,11 +361,78 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
+              <Button
+                variant={showListPanel ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowListPanel(!showListPanel)}
+                className={showListPanel ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
+              >
+                <List size={18} weight={showListPanel ? "fill" : "duotone"} className={showListPanel ? "" : "text-muted-foreground"} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle List</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Export size={18} weight="duotone" className="text-warning" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export Canvas</TooltipContent>
+          </Tooltip>
+
+          <Separator orientation="vertical" className="h-6 bg-border" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <FilePlus size={18} className="text-success" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>New Network</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('load')} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <FolderOpen size={18} className="text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Load Network</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveClick}
+                disabled={!downloadUrl}
+                className="hover:bg-toolbar-hover hover:border-success/50 disabled:opacity-40"
+              >
+                <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openSettingsDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
                 <Gear size={18} weight="duotone" className="text-muted-foreground" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Settings</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={onShowKeyboardShortcuts} className="hover:bg-toolbar-hover hover:border-primary/50">
+                <Question size={18} weight="bold" className="text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Keyboard Shortcuts (?)</TooltipContent>
           </Tooltip>
         </div>
         </div>

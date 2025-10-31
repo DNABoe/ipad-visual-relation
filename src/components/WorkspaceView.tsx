@@ -357,6 +357,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         canFindPath={canFindPath}
         isShortestPathActive={isShortestPathActive}
         searchBarRef={searchBarRef}
+        onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
       />
 
       <div className="flex-1 flex overflow-hidden">
