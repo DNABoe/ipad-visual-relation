@@ -231,17 +231,6 @@ export function WorkspaceToolbar({
 
           {(controller.selection.selectedPersons.length > 0 || controller.selection.selectedGroups.length > 0 || controller.selection.selectedConnections.length > 0) && (
             <>
-              {controller.selection.selectedPersons.length > 0 && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
-                      <UserMinus size={18} weight="bold" className="text-destructive" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Delete Selected Persons</TooltipContent>
-                </Tooltip>
-              )}
-
               {controller.selection.selectedGroups.length > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -331,6 +320,14 @@ export function WorkspaceToolbar({
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                        <UserMinus size={18} weight="bold" className="text-destructive" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Selected Persons</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedConnections} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
                         <LinkBreak size={18} weight="bold" className="text-destructive" />
                       </Button>
@@ -338,6 +335,17 @@ export function WorkspaceToolbar({
                     <TooltipContent>Delete Selected Connections</TooltipContent>
                   </Tooltip>
                 </>
+              )}
+
+              {controller.selection.selectedPersons.length > 0 && controller.selection.selectedConnections.length === 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={controller.handlers.handleDeleteSelectedPersons} className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive">
+                      <UserMinus size={18} weight="bold" className="text-destructive" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Selected Persons</TooltipContent>
+                </Tooltip>
               )}
 
               <Separator orientation="vertical" className="h-6 bg-border" />
