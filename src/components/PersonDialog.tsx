@@ -510,40 +510,41 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     <p className="text-xs text-muted-foreground">Up to 3 lines</p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Importance</Label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => setScore(num)}
-                          className={cn(
-                            "flex-1 h-11 rounded-lg border-2 font-bold text-lg transition-all",
-                            score === num 
-                              ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
-                              : 'bg-card border-border hover:border-accent/50'
-                          )}
-                        >
-                          {num}
-                        </button>
-                      ))}
+                  <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Importance</Label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => setScore(num)}
+                            className={cn(
+                              "flex-1 h-10 rounded-lg border-2 font-bold text-base transition-all",
+                              score === num 
+                                ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
+                                : 'bg-card border-border hover:border-accent/50'
+                            )}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">1 = High, 5 = Lower</p>
                     </div>
-                    <p className="text-xs text-muted-foreground text-center">1 = High, 5 = Lower</p>
-                  </div>
 
-                  <div className="flex items-center space-x-3 rounded-lg border border-border bg-card p-3">
-                    <Checkbox 
-                      id="advocate" 
-                      checked={advocate}
-                      onCheckedChange={(checked) => setAdvocate(checked === true)}
-                      className="h-5 w-5"
-                    />
-                    <div className="flex-1">
-                      <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
-                        Advocate
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Actively promotes messages</p>
+                    <div className="space-y-2 pt-6">
+                      <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-2.5 whitespace-nowrap">
+                        <Checkbox 
+                          id="advocate" 
+                          checked={advocate}
+                          onCheckedChange={(checked) => setAdvocate(checked === true)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
+                          Advocate
+                        </Label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -551,7 +552,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Status</Label>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   {FRAME_COLOR_NAMES.map(color => {
                     const labels: Record<string, string> = {
                       red: 'Negative',
@@ -565,17 +566,17 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         type="button"
                         onClick={() => setFrameColor(color as FrameColor)}
                         className={cn(
-                          "flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all",
+                          "flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-all",
                           frameColor === color 
                             ? 'border-accent ring-2 ring-accent ring-offset-1 ring-offset-background bg-accent/10' 
                             : 'border-border hover:border-accent/50'
                         )}
                       >
                         <div
-                          className="w-12 h-12 rounded-md"
+                          className="w-9 h-9 rounded-md"
                           style={{ backgroundColor: FRAME_COLORS[color] }}
                         />
-                        <span className="text-xs text-muted-foreground text-center">{labels[color]}</span>
+                        <span className="text-xs text-muted-foreground text-center leading-tight">{labels[color]}</span>
                       </button>
                     )
                   })}

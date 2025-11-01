@@ -5,7 +5,7 @@ import type { Person } from '@/lib/types'
 import { getInitials } from '@/lib/helpers'
 import { FRAME_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import { Megaphone, Stack } from '@phosphor-icons/react'
+import { Star, Stack } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface PersonNodeProps {
@@ -120,22 +120,22 @@ export function PersonNode({
       >
         {person.advocate && (
           <div 
-            className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full p-1.5 shadow-lg border-2 border-card z-10"
+            className="absolute -top-3 -right-3 bg-yellow-400 text-background rounded-full p-2 shadow-lg border-2 border-card z-20"
             title="Advocate - Actively promotes messages"
           >
-            <Megaphone size={14} weight="fill" />
+            <Star size={16} weight="fill" />
           </div>
         )}
         {hasCollapsedBranch && collapsedCount > 0 && (
           <div 
-            className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 shadow-lg border-2 border-card z-10 flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
+            className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-20 flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
             onClick={(e) => {
               e.stopPropagation()
               onExpandBranch?.(e)
             }}
           >
-            <Stack size={12} weight="fill" />
+            <Stack size={14} weight="fill" />
             <span className="text-xs font-bold">{collapsedCount}</span>
           </div>
         )}
