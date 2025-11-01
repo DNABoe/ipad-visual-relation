@@ -509,35 +509,22 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium">Importance</Label>
-                    <div className="flex gap-2 items-center">
-                      <div className="flex gap-1.5 flex-1">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => setScore(num)}
-                            className={cn(
-                              "w-11 h-11 rounded-lg border-2 font-bold text-lg transition-all flex items-center justify-center",
-                              score === num 
-                                ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
-                                : 'bg-card border-border hover:border-accent/50'
-                            )}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="flex items-center space-x-2 rounded-lg border border-border bg-card px-2.5 py-2 whitespace-nowrap flex-shrink-0 h-11">
-                        <Checkbox
-                          id="advocate"
-                          checked={advocate}
-                          onCheckedChange={(checked) => setAdvocate(!!checked)}
-                          className="h-4 w-4"
-                        />
-                        <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
-                          Advocate
-                        </Label>
-                      </div>
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setScore(num)}
+                          className={cn(
+                            "w-11 h-11 rounded-lg border-2 font-bold text-lg transition-all flex items-center justify-center",
+                            score === num 
+                              ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
+                              : 'bg-card border-border hover:border-accent/50'
+                          )}
+                        >
+                          {num}
+                        </button>
+                      ))}
                     </div>
                     <p className="text-[11px] text-muted-foreground">1 = High, 5 = Lower</p>
                   </div>
@@ -572,6 +559,21 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           </button>
                         )
                       })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium">Advocate</Label>
+                    <div className="flex items-center space-x-2 rounded-lg border border-border bg-card px-3 py-2.5">
+                      <Checkbox
+                        id="advocate"
+                        checked={advocate}
+                        onCheckedChange={(checked) => setAdvocate(!!checked)}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="advocate" className="text-sm cursor-pointer">
+                        This person actively promotes messages
+                      </Label>
                     </div>
                   </div>
                 </div>
