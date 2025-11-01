@@ -543,23 +543,15 @@ export function CanvasEdges({
       <div
         className="absolute inset-0 z-0"
         style={{ 
-          pointerEvents: hoveredConnection ? 'auto' : 'none',
+          pointerEvents: 'auto',
           cursor: hoveredConnection ? 'pointer' : 'inherit',
           background: 'transparent'
         }}
+        onMouseMove={handleCanvasMouseMove}
         onMouseDown={handleCanvasMouseDown}
         onMouseUp={handleCanvasMouseUp}
-        onContextMenu={handleCanvasContextMenu}
-      />
-      <div
-        className="absolute inset-0 z-0"
-        style={{ 
-          pointerEvents: 'auto',
-          cursor: 'inherit',
-          background: 'transparent'
-        }}
-        onMouseMove={handleCanvasMouseMove}
         onMouseLeave={() => setHoveredConnection(null)}
+        onContextMenu={handleCanvasContextMenu}
       />
     </>
   )
