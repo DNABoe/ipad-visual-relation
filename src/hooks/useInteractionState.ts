@@ -147,9 +147,8 @@ export function useInteractionState() {
     setSelectionRect(null)
     setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
-    clearDragIntent()
     return wasDragging
-  }, [dragState, clearDragIntent])
+  }, [dragState])
 
   const endResize = useCallback(() => {
     setResizeState(null)

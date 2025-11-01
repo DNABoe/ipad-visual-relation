@@ -248,6 +248,9 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       transform.pan(e.movementX, e.movementY)
     } else if (interaction.dragState.type === 'selection') {
       interaction.updateSelectionDrag(currentX, currentY)
+      if (!interaction.dragState.hasMoved) {
+        interaction.markDragAsMoved()
+      }
     }
   }, [controller, magneticSnap, gridSize, updatePersonPositions])
 
@@ -296,6 +299,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       }
 
       interaction.endDrag()
+      interaction.clearDragIntent()
     } else if (interaction.dragState.type === 'selection') {
       if (interaction.selectionRect && interaction.dragState.hasMoved) {
         const rectWidth = Math.abs(interaction.selectionRect.width)
@@ -343,9 +347,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       }
       
       interaction.endDrag()
+      interaction.clearDragIntent()
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
-    } else if (hadDragIntent && dragIntent.type === 'canvas' && !dragIntent.hasMovedEnough) {
+      interaction.clearDragIntent()
+    } else if (hadDragIntent && dragIntent.type === 'canvas') {
       if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
         selection.clearSelection()
       }
