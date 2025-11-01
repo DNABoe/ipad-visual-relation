@@ -48,7 +48,7 @@ export function UnsavedChangesDialog({
                   <li>Right-click the download link below</li>
                   <li>Select "Save Link As..." from the menu</li>
                   <li>Choose where to save the file</li>
-                  <li>Click "Save & Continue" below</li>
+                  <li>Click "Continue" below</li>
                 </ol>
                 <div className="pt-2">
                   <a
@@ -77,7 +77,7 @@ export function UnsavedChangesDialog({
             disabled={!downloadUrl}
             className="bg-success text-success-foreground hover:bg-success/90"
           >
-            Save & Continue
+            Continue
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
