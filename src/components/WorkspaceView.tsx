@@ -373,6 +373,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         searchBarRef={searchBarRef}
         onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
         hasUnsavedChanges={hasUnsavedChanges}
+        onMarkAsSaved={handleMarkAsSaved}
       />
 
       <div className="flex-1 flex overflow-hidden">

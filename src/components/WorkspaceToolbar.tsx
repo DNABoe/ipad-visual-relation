@@ -58,6 +58,7 @@ interface WorkspaceToolbarProps {
   searchBarRef: React.RefObject<SearchBarRef>
   onShowKeyboardShortcuts: () => void
   hasUnsavedChanges?: boolean
+  onMarkAsSaved?: () => void
 }
 
 export function WorkspaceToolbar({
@@ -74,6 +75,7 @@ export function WorkspaceToolbar({
   searchBarRef,
   onShowKeyboardShortcuts,
   hasUnsavedChanges = false,
+  onMarkAsSaved,
 }: WorkspaceToolbarProps) {
 
   const downloadFileName = fileName.endsWith('.enc.releye') 
@@ -433,6 +435,14 @@ export function WorkspaceToolbar({
                   }
                   e.preventDefault()
                   toast.info('Right-click on the Save button and select "Save Link As..." to download')
+                }}
+                onContextMenu={(e) => {
+                  if (downloadUrl && onMarkAsSaved) {
+                    setTimeout(() => {
+                      onMarkAsSaved()
+                      toast.success('File marked as saved')
+                    }, 100)
+                  }
                 }}
                 className="inline-block"
               >
