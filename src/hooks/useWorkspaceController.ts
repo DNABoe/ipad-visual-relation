@@ -28,8 +28,18 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   const canvasRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    workspaceState.updateCanvasTransform(transform.transform)
-  }, [transform.transform, workspaceState])
+    const currentTransform = workspaceState.workspace.canvasTransform
+    const newTransform = transform.transform
+    
+    if (
+      !currentTransform ||
+      currentTransform.x !== newTransform.x ||
+      currentTransform.y !== newTransform.y ||
+      currentTransform.scale !== newTransform.scale
+    ) {
+      workspaceState.updateCanvasTransform(newTransform)
+    }
+  }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState])
 
   const handlePersonClick = useCallback((personId: string, shiftKey: boolean) => {
     if (interaction.isConnecting) {
