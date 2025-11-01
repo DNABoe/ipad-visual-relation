@@ -393,7 +393,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
               <Input
                 id="load-file"
                 type="file"
-                accept=".json,.enc.json"
+                accept=".enc.releye,.enc.json"
                 className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
@@ -403,7 +403,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 }}
               />
               <p className="text-xs text-muted-foreground pl-1">
-                Select your <span className="font-mono text-foreground">.enc.json</span> file
+                Select your <span className="font-mono text-foreground">.enc.releye</span> file
               </p>
             </div>
 
