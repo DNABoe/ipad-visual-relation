@@ -518,7 +518,6 @@ export function CanvasEdges({
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
     if (connectionId) {
       e.stopPropagation()
-      e.preventDefault()
     }
   }
   
@@ -526,17 +525,16 @@ export function CanvasEdges({
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
     if (connectionId) {
       e.stopPropagation()
-      e.preventDefault()
     }
   }
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
     setHoveredConnectionId(connectionId)
-    
-    if (hitCanvasRef.current) {
-      hitCanvasRef.current.style.pointerEvents = connectionId ? 'auto' : 'none'
-    }
+  }
+
+  const handleCanvasMouseLeave = () => {
+    setHoveredConnectionId(null)
   }
 
   return (
@@ -550,15 +548,16 @@ export function CanvasEdges({
         ref={hitCanvasRef}
         className="absolute inset-0 opacity-0"
         style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{ pointerEvents: 'auto', cursor: hoveredConnectionId ? 'pointer' : 'default' }}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseLeave={handleCanvasMouseLeave}
         onMouseDown={handleCanvasMouseDown}
         onMouseUp={handleCanvasMouseUp}
         onClick={handleCanvasClick}
         onContextMenu={handleCanvasContextMenu}
-      />
-      <div
-        className="absolute inset-0"
-        style={{ pointerEvents: 'auto' }}
-        onMouseMove={handleCanvasMouseMove}
       />
     </>
   )
