@@ -283,13 +283,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
         <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
+            <div className="flex justify-center mb-4">
+              <Logo size={64} showText={false} animated={true} />
+            </div>
+            <DialogTitle className="flex items-center gap-2 text-xl justify-center">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <UsersThree size={20} className="text-primary-foreground" weight="duotone" />
               </div>
               Create New Network
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-center">
               Set up your encrypted relationship network
             </DialogDescription>
           </DialogHeader>
@@ -377,13 +380,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
         <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
+            <div className="flex justify-center mb-4">
+              <Logo size={64} showText={false} animated={true} />
+            </div>
+            <DialogTitle className="flex items-center gap-2 text-xl justify-center">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <FolderOpen size={20} className="text-primary-foreground" weight="duotone" />
               </div>
               Load Existing Network
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-center">
               Select your encrypted network file
             </DialogDescription>
           </DialogHeader>
