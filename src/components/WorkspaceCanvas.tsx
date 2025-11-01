@@ -267,28 +267,32 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
 
       interaction.endDrag()
     } else if (interaction.selectionRect) {
-      const selectedPersons = workspace.persons.filter(p => {
-        const px = p.x + NODE_WIDTH / 2
-        const py = p.y + NODE_HEIGHT / 2
-        return (
-          px >= interaction.selectionRect!.x &&
-          px <= interaction.selectionRect!.x + interaction.selectionRect!.width &&
-          py >= interaction.selectionRect!.y &&
-          py <= interaction.selectionRect!.y + interaction.selectionRect!.height
+      if (interaction.selectionRect.width === 0 && interaction.selectionRect.height === 0) {
+        selection.clearSelection()
+      } else {
+        const selectedPersons = workspace.persons.filter(p => {
+          const px = p.x + NODE_WIDTH / 2
+          const py = p.y + NODE_HEIGHT / 2
+          return (
+            px >= interaction.selectionRect!.x &&
+            px <= interaction.selectionRect!.x + interaction.selectionRect!.width &&
+            py >= interaction.selectionRect!.y &&
+            py <= interaction.selectionRect!.y + interaction.selectionRect!.height
+          )
+        }).map(p => p.id)
+
+        const selectedConnectionIds = getConnectionsInRect(
+          workspace.persons,
+          workspace.connections,
+          interaction.selectionRect.x,
+          interaction.selectionRect.y,
+          interaction.selectionRect.width,
+          interaction.selectionRect.height
         )
-      }).map(p => p.id)
 
-      const selectedConnectionIds = getConnectionsInRect(
-        workspace.persons,
-        workspace.connections,
-        interaction.selectionRect.x,
-        interaction.selectionRect.y,
-        interaction.selectionRect.width,
-        interaction.selectionRect.height
-      )
-
-      selection.selectPersons(selectedPersons)
-      selection.selectConnections(selectedConnectionIds)
+        selection.selectPersons(selectedPersons)
+        selection.selectConnections(selectedConnectionIds)
+      }
     }
 
     interaction.endDrag()
