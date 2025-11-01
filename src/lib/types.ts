@@ -25,6 +25,7 @@ export interface Person {
   position2?: string
   position3?: string
   photo?: string
+  photoOriginal?: string
   photoOffsetX?: number
   photoOffsetY?: number
   photoZoom?: number

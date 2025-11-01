@@ -14,6 +14,8 @@ import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
 import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { resampleImage } from '@/lib/imageProcessing'
+import { toast } from 'sonner'
 
 interface PersonDialogProps {
   open: boolean
@@ -29,6 +31,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [score, setScore] = useState(3)
   const [frameColor, setFrameColor] = useState<FrameColor>('white')
   const [photo, setPhoto] = useState<string | undefined>(undefined)
+  const [photoOriginal, setPhotoOriginal] = useState<string | undefined>(undefined)
   const [photoOffsetX, setPhotoOffsetX] = useState(0)
   const [photoOffsetY, setPhotoOffsetY] = useState(0)
   const [photoZoom, setPhotoZoom] = useState(100)
@@ -49,6 +52,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setScore(editPerson?.score || 3)
       setFrameColor(editPerson?.frameColor || 'white')
       setPhoto(editPerson?.photo)
+      setPhotoOriginal(editPerson?.photo)
       setPhotoOffsetX(editPerson?.photoOffsetX || 0)
       setPhotoOffsetY(editPerson?.photoOffsetY || 0)
       setPhotoZoom(editPerson?.photoZoom || 100)
@@ -61,6 +65,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setScore(3)
       setFrameColor('white')
       setPhoto(undefined)
+      setPhotoOriginal(undefined)
       setPhotoOffsetX(0)
       setPhotoOffsetY(0)
       setPhotoZoom(100)
@@ -70,12 +75,44 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     }
   }, [open, editPerson])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file')
+        return
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image file is too large. Maximum size is 10MB.')
+        return
+      }
+
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhoto(reader.result as string)
+      reader.onloadend = async () => {
+        const originalDataUrl = reader.result as string
+        
+        try {
+          toast.info('Processing image...')
+          const { original, resampled } = await resampleImage(originalDataUrl, {
+            maxWidth: 480,
+            maxHeight: 480,
+            quality: 0.85,
+            format: 'image/jpeg'
+          })
+          
+          setPhotoOriginal(original)
+          setPhoto(resampled)
+          toast.success('Image loaded and optimized')
+        } catch (error) {
+          console.error('Error resampling image:', error)
+          setPhotoOriginal(originalDataUrl)
+          setPhoto(originalDataUrl)
+          toast.warning('Image loaded but could not be optimized')
+        }
+      }
+      reader.onerror = () => {
+        toast.error('Failed to read image file')
       }
       reader.readAsDataURL(file)
     }
@@ -125,6 +162,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   const handleRemovePhoto = () => {
     setPhoto(undefined)
+    setPhotoOriginal(undefined)
     setPhotoOffsetX(0)
     setPhotoOffsetY(0)
     setPhotoZoom(100)
@@ -242,6 +280,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       score,
       frameColor,
       photo,
+      photoOriginal,
       photoOffsetX,
       photoOffsetY,
       photoZoom,
