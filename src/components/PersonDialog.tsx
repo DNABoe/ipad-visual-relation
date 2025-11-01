@@ -12,7 +12,7 @@ import { Slider } from '@/components/ui/slider'
 import type { Person, FrameColor, Attachment, ActivityLogEntry } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
-import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal } from '@phosphor-icons/react'
+import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 interface PersonDialogProps {
@@ -31,11 +31,15 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [photo, setPhoto] = useState<string | undefined>(undefined)
   const [photoOffsetX, setPhotoOffsetX] = useState(0)
   const [photoOffsetY, setPhotoOffsetY] = useState(0)
+  const [photoZoom, setPhotoZoom] = useState(100)
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false)
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 })
   const [advocate, setAdvocate] = useState(false)
   const [notes, setNotes] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
+  const photoPreviewRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
@@ -47,6 +51,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setPhoto(editPerson?.photo)
       setPhotoOffsetX(editPerson?.photoOffsetX || 0)
       setPhotoOffsetY(editPerson?.photoOffsetY || 0)
+      setPhotoZoom(editPerson?.photoZoom || 100)
       setAdvocate(editPerson?.advocate || false)
       setNotes(editPerson?.notes || '')
       setAttachments(editPerson?.attachments || [])
@@ -58,6 +63,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setPhoto(undefined)
       setPhotoOffsetX(0)
       setPhotoOffsetY(0)
+      setPhotoZoom(100)
       setAdvocate(false)
       setNotes('')
       setAttachments([])
@@ -119,10 +125,54 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   const handleRemovePhoto = () => {
     setPhoto(undefined)
+    setPhotoOffsetX(0)
+    setPhotoOffsetY(0)
+    setPhotoZoom(100)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
+
+  const handlePhotoMouseDown = (e: React.MouseEvent) => {
+    if (!photo) return
+    e.preventDefault()
+    setIsDraggingPhoto(true)
+    setDragStartPos({ x: e.clientX, y: e.clientY })
+  }
+
+  const handlePhotoMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingPhoto || !photo) return
+    
+    const deltaX = e.clientX - dragStartPos.x
+    const deltaY = e.clientY - dragStartPos.y
+    
+    setPhotoOffsetX(prev => Math.max(-50, Math.min(50, prev + deltaX * 0.2)))
+    setPhotoOffsetY(prev => Math.max(-50, Math.min(50, prev + deltaY * 0.2)))
+    setDragStartPos({ x: e.clientX, y: e.clientY })
+  }
+
+  const handlePhotoMouseUp = () => {
+    setIsDraggingPhoto(false)
+  }
+
+  const handlePhotoWheel = (e: React.WheelEvent) => {
+    if (!photo) return
+    e.preventDefault()
+    
+    const delta = e.deltaY > 0 ? -5 : 5
+    setPhotoZoom(prev => Math.max(50, Math.min(200, prev + delta)))
+  }
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDraggingPhoto(false)
+    }
+    
+    if (isDraggingPhoto) {
+      window.addEventListener('mouseup', handleGlobalMouseUp)
+      return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [isDraggingPhoto])
 
   const createActivityLogEntry = (action: ActivityLogEntry['action'], details?: string): ActivityLogEntry => {
     return {
@@ -194,6 +244,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       photo,
       photoOffsetX,
       photoOffsetY,
+      photoZoom,
       advocate,
       notes,
       attachments,
@@ -248,7 +299,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-5xl overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden flex flex-col p-0">
         <div className="p-6 border-b border-border">
           <DialogTitle className="text-xl">
             {editPerson ? 'Edit Person' : 'Add Person'}
@@ -258,7 +309,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
           </DialogDescription>
         </div>
         
-        <Tabs defaultValue="details" className="flex-1 overflow-hidden flex flex-col">
+        <Tabs defaultValue="details" className="flex-1 overflow-hidden flex flex-col min-h-[600px]">
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">Details</TabsTrigger>
@@ -277,23 +328,37 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 px-6">
-            <TabsContent value="details" className="space-y-6 mt-4 pb-4">
-              <div className="grid grid-cols-2 gap-6">
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full px-6">
+              <TabsContent value="details" className="space-y-6 mt-4 pb-4 m-0">
+                <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex flex-col items-center gap-3">
                     <div 
-                      className="relative cursor-pointer group w-48 h-48 rounded-lg overflow-hidden border-4 border-border"
+                      ref={photoPreviewRef}
+                      className={cn(
+                        "relative group w-60 h-48 rounded-t-lg overflow-hidden border-[3px]",
+                        isDraggingPhoto && photo && "cursor-grabbing",
+                        !isDraggingPhoto && photo && "cursor-grab"
+                      )}
+                      style={{ borderColor: FRAME_COLORS[frameColor] }}
                       onDoubleClick={() => fileInputRef.current?.click()}
-                      title="Double-click to upload photo"
+                      onMouseDown={handlePhotoMouseDown}
+                      onMouseMove={handlePhotoMouseMove}
+                      onMouseUp={handlePhotoMouseUp}
+                      onMouseLeave={handlePhotoMouseUp}
+                      onWheel={handlePhotoWheel}
+                      title={photo ? "Drag to move, scroll to zoom" : "Double-click to upload photo"}
                     >
                       <div 
                         className="w-full h-full"
                         style={{
                           backgroundImage: photo ? `url(${photo})` : undefined,
-                          backgroundSize: 'cover',
+                          backgroundSize: `${photoZoom}%`,
                           backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
+                          backgroundRepeat: 'no-repeat',
                           backgroundColor: photo ? undefined : FRAME_COLORS[frameColor],
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)'
                         }}
                       >
                         {!photo && (
@@ -307,9 +372,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           </div>
                         )}
                       </div>
-                      <div className="absolute inset-0 bg-card/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                        <Upload className="text-foreground" size={40} weight="duotone" />
-                      </div>
+                      {!photo && (
+                        <div className="absolute inset-0 bg-card/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center pointer-events-none">
+                          <Upload className="text-foreground" size={40} weight="duotone" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col gap-2 w-full">
                       <input
@@ -345,12 +412,30 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                       
                       {photo && (
                         <div className="space-y-3 pt-2 border-t border-border">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <ArrowsOutCardinal size={14} />
-                            <span>Adjust Photo Position</span>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <ArrowsOutCardinal size={14} />
+                              <span>Adjust Photo</span>
+                            </div>
+                            <span className="text-primary font-mono">{photoZoom}%</span>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-xs">Horizontal</Label>
+                            <div className="flex items-center gap-2">
+                              <MagnifyingGlassMinus size={14} className="text-muted-foreground flex-shrink-0" />
+                              <Label className="text-xs flex-shrink-0">Zoom</Label>
+                              <Slider
+                                value={[photoZoom]}
+                                onValueChange={([value]) => setPhotoZoom(value)}
+                                min={50}
+                                max={200}
+                                step={5}
+                                className="flex-1"
+                              />
+                              <MagnifyingGlassPlus size={14} className="text-muted-foreground flex-shrink-0" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Horizontal Position</Label>
                             <Slider
                               value={[photoOffsetX]}
                               onValueChange={([value]) => setPhotoOffsetX(value)}
@@ -361,7 +446,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-xs">Vertical</Label>
+                            <Label className="text-xs">Vertical Position</Label>
                             <Slider
                               value={[photoOffsetY]}
                               onValueChange={([value]) => setPhotoOffsetY(value)}
@@ -371,7 +456,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                               className="w-full"
                             />
                           </div>
-                          {(photoOffsetX !== 0 || photoOffsetY !== 0) && (
+                          {(photoOffsetX !== 0 || photoOffsetY !== 0 || photoZoom !== 100) && (
                             <Button
                               type="button"
                               variant="ghost"
@@ -379,12 +464,16 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                               onClick={() => {
                                 setPhotoOffsetX(0)
                                 setPhotoOffsetY(0)
+                                setPhotoZoom(100)
                               }}
                               className="w-full text-xs"
                             >
-                              Reset Position
+                              Reset All
                             </Button>
                           )}
+                          <p className="text-xs text-muted-foreground/70 text-center">
+                            Drag photo to move • Scroll to zoom
+                          </p>
                         </div>
                       )}
                     </div>
@@ -494,7 +583,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="notes" className="mt-4 space-y-4 pb-4">
+            <TabsContent value="notes" className="mt-4 space-y-4 pb-4 m-0">
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
                 <Textarea
@@ -511,7 +600,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 space-y-4 pb-4">
+            <TabsContent value="attachments" className="mt-4 space-y-4 pb-4 m-0">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Attached Files</Label>
@@ -579,7 +668,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="activity" className="mt-4 pb-4">
+            <TabsContent value="activity" className="mt-4 pb-4 m-0">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Activity Log</Label>
                 {!editPerson || !editPerson.activityLog || editPerson.activityLog.length === 0 ? (
@@ -613,7 +702,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 )}
               </div>
             </TabsContent>
-          </ScrollArea>
+            </ScrollArea>
+          </div>
         </Tabs>
 
         <div className="p-6 border-t border-border">

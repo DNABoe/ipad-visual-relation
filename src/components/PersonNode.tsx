@@ -47,6 +47,7 @@ export function PersonNode({
   
   const photoOffsetX = person.photoOffsetX || 0
   const photoOffsetY = person.photoOffsetY || 0
+  const photoZoom = person.photoZoom || 100
 
   return (
     <motion.div 
@@ -144,8 +145,9 @@ export function PersonNode({
             className="w-full h-48 overflow-hidden rounded-t-md"
             style={{ 
               backgroundImage: person.photo ? `url(${person.photo})` : undefined,
-              backgroundSize: 'cover',
+              backgroundSize: person.photo ? `${photoZoom}%` : 'cover',
               backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
+              backgroundRepeat: 'no-repeat',
               backgroundColor: person.photo ? undefined : frameColor,
               boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)'
             }}

@@ -27,6 +27,7 @@ export interface Person {
   photo?: string
   photoOffsetX?: number
   photoOffsetY?: number
+  photoZoom?: number
   score: number
   frameColor: FrameColor
   x: number
