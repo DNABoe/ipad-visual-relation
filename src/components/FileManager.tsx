@@ -130,26 +130,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
   const handleDownloadClick = useCallback(() => {
     if (!createdNetwork) return
-    
-    try {
-      const link = document.createElement('a')
-      link.href = createdNetwork.downloadUrl
-      link.download = createdNetwork.fileName
-      link.style.display = 'none'
-      
-      document.body.appendChild(link)
-      
-      setTimeout(() => {
-        link.click()
-        setTimeout(() => {
-          document.body.removeChild(link)
-          toast.success('Download started! Check your Downloads folder.')
-        }, 100)
-      }, 0)
-    } catch (error) {
-      console.error('Download error:', error)
-      toast.error('Download failed. Your browser may be blocking automatic downloads.')
-    }
+    toast.info('Right-click the download link and select "Save Link As..." to save your file')
   }, [createdNetwork])
 
   const handleContinueWithoutDownload = useCallback(() => {
@@ -193,27 +174,26 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 </div>
               </div>
 
-              <Button
-                onClick={handleDownloadClick}
-                className="flex items-center justify-center gap-2 w-full h-14 bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all duration-300 active:scale-[0.98]"
-              >
-                <DownloadSimple size={22} weight="bold" />
-                <span>Download {createdNetwork.fileName}</span>
-              </Button>
-
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground text-center px-4">
-                  Click the button above to download your encrypted network file
-                </p>
+              <div className="p-6 bg-muted/50 rounded-xl border border-border space-y-4">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <DownloadSimple size={18} weight="bold" className="text-primary" />
+                  How to Save Your File
+                </h3>
+                <ol className="text-sm space-y-2 text-muted-foreground list-decimal list-inside">
+                  <li>Right-click on the download link below</li>
+                  <li>Select <span className="font-medium text-foreground">"Save Link As..."</span> from the menu</li>
+                  <li>Choose where to save your encrypted file</li>
+                  <li>Click the <span className="font-medium text-foreground">Continue</span> button to start working</li>
+                </ol>
                 
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
-                  <span>or</span>
+                <div className="pt-2 flex justify-center">
                   <a
                     href={createdNetwork.downloadUrl}
                     download={createdNetwork.fileName}
-                    className="text-primary hover:text-accent underline underline-offset-2 transition-colors"
+                    className="inline-flex items-center gap-3 px-6 py-3.5 bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all duration-300 active:scale-[0.98] shadow-lg"
                   >
-                    right-click here to "Save Link As..."
+                    <DownloadSimple size={22} weight="bold" />
+                    <span className="font-mono">{createdNetwork.fileName}</span>
                   </a>
                 </div>
               </div>

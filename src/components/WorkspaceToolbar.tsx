@@ -58,7 +58,6 @@ interface WorkspaceToolbarProps {
   searchBarRef: React.RefObject<SearchBarRef>
   onShowKeyboardShortcuts: () => void
   hasUnsavedChanges?: boolean
-  onSave?: () => void
 }
 
 export function WorkspaceToolbar({
@@ -75,40 +74,11 @@ export function WorkspaceToolbar({
   searchBarRef,
   onShowKeyboardShortcuts,
   hasUnsavedChanges = false,
-  onSave,
 }: WorkspaceToolbarProps) {
 
   const downloadFileName = fileName.endsWith('.enc.json') 
     ? fileName 
     : `${fileName}.enc.json`
-
-  const handleSaveClick = (e: React.MouseEvent) => {
-    if (!downloadUrl) {
-      e.preventDefault()
-      return
-    }
-    
-    try {
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = downloadFileName
-      link.style.display = 'none'
-      
-      document.body.appendChild(link)
-      
-      setTimeout(() => {
-        link.click()
-        setTimeout(() => {
-          document.body.removeChild(link)
-          onSave?.()
-          toast.success('Download started! Check your Downloads folder.')
-        }, 100)
-      }, 0)
-    } catch (error) {
-      console.error('Download error:', error)
-      toast.error('Download failed. Try right-clicking the filename to "Save Link As..."')
-    }
-  }
 
   return (
     <TooltipProvider>
@@ -452,17 +422,34 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSaveClick}
-                disabled={!downloadUrl}
-                className="hover:bg-toolbar-hover hover:border-success/50"
+              <a
+                href={downloadUrl || '#'}
+                download={downloadFileName}
+                onClick={(e) => {
+                  if (!downloadUrl) {
+                    e.preventDefault()
+                    toast.error('Download link not ready')
+                    return
+                  }
+                  e.preventDefault()
+                  toast.info('Right-click on the Save button and select "Save Link As..." to download')
+                }}
+                className="inline-block"
               >
-                <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!downloadUrl}
+                  className="hover:bg-toolbar-hover hover:border-success/50 cursor-pointer"
+                  asChild
+                >
+                  <span>
+                    <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
+                  </span>
+                </Button>
+              </a>
             </TooltipTrigger>
-            <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
+            <TooltipContent>Right-click to "Save Link As..." (Ctrl+S)</TooltipContent>
           </Tooltip>
 
           <Tooltip>

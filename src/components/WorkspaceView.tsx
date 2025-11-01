@@ -120,17 +120,9 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
         if (downloadUrl) {
-          const downloadFileName = fileName.endsWith('.enc.json') 
-            ? fileName 
-            : `${fileName}.enc.json`
-          
-          const link = document.createElement('a')
-          link.href = downloadUrl
-          link.download = downloadFileName
-          link.click()
-          
-          setSavedWorkspaceStr(currentWorkspaceStr)
-          toast.success('Network saved successfully!')
+          toast.info('Right-click the Save button in the toolbar and select "Save Link As..." to download your file')
+        } else {
+          toast.error('Download link not ready yet')
         }
         return
       }
@@ -273,9 +265,11 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   }, [controller.dialogs, onNewNetwork, onLoadNetwork])
 
   const handleSaveAndContinue = useCallback(() => {
-    toast.success('Network saved successfully!')
+    setSavedWorkspaceStr(currentWorkspaceStr)
+    setHasUnsavedChanges(false)
+    toast.success('Please download your file to save your work')
     handleUnsavedAction()
-  }, [handleUnsavedAction])
+  }, [handleUnsavedAction, currentWorkspaceStr])
 
   const handleSearch = useCallback((criteria: SearchCriteria) => {
     const matches = searchPersons(controller.workspace.persons, criteria)
@@ -379,7 +373,6 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         searchBarRef={searchBarRef}
         onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
         hasUnsavedChanges={hasUnsavedChanges}
-        onSave={handleMarkAsSaved}
       />
 
       <div className="flex-1 flex overflow-hidden">
