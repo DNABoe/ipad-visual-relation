@@ -8,7 +8,6 @@ import { Separator } from '@/components/ui/separator'
 import type { Person, Connection, Group, ViewTransform } from '@/lib/types'
 import { toast } from 'sonner'
 import { Image, Selection, ArrowsOut, CheckCircle, ClipboardText, Export as ExportIcon } from '@phosphor-icons/react'
-import { NODE_WIDTH, NODE_HEIGHT } from '@/lib/constants'
 
 interface ExportDialogProps {
   open: boolean
@@ -36,6 +35,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
   const [includeName, setIncludeName] = useState(true)
   const [includePosition, setIncludePosition] = useState(true)
   const [includePhoto, setIncludePhoto] = useState(true)
+  const [includeAdvocate, setIncludeAdvocate] = useState(true)
   
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const selectionCanvasRef = useRef<HTMLDivElement>(null)
@@ -44,11 +44,13 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
     if (open && selectedPersons.length > 0) {
       const selectedPersonsData = persons.filter(p => selectedPersons.includes(p.id))
       if (selectedPersonsData.length > 0) {
+        const cardWidth = 240
+        const cardHeight = 340
         const bounds = {
           minX: Math.min(...selectedPersonsData.map(p => p.x)),
           minY: Math.min(...selectedPersonsData.map(p => p.y)),
-          maxX: Math.max(...selectedPersonsData.map(p => p.x + NODE_WIDTH)),
-          maxY: Math.max(...selectedPersonsData.map(p => p.y + NODE_HEIGHT)),
+          maxX: Math.max(...selectedPersonsData.map(p => p.x + cardWidth)),
+          maxY: Math.max(...selectedPersonsData.map(p => p.y + cardHeight)),
         }
         setSelectionRect({
           x: bounds.minX - 40,
@@ -132,15 +134,18 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           return null
         }
         
+        const cardWidth = 240
+        const cardHeight = 340
+        
         const allX = [
           ...persons.map(p => p.x),
-          ...persons.map(p => p.x + NODE_WIDTH),
+          ...persons.map(p => p.x + cardWidth),
           ...groups.map(g => g.x),
           ...groups.map(g => g.x + g.width),
         ]
         const allY = [
           ...persons.map(p => p.y),
-          ...persons.map(p => p.y + NODE_HEIGHT),
+          ...persons.map(p => p.y + cardHeight),
           ...groups.map(g => g.y),
           ...groups.map(g => g.y + g.height),
         ]
@@ -222,8 +227,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
       }
       
       const personsInBounds = persons.filter(p => {
-        const pRight = p.x + NODE_WIDTH
-        const pBottom = p.y + NODE_HEIGHT
+        const cardWidth = 240
+        const cardHeight = 340
+        const pRight = p.x + cardWidth
+        const pBottom = p.y + cardHeight
         return !(pRight < bounds.minX || p.x > bounds.maxX || pBottom < bounds.minY || p.y > bounds.maxY)
       })
       
@@ -238,10 +245,12 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         if (!fromPerson || !toPerson) continue
         
-        const fromX = fromPerson.x + NODE_WIDTH / 2
-        const fromY = fromPerson.y + NODE_HEIGHT / 2
-        const toX = toPerson.x + NODE_WIDTH / 2
-        const toY = toPerson.y + NODE_HEIGHT / 2
+        const cardWidth = 240
+        const cardHeight = 340
+        const fromX = fromPerson.x + cardWidth / 2
+        const fromY = fromPerson.y + cardHeight / 2
+        const toX = toPerson.x + cardWidth / 2
+        const toY = toPerson.y + cardHeight / 2
         
         ctx.save()
         const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
@@ -264,22 +273,25 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         }
         
         const frameColor = frameColorMap[person.frameColor] || frameColorMap.white
-        const cardColor = getComputedStyle(document.documentElement).getPropertyValue('--card').trim()
+        const cardColor = 'oklch(0.21 0.03 230)'
+        
+        const cardWidth = 240
+        const cardHeight = 340
         
         ctx.save()
         ctx.fillStyle = cardColor
         ctx.strokeStyle = frameColor
-        ctx.lineWidth = 4
+        ctx.lineWidth = 3
         
         const radius = 8
         ctx.beginPath()
         ctx.moveTo(person.x + radius, person.y)
-        ctx.lineTo(person.x + NODE_WIDTH - radius, person.y)
-        ctx.arcTo(person.x + NODE_WIDTH, person.y, person.x + NODE_WIDTH, person.y + radius, radius)
-        ctx.lineTo(person.x + NODE_WIDTH, person.y + NODE_HEIGHT - radius)
-        ctx.arcTo(person.x + NODE_WIDTH, person.y + NODE_HEIGHT, person.x + NODE_WIDTH - radius, person.y + NODE_HEIGHT, radius)
-        ctx.lineTo(person.x + radius, person.y + NODE_HEIGHT)
-        ctx.arcTo(person.x, person.y + NODE_HEIGHT, person.x, person.y + NODE_HEIGHT - radius, radius)
+        ctx.lineTo(person.x + cardWidth - radius, person.y)
+        ctx.arcTo(person.x + cardWidth, person.y, person.x + cardWidth, person.y + radius, radius)
+        ctx.lineTo(person.x + cardWidth, person.y + cardHeight - radius)
+        ctx.arcTo(person.x + cardWidth, person.y + cardHeight, person.x + cardWidth - radius, person.y + cardHeight, radius)
+        ctx.lineTo(person.x + radius, person.y + cardHeight)
+        ctx.arcTo(person.x, person.y + cardHeight, person.x, person.y + cardHeight - radius, radius)
         ctx.lineTo(person.x, person.y + radius)
         ctx.arcTo(person.x, person.y, person.x + radius, person.y, radius)
         ctx.closePath()
@@ -287,10 +299,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.stroke()
         ctx.restore()
         
-        const avatarSize = 80
-        const avatarX = person.x + 4
-        const avatarY = person.y + 4
-        const avatarRadius = avatarSize / 2
+        const photoHeight = 192
+        const photoOffsetX = person.photoOffsetX || 0
+        const photoOffsetY = person.photoOffsetY || 0
+        const photoZoom = person.photoZoom || 100
         
         if (includePhoto && person.photo) {
           try {
@@ -304,11 +316,21 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             
             ctx.save()
             ctx.beginPath()
-            ctx.arc(avatarX + avatarRadius, avatarY + avatarRadius, avatarRadius, 0, Math.PI * 2)
+            ctx.rect(person.x, person.y, cardWidth, photoHeight)
             ctx.closePath()
             ctx.clip()
             
-            ctx.drawImage(img, avatarX, avatarY, avatarSize, avatarSize)
+            const imgWidth = (cardWidth * photoZoom) / 100
+            const imgHeight = (photoHeight * photoZoom) / 100
+            const imgX = person.x + (cardWidth - imgWidth) / 2 + (photoOffsetX * imgWidth) / 100
+            const imgY = person.y + (photoHeight - imgHeight) / 2 + (photoOffsetY * imgHeight) / 100
+            
+            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight)
+            ctx.restore()
+            
+            ctx.save()
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'
+            ctx.fillRect(person.x, person.y + photoHeight - 6, cardWidth, 6)
             ctx.restore()
           } catch (err) {
             console.error('Failed to load photo:', err)
@@ -316,73 +338,107 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             if (includeName) {
               ctx.save()
               ctx.fillStyle = frameColor
-              ctx.beginPath()
-              ctx.arc(avatarX + avatarRadius, avatarY + avatarRadius, avatarRadius, 0, Math.PI * 2)
-              ctx.fill()
+              ctx.fillRect(person.x, person.y, cardWidth, photoHeight)
               
-              ctx.fillStyle = person.frameColor === 'white' ? getComputedStyle(document.documentElement).getPropertyValue('--card').trim() : getComputedStyle(document.documentElement).getPropertyValue('--card-foreground').trim()
-              ctx.font = 'bold 28px Inter, sans-serif'
+              ctx.fillStyle = person.frameColor === 'white' ? 'oklch(0.15 0.02 240)' : 'oklch(1 0 0)'
+              ctx.font = 'bold 48px Inter, sans-serif'
               ctx.textAlign = 'center'
               ctx.textBaseline = 'middle'
               const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-              ctx.fillText(initials, avatarX + avatarRadius, avatarY + avatarRadius)
+              ctx.fillText(initials, person.x + cardWidth / 2, person.y + photoHeight / 2)
               ctx.restore()
             }
           }
-        } else if (includeName) {
+        } else if (!includePhoto || !person.photo) {
           ctx.save()
           ctx.fillStyle = frameColor
-          ctx.beginPath()
-          ctx.arc(avatarX + avatarRadius, avatarY + avatarRadius, avatarRadius, 0, Math.PI * 2)
-          ctx.fill()
+          ctx.fillRect(person.x, person.y, cardWidth, photoHeight)
           
-          ctx.fillStyle = person.frameColor === 'white' ? getComputedStyle(document.documentElement).getPropertyValue('--card').trim() : getComputedStyle(document.documentElement).getPropertyValue('--card-foreground').trim()
-          ctx.font = 'bold 28px Inter, sans-serif'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-          ctx.fillText(initials, avatarX + avatarRadius, avatarY + avatarRadius)
+          if (includeName) {
+            ctx.fillStyle = person.frameColor === 'white' ? 'oklch(0.15 0.02 240)' : 'oklch(1 0 0)'
+            ctx.font = 'bold 48px Inter, sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+            ctx.fillText(initials, person.x + cardWidth / 2, person.y + photoHeight / 2)
+          }
           ctx.restore()
         }
         
         if (includeImportanceScore) {
-          const badgeWidth = 30
-          const badgeHeight = 18
-          const badgeX = avatarX + (avatarSize - badgeWidth) / 2
-          const badgeY = avatarY + avatarSize + 4
+          const badgeSize = 32
+          const badgeX = person.x + cardWidth - badgeSize - 8
+          const badgeY = person.y + 8
           
           ctx.save()
           const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
           const primaryForegroundColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-foreground').trim()
           ctx.fillStyle = primaryColor
           ctx.strokeStyle = primaryColor
-          ctx.lineWidth = 1
-          const badgeRadius = 4
+          ctx.lineWidth = 0
+          const badgeRadius = 6
           ctx.beginPath()
           ctx.moveTo(badgeX + badgeRadius, badgeY)
-          ctx.lineTo(badgeX + badgeWidth - badgeRadius, badgeY)
-          ctx.arcTo(badgeX + badgeWidth, badgeY, badgeX + badgeWidth, badgeY + badgeRadius, badgeRadius)
-          ctx.lineTo(badgeX + badgeWidth, badgeY + badgeHeight - badgeRadius)
-          ctx.arcTo(badgeX + badgeWidth, badgeY + badgeHeight, badgeX + badgeWidth - badgeRadius, badgeY + badgeHeight, badgeRadius)
-          ctx.lineTo(badgeX + badgeRadius, badgeY + badgeHeight)
-          ctx.arcTo(badgeX, badgeY + badgeHeight, badgeX, badgeY + badgeHeight - badgeRadius, badgeRadius)
+          ctx.lineTo(badgeX + badgeSize - badgeRadius, badgeY)
+          ctx.arcTo(badgeX + badgeSize, badgeY, badgeX + badgeSize, badgeY + badgeRadius, badgeRadius)
+          ctx.lineTo(badgeX + badgeSize, badgeY + badgeSize - badgeRadius)
+          ctx.arcTo(badgeX + badgeSize, badgeY + badgeSize, badgeX + badgeSize - badgeRadius, badgeY + badgeSize, badgeRadius)
+          ctx.lineTo(badgeX + badgeRadius, badgeY + badgeSize)
+          ctx.arcTo(badgeX, badgeY + badgeSize, badgeX, badgeY + badgeSize - badgeRadius, badgeRadius)
           ctx.lineTo(badgeX, badgeY + badgeRadius)
           ctx.arcTo(badgeX, badgeY, badgeX + badgeRadius, badgeY, badgeRadius)
           ctx.closePath()
           ctx.fill()
-          ctx.stroke()
+          
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'
+          ctx.shadowBlur = 8
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 2
+          ctx.fill()
+          ctx.shadowColor = 'transparent'
           
           ctx.fillStyle = primaryForegroundColor
-          ctx.font = 'bold 11px Inter, sans-serif'
+          ctx.font = 'bold 16px Inter, sans-serif'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText(person.score.toString(), badgeX + badgeWidth / 2, badgeY + badgeHeight / 2)
+          ctx.fillText(person.score.toString(), badgeX + badgeSize / 2, badgeY + badgeSize / 2)
+          ctx.restore()
+        }
+        
+        if (includeAdvocate && person.advocate) {
+          const starSize = 40
+          const starX = person.x + 8
+          const starY = person.y + 8
+          
+          ctx.save()
+          ctx.fillStyle = 'rgb(250, 204, 21)'
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+          ctx.shadowBlur = 8
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 2
+          
+          ctx.beginPath()
+          for (let i = 0; i < 5; i++) {
+            const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2
+            const x = starX + starSize / 2 + (starSize / 2) * Math.cos(angle)
+            const y = starY + starSize / 2 + (starSize / 2) * Math.sin(angle)
+            if (i === 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+            
+            const innerAngle = angle + (2 * Math.PI) / 10
+            const innerX = starX + starSize / 2 + (starSize / 5) * Math.cos(innerAngle)
+            const innerY = starY + starSize / 2 + (starSize / 5) * Math.sin(innerAngle)
+            ctx.lineTo(innerX, innerY)
+          }
+          ctx.closePath()
+          ctx.fill()
           ctx.restore()
         }
         
         if (includeName || includePosition) {
-          const textX = person.x + avatarSize + 12
-          const textStartY = person.y + 16
+          const textX = person.x + 16
+          const textStartY = person.y + photoHeight + 16
+          const textWidth = cardWidth - 32
           
           ctx.save()
           let currentY = textStartY
@@ -391,31 +447,71 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           
           if (includeName) {
             ctx.fillStyle = foregroundColor
-            ctx.font = '600 14px Inter, sans-serif'
+            ctx.font = '600 18px Inter, sans-serif'
             ctx.textBaseline = 'top'
-            ctx.fillText(person.name, textX, currentY)
-            currentY += 18
+            
+            const maxWidth = textWidth
+            let displayName = person.name
+            let metrics = ctx.measureText(displayName)
+            if (metrics.width > maxWidth) {
+              while (metrics.width > maxWidth - 20 && displayName.length > 0) {
+                displayName = displayName.slice(0, -1)
+                metrics = ctx.measureText(displayName + '...')
+              }
+              displayName += '...'
+            }
+            ctx.fillText(displayName, textX, currentY)
+            currentY += 24
           }
           
           if (includePosition) {
+            ctx.fillStyle = mutedForegroundColor
+            ctx.font = '400 14px Inter, sans-serif'
+            const maxWidth = textWidth
+            
             if (person.position) {
-              ctx.fillStyle = mutedForegroundColor
-              ctx.font = '400 12px Inter, sans-serif'
-              ctx.fillText(person.position, textX, currentY)
-              currentY += 16
+              let displayPos = person.position
+              let metrics = ctx.measureText(displayPos)
+              if (metrics.width > maxWidth) {
+                while (metrics.width > maxWidth - 20 && displayPos.length > 0) {
+                  displayPos = displayPos.slice(0, -1)
+                  metrics = ctx.measureText(displayPos + '...')
+                }
+                displayPos += '...'
+              }
+              ctx.fillText(displayPos, textX, currentY)
+              currentY += 20
+            } else {
+              currentY += 20
             }
             
             if (person.position2) {
-              ctx.fillStyle = mutedForegroundColor
-              ctx.font = '400 12px Inter, sans-serif'
-              ctx.fillText(person.position2, textX, currentY)
-              currentY += 16
+              let displayPos2 = person.position2
+              let metrics = ctx.measureText(displayPos2)
+              if (metrics.width > maxWidth) {
+                while (metrics.width > maxWidth - 20 && displayPos2.length > 0) {
+                  displayPos2 = displayPos2.slice(0, -1)
+                  metrics = ctx.measureText(displayPos2 + '...')
+                }
+                displayPos2 += '...'
+              }
+              ctx.fillText(displayPos2, textX, currentY)
+              currentY += 20
+            } else {
+              currentY += 20
             }
             
             if (person.position3) {
-              ctx.fillStyle = mutedForegroundColor
-              ctx.font = '400 12px Inter, sans-serif'
-              ctx.fillText(person.position3, textX, currentY)
+              let displayPos3 = person.position3
+              let metrics = ctx.measureText(displayPos3)
+              if (metrics.width > maxWidth) {
+                while (metrics.width > maxWidth - 20 && displayPos3.length > 0) {
+                  displayPos3 = displayPos3.slice(0, -1)
+                  metrics = ctx.measureText(displayPos3 + '...')
+                }
+                displayPos3 += '...'
+              }
+              ctx.fillText(displayPos3, textX, currentY)
             }
           }
           
@@ -438,7 +534,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
       console.error('Canvas generation failed:', err)
       return null
     }
-  }, [format, mode, selectionRect, persons, connections, groups, includeImportanceScore, includeName, includePosition, includePhoto])
+  }, [format, mode, selectionRect, persons, connections, groups, includeImportanceScore, includeName, includePosition, includePhoto, includeAdvocate])
 
   const copyToClipboard = useCallback(async () => {
     setIsExporting(true)
@@ -660,6 +756,16 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 />
                 <Label htmlFor="include-photo" className="font-normal cursor-pointer text-sm">
                   Photos
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="include-advocate" 
+                  checked={includeAdvocate} 
+                  onCheckedChange={(checked) => setIncludeAdvocate(checked === true)}
+                />
+                <Label htmlFor="include-advocate" className="font-normal cursor-pointer text-sm">
+                  Advocate indicator
                 </Label>
               </div>
             </div>
