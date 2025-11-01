@@ -38,6 +38,7 @@ import {
   Eye,
   EyeSlash,
   Question,
+  Star,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -56,6 +57,8 @@ interface WorkspaceToolbarProps {
   isShortestPathActive: boolean
   searchBarRef: React.RefObject<SearchBarRef>
   onShowKeyboardShortcuts: () => void
+  hasUnsavedChanges?: boolean
+  onSave?: () => void
 }
 
 export function WorkspaceToolbar({
@@ -71,6 +74,8 @@ export function WorkspaceToolbar({
   isShortestPathActive,
   searchBarRef,
   onShowKeyboardShortcuts,
+  hasUnsavedChanges = false,
+  onSave,
 }: WorkspaceToolbarProps) {
 
   const handleSaveClick = () => {
@@ -84,6 +89,7 @@ export function WorkspaceToolbar({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      onSave?.()
     }
   }
 
@@ -97,6 +103,14 @@ export function WorkspaceToolbar({
           <Separator orientation="vertical" className="h-6 bg-border" />
           <div className="flex items-center gap-2 bg-card/50 px-3 py-1.5 rounded-md border border-primary/30">
             <span className="text-base font-semibold text-foreground">{fileName.replace('.enc.json', '')}</span>
+            {hasUnsavedChanges && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Star size={16} weight="fill" className="text-warning animate-pulse" />
+                </TooltipTrigger>
+                <TooltipContent>Unsaved changes</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
 

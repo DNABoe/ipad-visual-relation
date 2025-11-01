@@ -41,12 +41,26 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
   const searchBarRef = useRef<SearchBarRef>(null!)
   const [shortestPathPersonIds, setShortestPathPersonIds] = useState<string[]>([])
   const [isShortestPathActive, setIsShortestPathActive] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [savedWorkspaceStr, setSavedWorkspaceStr] = useState<string>('')
 
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
   })
 
   const currentWorkspaceStr = useMemo(() => serializeWorkspace(controller.workspace), [controller.workspace])
+
+  useEffect(() => {
+    setSavedWorkspaceStr(currentWorkspaceStr)
+  }, [])
+
+  useEffect(() => {
+    if (savedWorkspaceStr && currentWorkspaceStr !== savedWorkspaceStr) {
+      setHasUnsavedChanges(true)
+    } else {
+      setHasUnsavedChanges(false)
+    }
+  }, [currentWorkspaceStr, savedWorkspaceStr])
 
   useEffect(() => {
     let isMounted = true
@@ -333,6 +347,11 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   const canFindPath = controller.selection.selectedPersons.length === 2
 
+  const handleMarkAsSaved = useCallback(() => {
+    setSavedWorkspaceStr(currentWorkspaceStr)
+    setHasUnsavedChanges(false)
+  }, [currentWorkspaceStr])
+
   useEffect(() => {
     if (showListPanel !== undefined) {
       const timeoutId = setTimeout(() => {
@@ -358,6 +377,8 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         isShortestPathActive={isShortestPathActive}
         searchBarRef={searchBarRef}
         onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onSave={handleMarkAsSaved}
       />
 
       <div className="flex-1 flex overflow-hidden">

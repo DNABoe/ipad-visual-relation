@@ -2,6 +2,22 @@ export type FrameColor = 'red' | 'green' | 'orange' | 'white'
 export type GroupColor = 'blue' | 'purple' | 'pink' | 'yellow' | 'teal' | 'indigo' | 'rose' | 'emerald' | 'amber' | 'cyan'
 export type ConnectionSide = 'top' | 'right' | 'bottom' | 'left'
 
+export interface Attachment {
+  id: string
+  name: string
+  type: string
+  data: string
+  size: number
+  addedAt: number
+}
+
+export interface ActivityLogEntry {
+  id: string
+  timestamp: number
+  action: 'created' | 'modified' | 'photo_added' | 'photo_removed' | 'attachment_added' | 'attachment_removed' | 'note_updated'
+  details?: string
+}
+
 export interface Person {
   id: string
   name: string
@@ -16,7 +32,11 @@ export interface Person {
   groupId?: string
   advocate?: boolean
   hidden?: boolean
+  notes?: string
+  attachments?: Attachment[]
+  activityLog?: ActivityLogEntry[]
   createdAt: number
+  modifiedAt?: number
 }
 
 export interface Connection {
