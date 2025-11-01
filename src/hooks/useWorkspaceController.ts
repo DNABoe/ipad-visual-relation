@@ -242,10 +242,6 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       e.preventDefault()
       transform.startPanning()
     } else if (e.button === 0 && !interaction.isConnecting) {
-      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        selection.clearSelection()
-      }
-      
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
 
@@ -254,7 +250,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
 
       interaction.startSelectionDrag(x, y)
     }
-  }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction, selection])
+  }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction])
 
   const handleOrganizeByImportance = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {

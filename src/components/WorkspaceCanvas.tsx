@@ -316,6 +316,14 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             selection.selectPersons(selectedPersons)
             selection.selectConnections(selectedConnectionIds)
           }
+        } else {
+          if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            selection.clearSelection()
+          }
+        }
+      } else {
+        if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          selection.clearSelection()
         }
       }
       
