@@ -276,11 +276,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     } else if (interaction.dragState.type === 'selection') {
       const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
       
-      if (interaction.selectionRect && interaction.dragState.hasMoved) {
+      if (interaction.selectionRect) {
         const rectWidth = Math.abs(interaction.selectionRect.width)
         const rectHeight = Math.abs(interaction.selectionRect.height)
         
-        if (rectWidth >= 5 || rectHeight >= 5) {
+        if (rectWidth >= 5 && rectHeight >= 5) {
           const minX = Math.min(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
           const maxX = Math.max(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
           const minY = Math.min(interaction.selectionRect.y, interaction.selectionRect.y + interaction.selectionRect.height)
@@ -333,12 +333,12 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
     } else if (transform.isPanning) {
+      transform.stopPanning()
     } else {
       interaction.endDrag()
     }
 
     interaction.endResize()
-    transform.stopPanning()
   }, [controller])
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
