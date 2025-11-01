@@ -7,6 +7,7 @@ import { FRAME_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { Star, Stack } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { memo } from 'react'
 
 interface PersonNodeProps {
   person: Person
@@ -25,7 +26,7 @@ interface PersonNodeProps {
   style?: React.CSSProperties
 }
 
-export function PersonNode({
+const PersonNodeInner = memo(function PersonNodeInner({
   person,
   isSelected,
   isDragging,
@@ -63,7 +64,11 @@ export function PersonNode({
         opacity: 0,
         scale: 0.8,
       }}
-      transition={isDragging ? { duration: 0, type: 'tween' } : {
+      transition={isDragging ? { 
+        duration: 0, 
+        type: 'tween',
+        ease: 'linear'
+      } : {
         type: 'spring',
         stiffness: 400,
         damping: 35,
@@ -74,9 +79,11 @@ export function PersonNode({
         width: 240,
         height: 340,
         willChange: isDragging ? 'transform' : 'auto',
+        transform: 'translateZ(0)',
+        contain: isDragging ? 'layout style paint' : 'none',
       }}
     >
-      {stackCount > 0 && Array.from({ length: stackCount }).map((_, index) => (
+      {!isDragging && stackCount > 0 && Array.from({ length: stackCount }).map((_, index) => (
         <motion.div
           key={`stack-${index}`}
           initial={{ opacity: 0, y: -5 }}
@@ -91,15 +98,16 @@ export function PersonNode({
             backgroundColor: 'oklch(0.18 0.03 230)',
             border: '3px solid',
             zIndex: -index - 1,
+            transform: 'translateZ(0)',
           }}
         />
       ))}
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200 overflow-hidden p-0 h-full flex flex-col',
-          'hover:shadow-lg hover:border-primary',
+          'cursor-grab select-none border-[3px] backdrop-blur-none relative overflow-hidden p-0 h-full flex flex-col',
+          isDragging ? 'node-dragging scale-[1.03]' : 'transition-all duration-200',
+          !isDragging && 'hover:shadow-lg hover:border-primary',
           isSelected && 'scale-[1.02]',
-          isDragging && 'node-dragging scale-[1.03]',
           isHighlighted && 'ring-2 ring-success ring-offset-2 ring-offset-canvas-bg glow-accent-strong scale-105',
           isDimmed && 'opacity-30 grayscale',
           hasCollapsedBranch && 'cursor-pointer relative z-10'
@@ -113,6 +121,8 @@ export function PersonNode({
             : isHighlighted 
             ? '0 4px 20px rgba(0, 255, 128, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)' 
             : '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
+          transform: 'translateZ(0)',
+          willChange: isDragging ? 'transform, box-shadow' : 'auto',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -150,7 +160,10 @@ export function PersonNode({
               backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
               backgroundRepeat: 'no-repeat',
               backgroundColor: person.photo ? undefined : frameColor,
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)'
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
+              willChange: isDragging ? 'transform' : 'auto',
             }}
           >
             {!person.photo && (
@@ -192,4 +205,31 @@ export function PersonNode({
       </Card>
     </motion.div>
   )
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.person.id === nextProps.person.id &&
+    prevProps.person.x === nextProps.person.x &&
+    prevProps.person.y === nextProps.person.y &&
+    prevProps.person.name === nextProps.person.name &&
+    prevProps.person.position === nextProps.person.position &&
+    prevProps.person.position2 === nextProps.person.position2 &&
+    prevProps.person.position3 === nextProps.person.position3 &&
+    prevProps.person.photo === nextProps.person.photo &&
+    prevProps.person.photoOffsetX === nextProps.person.photoOffsetX &&
+    prevProps.person.photoOffsetY === nextProps.person.photoOffsetY &&
+    prevProps.person.photoZoom === nextProps.person.photoZoom &&
+    prevProps.person.score === nextProps.person.score &&
+    prevProps.person.frameColor === nextProps.person.frameColor &&
+    prevProps.person.advocate === nextProps.person.advocate &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.isHighlighted === nextProps.isHighlighted &&
+    prevProps.isDimmed === nextProps.isDimmed &&
+    prevProps.hasCollapsedBranch === nextProps.hasCollapsedBranch &&
+    prevProps.collapsedCount === nextProps.collapsedCount
+  )
+})
+
+export function PersonNode(props: PersonNodeProps) {
+  return <PersonNodeInner {...props} />
 }

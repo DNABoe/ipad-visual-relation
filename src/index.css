@@ -188,3 +188,24 @@
 .glow-accent-strong {
   box-shadow: 0 0 20px oklch(0.88 0.18 185 / 0.5);
 }
+
+.node-dragging {
+  pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.node-dragging * {
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+.node-dragging img,
+.node-dragging [style*="backgroundImage"] {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  will-change: transform;
+}
+
