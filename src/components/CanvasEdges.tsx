@@ -477,27 +477,46 @@ export function CanvasEdges({
     return connectionColorMap.current.get(hitColor) || null
   }
 
+  const [hoveredConnection, setHoveredConnection] = useState<string | null>(null)
   const clickedConnectionRef = useRef<string | null>(null)
+  const mouseDownConnectionRef = useRef<string | null>(null)
+  const lastMouseMoveTime = useRef<number>(0)
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    const now = Date.now()
+    if (now - lastMouseMoveTime.current < 16) return
+    lastMouseMoveTime.current = now
+    
+    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
+    if (connectionId !== hoveredConnection) {
+      setHoveredConnection(connectionId)
+    }
+  }
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
+    mouseDownConnectionRef.current = connectionId
+    
     if (connectionId) {
       e.stopPropagation()
+      e.preventDefault()
       clickedConnectionRef.current = connectionId
-    } else {
-      clickedConnectionRef.current = null
     }
   }
   
   const handleCanvasMouseUp = (e: React.MouseEvent) => {
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    if (connectionId && connectionId === clickedConnectionRef.current) {
+    
+    if (connectionId && connectionId === clickedConnectionRef.current && connectionId === mouseDownConnectionRef.current) {
       e.stopPropagation()
+      e.preventDefault()
       if (onConnectionClick) {
         onConnectionClick(connectionId, e)
       }
     }
+    
     clickedConnectionRef.current = null
+    mouseDownConnectionRef.current = null
   }
 
   const handleCanvasContextMenu = (e: React.MouseEvent) => {
@@ -513,19 +532,25 @@ export function CanvasEdges({
     <>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-10"
         style={{ width: '100%', height: '100%' }}
       />
       <canvas
         ref={hitCanvasRef}
-        className="absolute inset-0 opacity-0"
+        className="absolute inset-0 opacity-0 z-10"
         style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
       />
       <div
-        className="absolute inset-0"
-        style={{ pointerEvents: 'auto' }}
+        className="absolute inset-0 z-10"
+        style={{ 
+          pointerEvents: 'auto',
+          cursor: hoveredConnection ? 'pointer' : 'auto',
+          background: 'transparent'
+        }}
+        onMouseMove={handleCanvasMouseMove}
         onMouseDown={handleCanvasMouseDown}
         onMouseUp={handleCanvasMouseUp}
+        onMouseLeave={() => setHoveredConnection(null)}
         onContextMenu={handleCanvasContextMenu}
       />
     </>
