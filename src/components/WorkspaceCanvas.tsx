@@ -319,14 +319,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             selection.selectPersons(selectedPersons)
             selection.selectConnections(selectedConnectionIds)
           }
-        } else {
-          if (!isMultiSelect) {
-            selection.clearSelection()
-          }
-        }
-      } else {
-        if (!isMultiSelect) {
-          selection.clearSelection()
         }
       }
       

@@ -477,12 +477,27 @@ export function CanvasEdges({
     return connectionColorMap.current.get(hitColor) || null
   }
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
+  const clickedConnectionRef = useRef<string | null>(null)
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    if (connectionId && onConnectionClick) {
+    if (connectionId) {
       e.stopPropagation()
-      onConnectionClick(connectionId, e)
+      clickedConnectionRef.current = connectionId
+    } else {
+      clickedConnectionRef.current = null
     }
+  }
+  
+  const handleCanvasMouseUp = (e: React.MouseEvent) => {
+    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
+    if (connectionId && connectionId === clickedConnectionRef.current) {
+      e.stopPropagation()
+      if (onConnectionClick) {
+        onConnectionClick(connectionId, e)
+      }
+    }
+    clickedConnectionRef.current = null
   }
 
   const handleCanvasContextMenu = (e: React.MouseEvent) => {
@@ -491,20 +506,6 @@ export function CanvasEdges({
       e.preventDefault()
       e.stopPropagation()
       onConnectionContextMenu(connectionId, e)
-    }
-  }
-
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    if (connectionId) {
-      e.stopPropagation()
-    }
-  }
-  
-  const handleCanvasMouseUp = (e: React.MouseEvent) => {
-    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    if (connectionId) {
-      e.stopPropagation()
     }
   }
 
@@ -525,7 +526,6 @@ export function CanvasEdges({
         style={{ pointerEvents: 'auto' }}
         onMouseDown={handleCanvasMouseDown}
         onMouseUp={handleCanvasMouseUp}
-        onClick={handleCanvasClick}
         onContextMenu={handleCanvasContextMenu}
       />
     </>

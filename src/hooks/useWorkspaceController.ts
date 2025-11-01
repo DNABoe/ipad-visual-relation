@@ -264,7 +264,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       return
     }
     
-    if (e.button === 0 && !interaction.isConnecting) {
+    if (e.button === 2) {
+      return
+    }
+    
+    if (e.button === 0 && !interaction.isConnecting && !transform.isPanning) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
 
