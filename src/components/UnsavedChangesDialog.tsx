@@ -28,9 +28,9 @@ export function UnsavedChangesDialog({
   downloadUrl,
   fileName,
 }: UnsavedChangesDialogProps) {
-  const downloadFileName = fileName.endsWith('.enc.json') 
+  const downloadFileName = fileName.endsWith('.enc.releye') 
     ? fileName 
-    : `${fileName}.enc.json`
+    : `${fileName}.enc.releye`
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

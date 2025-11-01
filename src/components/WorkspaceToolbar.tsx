@@ -76,9 +76,9 @@ export function WorkspaceToolbar({
   hasUnsavedChanges = false,
 }: WorkspaceToolbarProps) {
 
-  const downloadFileName = fileName.endsWith('.enc.json') 
+  const downloadFileName = fileName.endsWith('.enc.releye') 
     ? fileName 
-    : `${fileName}.enc.json`
+    : `${fileName}.enc.releye`
 
   return (
     <TooltipProvider>
@@ -89,7 +89,7 @@ export function WorkspaceToolbar({
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">RelEye</h1>
           <Separator orientation="vertical" className="h-6 bg-border" />
           <div className="flex items-center gap-1 bg-card/50 px-3 py-1.5 rounded-md border border-primary/30">
-            <span className="text-base font-semibold text-foreground">{fileName.replace('.enc.json', '')}</span>
+            <span className="text-base font-semibold text-foreground">{fileName.replace('.enc.releye', '')}</span>
             {hasUnsavedChanges && (
               <Tooltip>
                 <TooltipTrigger asChild>

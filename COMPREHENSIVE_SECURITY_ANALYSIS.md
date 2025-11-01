@@ -107,7 +107,7 @@ const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' })
 
 // Step 5: User downloads to THEIR computer
 const url = URL.createObjectURL(blob)
-// Downloaded as: filename.enc.json
+// Downloaded as: filename.enc.releye
 ```
 
 **Critical Security Point:**  

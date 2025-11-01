@@ -16,14 +16,14 @@ This is a full-featured network visualization tool with encrypted local file sto
 - **Functionality**: Create and load encrypted network database files with password protection
 - **Purpose**: Ensure data privacy and security - all data stays on the user's computer, never transmitted online
 - **Trigger**: App launch shows "New Network" or "Load Network" options
-- **Progression**: New Network → Enter filename and password → See security warning about password loss → Empty encrypted file created and downloaded → Workspace opens | Load Network → Select .enc.json file → Enter password → Workspace loads with data
-- **Success criteria**: Files are encrypted with AES-256-GCM using PBKDF2 (100,000 iterations) for key derivation; wrong password fails gracefully with clear error message; file can be saved/loaded across sessions; user sees security warnings about zero-knowledge architecture
+- **Progression**: New Network → Enter filename and password → See security warning about password loss → Empty encrypted file created and downloaded → Workspace opens | Load Network → Select .enc.releye file → Enter password → Workspace loads with data
+- **Success criteria**: Files are encrypted with AES-256-GCM using PBKDF2 (100,000 iterations) for key derivation; wrong password fails gracefully with clear error message; file can be saved/loaded across sessions; user sees security warnings about zero-knowledge architecture; all files use the .enc.releye extension
 
 ### Save Network
 - **Functionality**: Save current network state to encrypted file with automatic download
 - **Purpose**: Persist work and create backups with full encryption
 - **Trigger**: Click "Save Network" button in toolbar (or Ctrl+S)
-- **Progression**: Click Save → File is encrypted in browser → Browser automatically downloads .enc.json file to Downloads folder → Confirmation toast appears → Unsaved changes indicator clears
+- **Progression**: Click Save → File is encrypted in browser → Browser automatically downloads .enc.releye file to Downloads folder → Confirmation toast appears → Unsaved changes indicator clears
 - **Success criteria**: File contains all persons, connections, groups, and settings in encrypted format; can be re-loaded with correct password; download works across all major browsers (Chrome, Firefox, Safari, Edge) without requiring right-click; user receives clear confirmation when file is saved
 
 ### File Download Mechanism
