@@ -105,7 +105,6 @@ export function CanvasEdges({
     progress: number
     speed: number
   }>>([])
-  const [hoveredConnectionId, setHoveredConnectionId] = useState<string | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -200,7 +199,6 @@ export function CanvasEdges({
 
         const isSelected = selectedConnections.includes(conn.id)
         const isShortestPath = shortestPathConnectionIds.has(conn.id)
-        const isHovered = hoveredConnectionId === conn.id
 
         ctx.beginPath()
         ctx.moveTo(fromX, fromY)
@@ -258,16 +256,6 @@ export function CanvasEdges({
           
           ctx.shadowBlur = 0
           ctx.globalAlpha = 1
-        } else if (isHovered) {
-          ctx.strokeStyle = accentColor
-          ctx.lineWidth = 3.5
-          ctx.shadowColor = accentColor
-          ctx.shadowBlur = 12
-          ctx.globalAlpha = 0.9
-          ctx.stroke()
-          
-          ctx.shadowBlur = 0
-          ctx.globalAlpha = 1
         } else {
           ctx.strokeStyle = isSelected ? accentColor : edgeColor
           ctx.lineWidth = isSelected ? 3 : 2
@@ -276,7 +264,7 @@ export function CanvasEdges({
           ctx.globalAlpha = 1
         }
 
-        const arrowSize = isShortestPath ? 10 : (isHovered ? 9 : 8)
+        const arrowSize = isShortestPath ? 10 : 8
         const dx = toX - fromX
         const dy = toY - fromY
         let angle: number
@@ -316,14 +304,6 @@ export function CanvasEdges({
           ctx.shadowColor = accentColor
           ctx.shadowBlur = 15 + pulseIntensity * 10
           ctx.globalAlpha = 0.6 + pulseIntensity * 0.4
-          ctx.fill()
-          ctx.shadowBlur = 0
-          ctx.globalAlpha = 1
-        } else if (isHovered) {
-          ctx.fillStyle = accentColor
-          ctx.shadowColor = accentColor
-          ctx.shadowBlur = 8
-          ctx.globalAlpha = 0.9
           ctx.fill()
           ctx.shadowBlur = 0
           ctx.globalAlpha = 1
@@ -463,7 +443,7 @@ export function CanvasEdges({
         animationFrameRef.current = null
       }
     }
-  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, JSON.stringify(shortestPathPersonIds), hoveredConnectionId])
+  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, JSON.stringify(shortestPathPersonIds)])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -528,15 +508,6 @@ export function CanvasEdges({
     }
   }
 
-  const handleCanvasMouseMove = (e: React.MouseEvent) => {
-    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    setHoveredConnectionId(connectionId)
-  }
-
-  const handleCanvasMouseLeave = () => {
-    setHoveredConnectionId(null)
-  }
-
   return (
     <>
       <canvas
@@ -551,9 +522,7 @@ export function CanvasEdges({
       />
       <div
         className="absolute inset-0"
-        style={{ pointerEvents: 'auto', cursor: hoveredConnectionId ? 'pointer' : 'default' }}
-        onMouseMove={handleCanvasMouseMove}
-        onMouseLeave={handleCanvasMouseLeave}
+        style={{ pointerEvents: 'auto' }}
         onMouseDown={handleCanvasMouseDown}
         onMouseUp={handleCanvasMouseUp}
         onClick={handleCanvasClick}

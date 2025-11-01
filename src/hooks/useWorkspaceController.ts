@@ -102,8 +102,12 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     if (shiftKey) {
       selection.selectConnection(connectionId, true)
     } else {
-      selection.clearSelection()
-      selection.selectConnection(connectionId, false)
+      if (selection.selectedConnections.includes(connectionId) && selection.selectedConnections.length === 1) {
+        selection.clearSelection()
+      } else {
+        selection.clearSelection()
+        selection.selectConnection(connectionId, false)
+      }
     }
   }, [selection])
 
