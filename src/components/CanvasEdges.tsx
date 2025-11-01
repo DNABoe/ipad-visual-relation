@@ -499,7 +499,6 @@ export function CanvasEdges({
     
     if (connectionId) {
       e.stopPropagation()
-      e.preventDefault()
       clickedConnectionRef.current = connectionId
     }
   }
@@ -509,7 +508,6 @@ export function CanvasEdges({
     
     if (connectionId && connectionId === clickedConnectionRef.current && connectionId === mouseDownConnectionRef.current) {
       e.stopPropagation()
-      e.preventDefault()
       if (onConnectionClick) {
         onConnectionClick(connectionId, e)
       }
@@ -532,19 +530,19 @@ export function CanvasEdges({
     <>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-none z-10"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{ width: '100%', height: '100%' }}
       />
       <canvas
         ref={hitCanvasRef}
-        className="absolute inset-0 opacity-0 z-10"
+        className="absolute inset-0 opacity-0 z-0"
         style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
       />
       <div
-        className="absolute inset-0 z-10"
+        className="absolute inset-0 z-0"
         style={{ 
           pointerEvents: 'auto',
-          cursor: hoveredConnection ? 'pointer' : 'auto',
+          cursor: hoveredConnection ? 'pointer' : 'inherit',
           background: 'transparent'
         }}
         onMouseMove={handleCanvasMouseMove}

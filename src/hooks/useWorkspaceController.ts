@@ -252,10 +252,6 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   }, [workspaceState.workspace.persons, transform, selection])
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.target !== e.currentTarget) {
-      return
-    }
-    
     if (e.button === 1) {
       e.preventDefault()
       transform.startPanning()
