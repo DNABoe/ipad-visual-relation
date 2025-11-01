@@ -88,15 +88,26 @@ export function WorkspaceToolbar({
       return
     }
     
-    const link = document.createElement('a')
-    link.href = downloadUrl
-    link.download = downloadFileName
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    onSave?.()
-    toast.success('Network file downloaded successfully!')
+    try {
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = downloadFileName
+      link.style.display = 'none'
+      
+      document.body.appendChild(link)
+      
+      setTimeout(() => {
+        link.click()
+        setTimeout(() => {
+          document.body.removeChild(link)
+          onSave?.()
+          toast.success('Download started! Check your Downloads folder.')
+        }, 100)
+      }, 0)
+    } catch (error) {
+      console.error('Download error:', error)
+      toast.error('Download failed. Try right-clicking the filename to "Save Link As..."')
+    }
   }
 
   return (

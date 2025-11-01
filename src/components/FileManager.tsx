@@ -131,14 +131,25 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const handleDownloadClick = useCallback(() => {
     if (!createdNetwork) return
     
-    const link = document.createElement('a')
-    link.href = createdNetwork.downloadUrl
-    link.download = createdNetwork.fileName
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    toast.success('Network file downloaded! Check your Downloads folder.')
+    try {
+      const link = document.createElement('a')
+      link.href = createdNetwork.downloadUrl
+      link.download = createdNetwork.fileName
+      link.style.display = 'none'
+      
+      document.body.appendChild(link)
+      
+      setTimeout(() => {
+        link.click()
+        setTimeout(() => {
+          document.body.removeChild(link)
+          toast.success('Download started! Check your Downloads folder.')
+        }, 100)
+      }, 0)
+    } catch (error) {
+      console.error('Download error:', error)
+      toast.error('Download failed. Your browser may be blocking automatic downloads.')
+    }
   }, [createdNetwork])
 
   const handleContinueWithoutDownload = useCallback(() => {
@@ -190,9 +201,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 <span>Download {createdNetwork.fileName}</span>
               </Button>
 
-              <p className="text-xs text-muted-foreground text-center px-4">
-                Click the button above to download your encrypted network file to your Downloads folder
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground text-center px-4">
+                  Click the button above to download your encrypted network file
+                </p>
+                
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
+                  <span>or</span>
+                  <a
+                    href={createdNetwork.downloadUrl}
+                    download={createdNetwork.fileName}
+                    className="text-primary hover:text-accent underline underline-offset-2 transition-colors"
+                  >
+                    right-click here to "Save Link As..."
+                  </a>
+                </div>
+              </div>
             </div>
 
             <div className="pt-6 space-y-4">
