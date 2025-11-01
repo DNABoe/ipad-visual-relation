@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { hashPassword, type PasswordHash, verifyPassword } from '@/lib/auth'
 import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
@@ -150,24 +151,26 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg h-[680px] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl">Settings</DialogTitle>
           <DialogDescription>
             Manage your system preferences and account
           </DialogDescription>
         </DialogHeader>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
             <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
             <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
             <TabsTrigger value="about" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">About</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="system" className="space-y-5 py-4">
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Canvas Settings</h3>
-              <div className="space-y-4 rounded-xl bg-card p-4">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-1 pb-4">
+              <TabsContent value="system" className="space-y-3 py-3 m-0">
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm">Canvas Settings</h3>
+                  <div className="space-y-3 rounded-xl bg-card p-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="magnetic-snap-toggle" className="text-sm font-medium cursor-pointer">Magnetic Snap</Label>
@@ -193,8 +196,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 </div>
               </div>
 
-              <h3 className="font-semibold text-sm pt-2">Grid Settings</h3>
-              <div className="space-y-4 rounded-xl bg-card p-4">
+              <h3 className="font-semibold text-sm pt-1">Grid Settings</h3>
+              <div className="space-y-3 rounded-xl bg-card p-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="show-grid-toggle" className="text-sm font-medium cursor-pointer">Show Grid</Label>
@@ -221,10 +224,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 
                 {workspaceSettings.showGrid && (
                   <>
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="grid-opacity" className="text-sm font-medium">Grid Opacity</Label>
-                        <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{workspaceSettings.gridOpacity}%</span>
+                        <span className="text-xs font-semibold bg-primary/20 px-2 py-0.5 rounded-md">{workspaceSettings.gridOpacity}%</span>
                       </div>
                       <Slider
                         id="grid-opacity"
@@ -249,10 +252,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="grid-size" className="text-sm font-medium">Grid Size</Label>
-                        <span className="text-sm font-semibold bg-primary/20 px-2.5 py-1 rounded-lg">{workspaceSettings.gridSize}px</span>
+                        <span className="text-xs font-semibold bg-primary/20 px-2 py-0.5 rounded-md">{workspaceSettings.gridSize}px</span>
                       </div>
                       <Slider
                         id="grid-size"
@@ -280,8 +283,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 )}
               </div>
 
-              <h3 className="font-semibold text-sm pt-2">Connection Style</h3>
-              <div className="space-y-4 rounded-xl bg-card p-4">
+              <h3 className="font-semibold text-sm pt-1">Connection Style</h3>
+              <div className="space-y-3 rounded-xl bg-card p-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="organic-toggle" className="text-sm font-medium cursor-pointer">Organic Lines</Label>
@@ -309,11 +312,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
             </div>
           </TabsContent>
 
-          <TabsContent value="user" className="space-y-5 py-4">
-            <div className="space-y-4">
+          <TabsContent value="user" className="space-y-3 py-3 m-0">
+            <div className="space-y-3">
               <h3 className="font-semibold text-sm">Account Security</h3>
               
-              <div className="space-y-4 rounded-xl bg-card p-4">
+              <div className="space-y-3 rounded-xl bg-card p-3">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                   <Input
@@ -445,11 +448,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
               {onLogout && (
                 <>
-                  <div className="h-px bg-border my-4"></div>
+                  <div className="h-px bg-border my-2"></div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <h3 className="font-semibold text-sm">Session</h3>
-                    <div className="rounded-xl bg-card p-4">
+                    <div className="rounded-xl bg-card p-3">
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-medium">Log Out</p>
@@ -477,9 +480,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
             </div>
           </TabsContent>
 
-          <TabsContent value="about" className="space-y-5 py-4">
-            <div className="space-y-6">
-              <div className="flex flex-col items-center text-center space-y-4 py-6">
+          <TabsContent value="about" className="space-y-3 py-3 m-0">
+            <div className="space-y-4">
+              <div className="flex flex-col items-center text-center space-y-3 py-4">
                 <motion.div
                   onClick={handleLogoClick}
                   className="cursor-pointer"
@@ -519,40 +522,40 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   </motion.div>
                 </motion.div>
                 <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">
                     RelEye
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">Relationship Network Visualizer</p>
+                  <p className="text-xs text-muted-foreground mt-1">Relationship Network Visualizer</p>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-card p-5 space-y-4 text-center">
+              <div className="rounded-xl bg-card p-4 space-y-3 text-center">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Version</p>
-                  <p className="text-xl font-semibold text-primary">{APP_VERSION}</p>
+                  <p className="text-lg font-semibold text-primary">{APP_VERSION}</p>
                 </div>
 
-                <div className="h-px bg-border my-4"></div>
+                <div className="h-px bg-border my-2"></div>
 
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Made with ❤️ by</p>
-                  <p className="text-lg font-semibold text-foreground">D Boestad</p>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Made with ❤️ by</p>
+                  <p className="text-base font-semibold text-foreground">D Boestad</p>
                 </div>
 
-                <div className="h-px bg-border my-4"></div>
+                <div className="h-px bg-border my-2"></div>
 
-                <div className="space-y-3 pt-2">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     A secure, privacy-focused tool for visualizing and managing relationship networks. 
                     All data is encrypted and stored locally on your device.
                   </p>
                 </div>
 
-                <div className="h-px bg-border my-4"></div>
+                <div className="h-px bg-border my-2"></div>
 
-                <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-2">Security Features</p>
-                  <div className="space-y-2 text-left">
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Security Features</p>
+                  <div className="space-y-1.5 text-left">
                     <div className="flex items-start gap-2 text-xs">
                       <span className="text-accent mt-0.5">🔐</span>
                       <div>
@@ -584,9 +587,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   </div>
                 </div>
 
-                <div className="h-px bg-border my-4"></div>
+                <div className="h-px bg-border my-2"></div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <Button
                     onClick={() => setShowFileIconDialog(true)}
                     variant="outline"
@@ -603,8 +606,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               </div>
             </div>
           </TabsContent>
+            </div>
+          </ScrollArea>
         </Tabs>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 flex-shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             {activeTab === 'user' ? 'Cancel' : 'Close'}
           </Button>

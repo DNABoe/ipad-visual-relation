@@ -299,8 +299,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden flex flex-col p-0">
-        <div className="p-6 border-b border-border">
+      <DialogContent className="max-h-[90vh] h-[740px] max-w-5xl flex flex-col p-0">
+        <div className="p-5 border-b border-border flex-shrink-0">
           <DialogTitle className="text-xl">
             {editPerson ? 'Edit Person' : 'Add Person'}
           </DialogTitle>
@@ -309,8 +309,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
           </DialogDescription>
         </div>
         
-        <Tabs defaultValue="details" className="flex-1 overflow-hidden flex flex-col min-h-[600px]">
-          <div className="px-6">
+        <Tabs defaultValue="details" className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <div className="px-5 flex-shrink-0">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="notes">
@@ -328,9 +328,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             </TabsList>
           </div>
 
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full px-6">
-              <TabsContent value="details" className="space-y-6 mt-4 pb-4 m-0">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-5 pb-4">
+              <TabsContent value="details" className="space-y-5 mt-4 m-0">
                 <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex flex-col items-center gap-3">
@@ -583,7 +583,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="notes" className="mt-4 space-y-4 pb-4 m-0">
+            <TabsContent value="notes" className="mt-4 space-y-3 m-0">
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
                 <Textarea
@@ -600,7 +600,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 space-y-4 pb-4 m-0">
+            <TabsContent value="attachments" className="mt-4 space-y-3 m-0">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Attached Files</Label>
@@ -668,7 +668,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="activity" className="mt-4 pb-4 m-0">
+            <TabsContent value="activity" className="mt-4 m-0">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Activity Log</Label>
                 {!editPerson || !editPerson.activityLog || editPerson.activityLog.length === 0 ? (
@@ -702,11 +702,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 )}
               </div>
             </TabsContent>
-            </ScrollArea>
-          </div>
+            </div>
+          </ScrollArea>
         </Tabs>
 
-        <div className="p-6 border-t border-border">
+        <div className="p-5 border-t border-border flex-shrink-0">
           <div className="flex items-center justify-between gap-2">
             {editPerson && onDelete && (
               <Button variant="destructive" onClick={handleDelete}>
