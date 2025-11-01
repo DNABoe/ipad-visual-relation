@@ -531,10 +531,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         ))}
                       </div>
                       <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-2.5 whitespace-nowrap flex-shrink-0">
-                        <Checkbox 
-                          id="advocate" 
-                          checked={advocate}
-                          onCheckedChange={(checked) => setAdvocate(checked === true)}
                           className="h-4 w-4"
                         />
                         <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
@@ -546,7 +542,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   </div>
                 </div>
               </div>
-
+                    <p className="text-xs text-muted-foreground">1 = High, 5 = Lower</p>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Status</Label>
                 <div className="grid grid-cols-4 gap-2">
