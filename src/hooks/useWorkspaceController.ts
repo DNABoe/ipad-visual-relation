@@ -39,7 +39,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     ) {
       workspaceState.updateCanvasTransform(newTransform)
     }
-  }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState])
+  }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState.updateCanvasTransform, workspaceState.workspace.canvasTransform])
 
   const handlePersonClick = useCallback((personId: string, shiftKey: boolean) => {
     if (interaction.isConnecting) {
