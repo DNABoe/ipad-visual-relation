@@ -12,8 +12,9 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, DownloadSimple, FileText } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
+import { downloadIcoFile } from '@/lib/fileIcon'
 import { motion } from 'framer-motion'
 
 interface SettingsDialogProps {
@@ -578,6 +579,76 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         <span className="font-medium text-foreground">Direct Downloads:</span>
                         <span className="text-muted-foreground"> Files save directly to your Downloads folder when you click Save</span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-px bg-border my-4"></div>
+
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-2">Windows File Icon</p>
+                  <div className="space-y-3 text-left">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      To have Windows show the RelEye icon for your <span className="font-mono text-foreground">.enc.releye</span> files, 
+                      download the icon and setup files below.
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await downloadIcoFile('releye-icon.ico')
+                            toast.success('Icon file downloaded! Save it to a permanent location (e.g., C:\\Icons\\)')
+                          } catch (error) {
+                            toast.error('Failed to generate icon file')
+                          }
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 border-primary/30"
+                      >
+                        <DownloadSimple size={16} weight="regular" />
+                        Download Icon File (.ico)
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const link = document.createElement('a')
+                          link.href = '/setup-windows-icon.bat'
+                          link.download = 'setup-windows-icon.bat'
+                          link.click()
+                          toast.success('Setup script downloaded! Right-click and "Run as administrator"')
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2"
+                      >
+                        <DownloadSimple size={16} weight="regular" />
+                        Download Setup Script (.bat)
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          window.open('https://github.com/yourusername/releye/blob/main/WINDOWS_ICON_SETUP.md', '_blank')
+                          toast.info('Opening setup instructions...')
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2"
+                      >
+                        <FileText size={16} weight="regular" />
+                        View Setup Instructions
+                      </Button>
+                    </div>
+                    <div className="rounded-lg bg-muted/50 p-3 space-y-2 text-xs">
+                      <p className="font-medium text-foreground">Quick Setup:</p>
+                      <ol className="text-muted-foreground space-y-1.5 pl-4 list-decimal">
+                        <li>Download the icon file above and save it permanently (e.g., <span className="font-mono text-xs">C:\Icons\releye-icon.ico</span>)</li>
+                        <li>Download the setup script (.bat file)</li>
+                        <li>Right-click the .bat file and select "Run as administrator"</li>
+                        <li>Enter the path where you saved the icon</li>
+                        <li>The script will configure Windows automatically</li>
+                      </ol>
+                      <p className="text-muted-foreground/80 pt-2">
+                        ⚠️ <strong>Important:</strong> Don't move or delete the icon file after setup - Windows references it directly!
+                      </p>
                     </div>
                   </div>
                 </div>

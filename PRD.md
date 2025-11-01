@@ -33,6 +33,13 @@ This is a full-featured network visualization tool with encrypted local file sto
 - **Clear Messaging**: Tooltips and dialogs explain download location and process
 - **Unsaved Changes Dialog**: When user tries to create new network or load different file, dialog offers "Save & Continue" button that triggers download and automatically continues after successful save
 
+### Windows File Icon Setup
+- **Functionality**: Provide custom icon for .enc.releye files in Windows File Explorer with automated setup tools
+- **Purpose**: Make encrypted network files visually identifiable in Windows, improving file management and brand recognition
+- **Trigger**: User navigates to Settings → About tab → Windows File Icon section
+- **Progression**: Download icon file (.ico) → Download setup script (.bat) → Run script as administrator → Enter icon file path → Windows Explorer restarts → All .enc.releye files show RelEye icon
+- **Success criteria**: Icon file generated at multiple resolutions (16x16, 32x32, 48x48, 256x256) embedded in .ico format; setup script creates registry entries for file association; comprehensive documentation provided; icon features eye design with lock badge to communicate security; falls back gracefully on browsers that don't support canvas-to-PNG conversion
+
 ### Interactive Canvas with Pan/Zoom
 - **Functionality**: Infinite canvas with mouse/touch pan and zoom controls
 - **Purpose**: Navigate large networks comfortably and focus on specific areas

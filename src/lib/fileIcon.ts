@@ -170,3 +170,129 @@ export function downloadFileIcon(fileName: string = 'releye-icon.svg') {
   
   URL.revokeObjectURL(url)
 }
+
+export async function generatePngIcon(size: number = 256): Promise<Blob> {
+  const svgData = generateFileIcon()
+  
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Could not get canvas context')
+  
+  const img = new Image()
+  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+  const url = URL.createObjectURL(svgBlob)
+  
+  return new Promise((resolve, reject) => {
+    img.onload = () => {
+      ctx.clearRect(0, 0, size, size)
+      ctx.drawImage(img, 0, 0, size, size)
+      
+      canvas.toBlob((blob) => {
+        URL.revokeObjectURL(url)
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error('Failed to create PNG blob'))
+        }
+      }, 'image/png')
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Failed to load SVG'))
+    }
+    img.src = url
+  })
+}
+
+export async function generateIcoFile(): Promise<Blob> {
+  const sizes = [16, 32, 48, 256]
+  
+  const pngBuffers: ArrayBuffer[] = []
+  
+  for (const size of sizes) {
+    const pngBlob = await generatePngIcon(size)
+    const buffer = await pngBlob.arrayBuffer()
+    pngBuffers.push(buffer)
+  }
+  
+  const headerSize = 6
+  const dirEntrySize = 16
+  const dirSize = headerSize + dirEntrySize * sizes.length
+  
+  let dataOffset = dirSize
+  const dataOffsets: number[] = []
+  const dataSizes: number[] = []
+  
+  for (const buffer of pngBuffers) {
+    dataOffsets.push(dataOffset)
+    dataSizes.push(buffer.byteLength)
+    dataOffset += buffer.byteLength
+  }
+  
+  const totalSize = dataOffset
+  const icoData = new ArrayBuffer(totalSize)
+  const view = new DataView(icoData)
+  
+  view.setUint16(0, 0, true)
+  view.setUint16(2, 1, true)
+  view.setUint16(4, sizes.length, true)
+  
+  let offset = headerSize
+  for (let i = 0; i < sizes.length; i++) {
+    const size = sizes[i]
+    view.setUint8(offset + 0, size === 256 ? 0 : size)
+    view.setUint8(offset + 1, size === 256 ? 0 : size)
+    view.setUint8(offset + 2, 0)
+    view.setUint8(offset + 3, 0)
+    view.setUint16(offset + 4, 1, true)
+    view.setUint16(offset + 6, 32, true)
+    view.setUint32(offset + 8, dataSizes[i], true)
+    view.setUint32(offset + 12, dataOffsets[i], true)
+    offset += dirEntrySize
+  }
+  
+  for (let i = 0; i < pngBuffers.length; i++) {
+    const pngData = new Uint8Array(pngBuffers[i])
+    const targetOffset = dataOffsets[i]
+    const target = new Uint8Array(icoData, targetOffset, pngData.length)
+    target.set(pngData)
+  }
+  
+  return new Blob([icoData], { type: 'image/x-icon' })
+}
+
+export async function downloadIcoFile(fileName: string = 'releye-icon.ico') {
+  try {
+    const icoBlob = await generateIcoFile()
+    const url = URL.createObjectURL(icoBlob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    link.click()
+    
+    setTimeout(() => URL.revokeObjectURL(url), 100)
+  } catch (error) {
+    console.error('Failed to generate ICO file:', error)
+    throw error
+  }
+}
+
+export async function downloadPngIcon(size: number = 256, fileName: string = 'releye-icon.png') {
+  try {
+    const pngBlob = await generatePngIcon(size)
+    const url = URL.createObjectURL(pngBlob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    link.click()
+    
+    setTimeout(() => URL.revokeObjectURL(url), 100)
+  } catch (error) {
+    console.error('Failed to generate PNG file:', error)
+    throw error
+  }
+}
