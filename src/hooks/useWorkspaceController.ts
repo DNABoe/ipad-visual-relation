@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useEffect } from 'react'
 import { useWorkspaceState } from './useWorkspaceState'
 import { useSelection } from './useSelection'
 import { useCanvasTransform } from './useCanvasTransform'
@@ -22,10 +22,14 @@ interface UseWorkspaceControllerOptions {
 export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControllerOptions) {
   const workspaceState = useWorkspaceState(initialWorkspace)
   const selection = useSelection()
-  const transform = useCanvasTransform()
+  const transform = useCanvasTransform(initialWorkspace.canvasTransform)
   const interaction = useInteractionState()
   const dialogs = useDialogState()
   const canvasRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    workspaceState.updateCanvasTransform(transform.transform)
+  }, [transform.transform, workspaceState])
 
   const handlePersonClick = useCallback((personId: string, shiftKey: boolean) => {
     if (interaction.isConnecting) {

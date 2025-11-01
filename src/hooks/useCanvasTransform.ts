@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react'
 import type { ViewTransform } from '@/lib/types'
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '@/lib/constants'
 
-export function useCanvasTransform() {
-  const [transform, setTransform] = useState<ViewTransform>({ x: 0, y: 0, scale: 1 })
+export function useCanvasTransform(initialTransform?: ViewTransform) {
+  const [transform, setTransform] = useState<ViewTransform>(initialTransform || { x: 0, y: 0, scale: 1 })
   const [isPanning, setIsPanning] = useState(false)
 
   const pan = useCallback((dx: number, dy: number) => {

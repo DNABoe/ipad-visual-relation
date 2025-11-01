@@ -85,6 +85,7 @@ export interface Workspace {
   groups: Group[]
   collapsedBranches?: CollapsedBranch[]
   settings?: WorkspaceSettings
+  canvasTransform?: ViewTransform
 }
 
 export interface ViewTransform {

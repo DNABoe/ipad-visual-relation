@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import type { Workspace, Person, Connection, Group } from '@/lib/types'
+import type { Workspace, Person, Connection, Group, ViewTransform } from '@/lib/types'
 import { toast } from 'sonner'
 
 interface UndoAction {
@@ -348,6 +348,13 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     })
   }, [])
 
+  const updateCanvasTransform = useCallback((transform: ViewTransform) => {
+    setWorkspace(prev => ({
+      ...prev,
+      canvasTransform: transform,
+    }))
+  }, [])
+
   return {
     workspace,
     setWorkspace,
@@ -368,6 +375,7 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     replaceWorkspace,
     collapseBranch,
     expandBranch,
+    updateCanvasTransform,
     hasUndo: undoStack.length > 0,
   }
 }
