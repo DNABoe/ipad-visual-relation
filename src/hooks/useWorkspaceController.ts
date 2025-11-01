@@ -318,9 +318,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     
     workspaceState.updatePersonsInBulk(updates)
     
-    setTimeout(() => {
-      handleZoomToFit()
-    }, 50)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
     
     toast.success('Force-directed layout applied - connections minimized')
   }, [workspaceState, handleZoomToFit])
@@ -343,9 +345,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     
     workspaceState.updatePersonsInBulk(updates)
     
-    setTimeout(() => {
-      handleZoomToFit()
-    }, 50)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
     
     toast.success('Hierarchical tree layout applied')
   }, [workspaceState, handleZoomToFit])
@@ -368,9 +372,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     
     workspaceState.updatePersonsInBulk(updates)
     
-    setTimeout(() => {
-      handleZoomToFit()
-    }, 50)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
     
     toast.success('Circular cluster layout applied')
   }, [workspaceState, handleZoomToFit])
@@ -393,9 +399,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     
     workspaceState.updatePersonsInBulk(updates)
     
-    setTimeout(() => {
-      handleZoomToFit()
-    }, 50)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
     
     toast.success('Force-directed layout applied - connections minimized')
   }, [workspaceState, handleZoomToFit])
@@ -418,9 +426,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     
     workspaceState.updatePersonsInBulk(updates)
     
-    setTimeout(() => {
-      handleZoomToFit()
-    }, 50)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
     
     toast.success('Layout by importance & attitude applied')
   }, [workspaceState, handleZoomToFit])
@@ -443,9 +453,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     
     workspaceState.updatePersonsInBulk(updates)
     
-    setTimeout(() => {
-      handleZoomToFit()
-    }, 50)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
     
     toast.success('Layout by importance & advocate applied')
   }, [workspaceState, handleZoomToFit])

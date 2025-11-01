@@ -512,7 +512,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Importance</Label>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-3 items-start">
                       <div className="flex gap-2 flex-1">
                         {[1, 2, 3, 4, 5].map((num) => (
                           <button
@@ -520,7 +520,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                             type="button"
                             onClick={() => setScore(num)}
                             className={cn(
-                              "w-12 h-12 rounded-lg border-2 font-bold text-xl transition-all flex items-center justify-center",
+                              "w-14 h-14 rounded-lg border-2 font-bold text-xl transition-all flex items-center justify-center",
                               score === num 
                                 ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
                                 : 'bg-card border-border hover:border-accent/50'
@@ -530,7 +530,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           </button>
                         ))}
                       </div>
-                      <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-2.5 whitespace-nowrap flex-shrink-0">
+                      <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-3 whitespace-nowrap flex-shrink-0 h-14">
                         <Checkbox
                           id="advocate"
                           checked={advocate}
