@@ -13,6 +13,7 @@ import { generateSampleData } from '@/lib/sampleData'
 import { APP_VERSION } from '@/lib/version'
 import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
+import { createFileIconDataUrl } from '@/lib/fileIcon'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -164,8 +165,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                    <UsersThree size={24} className="text-primary-foreground" weight="duotone" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
+                    <img src={createFileIconDataUrl()} alt="RelEye File Icon" className="w-12 h-12" />
                   </div>
                   <div>
                     <p className="font-mono text-sm font-medium truncate">{createdNetwork.fileName}</p>
