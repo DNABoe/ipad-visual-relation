@@ -275,8 +275,9 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       interaction.endDrag()
     } else if (interaction.dragState.type === 'selection') {
       const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
+      const hasMoved = interaction.dragState.hasMoved
       
-      if (interaction.selectionRect) {
+      if (hasMoved && interaction.selectionRect) {
         const rectWidth = Math.abs(interaction.selectionRect.width)
         const rectHeight = Math.abs(interaction.selectionRect.height)
         
