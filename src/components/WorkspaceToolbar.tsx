@@ -187,6 +187,20 @@ export function WorkspaceToolbar({
                   <span className="text-xs text-muted-foreground">Groups connected nodes</span>
                 </div>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={controller.handlers.handleImportanceAttitudeArrange} className="cursor-pointer gap-3 py-2.5">
+                <Target size={18} weight="duotone" className="text-warning" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Importance & Attitude</span>
+                  <span className="text-xs text-muted-foreground">High importance center, sorted by status</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={controller.handlers.handleImportanceAdvocateArrange} className="cursor-pointer gap-3 py-2.5">
+                <Star size={18} weight="duotone" className="text-yellow-400" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Importance & Advocate</span>
+                  <span className="text-xs text-muted-foreground">Advocates near center, sorted by importance</span>
+                </div>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

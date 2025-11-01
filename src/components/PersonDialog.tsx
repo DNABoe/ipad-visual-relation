@@ -520,7 +520,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                             type="button"
                             onClick={() => setScore(num)}
                             className={cn(
-                              "flex-1 h-10 rounded-lg border-2 font-bold text-base transition-all",
+                              "flex-1 h-14 rounded-lg border-2 font-bold text-xl transition-all",
                               score === num 
                                 ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
                                 : 'bg-card border-border hover:border-accent/50'
@@ -531,6 +531,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         ))}
                       </div>
                       <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-2.5 whitespace-nowrap flex-shrink-0">
+                        <Checkbox
+                          id="advocate"
+                          checked={advocate}
+                          onCheckedChange={(checked) => setAdvocate(!!checked)}
                           className="h-4 w-4"
                         />
                         <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
@@ -542,7 +546,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   </div>
                 </div>
               </div>
-                    <p className="text-xs text-muted-foreground">1 = High, 5 = Lower</p>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Status</Label>
                 <div className="grid grid-cols-4 gap-2">

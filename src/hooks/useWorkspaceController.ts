@@ -12,7 +12,9 @@ import {
   organizeByImportance, 
   hierarchicalFromSelected, 
   tightenNetwork,
-  smartArrange
+  smartArrange,
+  arrangeByImportanceAndAttitude,
+  arrangeByImportanceAndAdvocate
 } from '@/lib/layoutAlgorithms'
 
 interface UseWorkspaceControllerOptions {
@@ -398,6 +400,56 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     toast.success('Force-directed layout applied - connections minimized')
   }, [workspaceState, handleZoomToFit])
 
+  const handleImportanceAttitudeArrange = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = arrangeByImportanceAndAttitude(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+    
+    toast.success('Layout by importance & attitude applied')
+  }, [workspaceState, handleZoomToFit])
+
+  const handleImportanceAdvocateArrange = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = arrangeByImportanceAndAdvocate(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    
+    setTimeout(() => {
+      handleZoomToFit()
+    }, 50)
+    
+    toast.success('Layout by importance & advocate applied')
+  }, [workspaceState, handleZoomToFit])
+
   const addPersons = useCallback((persons: Person[]) => {
     persons.forEach(person => {
       workspaceState.addPerson(person)
@@ -474,6 +526,8 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleHierarchicalView,
       handleTightenNetwork,
       handleSmartArrange,
+      handleImportanceAttitudeArrange,
+      handleImportanceAdvocateArrange,
       handleCollapseBranch,
       handleExpandBranch,
       handleExpandBranchFromPerson,

@@ -1,7 +1,7 @@
 import type { Person, Connection, FrameColor } from './types'
 
-const CARD_WIDTH = 280
-const CARD_HEIGHT = 160
+const CARD_WIDTH = 240
+const CARD_HEIGHT = 340
 const MIN_SPACING = 50
 
 interface Point {
@@ -484,6 +484,187 @@ export function circularClusterLayout(
   }
 
   const finalResult = resolveOverlaps(result, 100)
+  
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
+}
+
+export function arrangeByImportanceAndAttitude(
+  persons: Person[],
+  connections: Connection[]
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  const adjacency = buildAdjacencyMap(connections)
+
+  result.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score
+    
+    const attitudeOrder = { green: 0, orange: 1, white: 2, red: 3 }
+    const aAttitude = attitudeOrder[a.frameColor as keyof typeof attitudeOrder] ?? 4
+    const bAttitude = attitudeOrder[b.frameColor as keyof typeof attitudeOrder] ?? 4
+    
+    if (aAttitude !== bAttitude) return aAttitude - bAttitude
+    
+    const aConns = adjacency.get(a.id)?.size || 0
+    const bConns = adjacency.get(b.id)?.size || 0
+    return bConns - aConns
+  })
+
+  const mostImportant = result[0]
+  mostImportant.x = 0
+  mostImportant.y = 0
+
+  const remaining = result.slice(1)
+  const positivePeople = remaining.filter(p => p.frameColor === 'green')
+  const neutralPeople = remaining.filter(p => p.frameColor === 'orange' || p.frameColor === 'white')
+  const negativePeople = remaining.filter(p => p.frameColor === 'red')
+
+  const placeInRing = (people: Person[], startAngle: number, endAngle: number, baseRadius: number) => {
+    const ringsNeeded = Math.ceil(people.length / 6)
+    let personIndex = 0
+    
+    for (let ring = 0; ring < ringsNeeded && personIndex < people.length; ring++) {
+      const radius = baseRadius + ring * 400
+      const personsInRing = Math.min(6 + ring * 2, people.length - personIndex)
+      
+      for (let i = 0; i < personsInRing && personIndex < people.length; i++) {
+        const angle = startAngle + ((endAngle - startAngle) * i / Math.max(personsInRing - 1, 1))
+        const person = people[personIndex]
+        
+        const importanceFactor = 1 + (person.score - 1) * 0.15
+        person.x = Math.cos(angle) * radius * importanceFactor
+        person.y = Math.sin(angle) * radius * importanceFactor
+        personIndex++
+      }
+    }
+  }
+
+  const topRadius = 450
+  placeInRing(positivePeople, -Math.PI * 0.65, -Math.PI * 0.35, topRadius)
+  placeInRing(neutralPeople, -Math.PI * 0.3, Math.PI * 0.3, topRadius + 100)
+  placeInRing(negativePeople, Math.PI * 0.35, Math.PI * 0.65, topRadius + 200)
+
+  for (let iter = 0; iter < 80; iter++) {
+    result.forEach(person => {
+      if (person === mostImportant) return
+      
+      const neighbors = Array.from(adjacency.get(person.id) || [])
+        .map(id => result.find(p => p.id === id))
+        .filter(p => p !== undefined) as Person[]
+      
+      if (neighbors.length === 0) return
+      
+      const avgX = neighbors.reduce((sum, p) => sum + p.x, 0) / neighbors.length
+      const avgY = neighbors.reduce((sum, p) => sum + p.y, 0) / neighbors.length
+      
+      const dx = avgX - person.x
+      const dy = avgY - person.y
+      
+      person.x += dx * 0.1
+      person.y += dy * 0.1
+    })
+  }
+
+  const finalResult = resolveOverlaps(result, 150)
+  
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+  
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
+}
+
+export function arrangeByImportanceAndAdvocate(
+  persons: Person[],
+  connections: Connection[]
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  const adjacency = buildAdjacencyMap(connections)
+
+  result.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score
+    
+    if (a.advocate !== b.advocate) return a.advocate ? -1 : 1
+    
+    const aConns = adjacency.get(a.id)?.size || 0
+    const bConns = adjacency.get(b.id)?.size || 0
+    return bConns - aConns
+  })
+
+  const mostImportant = result[0]
+  mostImportant.x = 0
+  mostImportant.y = 0
+
+  const remaining = result.slice(1)
+  const advocates = remaining.filter(p => p.advocate)
+  const nonAdvocates = remaining.filter(p => !p.advocate)
+
+  const placeInRing = (people: Person[], baseRadius: number, radiusMultiplier: number = 1) => {
+    const ringsNeeded = Math.ceil(people.length / 8)
+    let personIndex = 0
+    
+    for (let ring = 0; ring < ringsNeeded && personIndex < people.length; ring++) {
+      const radius = (baseRadius + ring * 380) * radiusMultiplier
+      const personsInRing = Math.min(8 + ring * 3, people.length - personIndex)
+      
+      for (let i = 0; i < personsInRing && personIndex < people.length; i++) {
+        const angle = (i / personsInRing) * 2 * Math.PI - Math.PI / 2
+        const person = people[personIndex]
+        
+        const importanceFactor = 1 + (person.score - 1) * 0.12
+        person.x = Math.cos(angle) * radius * importanceFactor
+        person.y = Math.sin(angle) * radius * importanceFactor
+        personIndex++
+      }
+    }
+  }
+
+  placeInRing(advocates, 400, 0.85)
+  placeInRing(nonAdvocates, 450, 1.15)
+
+  for (let iter = 0; iter < 80; iter++) {
+    result.forEach(person => {
+      if (person === mostImportant) return
+      
+      const neighbors = Array.from(adjacency.get(person.id) || [])
+        .map(id => result.find(p => p.id === id))
+        .filter(p => p !== undefined) as Person[]
+      
+      if (neighbors.length === 0) return
+      
+      const avgX = neighbors.reduce((sum, p) => sum + p.x, 0) / neighbors.length
+      const avgY = neighbors.reduce((sum, p) => sum + p.y, 0) / neighbors.length
+      
+      const dx = avgX - person.x
+      const dy = avgY - person.y
+      
+      person.x += dx * 0.1
+      person.y += dy * 0.1
+    })
+  }
+
+  const finalResult = resolveOverlaps(result, 150)
   
   const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
   const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
