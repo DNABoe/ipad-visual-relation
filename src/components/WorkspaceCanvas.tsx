@@ -343,15 +343,16 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       }
       
       interaction.endDrag()
-    } else if (hadDragIntent && dragIntent.type === 'canvas') {
+    } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
+      interaction.endDrag()
+    } else if (hadDragIntent && dragIntent.type === 'canvas' && !dragIntent.hasMovedEnough) {
       if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
         selection.clearSelection()
       }
       interaction.clearDragIntent()
-    } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
-      interaction.endDrag()
     } else {
       interaction.endDrag()
+      interaction.clearDragIntent()
     }
 
     interaction.endResize()
@@ -504,13 +505,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             }}
             onClick={(e) => {
               e.stopPropagation()
-              if (controller.interaction.hasDragIntent() || controller.interaction.dragState.hasMoved) {
-                controller.interaction.clearDragIntent()
-                return
-              }
-              
-              const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
-              controller.handlers.handlePersonClick(person.id, isMultiSelect)
             }}
             onDoubleClick={(e) => {
               e.stopPropagation()

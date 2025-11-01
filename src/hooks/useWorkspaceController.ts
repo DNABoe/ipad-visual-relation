@@ -56,15 +56,9 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       }
     } else {
       if (shiftKey) {
-        if (selection.selectedPersons.includes(personId) && selection.selectedPersons.length === 1) {
-          selection.clearPersonSelection()
-        } else {
-          selection.selectPerson(personId, true)
-        }
+        selection.selectPerson(personId, true)
       } else {
-        if (selection.selectedPersons.includes(personId) && selection.selectedPersons.length === 1) {
-          selection.clearPersonSelection()
-        } else {
+        if (!selection.selectedPersons.includes(personId)) {
           selection.selectPerson(personId, false)
         }
       }
