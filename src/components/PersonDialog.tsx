@@ -266,7 +266,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="h-[500px] pr-4">
             <TabsContent value="details" className="space-y-5 mt-0">
               <div className="space-y-2">
                 <div className="flex flex-col items-center gap-4">
