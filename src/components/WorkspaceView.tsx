@@ -120,15 +120,16 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
         if (downloadUrl) {
-          const link = document.createElement('a')
-          link.href = downloadUrl
           const downloadFileName = fileName.endsWith('.enc.json') 
             ? fileName 
             : `${fileName}.enc.json`
+          
+          const link = document.createElement('a')
+          link.href = downloadUrl
           link.download = downloadFileName
-          document.body.appendChild(link)
           link.click()
-          document.body.removeChild(link)
+          
+          setSavedWorkspaceStr(currentWorkspaceStr)
           toast.success('Network saved successfully!')
         }
         return
