@@ -12,7 +12,7 @@ interface DragState {
   startY?: number
   mouseX?: number
   mouseY?: number
-  hasMoved?: boolean
+  hasMoved: boolean
 }
 
 interface ResizeState {
@@ -26,22 +26,24 @@ interface ResizeState {
   startGroupY: number
 }
 
+interface DragIntent {
+  type: 'person' | 'group' | 'canvas' | null
+  id?: string
+  startX: number
+  startY: number
+  hasMovedEnough: boolean
+}
+
 export function useInteractionState() {
   const [mode, setMode] = useState<InteractionMode>('select')
-  const [dragState, setDragState] = useState<DragState>({ type: null })
+  const [dragState, setDragState] = useState<DragState>({ type: null, hasMoved: false })
   const [resizeState, setResizeState] = useState<ResizeState | null>(null)
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([])
   const [isSpacebarPressed, setIsSpacebarPressed] = useState(false)
   const dragAccumulator = useRef({ x: 0, y: 0 })
-  const dragIntentState = useRef<{
-    type: 'person' | 'group' | 'canvas' | null
-    id?: string
-    startX: number
-    startY: number
-    hasMovedEnough: boolean
-  }>({ type: null, startX: 0, startY: 0, hasMovedEnough: false })
+  const dragIntentState = useRef<DragIntent>({ type: null, startX: 0, startY: 0, hasMovedEnough: false })
 
   const enableSelectMode = useCallback(() => {
     setMode('select')
@@ -67,7 +69,7 @@ export function useInteractionState() {
     const dy = Math.abs(currentY - dragIntentState.current.startY)
     const distance = Math.sqrt(dx * dx + dy * dy)
     
-    const threshold = 5
+    const threshold = 3
     
     if (distance > threshold && !dragIntentState.current.hasMovedEnough) {
       dragIntentState.current.hasMovedEnough = true
@@ -104,7 +106,7 @@ export function useInteractionState() {
   }, [])
 
   const updateConnectionDrag = useCallback((mouseX: number, mouseY: number) => {
-    setDragState(prev => prev.type === 'connection' ? { ...prev, mouseX, mouseY } : prev)
+    setDragState(prev => prev.type === 'connection' ? { ...prev, mouseX, mouseY, hasMoved: true } : prev)
   }, [])
 
   const markDragAsMoved = useCallback(() => {
@@ -117,21 +119,23 @@ export function useInteractionState() {
   }, [])
 
   const updateSelectionDrag = useCallback((currentX: number, currentY: number) => {
-    if (dragState.type !== 'selection' || dragState.startX === undefined || dragState.startY === undefined) return
+    setDragState(prev => {
+      if (prev.type !== 'selection' || prev.startX === undefined || prev.startY === undefined) return prev
 
-    const rectData = {
-      x: Math.min(dragState.startX, currentX),
-      y: Math.min(dragState.startY, currentY),
-      width: Math.abs(currentX - dragState.startX),
-      height: Math.abs(currentY - dragState.startY),
-    }
+      const rectData = {
+        x: Math.min(prev.startX, currentX),
+        y: Math.min(prev.startY, currentY),
+        width: Math.abs(currentX - prev.startX),
+        height: Math.abs(currentY - prev.startY),
+      }
 
-    setSelectionRect(rectData)
-    
-    if (!dragState.hasMoved && (rectData.width > 5 || rectData.height > 5)) {
-      setDragState(prev => ({ ...prev, hasMoved: true }))
-    }
-  }, [dragState])
+      setSelectionRect(rectData)
+      
+      const shouldMarkAsMoved = !prev.hasMoved && (rectData.width > 5 || rectData.height > 5)
+      
+      return shouldMarkAsMoved ? { ...prev, hasMoved: true } : prev
+    })
+  }, [])
 
   const startGroupResize = useCallback((groupId: string, handle: string, startX: number, startY: number, startWidth: number, startHeight: number, startGroupX: number, startGroupY: number) => {
     setResizeState({ groupId, handle, startX, startY, startWidth, startHeight, startGroupX, startGroupY })
@@ -139,7 +143,7 @@ export function useInteractionState() {
 
   const endDrag = useCallback(() => {
     const wasDragging = dragState.type !== null && dragState.hasMoved
-    setDragState({ type: null })
+    setDragState({ type: null, hasMoved: false })
     setSelectionRect(null)
     setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
@@ -156,7 +160,7 @@ export function useInteractionState() {
   }, [])
 
   const resetInteraction = useCallback(() => {
-    setDragState({ type: null })
+    setDragState({ type: null, hasMoved: false })
     setResizeState(null)
     setConnectFrom(null)
     setSelectionRect(null)

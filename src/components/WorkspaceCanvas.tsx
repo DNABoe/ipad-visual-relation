@@ -112,7 +112,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       const mouseY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
       interaction.updateConnectionDrag(mouseX, mouseY)
-    } else if (interaction.dragState.type === 'person' && interaction.dragState.hasMoved) {
+    } else if (interaction.dragState.type === 'person') {
+      if (!interaction.dragState.hasMoved) {
+        interaction.markDragAsMoved()
+      }
+      
       const dx = e.movementX / transform.transform.scale
       const dy = e.movementY / transform.transform.scale
 
@@ -158,53 +162,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         
         interaction.updateAlignmentGuides(alignment?.guides || [])
       }
-    } else if (interaction.dragState.type === 'group' && interaction.dragState.hasMoved) {
-      const dx = e.movementX / transform.transform.scale
-      const dy = e.movementY / transform.transform.scale
-
-      if (!magneticSnap) {
-        const newAccX = interaction.dragAccumulator.current.x + dx
-        const newAccY = interaction.dragAccumulator.current.y + dy
-
-        const gridStepsX = Math.floor(newAccX / gridSize)
-        const gridStepsY = Math.floor(newAccY / gridSize)
-
-        if (gridStepsX !== 0 || gridStepsY !== 0) {
-          const moveX = gridStepsX * gridSize
-          const moveY = gridStepsY * gridSize
-
-          updatePersonPositions(selection.selectedPersons, moveX, moveY)
-
-          interaction.dragAccumulator.current = { x: newAccX - moveX, y: newAccY - moveY }
-        } else {
-          interaction.dragAccumulator.current = { x: newAccX, y: newAccY }
-        }
-      } else {
-        const selectedIds = selection.selectedPersons
-        const personsMap = new Map(workspace.persons.map(p => [p.id, p]))
-        
-        const movingPersons: Person[] = []
-        for (const id of selectedIds) {
-          const person = personsMap.get(id)
-          if (person) {
-            movingPersons.push({ ...person, x: person.x + dx, y: person.y + dy })
-          }
-        }
-        
-        const staticPersons = workspace.persons.filter(
-          p => !selectedIds.includes(p.id)
-        )
-        
-        const alignment = calculateAlignment(movingPersons, staticPersons)
-        
-        const finalDx = dx + (alignment?.x || 0)
-        const finalDy = dy + (alignment?.y || 0)
-        
-        updatePersonPositions(selectedIds, finalDx, finalDy)
-        
-        interaction.updateAlignmentGuides(alignment?.guides || [])
+    } else if (interaction.dragState.type === 'group') {
+      if (!interaction.dragState.hasMoved) {
+        interaction.markDragAsMoved()
       }
-    } else if (interaction.dragState.type === 'group' && interaction.dragState.hasMoved) {
       const dx = e.movementX / transform.transform.scale
       const dy = e.movementY / transform.transform.scale
 
@@ -285,7 +246,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       handlers.updateGroup(group.id, { x: newX, y: newY, width: newWidth, height: newHeight })
     } else if (transform.isPanning) {
       transform.pan(e.movementX, e.movementY)
-    } else if (interaction.dragState.type === 'selection' && interaction.dragState.hasMoved) {
+    } else if (interaction.dragState.type === 'selection') {
       interaction.updateSelectionDrag(currentX, currentY)
     }
   }, [controller, magneticSnap, gridSize, updatePersonPositions])
