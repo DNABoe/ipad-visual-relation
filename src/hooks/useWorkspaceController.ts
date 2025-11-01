@@ -238,10 +238,13 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   }, [workspaceState.workspace.persons, transform, selection])
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey) || (e.button === 0 && interaction.isSpacebarPressed)) {
+    if (e.button === 1 || (e.button === 0 && interaction.isSpacebarPressed)) {
       e.preventDefault()
       transform.startPanning()
-    } else if (e.button === 0 && !interaction.isConnecting) {
+      return
+    }
+    
+    if (e.button === 0 && !interaction.isConnecting) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
 
@@ -250,7 +253,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
 
       interaction.startSelectionDrag(x, y)
     }
-  }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction])
+  }, [interaction, transform])
 
   const handleOrganizeByImportance = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {

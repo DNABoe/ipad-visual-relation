@@ -274,6 +274,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
 
       interaction.endDrag()
     } else if (interaction.dragState.type === 'selection') {
+      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
+      
       if (interaction.selectionRect && interaction.dragState.hasMoved) {
         const rectWidth = Math.abs(interaction.selectionRect.width)
         const rectHeight = Math.abs(interaction.selectionRect.height)
@@ -304,7 +306,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             maxY - minY
           )
 
-          if (e.shiftKey) {
+          if (isMultiSelect) {
             const currentPersons = new Set(selection.selectedPersons)
             selectedPersons.forEach(id => currentPersons.add(id))
             selection.selectPersons(Array.from(currentPersons))
@@ -317,12 +319,12 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             selection.selectConnections(selectedConnectionIds)
           }
         } else {
-          if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          if (!isMultiSelect) {
             selection.clearSelection()
           }
         }
       } else {
-        if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        if (!isMultiSelect) {
           selection.clearSelection()
         }
       }
@@ -330,6 +332,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       interaction.endDrag()
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
+    } else if (interaction.dragState.type === null) {
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        selection.clearSelection()
+      }
     } else {
       interaction.endDrag()
     }
