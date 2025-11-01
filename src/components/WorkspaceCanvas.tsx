@@ -78,15 +78,41 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers, workspace, selection } = controller
 
-    if (interaction.dragState.type === 'connection') {
-      const rect = controller.canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
+    const rect = controller.canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
 
+    const currentX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
+    const currentY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
+
+    if (interaction.hasDragIntent()) {
+      const hasMovedEnough = interaction.checkDragIntent(e.clientX, e.clientY)
+      
+      if (hasMovedEnough) {
+        const intent = interaction.getDragIntent()
+        
+        if (intent.type === 'person' && intent.id) {
+          interaction.startPersonDrag(intent.id)
+          interaction.clearDragIntent()
+        } else if (intent.type === 'group' && intent.id) {
+          interaction.startGroupDrag(intent.id)
+          interaction.clearDragIntent()
+        } else if (intent.type === 'canvas') {
+          const canvasX = (intent.startX - rect.left - transform.transform.x) / transform.transform.scale
+          const canvasY = (intent.startY - rect.top - transform.transform.y) / transform.transform.scale
+          interaction.startSelectionDrag(canvasX, canvasY)
+          interaction.clearDragIntent()
+        }
+      } else {
+        return
+      }
+    }
+
+    if (interaction.dragState.type === 'connection') {
       const mouseX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
       const mouseY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
       interaction.updateConnectionDrag(mouseX, mouseY)
-    } else if (interaction.dragState.type === 'person') {
+    } else if (interaction.dragState.type === 'person' && interaction.dragState.hasMoved) {
       const dx = e.movementX / transform.transform.scale
       const dy = e.movementY / transform.transform.scale
 
@@ -132,7 +158,53 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         
         interaction.updateAlignmentGuides(alignment?.guides || [])
       }
-    } else if (interaction.dragState.type === 'group') {
+    } else if (interaction.dragState.type === 'group' && interaction.dragState.hasMoved) {
+      const dx = e.movementX / transform.transform.scale
+      const dy = e.movementY / transform.transform.scale
+
+      if (!magneticSnap) {
+        const newAccX = interaction.dragAccumulator.current.x + dx
+        const newAccY = interaction.dragAccumulator.current.y + dy
+
+        const gridStepsX = Math.floor(newAccX / gridSize)
+        const gridStepsY = Math.floor(newAccY / gridSize)
+
+        if (gridStepsX !== 0 || gridStepsY !== 0) {
+          const moveX = gridStepsX * gridSize
+          const moveY = gridStepsY * gridSize
+
+          updatePersonPositions(selection.selectedPersons, moveX, moveY)
+
+          interaction.dragAccumulator.current = { x: newAccX - moveX, y: newAccY - moveY }
+        } else {
+          interaction.dragAccumulator.current = { x: newAccX, y: newAccY }
+        }
+      } else {
+        const selectedIds = selection.selectedPersons
+        const personsMap = new Map(workspace.persons.map(p => [p.id, p]))
+        
+        const movingPersons: Person[] = []
+        for (const id of selectedIds) {
+          const person = personsMap.get(id)
+          if (person) {
+            movingPersons.push({ ...person, x: person.x + dx, y: person.y + dy })
+          }
+        }
+        
+        const staticPersons = workspace.persons.filter(
+          p => !selectedIds.includes(p.id)
+        )
+        
+        const alignment = calculateAlignment(movingPersons, staticPersons)
+        
+        const finalDx = dx + (alignment?.x || 0)
+        const finalDy = dy + (alignment?.y || 0)
+        
+        updatePersonPositions(selectedIds, finalDx, finalDy)
+        
+        interaction.updateAlignmentGuides(alignment?.guides || [])
+      }
+    } else if (interaction.dragState.type === 'group' && interaction.dragState.hasMoved) {
       const dx = e.movementX / transform.transform.scale
       const dy = e.movementY / transform.transform.scale
 
@@ -213,19 +285,16 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       handlers.updateGroup(group.id, { x: newX, y: newY, width: newWidth, height: newHeight })
     } else if (transform.isPanning) {
       transform.pan(e.movementX, e.movementY)
-    } else if (interaction.dragState.type === 'selection') {
-      const rect = controller.canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-
-      const currentX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
-      const currentY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
-
+    } else if (interaction.dragState.type === 'selection' && interaction.dragState.hasMoved) {
       interaction.updateSelectionDrag(currentX, currentY)
     }
-  }, [controller, magneticSnap, gridSize])
+  }, [controller, magneticSnap, gridSize, updatePersonPositions])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     const { interaction, workspace, transform, selection, handlers } = controller
+
+    const hadDragIntent = interaction.hasDragIntent()
+    const dragIntent = interaction.getDragIntent()
 
     if (interaction.dragState.type === 'connection') {
       const rect = controller.canvasRef.current?.getBoundingClientRect()
@@ -267,7 +336,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
 
       interaction.endDrag()
     } else if (interaction.dragState.type === 'selection') {
-      if (interaction.selectionRect) {
+      if (interaction.selectionRect && interaction.dragState.hasMoved) {
         const rectWidth = Math.abs(interaction.selectionRect.width)
         const rectHeight = Math.abs(interaction.selectionRect.height)
         
@@ -311,9 +380,17 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           }
         }
       }
+      
+      interaction.endDrag()
+    } else if (hadDragIntent && dragIntent.type === 'canvas') {
+      if (!e.shiftKey) {
+        selection.clearSelection()
+      }
+      interaction.clearDragIntent()
+    } else {
+      const wasDragging = interaction.endDrag()
     }
 
-    interaction.endDrag()
     interaction.endResize()
     transform.stopPanning()
   }, [controller])
@@ -394,7 +471,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             key={group.id}
             group={group}
             isSelected={controller.selection.selectedGroups.includes(group.id)}
-            isDragging={controller.interaction.dragState.type === 'group' && controller.interaction.dragState.id === group.id}
+            isDragging={controller.interaction.dragState.type === 'group' && controller.interaction.dragState.id === group.id && controller.interaction.dragState.hasMoved === true}
             onClick={(e) => {
               e.stopPropagation()
               controller.handlers.handleGroupClick(group.id, e.shiftKey)
@@ -403,10 +480,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             onRemove={() => controller.handlers.handleDeleteGroup(group.id)}
             onDragStart={(e) => {
               e.stopPropagation()
-              controller.interaction.startGroupDrag(group.id)
               if (!controller.selection.selectedGroups.includes(group.id)) {
                 controller.selection.selectGroup(group.id, false)
               }
+              controller.interaction.setDragIntent('group', group.id, e.clientX, e.clientY)
             }}
             onResizeStart={(e, handle) => {
               const rect = controller.canvasRef.current?.getBoundingClientRect()
@@ -440,7 +517,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             key={person.id}
             person={person}
             isSelected={controller.selection.selectedPersons.includes(person.id)}
-            isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id}
+            isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id && controller.interaction.dragState.hasMoved === true}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
             hasCollapsedBranch={hasCollapsedBranch}
@@ -455,12 +532,20 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               
               if (!isMultiSelect && !controller.selection.selectedPersons.includes(person.id)) {
                 controller.selection.selectPerson(person.id, false)
+              } else if (isMultiSelect && controller.selection.selectedPersons.includes(person.id)) {
+              } else if (isMultiSelect) {
+                controller.selection.selectPerson(person.id, true)
               }
               
-              controller.interaction.startPersonDrag(person.id)
+              controller.interaction.setDragIntent('person', person.id, e.clientX, e.clientY)
             }}
             onClick={(e) => {
               e.stopPropagation()
+              if (controller.interaction.hasDragIntent() || controller.interaction.dragState.hasMoved) {
+                controller.interaction.clearDragIntent()
+                return
+              }
+              
               const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
               controller.handlers.handlePersonClick(person.id, isMultiSelect)
             }}

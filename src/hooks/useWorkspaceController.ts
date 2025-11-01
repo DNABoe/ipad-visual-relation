@@ -55,7 +55,19 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
         }
       }
     } else {
-      selection.selectPerson(personId, shiftKey)
+      if (shiftKey) {
+        if (selection.selectedPersons.includes(personId) && selection.selectedPersons.length === 1) {
+          selection.clearPersonSelection()
+        } else {
+          selection.selectPerson(personId, true)
+        }
+      } else {
+        if (selection.selectedPersons.includes(personId) && selection.selectedPersons.length === 1) {
+          selection.clearPersonSelection()
+        } else {
+          selection.selectPerson(personId, false)
+        }
+      }
     }
   }, [interaction, workspaceState, selection])
 
@@ -242,11 +254,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       const x = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
       const y = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
-      if (!e.shiftKey) {
-        selection.clearSelection()
-      }
-      
-      interaction.startSelectionDrag(x, y)
+      interaction.setDragIntent('canvas', undefined, e.clientX, e.clientY)
     }
   }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction, selection])
 
