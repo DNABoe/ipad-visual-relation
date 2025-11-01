@@ -184,6 +184,8 @@ export function CanvasEdges({
       const pulsePhase = (time * 0.002) % (Math.PI * 2)
       const pulseIntensity = (Math.sin(pulsePhase) + 1) * 0.5
 
+      let connectionIndex = 0
+
       connections.forEach(conn => {
         const from = personMap.get(conn.fromPersonId)
         const to = personMap.get(conn.toPersonId)
@@ -310,8 +312,12 @@ export function CanvasEdges({
           ctx.fill()
         }
 
-        const hitColor = `rgb(${(conn.id.charCodeAt(0) * 7) % 256}, ${(conn.id.charCodeAt(1) * 13) % 256}, ${(conn.id.charCodeAt(2) * 17) % 256})`
+        const r = (connectionIndex * 37) % 256
+        const g = (connectionIndex * 71) % 256
+        const b = (connectionIndex * 113) % 256
+        const hitColor = `rgb(${r}, ${g}, ${b})`
         connectionColorMap.current.set(hitColor, conn.id)
+        connectionIndex++
         
         hitCtx.beginPath()
         hitCtx.moveTo(fromX, fromY)
