@@ -2,9 +2,9 @@
 
 Windows doesn't automatically recognize custom file extensions like `.enc.releye`, so you'll need to manually configure the file association and icon. Follow these steps:
 
-## Method 1: Using Windows Registry (Recommended)
+### Step 1: Download the Icon File
 
-This method creates a proper file type association that will persist across system restarts.
+3. Go to the **About** tab
 
 ### Step 1: Download the Icon File
 
@@ -14,22 +14,22 @@ This method creates a proper file type association that will persist across syst
 4. Scroll down to "Windows File Icon"
 5. Click **"Download Windows Icon (.ico)"**
 6. Save the icon to a permanent location (e.g., `C:\Icons\releye-icon.ico`)
-   - ⚠️ Don't delete this file later - Windows will reference it!
+2. Right-click on "Classes" → **New** → **Key**
 
-### Step 2: Create File Association via Registry
+6. With "DefaultIcon" selected, double-click "(D
 
-1. Press `Win + R` to open Run dialog
-2. Type `regedit` and press Enter
-3. Navigate to: `HKEY_CURRENT_USER\Software\Classes\`
-4. Right-click on "Classes" → **New** → **Key**
-5. Name it: `.enc.releye`
-6. With `.enc.releye` selected, double-click "(Default)" in the right pane
-7. Set value to: `RelEyeFile`
-8. Click OK
 
-### Step 3: Configure File Type
 
-1. Still in Registry Editor, go back to `HKEY_CURRENT_USER\Software\Classes\`
+2. Find "Windows Explorer" in the list
+
+
+
+
+
+
+2. Right-click any `.enc.releye
+
+6. Navigate to any program (e.g., `C:\Windows\notepad.exe`)
 2. Right-click on "Classes" → **New** → **Key**
 3. Name it: `RelEyeFile`
 4. Right-click on "RelEyeFile" → **New** → **Key**
@@ -60,74 +60,74 @@ This method is simpler but may not work in all Windows versions and might not pe
 3. Select **"Open with"** → **"Choose another app"**
 4. Click **"More apps"**
 5. Scroll down and click **"Look for another app on this PC"**
-6. Navigate to any program (e.g., `C:\Windows\notepad.exe`)
-7. Check **"Always use this app to open .enc.releye files"**
-8. Click **Open**
+### Will this work on Mac or Linux?
+- **Mac**: macOS doesn't use the file extension for icons. T
 
-Note: This method associates the file with a program rather than just setting an icon. You'll still need to right-click and "Open with" → RelEye (your browser) to actually use the files.
 
----
 
-## Method 3: Using Third-Party Tools
 
-Several tools can help manage file associations and icons more easily:
+3. 
 
-- **FileTypesMan** (by NirSoft) - Free utility to manage file types
-- **Default Programs Editor** - More user-friendly than Registry Editor
-- **IconsExtract** - Can help manage icon files
 
----
 
-## Troubleshooting
 
-### Icon doesn't appear after following steps:
-- Make sure the icon file path in the registry is correct
-- Try restarting your computer (not just Explorer)
-- Ensure the icon file hasn't been moved or deleted
-- Check that the file extension is exactly `.enc.releye` (not `.enc.releye.txt`)
 
-### Icon appears but is low quality:
-- The .ico file contains multiple resolutions (16x16, 32x32, 48x48, 256x256)
-- Windows should automatically pick the right size
-- If it looks blurry, try regenerating and downloading the icon file again
 
-### Can't edit Registry:
-- You need administrator privileges to edit HKEY_CURRENT_USER
-- Try running Registry Editor as Administrator
-- Or use Method 2 instead
 
-### Files still show generic icon:
-- Clear icon cache: Delete `%localappdata%\IconCache.db` and restart Explorer
-- Refresh the folder by pressing F5
-- Try logging out and back in
 
----
 
-## Additional Notes
 
-### Why can't RelEye set this automatically?
 
-Modern browsers run in a sandboxed environment and don't have permission to:
-- Modify the Windows Registry
-- Create file associations
-- Set system-wide icon preferences
 
-This is a security feature to prevent malicious websites from changing your system settings.
 
-### Is this safe?
 
-Yes! You're simply telling Windows:
-1. "These files with `.enc.releye` extension are RelEye files"
-2. "Show this icon for RelEye files"
 
-This doesn't give any program permission to run automatically or access your files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Will this work on Mac or Linux?
 
-- **Mac**: macOS doesn't use the file extension for icons. The system relies on metadata and bundle identifiers.
-- **Linux**: Different desktop environments handle this differently. Most will show a generic file icon unless you create a MIME type association.
 
----
+
+
+
 
 ## Need Help?
 
