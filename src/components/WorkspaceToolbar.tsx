@@ -95,7 +95,7 @@ export function WorkspaceToolbar({
 
   return (
     <TooltipProvider>
-      <div className="px-4 py-3 space-y-3 shadow-lg bg-toolbar-bg border-b border-toolbar-border">
+      <div className="px-4 py-3 shadow-lg bg-toolbar-bg border-b border-toolbar-border">
         <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Logo size={32} showText={false} />
@@ -114,7 +114,16 @@ export function WorkspaceToolbar({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap">
+          <SearchBar
+            ref={searchBarRef}
+            persons={controller.workspace.persons}
+            groups={controller.workspace.groups}
+            onSearch={onSearch}
+            onClear={onClearSearch}
+          />
+
+          <div className="flex items-center gap-2 flex-wrap">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
@@ -456,16 +465,9 @@ export function WorkspaceToolbar({
             </TooltipTrigger>
             <TooltipContent>Keyboard Shortcuts (?)</TooltipContent>
           </Tooltip>
+          </div>
         </div>
         </div>
-
-        <SearchBar
-          ref={searchBarRef}
-          persons={controller.workspace.persons}
-          groups={controller.workspace.groups}
-          onSearch={onSearch}
-          onClear={onClearSearch}
-        />
       </div>
     </TooltipProvider>
   )
