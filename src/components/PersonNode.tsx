@@ -121,7 +121,7 @@ export function PersonNode({
       >
         {person.advocate && (
           <div 
-            className="absolute -top-3 -right-3 bg-yellow-400 text-background rounded-full p-2 shadow-lg border-2 border-card z-20"
+            className="absolute top-2 left-2 bg-yellow-400 text-background rounded-full p-2 shadow-lg z-20"
             title="Advocate - Actively promotes messages"
           >
             <Star size={20} weight="fill" />
@@ -129,7 +129,7 @@ export function PersonNode({
         )}
         {hasCollapsedBranch && collapsedCount > 0 && (
           <div 
-            className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full px-2.5 py-1.5 shadow-lg border-2 border-card z-20 flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
+            className="absolute top-14 right-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1.5 shadow-lg flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform z-20"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
             onClick={(e) => {
               e.stopPropagation()

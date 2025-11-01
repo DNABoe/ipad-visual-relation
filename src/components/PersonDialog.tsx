@@ -510,10 +510,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     <p className="text-xs text-muted-foreground">Up to 3 lines</p>
                   </div>
 
-                  <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Importance</Label>
-                      <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Importance</Label>
+                    <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 flex-1">
                         {[1, 2, 3, 4, 5].map((num) => (
                           <button
                             key={num}
@@ -530,11 +530,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           </button>
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">1 = High, 5 = Lower</p>
-                    </div>
-
-                    <div className="space-y-2 pt-6">
-                      <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-2.5 whitespace-nowrap">
+                      <div className="flex items-center space-x-2 rounded-lg border border-border bg-card p-2.5 whitespace-nowrap flex-shrink-0">
                         <Checkbox 
                           id="advocate" 
                           checked={advocate}
@@ -546,6 +542,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         </Label>
                       </div>
                     </div>
+                    <p className="text-xs text-muted-foreground">1 = High, 5 = Lower</p>
                   </div>
                 </div>
               </div>
