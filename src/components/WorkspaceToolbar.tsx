@@ -101,12 +101,12 @@ export function WorkspaceToolbar({
           <Logo size={32} showText={false} />
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-accent bg-clip-text text-transparent">RelEye</h1>
           <Separator orientation="vertical" className="h-6 bg-border" />
-          <div className="flex items-center gap-2 bg-card/50 px-3 py-1.5 rounded-md border border-primary/30">
+          <div className="flex items-center gap-1 bg-card/50 px-3 py-1.5 rounded-md border border-primary/30">
             <span className="text-base font-semibold text-foreground">{fileName.replace('.enc.json', '')}</span>
             {hasUnsavedChanges && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Star size={16} weight="fill" className="text-warning animate-pulse" />
+                  <span className="text-muted-foreground">*</span>
                 </TooltipTrigger>
                 <TooltipContent>Unsaved changes</TooltipContent>
               </Tooltip>
