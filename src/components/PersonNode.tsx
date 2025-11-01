@@ -72,6 +72,7 @@ export function PersonNode({
       }}
       style={{ 
         width: 240,
+        height: 340,
         willChange: isDragging ? 'transform' : 'auto',
       }}
     >
@@ -95,7 +96,7 @@ export function PersonNode({
       ))}
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200 overflow-hidden p-0',
+          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200 overflow-hidden p-0 h-full flex flex-col',
           'hover:shadow-lg hover:border-primary',
           isSelected && 'scale-[1.02]',
           isDragging && 'node-dragging scale-[1.03]',
@@ -123,26 +124,26 @@ export function PersonNode({
             className="absolute -top-3 -right-3 bg-yellow-400 text-background rounded-full p-2 shadow-lg border-2 border-card z-20"
             title="Advocate - Actively promotes messages"
           >
-            <Star size={16} weight="fill" />
+            <Star size={20} weight="fill" />
           </div>
         )}
         {hasCollapsedBranch && collapsedCount > 0 && (
           <div 
-            className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-20 flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
+            className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full px-2.5 py-1.5 shadow-lg border-2 border-card z-20 flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
             onClick={(e) => {
               e.stopPropagation()
               onExpandBranch?.(e)
             }}
           >
-            <Stack size={14} weight="fill" />
+            <Stack size={16} weight="fill" />
             <span className="text-xs font-bold">{collapsedCount}</span>
           </div>
         )}
         
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <div 
-            className="w-full h-48 overflow-hidden rounded-t-md"
+            className="w-full h-48 overflow-hidden"
             style={{ 
               backgroundImage: person.photo ? `url(${person.photo})` : undefined,
               backgroundSize: person.photo ? `${photoZoom}%` : 'cover',
@@ -174,25 +175,19 @@ export function PersonNode({
           </Badge>
         </div>
 
-        <div className="p-3 space-y-0.5">
-          <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-2">
+        <div className="p-4 flex flex-col justify-start flex-1 min-h-0" style={{ height: 92 }}>
+          <h3 className="font-semibold text-lg leading-tight break-words text-foreground line-clamp-1 mb-1">
             {person.name}
           </h3>
-          {person.position && (
-            <p className="text-sm leading-tight break-words text-muted-foreground line-clamp-1">
-              {person.position}
-            </p>
-          )}
-          {person.position2 && (
-            <p className="text-sm leading-tight break-words text-muted-foreground line-clamp-1">
-              {person.position2}
-            </p>
-          )}
-          {person.position3 && (
-            <p className="text-sm leading-tight break-words text-muted-foreground line-clamp-1">
-              {person.position3}
-            </p>
-          )}
+          <p className="text-sm leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
+            {person.position || '\u00A0'}
+          </p>
+          <p className="text-sm leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
+            {person.position2 || '\u00A0'}
+          </p>
+          <p className="text-sm leading-snug break-words text-muted-foreground line-clamp-1">
+            {person.position3 || '\u00A0'}
+          </p>
         </div>
       </Card>
     </motion.div>
