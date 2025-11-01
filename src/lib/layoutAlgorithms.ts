@@ -2,7 +2,7 @@ import type { Person, Connection, FrameColor } from './types'
 
 const CARD_WIDTH = 240
 const CARD_HEIGHT = 340
-const MIN_SPACING = 50
+const MIN_SPACING = 60
 
 interface Point {
   x: number
@@ -14,25 +14,28 @@ function distance(p1: Point, p2: Point): number {
 }
 
 function checkOverlap(p1: Person, p2: Person, padding = MIN_SPACING): boolean {
-  const left1 = p1.x - CARD_WIDTH / 2
-  const right1 = p1.x + CARD_WIDTH / 2
-  const top1 = p1.y - CARD_HEIGHT / 2
-  const bottom1 = p1.y + CARD_HEIGHT / 2
+  const halfWidth = CARD_WIDTH / 2 + padding
+  const halfHeight = CARD_HEIGHT / 2 + padding
+  
+  const left1 = p1.x - halfWidth
+  const right1 = p1.x + halfWidth
+  const top1 = p1.y - halfHeight
+  const bottom1 = p1.y + halfHeight
 
-  const left2 = p2.x - CARD_WIDTH / 2
-  const right2 = p2.x + CARD_WIDTH / 2
-  const top2 = p2.y - CARD_HEIGHT / 2
-  const bottom2 = p2.y + CARD_HEIGHT / 2
+  const left2 = p2.x - halfWidth
+  const right2 = p2.x + halfWidth
+  const top2 = p2.y - halfHeight
+  const bottom2 = p2.y + halfHeight
 
   return !(
-    right1 + padding < left2 ||
-    left1 - padding > right2 ||
-    bottom1 + padding < top2 ||
-    top1 - padding > bottom2
+    right1 < left2 ||
+    left1 > right2 ||
+    bottom1 < top2 ||
+    top1 > bottom2
   )
 }
 
-function resolveOverlaps(persons: Person[], iterations = 150): Person[] {
+function resolveOverlaps(persons: Person[], iterations = 200): Person[] {
   const result = [...persons]
   let iteration = 0
 
@@ -42,31 +45,39 @@ function resolveOverlaps(persons: Person[], iterations = 150): Person[] {
 
     for (let i = 0; i < result.length; i++) {
       for (let j = i + 1; j < result.length; j++) {
-        if (checkOverlap(result[i], result[j])) {
+        if (checkOverlap(result[i], result[j], MIN_SPACING / 2)) {
           hasOverlap = true
           
           const dx = result[j].x - result[i].x
           const dy = result[j].y - result[i].y
           const dist = Math.sqrt(dx * dx + dy * dy)
           
-          const minDist = CARD_WIDTH + MIN_SPACING
-          const pushDistance = (minDist - dist) / 2 + 10
+          const minDist = Math.sqrt(
+            Math.pow(CARD_WIDTH + MIN_SPACING, 2) + 
+            Math.pow(CARD_HEIGHT + MIN_SPACING, 2)
+          ) / 2
           
-          if (dist < 0.01) {
-            result[i].x -= 25
-            result[j].x += 25
-            result[i].y += (Math.random() - 0.5) * 20
-            result[j].y += (Math.random() - 0.5) * 20
+          if (dist < 1) {
+            const angle = Math.random() * 2 * Math.PI
+            const pushDist = minDist
+            result[i].x -= Math.cos(angle) * pushDist
+            result[i].y -= Math.sin(angle) * pushDist
+            result[j].x += Math.cos(angle) * pushDist
+            result[j].y += Math.sin(angle) * pushDist
             moved = true
           } else {
-            const pushX = (dx / dist) * pushDistance
-            const pushY = (dy / dist) * pushDistance
-            
-            result[i].x -= pushX
-            result[i].y -= pushY
-            result[j].x += pushX
-            result[j].y += pushY
-            moved = true
+            const overlap = minDist - dist
+            if (overlap > 0) {
+              const pushDistance = overlap / 2 + 20
+              const pushX = (dx / dist) * pushDistance
+              const pushY = (dy / dist) * pushDistance
+              
+              result[i].x -= pushX
+              result[i].y -= pushY
+              result[j].x += pushX
+              result[j].y += pushY
+              moved = true
+            }
           }
         }
       }

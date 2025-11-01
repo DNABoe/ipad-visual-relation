@@ -520,7 +520,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                             type="button"
                             onClick={() => setScore(num)}
                             className={cn(
-                              "flex-1 h-14 rounded-lg border-2 font-bold text-xl transition-all",
+                              "w-12 h-12 rounded-lg border-2 font-bold text-xl transition-all flex items-center justify-center",
                               score === num 
                                 ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
                                 : 'bg-card border-border hover:border-accent/50'
