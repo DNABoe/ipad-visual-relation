@@ -5,6 +5,7 @@ import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { NODE_WIDTH, NODE_HEIGHT, ZOOM_STEP, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { calculateAlignment } from '@/lib/alignment'
+import { generateId } from '@/lib/helpers'
 import { toast } from 'sonner'
 import type { Person } from '@/lib/types'
 
@@ -261,11 +262,12 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
 
         if (!existingConnection) {
           const newConnection = {
-            id: `conn-${Date.now()}`,
+            id: generateId(),
             fromPersonId: interaction.dragState.id,
             toPersonId: targetPerson.id,
           }
           handlers.addConnection(newConnection)
+          selection.clearSelection()
           toast.success('Connection created')
         } else {
           toast.info('Connection already exists')

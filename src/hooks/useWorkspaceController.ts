@@ -268,16 +268,21 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       return
     }
     
-    if (e.button === 0 && !interaction.isConnecting && !transform.isPanning) {
+    if (e.button === 0 && !interaction.isConnecting) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
 
       const x = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
       const y = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
+      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
+      if (!isMultiSelect) {
+        selection.clearSelection()
+      }
+
       interaction.startSelectionDrag(x, y)
     }
-  }, [interaction, transform, canvasRef])
+  }, [interaction, transform, canvasRef, selection])
 
   const handleOrganizeByImportance = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
