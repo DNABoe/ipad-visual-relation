@@ -31,7 +31,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
     {
       title: 'File Operations',
       shortcuts: [
-        { keys: [isMac ? 'Cmd' : 'Ctrl', '+', 'S'], description: 'Save network file' },
+        { keys: [isMac ? 'Cmd' : 'Ctrl', '+', 'S'], description: 'Save & download network file' },
       ],
     },
     {

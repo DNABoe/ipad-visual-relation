@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { DownloadSimple } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 
 interface UnsavedChangesDialogProps {
   open: boolean
@@ -38,6 +39,8 @@ export function UnsavedChangesDialog({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      
+      toast.success('Network file downloaded successfully!')
       
       setTimeout(() => {
         onSaveAndContinue()

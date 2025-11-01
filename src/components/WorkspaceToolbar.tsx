@@ -82,8 +82,21 @@ export function WorkspaceToolbar({
     ? fileName 
     : `${fileName}.enc.json`
 
-  const handleSaveClick = () => {
+  const handleSaveClick = (e: React.MouseEvent) => {
+    if (!downloadUrl) {
+      e.preventDefault()
+      return
+    }
+    
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = downloadFileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
     onSave?.()
+    toast.success('Network file downloaded successfully!')
   }
 
   return (
@@ -428,15 +441,15 @@ export function WorkspaceToolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <a 
-                href={downloadUrl || '#'}
-                download={downloadFileName}
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleSaveClick}
-                className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input hover:bg-toolbar-hover hover:border-success/50 h-9 px-3 ${!downloadUrl ? 'opacity-40 pointer-events-none' : ''}`}
-                aria-disabled={!downloadUrl}
+                disabled={!downloadUrl}
+                className="hover:bg-toolbar-hover hover:border-success/50"
               >
                 <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
-              </a>
+              </Button>
             </TooltipTrigger>
             <TooltipContent>Save Network (Ctrl+S)</TooltipContent>
           </Tooltip>

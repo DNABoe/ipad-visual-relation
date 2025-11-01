@@ -128,6 +128,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
   }
 
+  const handleDownloadClick = useCallback(() => {
+    if (!createdNetwork) return
+    
+    const link = document.createElement('a')
+    link.href = createdNetwork.downloadUrl
+    link.download = createdNetwork.fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    toast.success('Network file downloaded! Check your Downloads folder.')
+  }, [createdNetwork])
+
   const handleContinueWithoutDownload = useCallback(() => {
     if (!createdNetwork) return
     onLoad(createdNetwork.workspace, createdNetwork.fileName, createdNetwork.password)
@@ -169,17 +182,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
                 </div>
               </div>
 
-              <a
-                href={createdNetwork.downloadUrl}
-                download={createdNetwork.fileName}
+              <Button
+                onClick={handleDownloadClick}
                 className="flex items-center justify-center gap-2 w-full h-14 bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all duration-300 active:scale-[0.98]"
               >
                 <DownloadSimple size={22} weight="bold" />
                 <span>Download {createdNetwork.fileName}</span>
-              </a>
+              </Button>
 
               <p className="text-xs text-muted-foreground text-center px-4">
-                Right-click the button above and select <strong className="text-foreground">"Save link as..."</strong> if download doesn't start automatically
+                Click the button above to download your encrypted network file to your Downloads folder
               </p>
             </div>
 

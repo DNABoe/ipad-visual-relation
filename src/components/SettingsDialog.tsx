@@ -572,6 +572,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         <span className="text-muted-foreground"> Files are encrypted with your password, no master key exists</span>
                       </div>
                     </div>
+                    <div className="flex items-start gap-2 text-xs">
+                      <span className="text-accent mt-0.5">📥</span>
+                      <div>
+                        <span className="font-medium text-foreground">Direct Downloads:</span>
+                        <span className="text-muted-foreground"> Files save directly to your Downloads folder when you click Save</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

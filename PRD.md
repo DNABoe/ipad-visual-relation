@@ -20,11 +20,18 @@ This is a full-featured network visualization tool with encrypted local file sto
 - **Success criteria**: Files are encrypted with AES-256-GCM using PBKDF2 (100,000 iterations) for key derivation; wrong password fails gracefully with clear error message; file can be saved/loaded across sessions; user sees security warnings about zero-knowledge architecture
 
 ### Save Network
-- **Functionality**: Save current network state to encrypted file
+- **Functionality**: Save current network state to encrypted file with automatic download
 - **Purpose**: Persist work and create backups with full encryption
-- **Trigger**: Click "Save Network" button in toolbar
-- **Progression**: Click Save → Encrypt current workspace → Download .enc.json file → Confirmation toast
-- **Success criteria**: File contains all persons, connections, and groups in encrypted format; can be re-loaded with correct password
+- **Trigger**: Click "Save Network" button in toolbar (or Ctrl+S)
+- **Progression**: Click Save → File is encrypted in browser → Browser automatically downloads .enc.json file to Downloads folder → Confirmation toast appears → Unsaved changes indicator clears
+- **Success criteria**: File contains all persons, connections, groups, and settings in encrypted format; can be re-loaded with correct password; download works across all major browsers (Chrome, Firefox, Safari, Edge) without requiring right-click; user receives clear confirmation when file is saved
+
+### File Download Mechanism
+- **Browser Compatibility**: All major browsers support programmatic file downloads via blob URLs and the HTML5 download attribute
+- **User Experience**: Single left-click triggers immediate download to default Downloads folder
+- **Fallback Option**: If browser blocks automatic download, user can right-click "Save link as..."
+- **Clear Messaging**: Tooltips and dialogs explain download location and process
+- **Unsaved Changes Dialog**: When user tries to create new network or load different file, dialog offers "Save & Continue" button that triggers download and automatically continues after successful save
 
 ### Interactive Canvas with Pan/Zoom
 - **Functionality**: Infinite canvas with mouse/touch pan and zoom controls
