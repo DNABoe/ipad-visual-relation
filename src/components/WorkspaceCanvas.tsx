@@ -324,7 +324,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           }
         }
       } else {
-        if (!isMultiSelect) {
+        if (!isMultiSelect && !interaction.dragState.hasMoved) {
           selection.clearSelection()
         }
       }
@@ -332,10 +332,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       interaction.endDrag()
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
-    } else if (interaction.dragState.type === null) {
-      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        selection.clearSelection()
-      }
+    } else if (transform.isPanning) {
     } else {
       interaction.endDrag()
     }
@@ -406,6 +403,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div className="absolute inset-0 z-0">
         <CanvasEdges
