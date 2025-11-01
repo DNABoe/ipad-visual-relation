@@ -69,7 +69,7 @@ export function PersonNode({
         opacity: { duration: 0.15 },
       }}
       style={{ 
-        width: 280,
+        width: 240,
         willChange: isDragging ? 'transform' : 'auto',
       }}
     >
@@ -93,7 +93,7 @@ export function PersonNode({
       ))}
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200',
+          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200 overflow-hidden',
           'hover:shadow-lg hover:border-primary',
           isSelected && 'scale-[1.02]',
           isDragging && 'node-dragging scale-[1.03]',
@@ -121,23 +121,24 @@ export function PersonNode({
             className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full p-1.5 shadow-lg border-2 border-card z-10"
             title="Advocate - Actively promotes messages"
           >
-            <Megaphone size={16} weight="fill" />
+            <Megaphone size={14} weight="fill" />
           </div>
         )}
         {hasCollapsedBranch && collapsedCount > 0 && (
           <div 
-            className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1 shadow-lg border-2 border-card z-10 flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform"
+            className="absolute -top-2 -left-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 shadow-lg border-2 border-card z-10 flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
             onClick={(e) => {
               e.stopPropagation()
               onExpandBranch?.(e)
             }}
           >
-            <Stack size={14} weight="fill" />
+            <Stack size={12} weight="fill" />
             <span className="text-xs font-bold">{collapsedCount}</span>
           </div>
         )}
-        <div className="flex items-start gap-3.5 p-3.5">
+        
+        <div className="relative">
           <div 
             className="cursor-pointer"
             onDoubleClick={(e) => {
@@ -145,11 +146,11 @@ export function PersonNode({
               onPhotoDoubleClick?.(e)
             }}
           >
-            <Avatar className="h-24 w-24 flex-shrink-0 border-0 ring-1 ring-border" style={{ boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)' }}>
+            <Avatar className="w-full h-48 rounded-none rounded-t-md border-0" style={{ boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)' }}>
               {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
               <AvatarFallback 
                 className={cn(
-                  "text-2xl font-bold",
+                  "text-5xl font-bold rounded-none",
                   person.frameColor === 'white' ? 'text-background' : 'text-foreground'
                 )}
                 style={{ 
@@ -160,15 +161,34 @@ export function PersonNode({
               </AvatarFallback>
             </Avatar>
           </div>
-          <div className="flex-1 min-w-0 space-y-1 pt-1">
-            <h3 className="font-semibold text-sm leading-tight break-words tracking-tight text-foreground">{person.name}</h3>
-            {person.position && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position}</p>}
-            {person.position2 && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position2}</p>}
-            {person.position3 && <p className="text-xs leading-tight break-words text-muted-foreground">{person.position3}</p>}
-          </div>
-          <Badge className="flex-shrink-0 font-bold text-xs px-2.5 py-1.5 border-0 bg-primary text-primary-foreground mt-1" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>
+          
+          <Badge 
+            className="absolute top-2 right-2 font-bold text-sm px-2.5 py-1.5 border-0 bg-primary text-primary-foreground" 
+            style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}
+          >
             {person.score}
           </Badge>
+        </div>
+
+        <div className="p-3 space-y-0.5">
+          <h3 className="font-semibold text-sm leading-tight break-words text-foreground line-clamp-2">
+            {person.name}
+          </h3>
+          {person.position && (
+            <p className="text-xs leading-tight break-words text-muted-foreground line-clamp-1">
+              {person.position}
+            </p>
+          )}
+          {person.position2 && (
+            <p className="text-xs leading-tight break-words text-muted-foreground line-clamp-1">
+              {person.position2}
+            </p>
+          )}
+          {person.position3 && (
+            <p className="text-xs leading-tight break-words text-muted-foreground line-clamp-1">
+              {person.position3}
+            </p>
+          )}
         </div>
       </Card>
     </motion.div>
