@@ -393,6 +393,28 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
     >
+      <div className="absolute inset-0 z-0">
+        <CanvasEdges
+          persons={controller.workspace.persons}
+          connections={controller.workspace.connections}
+          transform={controller.transform.transform}
+          selectedConnections={controller.selection.selectedConnections}
+          selectionRect={controller.interaction.selectionRect}
+          organicLines={organicLines}
+          shortestPathPersonIds={shortestPathPersonIds}
+          isShortestPathActive={isShortestPathActive}
+          onConnectionClick={(connectionId, e) => {
+            e.stopPropagation()
+            controller.handlers.handleConnectionClick(connectionId, e.shiftKey)
+          }}
+          onConnectionContextMenu={(connectionId, e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            controller.handlers.handleConnectionContextMenu(connectionId, e)
+          }}
+        />
+      </div>
+
       <div
         className="absolute inset-0 z-10"
         style={{
@@ -584,28 +606,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             })()}
           </svg>
         )}
-      </div>
-
-      <div className="absolute inset-0 z-0">
-        <CanvasEdges
-          persons={controller.workspace.persons}
-          connections={controller.workspace.connections}
-          transform={controller.transform.transform}
-          selectedConnections={controller.selection.selectedConnections}
-          selectionRect={controller.interaction.selectionRect}
-          organicLines={organicLines}
-          shortestPathPersonIds={shortestPathPersonIds}
-          isShortestPathActive={isShortestPathActive}
-          onConnectionClick={(connectionId, e) => {
-            e.stopPropagation()
-            controller.handlers.handleConnectionClick(connectionId, e.shiftKey)
-          }}
-          onConnectionContextMenu={(connectionId, e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            controller.handlers.handleConnectionContextMenu(connectionId, e)
-          }}
-        />
       </div>
 
       {controller.interaction.isConnecting && (
