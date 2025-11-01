@@ -463,7 +463,7 @@ export function CanvasEdges({
         animationFrameRef.current = null
       }
     }
-  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, JSON.stringify(shortestPathPersonIds)])
+  }, [persons, connections, transform, selectedConnections, organicLines, isShortestPathActive, JSON.stringify(shortestPathPersonIds), hoveredConnectionId])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -498,20 +498,16 @@ export function CanvasEdges({
   }
 
   const handleCanvasClick = (e: React.MouseEvent) => {
-    if (!onConnectionClick) return
-    
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    if (connectionId) {
+    if (connectionId && onConnectionClick) {
       e.stopPropagation()
       onConnectionClick(connectionId, e)
     }
   }
 
   const handleCanvasContextMenu = (e: React.MouseEvent) => {
-    if (!onConnectionContextMenu) return
-    
     const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
-    if (connectionId) {
+    if (connectionId && onConnectionContextMenu) {
       e.preventDefault()
       e.stopPropagation()
       onConnectionContextMenu(connectionId, e)
@@ -523,6 +519,11 @@ export function CanvasEdges({
     if (connectionId) {
       e.stopPropagation()
     }
+  }
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    const connectionId = getConnectionIdAtPosition(e.clientX, e.clientY)
+    setHoveredConnectionId(connectionId)
   }
 
   return (
@@ -537,6 +538,7 @@ export function CanvasEdges({
         className="absolute inset-0 opacity-0"
         style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
         onMouseDown={handleCanvasMouseDown}
+        onMouseMove={handleCanvasMouseMove}
         onClick={handleCanvasClick}
         onContextMenu={handleCanvasContextMenu}
       />

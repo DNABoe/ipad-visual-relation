@@ -324,7 +324,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           }
         }
       } else {
-        if (!isMultiSelect && !interaction.dragState.hasMoved) {
+        if (!isMultiSelect) {
           selection.clearSelection()
         }
       }

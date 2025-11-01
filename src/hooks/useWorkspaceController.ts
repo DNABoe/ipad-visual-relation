@@ -59,6 +59,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
         selection.selectPerson(personId, true)
       } else {
         if (!selection.selectedPersons.includes(personId)) {
+          selection.clearSelection()
           selection.selectPerson(personId, false)
         }
       }
@@ -98,12 +99,20 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   }, [workspaceState.workspace.persons, dialogs, transform.transform, interaction])
 
   const handleConnectionClick = useCallback((connectionId: string, shiftKey: boolean) => {
-    selection.selectConnection(connectionId, shiftKey)
+    if (shiftKey) {
+      selection.selectConnection(connectionId, true)
+    } else {
+      selection.clearSelection()
+      selection.selectConnection(connectionId, false)
+    }
   }, [selection])
 
   const handleConnectionContextMenu = useCallback((connectionId: string, e: React.MouseEvent) => {
     e.preventDefault()
-    selection.selectConnection(connectionId, false)
+    if (!selection.selectedConnections.includes(connectionId)) {
+      selection.clearSelection()
+      selection.selectConnection(connectionId, false)
+    }
   }, [selection])
 
   const handleCollapseBranch = useCallback((parentId: string, childIds: string[]) => {
@@ -139,7 +148,12 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   }, [workspaceState.workspace.collapsedBranches, handleExpandBranch])
 
   const handleGroupClick = useCallback((groupId: string, shiftKey: boolean) => {
-    selection.selectGroup(groupId, shiftKey)
+    if (shiftKey) {
+      selection.selectGroup(groupId, true)
+    } else {
+      selection.clearSelection()
+      selection.selectGroup(groupId, false)
+    }
   }, [selection])
 
   const handleSavePerson = useCallback((person: Person) => {
