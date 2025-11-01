@@ -510,10 +510,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               e.stopPropagation()
               controller.handlers.handlePersonDoubleClick(person.id)
             }}
-            onPhotoDoubleClick={(e) => {
-              e.stopPropagation()
-              controller.handlers.handlePhotoDoubleClick(person.id)
-            }}
             onContextMenu={(e) => {
               e.preventDefault()
               e.stopPropagation()

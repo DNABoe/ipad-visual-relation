@@ -20,7 +20,6 @@ interface PersonNodeProps {
   onMouseDown: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
-  onPhotoDoubleClick?: (e: React.MouseEvent) => void
   onContextMenu: (e: React.MouseEvent) => void
   onExpandBranch?: (e: React.MouseEvent) => void
   style?: React.CSSProperties
@@ -38,7 +37,6 @@ export function PersonNode({
   onMouseDown,
   onClick,
   onDoubleClick,
-  onPhotoDoubleClick,
   onContextMenu,
   onExpandBranch,
   style,
@@ -46,6 +44,9 @@ export function PersonNode({
   const frameColor = FRAME_COLORS[person.frameColor]
   
   const stackCount = (hasCollapsedBranch && collapsedCount > 0) ? Math.min(collapsedCount, 3) : 0
+  
+  const photoOffsetX = person.photoOffsetX || 0
+  const photoOffsetY = person.photoOffsetY || 0
 
   return (
     <motion.div 
@@ -93,7 +94,7 @@ export function PersonNode({
       ))}
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200 overflow-hidden',
+          'cursor-grab select-none border-[3px] backdrop-blur-none relative transition-all duration-200 overflow-hidden p-0',
           'hover:shadow-lg hover:border-primary',
           isSelected && 'scale-[1.02]',
           isDragging && 'node-dragging scale-[1.03]',
@@ -140,30 +141,31 @@ export function PersonNode({
         
         <div className="relative">
           <div 
-            className="cursor-pointer"
-            onDoubleClick={(e) => {
-              e.stopPropagation()
-              onPhotoDoubleClick?.(e)
+            className="w-full h-48 overflow-hidden rounded-t-md"
+            style={{ 
+              backgroundImage: person.photo ? `url(${person.photo})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
+              backgroundColor: person.photo ? undefined : frameColor,
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)'
             }}
           >
-            <Avatar className="w-full h-48 rounded-none rounded-t-md border-0" style={{ boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)' }}>
-              {person.photo && <AvatarImage src={person.photo} alt={person.name} className="object-cover" />}
-              <AvatarFallback 
-                className={cn(
-                  "text-5xl font-bold rounded-none",
-                  person.frameColor === 'white' ? 'text-background' : 'text-foreground'
-                )}
-                style={{ 
-                  backgroundColor: frameColor,
-                }}
-              >
-                {getInitials(person.name)}
-              </AvatarFallback>
-            </Avatar>
+            {!person.photo && (
+              <div className="w-full h-full flex items-center justify-center">
+                <span 
+                  className={cn(
+                    "text-5xl font-bold",
+                    person.frameColor === 'white' ? 'text-background' : 'text-foreground'
+                  )}
+                >
+                  {getInitials(person.name)}
+                </span>
+              </div>
+            )}
           </div>
           
           <Badge 
-            className="absolute top-2 right-2 font-bold text-sm px-2.5 py-1.5 border-0 bg-primary text-primary-foreground" 
+            className="absolute top-2 right-2 font-bold text-base px-3 py-1.5 border-0 bg-primary text-primary-foreground" 
             style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}
           >
             {person.score}
@@ -171,21 +173,21 @@ export function PersonNode({
         </div>
 
         <div className="p-3 space-y-0.5">
-          <h3 className="font-semibold text-sm leading-tight break-words text-foreground line-clamp-2">
+          <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-2">
             {person.name}
           </h3>
           {person.position && (
-            <p className="text-xs leading-tight break-words text-muted-foreground line-clamp-1">
+            <p className="text-sm leading-tight break-words text-muted-foreground line-clamp-1">
               {person.position}
             </p>
           )}
           {person.position2 && (
-            <p className="text-xs leading-tight break-words text-muted-foreground line-clamp-1">
+            <p className="text-sm leading-tight break-words text-muted-foreground line-clamp-1">
               {person.position2}
             </p>
           )}
           {person.position3 && (
-            <p className="text-xs leading-tight break-words text-muted-foreground line-clamp-1">
+            <p className="text-sm leading-tight break-words text-muted-foreground line-clamp-1">
               {person.position3}
             </p>
           )}

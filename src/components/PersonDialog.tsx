@@ -8,10 +8,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Slider } from '@/components/ui/slider'
 import type { Person, FrameColor, Attachment, ActivityLogEntry } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
-import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple } from '@phosphor-icons/react'
+import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 interface PersonDialogProps {
@@ -28,6 +29,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [score, setScore] = useState(3)
   const [frameColor, setFrameColor] = useState<FrameColor>('white')
   const [photo, setPhoto] = useState<string | undefined>(undefined)
+  const [photoOffsetX, setPhotoOffsetX] = useState(0)
+  const [photoOffsetY, setPhotoOffsetY] = useState(0)
   const [advocate, setAdvocate] = useState(false)
   const [notes, setNotes] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
@@ -42,6 +45,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setScore(editPerson?.score || 3)
       setFrameColor(editPerson?.frameColor || 'white')
       setPhoto(editPerson?.photo)
+      setPhotoOffsetX(editPerson?.photoOffsetX || 0)
+      setPhotoOffsetY(editPerson?.photoOffsetY || 0)
       setAdvocate(editPerson?.advocate || false)
       setNotes(editPerson?.notes || '')
       setAttachments(editPerson?.attachments || [])
@@ -51,6 +56,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setScore(3)
       setFrameColor('white')
       setPhoto(undefined)
+      setPhotoOffsetX(0)
+      setPhotoOffsetY(0)
       setAdvocate(false)
       setNotes('')
       setAttachments([])
@@ -185,6 +192,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       score,
       frameColor,
       photo,
+      photoOffsetX,
+      photoOffsetY,
       advocate,
       notes,
       attachments,
@@ -239,124 +248,215 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-h-[85vh] max-w-5xl overflow-hidden flex flex-col p-0">
+        <div className="p-6 border-b border-border">
           <DialogTitle className="text-xl">
             {editPerson ? 'Edit Person' : 'Add Person'}
           </DialogTitle>
           <DialogDescription>
             {editPerson ? 'Update person details, notes, and attachments' : 'Add a new person to your network'}
           </DialogDescription>
-        </DialogHeader>
+        </div>
         
         <Tabs defaultValue="details" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-4 mb-3">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="notes">
-              <Note className="mr-1.5" size={16} />
-              Notes
-            </TabsTrigger>
-            <TabsTrigger value="attachments">
-              <Paperclip className="mr-1.5" size={16} />
-              Attachments {attachments.length > 0 && `(${attachments.length})`}
-            </TabsTrigger>
-            <TabsTrigger value="activity">
-              <ClockCounterClockwise className="mr-1.5" size={16} />
-              Activity
-            </TabsTrigger>
-          </TabsList>
+          <div className="px-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="notes">
+                <Note className="mr-1.5" size={16} />
+                Notes
+              </TabsTrigger>
+              <TabsTrigger value="attachments">
+                <Paperclip className="mr-1.5" size={16} />
+                Attachments {attachments.length > 0 && `(${attachments.length})`}
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                <ClockCounterClockwise className="mr-1.5" size={16} />
+                Activity
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <ScrollArea className="h-[500px] pr-4">
-            <TabsContent value="details" className="space-y-5 mt-0">
-              <div className="space-y-2">
-                <div className="flex flex-col items-center gap-4">
-                  <div 
-                    className="relative cursor-pointer group"
-                    onDoubleClick={() => fileInputRef.current?.click()}
-                    title="Double-click to upload photo"
-                  >
-                    <Avatar className="h-28 w-28 ring-4 ring-border transition-all group-hover:ring-accent group-hover:shadow-xl">
-                      {photo ? (
-                        <AvatarImage src={photo} alt={name || 'Person'} className="object-cover" />
-                      ) : (
-                        <AvatarFallback 
-                          className={cn(
-                            "text-3xl font-bold",
-                            frameColor === 'white' ? 'text-card' : 'text-card-foreground'
-                          )}
-                          style={{ 
-                            backgroundColor: FRAME_COLORS[frameColor], 
-                          }}
+          <ScrollArea className="flex-1 px-6">
+            <TabsContent value="details" className="space-y-6 mt-4 pb-4">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col items-center gap-3">
+                    <div 
+                      className="relative cursor-pointer group w-48 h-48 rounded-lg overflow-hidden border-4 border-border"
+                      onDoubleClick={() => fileInputRef.current?.click()}
+                      title="Double-click to upload photo"
+                    >
+                      <div 
+                        className="w-full h-full"
+                        style={{
+                          backgroundImage: photo ? `url(${photo})` : undefined,
+                          backgroundSize: 'cover',
+                          backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
+                          backgroundColor: photo ? undefined : FRAME_COLORS[frameColor],
+                        }}
+                      >
+                        {!photo && (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className={cn(
+                              "text-5xl font-bold",
+                              frameColor === 'white' ? 'text-background' : 'text-foreground'
+                            )}>
+                              {name ? getInitials(name) : '?'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-card/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                        <Upload className="text-foreground" size={40} weight="duotone" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 w-full">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="photo-upload"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1"
                         >
-                          {name ? getInitials(name) : '?'}
-                        </AvatarFallback>
+                          <Upload className="mr-2" size={16} />
+                          Upload Photo
+                        </Button>
+                        {photo && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemovePhoto}
+                          >
+                            <X size={16} />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {photo && (
+                        <div className="space-y-3 pt-2 border-t border-border">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <ArrowsOutCardinal size={14} />
+                            <span>Adjust Photo Position</span>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Horizontal</Label>
+                            <Slider
+                              value={[photoOffsetX]}
+                              onValueChange={([value]) => setPhotoOffsetX(value)}
+                              min={-50}
+                              max={50}
+                              step={1}
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Vertical</Label>
+                            <Slider
+                              value={[photoOffsetY]}
+                              onValueChange={([value]) => setPhotoOffsetY(value)}
+                              min={-50}
+                              max={50}
+                              step={1}
+                              className="w-full"
+                            />
+                          </div>
+                          {(photoOffsetX !== 0 || photoOffsetY !== 0) && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setPhotoOffsetX(0)
+                                setPhotoOffsetY(0)
+                              }}
+                              className="w-full text-xs"
+                            >
+                              Reset Position
+                            </Button>
+                          )}
+                        </div>
                       )}
-                    </Avatar>
-                    <div className="absolute inset-0 rounded-full bg-card/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                      <Upload className="text-foreground" size={32} weight="duotone" />
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="photo-upload"
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter name"
+                      className="h-10"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="mr-2" size={16} />
-                      Upload Photo
-                    </Button>
-                    {photo && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRemovePhoto}
-                      >
-                        <X className="mr-2" size={16} />
-                        Remove
-                      </Button>
-                    )}
                   </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter name"
-                    className="h-10"
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="position" className="text-sm font-medium">Position</Label>
+                    <Textarea
+                      id="position"
+                      value={position}
+                      onChange={(e) => {
+                        const lines = e.target.value.split('\n')
+                        if (lines.length <= 3) {
+                          setPosition(e.target.value)
+                        }
+                      }}
+                      placeholder="Enter position (max 3 lines)"
+                      rows={3}
+                      className="resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground">Up to 3 lines</p>
+                  </div>
 
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="position" className="text-sm font-medium">Position</Label>
-                  <Textarea
-                    id="position"
-                    value={position}
-                    onChange={(e) => {
-                      const lines = e.target.value.split('\n')
-                      if (lines.length <= 3) {
-                        setPosition(e.target.value)
-                      }
-                    }}
-                    placeholder="Enter position (max 3 lines)"
-                    rows={3}
-                    className="resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground">Up to 3 lines</p>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Importance</Label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setScore(num)}
+                          className={cn(
+                            "flex-1 h-11 rounded-lg border-2 font-bold text-lg transition-all",
+                            score === num 
+                              ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
+                              : 'bg-card border-border hover:border-accent/50'
+                          )}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">1 = High, 5 = Lower</p>
+                  </div>
+
+                  <div className="flex items-center space-x-3 rounded-lg border border-border bg-card p-3">
+                    <Checkbox 
+                      id="advocate" 
+                      checked={advocate}
+                      onCheckedChange={(checked) => setAdvocate(checked === true)}
+                      className="h-5 w-5"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
+                        Advocate
+                      </Label>
+                      <p className="text-xs text-muted-foreground">Actively promotes messages</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -376,14 +476,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         type="button"
                         onClick={() => setFrameColor(color as FrameColor)}
                         className={cn(
-                          "flex flex-col items-center gap-2 p-2 rounded-lg border-2 transition-all",
+                          "flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all",
                           frameColor === color 
                             ? 'border-accent ring-2 ring-accent ring-offset-1 ring-offset-background bg-accent/10' 
                             : 'border-border hover:border-accent/50'
                         )}
                       >
                         <div
-                          className="w-10 h-10 rounded-md"
+                          className="w-12 h-12 rounded-md"
                           style={{ backgroundColor: FRAME_COLORS[color] }}
                         />
                         <span className="text-xs text-muted-foreground text-center">{labels[color]}</span>
@@ -392,46 +492,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   })}
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Importance</Label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => setScore(num)}
-                      className={cn(
-                        "flex-1 h-12 rounded-lg border-2 font-bold text-lg transition-all",
-                        score === num 
-                          ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground border-accent scale-105 shadow-lg' 
-                          : 'bg-card border-border hover:border-accent/50'
-                      )}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground text-center">1 = High, 5 = Lower</p>
-              </div>
-
-              <div className="flex items-center space-x-3 rounded-lg border border-border bg-card p-3">
-                <Checkbox 
-                  id="advocate" 
-                  checked={advocate}
-                  onCheckedChange={(checked) => setAdvocate(checked === true)}
-                  className="h-5 w-5"
-                />
-                <div className="flex-1">
-                  <Label htmlFor="advocate" className="text-sm font-medium cursor-pointer">
-                    Advocate
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Actively promotes messages</p>
-                </div>
-              </div>
             </TabsContent>
 
-            <TabsContent value="notes" className="mt-0 space-y-3">
+            <TabsContent value="notes" className="mt-4 space-y-4 pb-4">
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
                 <Textarea
@@ -439,7 +502,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add notes about this person..."
-                  rows={12}
+                  rows={14}
                   className="resize-none font-sans"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -448,7 +511,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-0 space-y-3">
+            <TabsContent value="attachments" className="mt-4 space-y-4 pb-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Attached Files</Label>
@@ -516,11 +579,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="activity" className="mt-0">
+            <TabsContent value="activity" className="mt-4 pb-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Activity Log</Label>
                 {!editPerson || !editPerson.activityLog || editPerson.activityLog.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-12 text-muted-foreground">
                     <ClockCounterClockwise size={48} className="mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No activity yet</p>
                     <p className="text-xs mt-1">Changes to this person will be logged here</p>
@@ -553,18 +616,22 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
           </ScrollArea>
         </Tabs>
 
-        <DialogFooter className="gap-2 mt-4">
-          {editPerson && onDelete && (
-            <Button variant="destructive" onClick={handleDelete} className="mr-auto">
-              <Trash className="mr-2" size={16} />
-              Delete
-            </Button>
-          )}
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!name.trim()} className="bg-gradient-to-r from-primary to-accent">
-            {editPerson ? 'Update' : 'Add'} Person
-          </Button>
-        </DialogFooter>
+        <div className="p-6 border-t border-border">
+          <div className="flex items-center justify-between gap-2">
+            {editPerson && onDelete && (
+              <Button variant="destructive" onClick={handleDelete}>
+                <Trash className="mr-2" size={16} />
+                Delete
+              </Button>
+            )}
+            <div className={cn("flex gap-2", !editPerson && "ml-auto")}>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={handleSave} disabled={!name.trim()} className="bg-gradient-to-r from-primary to-accent">
+                {editPerson ? 'Update' : 'Add'} Person
+              </Button>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

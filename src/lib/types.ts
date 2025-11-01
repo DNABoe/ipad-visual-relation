@@ -25,6 +25,8 @@ export interface Person {
   position2?: string
   position3?: string
   photo?: string
+  photoOffsetX?: number
+  photoOffsetY?: number
   score: number
   frameColor: FrameColor
   x: number
