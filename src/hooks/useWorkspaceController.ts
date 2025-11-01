@@ -242,13 +242,17 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       e.preventDefault()
       transform.startPanning()
     } else if (e.button === 0 && !interaction.isConnecting) {
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        selection.clearSelection()
+      }
+      
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
 
       const x = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
       const y = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
-      interaction.setDragIntent('canvas', undefined, e.clientX, e.clientY)
+      interaction.startSelectionDrag(x, y)
     }
   }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction, selection])
 

@@ -26,14 +26,6 @@ interface ResizeState {
   startGroupY: number
 }
 
-interface DragIntent {
-  type: 'person' | 'group' | 'canvas' | null
-  id?: string
-  startX: number
-  startY: number
-  hasMovedEnough: boolean
-}
-
 export function useInteractionState() {
   const [mode, setMode] = useState<InteractionMode>('select')
   const [dragState, setDragState] = useState<DragState>({ type: null, hasMoved: false })
@@ -43,7 +35,6 @@ export function useInteractionState() {
   const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([])
   const [isSpacebarPressed, setIsSpacebarPressed] = useState(false)
   const dragAccumulator = useRef({ x: 0, y: 0 })
-  const dragIntentState = useRef<DragIntent>({ type: null, startX: 0, startY: 0, hasMovedEnough: false })
 
   const enableSelectMode = useCallback(() => {
     setMode('select')
@@ -56,39 +47,6 @@ export function useInteractionState() {
 
   const enablePanMode = useCallback(() => {
     setMode('pan')
-  }, [])
-
-  const setDragIntent = useCallback((type: 'person' | 'group' | 'canvas', id: string | undefined, x: number, y: number) => {
-    dragIntentState.current = { type, id, startX: x, startY: y, hasMovedEnough: false }
-  }, [])
-
-  const checkDragIntent = useCallback((currentX: number, currentY: number): boolean => {
-    if (!dragIntentState.current.type) return false
-    
-    const dx = Math.abs(currentX - dragIntentState.current.startX)
-    const dy = Math.abs(currentY - dragIntentState.current.startY)
-    const distance = Math.sqrt(dx * dx + dy * dy)
-    
-    const threshold = 3
-    
-    if (distance > threshold && !dragIntentState.current.hasMovedEnough) {
-      dragIntentState.current.hasMovedEnough = true
-      return true
-    }
-    
-    return dragIntentState.current.hasMovedEnough
-  }, [])
-
-  const clearDragIntent = useCallback(() => {
-    dragIntentState.current = { type: null, startX: 0, startY: 0, hasMovedEnough: false }
-  }, [])
-
-  const hasDragIntent = useCallback(() => {
-    return dragIntentState.current.type !== null
-  }, [])
-
-  const getDragIntent = useCallback(() => {
-    return dragIntentState.current
   }, [])
 
   const startPersonDrag = useCallback((personId: string) => {
@@ -165,8 +123,7 @@ export function useInteractionState() {
     setSelectionRect(null)
     setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
-    clearDragIntent()
-  }, [clearDragIntent])
+  }, [])
 
   const updateAlignmentGuides = useCallback((guides: AlignmentGuide[]) => {
     setAlignmentGuides(guides)
@@ -189,11 +146,6 @@ export function useInteractionState() {
     dragAccumulator,
     isSpacebarPressed,
     setSpacebarPressed,
-    setDragIntent,
-    checkDragIntent,
-    clearDragIntent,
-    hasDragIntent,
-    getDragIntent,
     startPersonDrag,
     startGroupDrag,
     startConnectionDrag,
