@@ -344,12 +344,14 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       
       interaction.endDrag()
     } else if (hadDragIntent && dragIntent.type === 'canvas') {
-      if (!e.shiftKey) {
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
         selection.clearSelection()
       }
       interaction.clearDragIntent()
+    } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
+      interaction.endDrag()
     } else {
-      const wasDragging = interaction.endDrag()
+      interaction.endDrag()
     }
 
     interaction.endResize()
