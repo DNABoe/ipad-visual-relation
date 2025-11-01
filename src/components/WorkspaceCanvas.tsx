@@ -268,27 +268,35 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       interaction.endDrag()
     } else if (interaction.dragState.type === 'selection') {
       if (interaction.selectionRect) {
-        if (interaction.selectionRect.width === 0 && interaction.selectionRect.height === 0) {
+        const rectWidth = Math.abs(interaction.selectionRect.width)
+        const rectHeight = Math.abs(interaction.selectionRect.height)
+        
+        if (rectWidth < 5 && rectHeight < 5) {
           selection.clearSelection()
         } else {
+          const minX = Math.min(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
+          const maxX = Math.max(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
+          const minY = Math.min(interaction.selectionRect.y, interaction.selectionRect.y + interaction.selectionRect.height)
+          const maxY = Math.max(interaction.selectionRect.y, interaction.selectionRect.y + interaction.selectionRect.height)
+
           const selectedPersons = workspace.persons.filter(p => {
             const px = p.x + NODE_WIDTH / 2
             const py = p.y + NODE_HEIGHT / 2
             return (
-              px >= interaction.selectionRect!.x &&
-              px <= interaction.selectionRect!.x + interaction.selectionRect!.width &&
-              py >= interaction.selectionRect!.y &&
-              py <= interaction.selectionRect!.y + interaction.selectionRect!.height
+              px >= minX &&
+              px <= maxX &&
+              py >= minY &&
+              py <= maxY
             )
           }).map(p => p.id)
 
           const selectedConnectionIds = getConnectionsInRect(
             workspace.persons,
             workspace.connections,
-            interaction.selectionRect.x,
-            interaction.selectionRect.y,
-            interaction.selectionRect.width,
-            interaction.selectionRect.height
+            minX,
+            minY,
+            maxX - minX,
+            maxY - minY
           )
 
           selection.selectPersons(selectedPersons)
