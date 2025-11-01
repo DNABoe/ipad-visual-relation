@@ -242,9 +242,13 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       const x = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
       const y = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
+      if (!e.shiftKey) {
+        selection.clearSelection()
+      }
+      
       interaction.startSelectionDrag(x, y)
     }
-  }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction])
+  }, [interaction.isConnecting, interaction.isSpacebarPressed, transform, interaction, selection])
 
   const handleOrganizeByImportance = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {

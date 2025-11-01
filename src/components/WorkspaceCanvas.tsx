@@ -271,9 +271,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
         const rectWidth = Math.abs(interaction.selectionRect.width)
         const rectHeight = Math.abs(interaction.selectionRect.height)
         
-        if (rectWidth < 5 && rectHeight < 5) {
-          selection.clearSelection()
-        } else {
+        if (rectWidth >= 5 || rectHeight >= 5) {
           const minX = Math.min(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
           const maxX = Math.max(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
           const minY = Math.min(interaction.selectionRect.y, interaction.selectionRect.y + interaction.selectionRect.height)
@@ -299,8 +297,18 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             maxY - minY
           )
 
-          selection.selectPersons(selectedPersons)
-          selection.selectConnections(selectedConnectionIds)
+          if (e.shiftKey) {
+            const currentPersons = new Set(selection.selectedPersons)
+            selectedPersons.forEach(id => currentPersons.add(id))
+            selection.selectPersons(Array.from(currentPersons))
+            
+            const currentConnections = new Set(selection.selectedConnections)
+            selectedConnectionIds.forEach(id => currentConnections.add(id))
+            selection.selectConnections(Array.from(currentConnections))
+          } else {
+            selection.selectPersons(selectedPersons)
+            selection.selectConnections(selectedConnectionIds)
+          }
         }
       }
     }
