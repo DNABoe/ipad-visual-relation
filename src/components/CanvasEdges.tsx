@@ -312,9 +312,9 @@ export function CanvasEdges({
           ctx.fill()
         }
 
-        const r = (connectionIndex * 37) % 256
-        const g = (connectionIndex * 71) % 256
-        const b = (connectionIndex * 113) % 256
+        const r = ((connectionIndex + 1) * 37) % 256
+        const g = ((connectionIndex + 1) * 71) % 256
+        const b = ((connectionIndex + 1) * 113) % 256
         const hitColor = `rgb(${r}, ${g}, ${b})`
         connectionColorMap.current.set(hitColor, conn.id)
         connectionIndex++
@@ -500,6 +500,8 @@ export function CanvasEdges({
     if (connectionId) {
       e.stopPropagation()
       clickedConnectionRef.current = connectionId
+    } else {
+      clickedConnectionRef.current = null
     }
   }
   
@@ -530,8 +532,8 @@ export function CanvasEdges({
     <>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-none z-0"
-        style={{ width: '100%', height: '100%' }}
+        className="absolute inset-0 z-0"
+        style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
       />
       <canvas
         ref={hitCanvasRef}
@@ -541,15 +543,23 @@ export function CanvasEdges({
       <div
         className="absolute inset-0 z-0"
         style={{ 
-          pointerEvents: 'auto',
+          pointerEvents: hoveredConnection ? 'auto' : 'none',
           cursor: hoveredConnection ? 'pointer' : 'inherit',
           background: 'transparent'
         }}
-        onMouseMove={handleCanvasMouseMove}
         onMouseDown={handleCanvasMouseDown}
         onMouseUp={handleCanvasMouseUp}
-        onMouseLeave={() => setHoveredConnection(null)}
         onContextMenu={handleCanvasContextMenu}
+      />
+      <div
+        className="absolute inset-0 z-0"
+        style={{ 
+          pointerEvents: 'auto',
+          cursor: 'inherit',
+          background: 'transparent'
+        }}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseLeave={() => setHoveredConnection(null)}
       />
     </>
   )
