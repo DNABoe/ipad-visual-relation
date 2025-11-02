@@ -40,12 +40,12 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const selectionCanvasRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+      useEffect(() => {
     if (open && selectedPersons.length > 0) {
       const selectedPersonsData = persons.filter(p => selectedPersons.includes(p.id))
       if (selectedPersonsData.length > 0) {
-        const cardWidth = 240
-        const cardHeight = 340
+        const cardWidth = 200
+        const cardHeight = 280
         const bounds = {
           minX: Math.min(...selectedPersonsData.map(p => p.x)),
           minY: Math.min(...selectedPersonsData.map(p => p.y)),
@@ -134,8 +134,8 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           return null
         }
         
-        const cardWidth = 240
-        const cardHeight = 340
+        const cardWidth = 200
+        const cardHeight = 280
         
         const allX = [
           ...persons.map(p => p.x),
@@ -207,11 +207,11 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         ctx.save()
         ctx.strokeStyle = color
-        ctx.lineWidth = 3
-        ctx.setLineDash([8, 6])
+        ctx.lineWidth = 6
+        ctx.setLineDash([12, 8])
         
         if (group.solidBackground) {
-          ctx.fillStyle = color.replace(')', ' / 0.08)')
+          ctx.fillStyle = color.replace(')', ' / 0.12)')
           ctx.fillRect(group.x, group.y, group.width, group.height)
         }
         
@@ -221,14 +221,14 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.save()
         const cardColor = getComputedStyle(document.documentElement).getPropertyValue('--card').trim()
         ctx.fillStyle = cardColor
-        ctx.font = '600 14px Inter, sans-serif'
-        ctx.fillText(group.name, group.x + 12, group.y + 24)
+        ctx.font = '600 16px Inter, sans-serif'
+        ctx.fillText(group.name, group.x + 12, group.y + 28)
         ctx.restore()
       }
       
       const personsInBounds = persons.filter(p => {
-        const cardWidth = 240
-        const cardHeight = 340
+        const cardWidth = 200
+        const cardHeight = 280
         const pRight = p.x + cardWidth
         const pBottom = p.y + cardHeight
         return !(pRight < bounds.minX || p.x > bounds.maxX || pBottom < bounds.minY || p.y > bounds.maxY)
@@ -245,8 +245,8 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         if (!fromPerson || !toPerson) continue
         
-        const cardWidth = 240
-        const cardHeight = 340
+        const cardWidth = 200
+        const cardHeight = 280
         const fromX = fromPerson.x + cardWidth / 2
         const fromY = fromPerson.y + cardHeight / 2
         const toX = toPerson.x + cardWidth / 2
@@ -255,13 +255,65 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.save()
         const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
         ctx.strokeStyle = primaryColor
-        ctx.lineWidth = 2.5
-        ctx.globalAlpha = 0.6
+        
+        const lineStyle = conn.style || 'solid'
+        const thickness = conn.weight || 'medium'
+        
+        const thicknessMap = {
+          thin: 2.5,
+          medium: 4.5,
+          thick: 7.5
+        }
+        ctx.lineWidth = thicknessMap[thickness]
+        
+        if (lineStyle === 'dashed') {
+          ctx.setLineDash([12, 8])
+        }
+        
+        ctx.globalAlpha = 0.7
         ctx.beginPath()
         ctx.moveTo(fromX, fromY)
         ctx.lineTo(toX, toY)
         ctx.stroke()
         ctx.restore()
+        
+        if (conn.direction && conn.direction !== 'none') {
+          const dx = toX - fromX
+          const dy = toY - fromY
+          const length = Math.sqrt(dx * dx + dy * dy)
+          const centerX = fromX + dx * 0.5
+          const centerY = fromY + dy * 0.5
+          
+          const angle = Math.atan2(dy, dx)
+          
+          ctx.save()
+          ctx.translate(centerX, centerY)
+          ctx.rotate(angle)
+          
+          const arrowSize = conn.direction === 'bidirectional' ? 12 : 16
+          ctx.fillStyle = primaryColor
+          ctx.globalAlpha = 0.9
+          
+          if (conn.direction === 'forward' || conn.direction === 'bidirectional') {
+            ctx.beginPath()
+            ctx.moveTo(arrowSize, 0)
+            ctx.lineTo(-arrowSize / 2, -arrowSize / 2)
+            ctx.lineTo(-arrowSize / 2, arrowSize / 2)
+            ctx.closePath()
+            ctx.fill()
+          }
+          
+          if (conn.direction === 'backward' || conn.direction === 'bidirectional') {
+            ctx.beginPath()
+            ctx.moveTo(-arrowSize, 0)
+            ctx.lineTo(arrowSize / 2, -arrowSize / 2)
+            ctx.lineTo(arrowSize / 2, arrowSize / 2)
+            ctx.closePath()
+            ctx.fill()
+          }
+          
+          ctx.restore()
+        }
       }
       
       for (const person of personsInBounds) {
@@ -275,13 +327,13 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         const frameColor = frameColorMap[person.frameColor] || frameColorMap.white
         const cardColor = 'oklch(0.21 0.03 230)'
         
-        const cardWidth = 240
-        const cardHeight = 340
+        const cardWidth = 200
+        const cardHeight = 280
         
         ctx.save()
         ctx.fillStyle = cardColor
         ctx.strokeStyle = frameColor
-        ctx.lineWidth = 3
+        ctx.lineWidth = 6
         
         const radius = 8
         ctx.beginPath()
@@ -299,7 +351,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.stroke()
         ctx.restore()
         
-        const photoHeight = 192
+        const photoHeight = 160
         const photoOffsetX = person.photoOffsetX || 0
         const photoOffsetY = person.photoOffsetY || 0
         const photoZoom = person.photoZoom || 100
@@ -316,21 +368,42 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             
             ctx.save()
             ctx.beginPath()
-            ctx.rect(person.x, person.y, cardWidth, photoHeight)
+            const topRadius = 8
+            ctx.moveTo(person.x + topRadius, person.y)
+            ctx.lineTo(person.x + cardWidth - topRadius, person.y)
+            ctx.arcTo(person.x + cardWidth, person.y, person.x + cardWidth, person.y + topRadius, topRadius)
+            ctx.lineTo(person.x + cardWidth, person.y + photoHeight)
+            ctx.lineTo(person.x, person.y + photoHeight)
+            ctx.lineTo(person.x, person.y + topRadius)
+            ctx.arcTo(person.x, person.y, person.x + topRadius, person.y, topRadius)
             ctx.closePath()
             ctx.clip()
             
-            const imgWidth = (cardWidth * photoZoom) / 100
-            const imgHeight = (photoHeight * photoZoom) / 100
-            const imgX = person.x + (cardWidth - imgWidth) / 2 + (photoOffsetX * imgWidth) / 100
-            const imgY = person.y + (photoHeight - imgHeight) / 2 + (photoOffsetY * imgHeight) / 100
+            const aspectRatio = img.width / img.height
+            const containerAspect = cardWidth / photoHeight
             
-            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight)
-            ctx.restore()
+            let baseWidth, baseHeight
+            if (aspectRatio > containerAspect) {
+              baseHeight = photoHeight
+              baseWidth = baseHeight * aspectRatio
+            } else {
+              baseWidth = cardWidth
+              baseHeight = baseWidth / aspectRatio
+            }
             
-            ctx.save()
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'
-            ctx.fillRect(person.x, person.y + photoHeight - 6, cardWidth, 6)
+            const renderWidth = baseWidth * (photoZoom / 100)
+            const renderHeight = baseHeight * (photoZoom / 100)
+            
+            const centerX = person.x + cardWidth / 2
+            const centerY = person.y + photoHeight / 2
+            
+            const offsetX = (photoOffsetX / 100) * renderWidth
+            const offsetY = (photoOffsetY / 100) * renderHeight
+            
+            const imgX = centerX - renderWidth / 2 + offsetX
+            const imgY = centerY - renderHeight / 2 + offsetY
+            
+            ctx.drawImage(img, imgX, imgY, renderWidth, renderHeight)
             ctx.restore()
           } catch (err) {
             console.error('Failed to load photo:', err)
@@ -338,10 +411,20 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             if (includeName) {
               ctx.save()
               ctx.fillStyle = frameColor
-              ctx.fillRect(person.x, person.y, cardWidth, photoHeight)
+              ctx.beginPath()
+              const topRadius = 8
+              ctx.moveTo(person.x + topRadius, person.y)
+              ctx.lineTo(person.x + cardWidth - topRadius, person.y)
+              ctx.arcTo(person.x + cardWidth, person.y, person.x + cardWidth, person.y + topRadius, topRadius)
+              ctx.lineTo(person.x + cardWidth, person.y + photoHeight)
+              ctx.lineTo(person.x, person.y + photoHeight)
+              ctx.lineTo(person.x, person.y + topRadius)
+              ctx.arcTo(person.x, person.y, person.x + topRadius, person.y, topRadius)
+              ctx.closePath()
+              ctx.fill()
               
               ctx.fillStyle = person.frameColor === 'white' ? 'oklch(0.15 0.02 240)' : 'oklch(1 0 0)'
-              ctx.font = 'bold 48px Inter, sans-serif'
+              ctx.font = 'bold 36px Inter, sans-serif'
               ctx.textAlign = 'center'
               ctx.textBaseline = 'middle'
               const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -352,11 +435,21 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         } else if (!includePhoto || !person.photo) {
           ctx.save()
           ctx.fillStyle = frameColor
-          ctx.fillRect(person.x, person.y, cardWidth, photoHeight)
+          ctx.beginPath()
+          const topRadius = 8
+          ctx.moveTo(person.x + topRadius, person.y)
+          ctx.lineTo(person.x + cardWidth - topRadius, person.y)
+          ctx.arcTo(person.x + cardWidth, person.y, person.x + cardWidth, person.y + topRadius, topRadius)
+          ctx.lineTo(person.x + cardWidth, person.y + photoHeight)
+          ctx.lineTo(person.x, person.y + photoHeight)
+          ctx.lineTo(person.x, person.y + topRadius)
+          ctx.arcTo(person.x, person.y, person.x + topRadius, person.y, topRadius)
+          ctx.closePath()
+          ctx.fill()
           
           if (includeName) {
             ctx.fillStyle = person.frameColor === 'white' ? 'oklch(0.15 0.02 240)' : 'oklch(1 0 0)'
-            ctx.font = 'bold 48px Inter, sans-serif'
+            ctx.font = 'bold 36px Inter, sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -367,8 +460,8 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         if (includeImportanceScore) {
           const badgeSize = 32
-          const badgeX = person.x + cardWidth - badgeSize - 8
-          const badgeY = person.y + 8
+          const badgeX = person.x + cardWidth - badgeSize - 6
+          const badgeY = person.y + 6
           
           ctx.save()
           const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
@@ -398,7 +491,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           ctx.shadowColor = 'transparent'
           
           ctx.fillStyle = primaryForegroundColor
-          ctx.font = 'bold 16px Inter, sans-serif'
+          ctx.font = 'bold 14px Inter, sans-serif'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText(person.score.toString(), badgeX + badgeSize / 2, badgeY + badgeSize / 2)
@@ -406,9 +499,9 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         }
         
         if (includeAdvocate && person.advocate) {
-          const starSize = 40
-          const starX = person.x + 8
-          const starY = person.y + 8
+          const starSize = 32
+          const starX = person.x + 6
+          const starY = person.y + 6
           
           ctx.save()
           ctx.fillStyle = 'rgb(250, 204, 21)'
@@ -436,9 +529,9 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         }
         
         if (includeName || includePosition) {
-          const textX = person.x + 16
-          const textStartY = person.y + photoHeight + 16
-          const textWidth = cardWidth - 32
+          const textX = person.x + 12
+          const textStartY = person.y + photoHeight + 12
+          const textWidth = cardWidth - 24
           
           ctx.save()
           let currentY = textStartY
@@ -447,7 +540,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           
           if (includeName) {
             ctx.fillStyle = foregroundColor
-            ctx.font = '600 18px Inter, sans-serif'
+            ctx.font = '600 16px Inter, sans-serif'
             ctx.textBaseline = 'top'
             
             const maxWidth = textWidth
@@ -461,12 +554,12 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               displayName += '...'
             }
             ctx.fillText(displayName, textX, currentY)
-            currentY += 24
+            currentY += 20
           }
           
           if (includePosition) {
             ctx.fillStyle = mutedForegroundColor
-            ctx.font = '400 14px Inter, sans-serif'
+            ctx.font = '400 12px Inter, sans-serif'
             const maxWidth = textWidth
             
             if (person.position) {
@@ -480,9 +573,9 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 displayPos += '...'
               }
               ctx.fillText(displayPos, textX, currentY)
-              currentY += 20
+              currentY += 16
             } else {
-              currentY += 20
+              currentY += 16
             }
             
             if (person.position2) {
@@ -496,9 +589,9 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 displayPos2 += '...'
               }
               ctx.fillText(displayPos2, textX, currentY)
-              currentY += 20
+              currentY += 16
             } else {
-              currentY += 20
+              currentY += 16
             }
             
             if (person.position3) {
