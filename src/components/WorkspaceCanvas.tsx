@@ -272,44 +272,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const { interaction, workspace, transform, selection, handlers } = controller
 
     if (interaction.dragState.type === 'connection') {
-      interaction.endDrag()
-    } else if (interaction.dragState.type === 'selection') {
-      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
-      const hasMoved = interaction.dragState.hasMoved
-      
-      if (hasMoved && interaction.selectionRect) {
-        const rectWidth = Math.abs(interaction.selectionRect.width)
-        const rectHeight = Math.abs(interaction.selectionRect.height)
-        
-        if (rectWidth >= 5 && rectHeight >= 5) {
-          const minX = Math.min(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
-          const maxX = Math.max(interaction.selectionRect.x, interaction.selectionRect.x + interaction.selectionRect.width)
-          const minY = Math.min(interaction.selectionRect.y, interaction.selectionRect.y + interaction.selectionRect.height)
-          const maxY = Math.max(interaction.selectionRect.y, interaction.selectionRect.y + interaction.selectionRect.height)
-
-          const selectedPersons = workspace.persons.filter(p => {
-            const px = p.x + NODE_WIDTH / 2
-            const py = p.y + NODE_HEIGHT / 2
-            return (
-              px >= minX &&
-              px <= maxX &&
-              py >= minY &&
-              py <= maxY
-            )
-          }).map(p => p.id)
-
-          const selectedConnectionIds = getConnectionsInRect(
-            workspace.persons,
-            workspace.connections,
-            minX,
-            minY,
-            maxX - minX,
-            maxY - minY
-          )
-
-          if (isMultiSelect) {
-            const currentPersons = new Set(selection.selectedPersons)
-            selectedPersons.forEach(id => currentPersons.add(id))
             selection.selectPersons(Array.from(currentPersons))
             
             const currentConnections = new Set(selection.selectedConnections)
