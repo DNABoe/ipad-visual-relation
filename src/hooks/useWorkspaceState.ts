@@ -260,56 +260,58 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   }, [])
 
   const undo = useCallback(() => {
-    if (undoStack.length === 0) {
-      toast.info('Nothing to undo')
-      return
-    }
+    setUndoStack(prevStack => {
+      if (prevStack.length === 0) {
+        toast.info('Nothing to undo')
+        return prevStack
+      }
 
-    const lastAction = undoStack[undoStack.length - 1]
+      const lastAction = prevStack[prevStack.length - 1]
 
-    if (lastAction.type === 'delete-persons') {
-      setWorkspace(prev => ({
-        ...prev,
-        persons: [...prev.persons, ...(lastAction.persons || [])],
-        connections: [...prev.connections, ...(lastAction.connections || [])],
-      }))
-      toast.success('Restored deleted persons')
-    } else if (lastAction.type === 'delete-groups') {
-      setWorkspace(prev => ({
-        ...prev,
-        groups: [...prev.groups, ...(lastAction.groups || [])],
-      }))
-      toast.success('Restored deleted groups')
-    } else if (lastAction.type === 'delete-connections') {
-      setWorkspace(prev => ({
-        ...prev,
-        connections: [...prev.connections, ...(lastAction.connections || [])],
-      }))
-      toast.success('Restored deleted connections')
-    } else if (lastAction.type === 'update-persons' && lastAction.persons) {
-      setWorkspace(prev => {
-        const updatedPersonIds = new Set(lastAction.persons!.map(p => p.id))
-        const currentPersonIds = new Set(prev.persons.map(p => p.id))
-        const allPersonsExist = Array.from(updatedPersonIds).every(id => currentPersonIds.has(id))
-        
-        if (!allPersonsExist) {
-          toast.info('Cannot undo: affected persons no longer exist')
-          return prev
-        }
-        
-        return {
+      if (lastAction.type === 'delete-persons') {
+        setWorkspace(prev => ({
           ...prev,
-          persons: prev.persons.map(p => {
-            const restored = lastAction.persons?.find(restored => restored.id === p.id)
-            return restored || p
-          }),
-        }
-      })
-      toast.success('Restored previous state')
-    }
+          persons: [...prev.persons, ...(lastAction.persons || [])],
+          connections: [...prev.connections, ...(lastAction.connections || [])],
+        }))
+        toast.success('Restored deleted persons')
+      } else if (lastAction.type === 'delete-groups') {
+        setWorkspace(prev => ({
+          ...prev,
+          groups: [...prev.groups, ...(lastAction.groups || [])],
+        }))
+        toast.success('Restored deleted groups')
+      } else if (lastAction.type === 'delete-connections') {
+        setWorkspace(prev => ({
+          ...prev,
+          connections: [...prev.connections, ...(lastAction.connections || [])],
+        }))
+        toast.success('Restored deleted connections')
+      } else if (lastAction.type === 'update-persons' && lastAction.persons) {
+        setWorkspace(prev => {
+          const updatedPersonIds = new Set(lastAction.persons!.map(p => p.id))
+          const currentPersonIds = new Set(prev.persons.map(p => p.id))
+          const allPersonsExist = Array.from(updatedPersonIds).every(id => currentPersonIds.has(id))
+          
+          if (!allPersonsExist) {
+            toast.info('Cannot undo: affected persons no longer exist')
+            return prev
+          }
+          
+          return {
+            ...prev,
+            persons: prev.persons.map(p => {
+              const restored = lastAction.persons?.find(restored => restored.id === p.id)
+              return restored || p
+            }),
+          }
+        })
+        toast.success('Restored previous state')
+      }
 
-    setUndoStack(prev => prev.slice(0, -1))
-  }, [undoStack])
+      return prevStack.slice(0, -1)
+    })
+  }, [])
 
   const updatePersonsInBulk = useCallback((updates: Map<string, Partial<Person>>, skipUndo = false) => {
     let previousPersons: Person[] = []
