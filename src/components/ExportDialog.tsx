@@ -376,32 +376,17 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             ctx.closePath()
             ctx.clip()
             
-            const aspectRatio = img.width / img.height
-            const containerAspect = cardWidth / photoHeight
-            
-            let baseWidth, baseHeight
-            if (aspectRatio > containerAspect) {
-              baseHeight = photoHeight
-              baseWidth = baseHeight * aspectRatio
-            } else {
-              baseWidth = cardWidth
-              baseHeight = baseWidth / aspectRatio
-            }
-            
-            const renderWidth = baseWidth * (photoZoom / 100)
-            const renderHeight = baseHeight * (photoZoom / 100)
+            const renderWidth = cardWidth * (photoZoom / 100)
+            const renderHeight = photoHeight * (photoZoom / 100)
             
             const containerCenterX = person.x + cardWidth / 2
             const containerCenterY = person.y + photoHeight / 2
             
-            const maxOffsetX = (renderWidth - cardWidth) / 2
-            const maxOffsetY = (renderHeight - photoHeight) / 2
+            const bgPosX = 50 + photoOffsetX
+            const bgPosY = 50 + photoOffsetY
             
-            const actualOffsetX = (photoOffsetX / 100) * maxOffsetX
-            const actualOffsetY = (photoOffsetY / 100) * maxOffsetY
-            
-            const imgX = containerCenterX - renderWidth / 2 + actualOffsetX
-            const imgY = containerCenterY - renderHeight / 2 + actualOffsetY
+            const imgX = person.x + (cardWidth * bgPosX / 100) - (renderWidth / 2)
+            const imgY = person.y + (photoHeight * bgPosY / 100) - (renderHeight / 2)
             
             ctx.drawImage(img, imgX, imgY, renderWidth, renderHeight)
             ctx.restore()
