@@ -552,6 +552,11 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
                     if (controller.contextMenu!.targetId) {
                       controller.handlers.handleDeletePerson(controller.contextMenu!.targetId)
                     }
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleInfluenceArrange(controller.contextMenu!.targetId)
+                    }
                   }
                 )
               : controller.contextMenu.type === 'connection'

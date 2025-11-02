@@ -14,7 +14,8 @@ import {
   tightenNetwork,
   smartArrange,
   arrangeByImportanceAndAttitude,
-  arrangeByImportanceAndAdvocate
+  arrangeByImportanceAndAdvocate,
+  influenceHierarchyLayout
 } from '@/lib/layoutAlgorithms'
 
 export type ContextMenuState = {
@@ -729,6 +730,40 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     }
   }, [workspaceState.workspace.groups, dialogs])
 
+  const handleInfluenceArrange = useCallback((targetPersonId: string) => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const targetPerson = workspaceState.workspace.persons.find(p => p.id === targetPersonId)
+    if (!targetPerson) {
+      toast.error('Selected person not found')
+      return
+    }
+
+    const organized = influenceHierarchyLayout(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections,
+      targetPersonId
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
+    
+    toast.success(`Network arranged to show influence paths to ${targetPerson.name}`)
+  }, [workspaceState, handleZoomToFit])
+
   return {
     workspace: workspaceState.workspace,
     selection,
@@ -781,6 +816,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleChangeConnectionDirection,
       handleAutoFitGroup,
       handleRenameGroup,
+      handleInfluenceArrange,
       addPersons,
       updatePersonsScore,
       nudgePersons,

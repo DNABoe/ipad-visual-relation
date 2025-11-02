@@ -11,7 +11,8 @@ import {
   ArrowsLeftRight,
   Palette,
   TextAlignCenter,
-  Crosshair
+  Crosshair,
+  TreeStructure
 } from '@phosphor-icons/react'
 
 export type ContextMenuType = 'canvas' | 'person' | 'connection' | 'group'
@@ -144,22 +145,36 @@ export function getCanvasMenuItems(
 
 export function getPersonMenuItems(
   onEdit: () => void,
-  onDelete: () => void
+  onDelete: () => void,
+  onArrangeToInfluence?: () => void
 ): ContextMenuItem[] {
-  return [
+  const items: ContextMenuItem[] = [
     {
       label: 'Edit',
       icon: <PencilSimple size={18} />,
       onClick: onEdit,
     },
+  ]
+  
+  if (onArrangeToInfluence) {
+    items.push({
+      label: 'Arrange to Influence',
+      icon: <TreeStructure size={18} />,
+      onClick: onArrangeToInfluence,
+    })
+  }
+  
+  items.push(
     { divider: true } as ContextMenuItem,
     {
       label: 'Delete',
       icon: <Trash size={18} />,
       onClick: onDelete,
       danger: true,
-    },
-  ]
+    }
+  )
+  
+  return items
 }
 
 export function getConnectionMenuItems(
