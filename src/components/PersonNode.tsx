@@ -19,6 +19,7 @@ interface PersonNodeProps {
   collapsedCount?: number
   connectionCount?: number
   onMouseDown: (e: React.MouseEvent) => void
+  onMouseUp?: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
   onDoubleClick: (e: React.MouseEvent) => void
   onContextMenu: (e: React.MouseEvent) => void
@@ -36,6 +37,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
   collapsedCount = 0,
   connectionCount = 0,
   onMouseDown,
+  onMouseUp,
   onClick,
   onDoubleClick,
   onContextMenu,
@@ -127,6 +129,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           contentVisibility: isDragging ? 'auto' : 'visible',
         }}
         onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         onContextMenu={onContextMenu}

@@ -272,7 +272,13 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const { interaction, transform } = controller
 
     if (interaction.dragState.type === 'connection') {
-      interaction.endDrag()
+      setTimeout(() => {
+        if (interaction.dragState.type === 'connection') {
+          interaction.endDrag()
+          toast.info('Connection cancelled')
+        }
+      }, 50)
+      return
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
     } else if (transform.isPanning) {
@@ -475,7 +481,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return
-              if (controller.interaction.dragState.type === 'connection') return
+              
+              if (controller.interaction.dragState.type === 'connection') {
+                return
+              }
               if (controller.interaction.isConnecting) return
               
               const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
@@ -489,7 +498,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               
               controller.interaction.startPersonDrag(person.id)
             }}
-            onClick={(e) => {
+            onMouseUp={(e) => {
               e.stopPropagation()
               
               if (controller.interaction.dragState.type === 'connection' && controller.interaction.dragState.id) {
@@ -517,6 +526,38 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                 }
                 
                 controller.interaction.endDrag()
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              
+              if (controller.interaction.dragState.type === 'connection' && controller.interaction.dragState.id) {
+                e.preventDefault()
+                const fromPersonId = controller.interaction.dragState.id
+                const toPersonId = person.id
+                
+                if (fromPersonId !== toPersonId) {
+                  const existingConnection = controller.workspace.connections.find(
+                    c => (c.fromPersonId === fromPersonId && c.toPersonId === toPersonId) ||
+                         (c.fromPersonId === toPersonId && c.toPersonId === fromPersonId)
+                  )
+
+                  if (!existingConnection) {
+                    const newConnection = {
+                      id: generateId(),
+                      fromPersonId: fromPersonId,
+                      toPersonId: toPersonId,
+                    }
+                    controller.handlers.addConnection(newConnection)
+                    controller.selection.clearSelection()
+                    toast.success('Connection created')
+                  } else {
+                    toast.info('Connection already exists')
+                  }
+                }
+                
+                controller.interaction.endDrag()
+                return
               }
             }}
             onDoubleClick={(e) => {
