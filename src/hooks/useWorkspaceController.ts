@@ -28,20 +28,22 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   const interaction = useInteractionState()
   const dialogs = useDialogState()
   const canvasRef = useRef<HTMLDivElement>(null)
+  const lastSavedTransformRef = useRef<{ x: number; y: number; scale: number } | null>(null)
 
   useEffect(() => {
-    const currentTransform = workspaceState.workspace.canvasTransform
     const newTransform = transform.transform
+    const lastSaved = lastSavedTransformRef.current
     
     if (
-      !currentTransform ||
-      currentTransform.x !== newTransform.x ||
-      currentTransform.y !== newTransform.y ||
-      currentTransform.scale !== newTransform.scale
+      !lastSaved ||
+      lastSaved.x !== newTransform.x ||
+      lastSaved.y !== newTransform.y ||
+      lastSaved.scale !== newTransform.scale
     ) {
+      lastSavedTransformRef.current = { x: newTransform.x, y: newTransform.y, scale: newTransform.scale }
       workspaceState.updateCanvasTransform(newTransform)
     }
-  }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState.updateCanvasTransform, workspaceState.workspace.canvasTransform])
+  }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState])
 
   const handlePersonClick = useCallback((personId: string, shiftKey: boolean) => {
     if (interaction.isConnecting) {
