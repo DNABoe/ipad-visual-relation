@@ -53,10 +53,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           maxY: Math.max(...selectedPersonsData.map(p => p.y + cardHeight)),
         }
         setSelectionRect({
-          x: bounds.minX - 40,
-          y: bounds.minY - 40,
-          width: bounds.maxX - bounds.minX + 80,
-          height: bounds.maxY - bounds.minY + 80,
+          x: bounds.minX - 15,
+          y: bounds.minY - 15,
+          width: bounds.maxX - bounds.minX + 30,
+          height: bounds.maxY - bounds.minY + 30,
         })
         setMode('selection')
       }
@@ -151,10 +151,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ]
         
         bounds = {
-          minX: Math.min(...allX) - 40,
-          minY: Math.min(...allY) - 40,
-          maxX: Math.max(...allX) + 40,
-          maxY: Math.max(...allY) + 40,
+          minX: Math.min(...allX) - 15,
+          minY: Math.min(...allY) - 15,
+          maxX: Math.max(...allX) + 15,
+          maxY: Math.max(...allY) + 15,
         }
       }
       
