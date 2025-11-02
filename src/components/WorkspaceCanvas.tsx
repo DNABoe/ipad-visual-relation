@@ -508,12 +508,17 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           const hasCollapsedBranch = !!branch
           const collapsedCount = branch?.collapsedPersonIds.length || 0
           
+          const isDraggingThisCard = (
+            controller.interaction.dragState.type === 'person' && 
+            controller.selection.selectedPersons.includes(person.id)
+          )
+          
           return (
           <PersonNode
             key={person.id}
             person={person}
             isSelected={controller.selection.selectedPersons.includes(person.id)}
-            isDragging={controller.interaction.dragState.type === 'person' && controller.interaction.dragState.id === person.id && controller.interaction.dragState.hasMoved === true}
+            isDragging={isDraggingThisCard}
             isHighlighted={isHighlighted}
             isDimmed={isDimmed}
             hasCollapsedBranch={hasCollapsedBranch}

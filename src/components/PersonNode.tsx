@@ -54,14 +54,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
     <motion.div 
       className="absolute" 
       initial={false}
-      animate={isDragging ? { 
-        left: person.x, 
-        top: person.y,
-        transition: {
-          duration: 0,
-          ease: 'linear'
-        }
-      } : {
+      animate={{
         left: person.x,
         top: person.y,
         opacity: 1,
@@ -71,19 +64,22 @@ const PersonNodeInner = memo(function PersonNodeInner({
         opacity: 0,
         scale: 0.8,
       }}
-      transition={!isDragging ? {
+      transition={isDragging ? {
+        duration: 0,
+        ease: 'linear',
+      } : {
         type: 'spring',
         stiffness: 400,
         damping: 35,
         mass: 0.5,
         opacity: { duration: 0.15 },
-      } : undefined}
+      }}
       style={{ 
         width: 200,
         height: 280,
         willChange: isDragging ? 'transform' : 'auto',
         transform: 'translateZ(0)',
-        contain: isDragging ? 'layout style paint' : 'none',
+        contain: 'layout style paint',
         pointerEvents: isDragging ? 'none' : 'auto',
       }}
     >
@@ -160,9 +156,9 @@ const PersonNodeInner = memo(function PersonNodeInner({
         
         <div className="relative flex-shrink-0">
           <div 
-            className="w-full h-40 overflow-hidden"
+            className="w-full h-40 overflow-hidden bg-image-container"
             style={{ 
-              backgroundImage: person.photo ? `url(${person.photo})` : undefined,
+              backgroundImage: isDragging && person.photo ? 'none' : person.photo ? `url(${person.photo})` : undefined,
               backgroundSize: person.photo ? `${photoZoom}%` : 'cover',
               backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
               backgroundRepeat: 'no-repeat',
@@ -171,7 +167,6 @@ const PersonNodeInner = memo(function PersonNodeInner({
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
               willChange: isDragging ? 'transform' : 'auto',
-              visibility: isDragging && person.photo ? 'hidden' : 'visible',
             }}
           >
             {!person.photo && (

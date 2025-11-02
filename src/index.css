@@ -204,15 +204,3 @@
   transform: translateZ(0);
 }
 
-.node-dragging img,
-.node-dragging [style*="backgroundImage"],
-.node-dragging div[style*="background-image"] {
-  visibility: hidden !important;
-  will-change: transform;
-}
-
-.node-dragging .badge,
-.node-dragging .text-content {
-  will-change: contents;
-}
-
