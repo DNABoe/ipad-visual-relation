@@ -274,10 +274,11 @@ export function CanvasEdges({
           ctx.shadowBlur = 0
           ctx.globalAlpha = 1
         } else {
-          const lineOpacity = isSelected ? 1 : 0.75
+          const isMutedByShortestPath = isShortestPathActive && shortestPathConnectionIds.size > 0
+          const lineOpacity = isMutedByShortestPath ? 0.05 : (isSelected ? 1 : 0.75)
           ctx.strokeStyle = isSelected ? accentColor : `oklch(0.88 0.18 185 / ${lineOpacity})`
           ctx.lineWidth = isSelected ? baseLineWidth + 2 : baseLineWidth
-          ctx.globalAlpha = 1
+          ctx.globalAlpha = isMutedByShortestPath ? 0.05 : 1
           
           if (connectionStyle === 'dashed') {
             const dashLength = baseLineWidth * 2.5
@@ -313,6 +314,8 @@ export function CanvasEdges({
         }
 
         const drawArrow = (x: number, y: number, rotation: number, filled: boolean = true) => {
+          const isMutedByShortestPath = isShortestPathActive && shortestPathConnectionIds.size > 0 && !isShortestPath
+          
           ctx.save()
           ctx.translate(x, y)
           ctx.rotate(rotation)
@@ -332,7 +335,7 @@ export function CanvasEdges({
               ctx.globalAlpha = 0.85 + pulseIntensity * 0.15
             } else {
               ctx.fillStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185)'
-              ctx.globalAlpha = 1
+              ctx.globalAlpha = isMutedByShortestPath ? 0.05 : 1
             }
             ctx.fill()
             
@@ -343,11 +346,12 @@ export function CanvasEdges({
               ctx.strokeStyle = isSelected ? 'oklch(0.95 0.2 185)' : 'oklch(0.15 0.02 240)'
               ctx.lineWidth = 2.5
             }
-            ctx.globalAlpha = 1
+            ctx.globalAlpha = isMutedByShortestPath ? 0.05 : 1
             ctx.stroke()
           } else {
             ctx.strokeStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185)'
             ctx.lineWidth = baseLineWidth * 0.8
+            ctx.globalAlpha = isMutedByShortestPath ? 0.05 : 1
             ctx.stroke()
           }
           
