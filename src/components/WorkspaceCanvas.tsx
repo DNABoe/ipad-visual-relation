@@ -272,12 +272,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const { interaction, transform } = controller
 
     if (interaction.dragState.type === 'connection') {
-      setTimeout(() => {
-        if (interaction.dragState.type === 'connection') {
-          interaction.endDrag()
-          toast.info('Connection cancelled')
-        }
-      }, 50)
       return
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
@@ -464,7 +458,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           
           const isDraggingThisCard = (
             controller.interaction.dragState.type === 'person' && 
-            controller.selection.selectedPersons.includes(person.id)
+            controller.selection.selectedPersons.includes(person.id) &&
+            controller.interaction.dragState.hasMoved
           )
           
           return (
@@ -500,6 +495,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             }}
             onMouseUp={(e) => {
               e.stopPropagation()
+              if (e.button !== 0) return
               
               if (controller.interaction.dragState.type === 'connection' && controller.interaction.dragState.id) {
                 const fromPersonId = controller.interaction.dragState.id
@@ -530,35 +526,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             }}
             onClick={(e) => {
               e.stopPropagation()
-              
-              if (controller.interaction.dragState.type === 'connection' && controller.interaction.dragState.id) {
-                e.preventDefault()
-                const fromPersonId = controller.interaction.dragState.id
-                const toPersonId = person.id
-                
-                if (fromPersonId !== toPersonId) {
-                  const existingConnection = controller.workspace.connections.find(
-                    c => (c.fromPersonId === fromPersonId && c.toPersonId === toPersonId) ||
-                         (c.fromPersonId === toPersonId && c.toPersonId === fromPersonId)
-                  )
-
-                  if (!existingConnection) {
-                    const newConnection = {
-                      id: generateId(),
-                      fromPersonId: fromPersonId,
-                      toPersonId: toPersonId,
-                    }
-                    controller.handlers.addConnection(newConnection)
-                    controller.selection.clearSelection()
-                    toast.success('Connection created')
-                  } else {
-                    toast.info('Connection already exists')
-                  }
-                }
-                
-                controller.interaction.endDrag()
-                return
-              }
             }}
             onDoubleClick={(e) => {
               e.stopPropagation()
