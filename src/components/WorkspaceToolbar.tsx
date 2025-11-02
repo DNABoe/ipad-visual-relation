@@ -187,6 +187,13 @@ export function WorkspaceToolbar({
                   <span className="text-xs text-muted-foreground">Groups connected nodes</span>
                 </div>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={controller.handlers.handleCompactLayout} className="cursor-pointer gap-3 py-2.5">
+                <ArrowsInCardinal size={18} weight="duotone" className="text-primary" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Compact Network</span>
+                  <span className="text-xs text-muted-foreground">Tightens spacing, no overlaps</span>
+                </div>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={controller.handlers.handleImportanceAttitudeArrange} className="cursor-pointer gap-3 py-2.5">
                 <Target size={18} weight="duotone" className="text-warning" />
                 <div className="flex flex-col gap-0.5">

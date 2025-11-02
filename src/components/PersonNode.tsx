@@ -155,7 +155,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
         
         <div className="relative flex-shrink-0">
           <div 
-            className="w-full h-40 overflow-hidden bg-image-container"
+            className="w-full h-40 overflow-hidden bg-image-container rounded-t-lg"
             style={{ 
               backgroundImage: isDragging && person.photo ? 'none' : person.photo ? `url(${person.photo})` : undefined,
               backgroundSize: person.photo ? `${photoZoom}%` : 'cover',

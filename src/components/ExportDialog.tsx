@@ -332,8 +332,6 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         ctx.save()
         ctx.fillStyle = cardColor
-        ctx.strokeStyle = frameColor
-        ctx.lineWidth = 6
         
         const radius = 8
         ctx.beginPath()
@@ -348,7 +346,6 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.arcTo(person.x, person.y, person.x + radius, person.y, radius)
         ctx.closePath()
         ctx.fill()
-        ctx.stroke()
         ctx.restore()
         
         const photoHeight = 160
@@ -610,6 +607,27 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           
           ctx.restore()
         }
+        
+        ctx.save()
+        ctx.strokeStyle = frameColor
+        ctx.lineWidth = 8
+        ctx.lineJoin = 'round'
+        ctx.lineCap = 'round'
+        
+        const borderRadius = 8
+        ctx.beginPath()
+        ctx.moveTo(person.x + borderRadius, person.y)
+        ctx.lineTo(person.x + cardWidth - borderRadius, person.y)
+        ctx.arcTo(person.x + cardWidth, person.y, person.x + cardWidth, person.y + borderRadius, borderRadius)
+        ctx.lineTo(person.x + cardWidth, person.y + cardHeight - borderRadius)
+        ctx.arcTo(person.x + cardWidth, person.y + cardHeight, person.x + cardWidth - borderRadius, person.y + cardHeight, borderRadius)
+        ctx.lineTo(person.x + borderRadius, person.y + cardHeight)
+        ctx.arcTo(person.x, person.y + cardHeight, person.x, person.y + cardHeight - borderRadius, borderRadius)
+        ctx.lineTo(person.x, person.y + borderRadius)
+        ctx.arcTo(person.x, person.y, person.x + borderRadius, person.y, borderRadius)
+        ctx.closePath()
+        ctx.stroke()
+        ctx.restore()
       }
       
       ctx.restore()

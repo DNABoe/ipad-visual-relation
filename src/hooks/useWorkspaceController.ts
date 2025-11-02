@@ -15,7 +15,8 @@ import {
   smartArrange,
   arrangeByImportanceAndAttitude,
   arrangeByImportanceAndAdvocate,
-  influenceHierarchyLayout
+  influenceHierarchyLayout,
+  compactNetworkLayout
 } from '@/lib/layoutAlgorithms'
 
 export type ContextMenuState = {
@@ -537,6 +538,33 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     toast.success('Layout by importance & advocate applied')
   }, [workspaceState, handleZoomToFit])
 
+  const handleCompactLayout = useCallback(() => {
+    if (workspaceState.workspace.persons.length === 0) {
+      toast.info('No persons to organize')
+      return
+    }
+
+    const organized = compactNetworkLayout(
+      workspaceState.workspace.persons,
+      workspaceState.workspace.connections
+    )
+    
+    const updates = new Map<string, Partial<Person>>()
+    organized.forEach(person => {
+      updates.set(person.id, { x: person.x, y: person.y })
+    })
+    
+    workspaceState.updatePersonsInBulk(updates)
+    
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        handleZoomToFit()
+      })
+    })
+    
+    toast.success('Compact layout applied - network tightened')
+  }, [workspaceState, handleZoomToFit])
+
   const addPersons = useCallback((persons: Person[]) => {
     persons.forEach(person => {
       workspaceState.addPerson(person)
@@ -805,6 +833,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleSmartArrange,
       handleImportanceAttitudeArrange,
       handleImportanceAdvocateArrange,
+      handleCompactLayout,
       handleCollapseBranch,
       handleExpandBranch,
       handleExpandBranchFromPerson,

@@ -1093,3 +1093,169 @@ export const organizeByImportance = forceDirectedLayout
 export const hierarchicalFromSelected = hierarchicalTreeLayout
 export const tightenNetwork = circularClusterLayout
 export const smartArrange = forceDirectedLayout
+
+export function compactNetworkLayout(
+  persons: Person[],
+  connections: Connection[]
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  const adjacency = buildAdjacencyMap(connections)
+
+  const OPTIMAL_DISTANCE = 260
+  const REPULSION_STRENGTH = 60000
+  const ATTRACTION_STRENGTH = 0.15
+  const DAMPING = 0.82
+  const MAX_ITERATIONS = 400
+  const VELOCITY_THRESHOLD = 0.3
+
+  const velocities = new Map<string, { vx: number; vy: number }>()
+  result.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
+
+  for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    const forces = new Map<string, { fx: number; fy: number }>()
+    result.forEach(p => forces.set(p.id, { fx: 0, fy: 0 }))
+
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const p1 = result[i]
+        const p2 = result[j]
+        
+        const dx = p2.x - p1.x
+        const dy = p2.y - p1.y
+        const distSq = dx * dx + dy * dy
+        const dist = Math.sqrt(distSq)
+        
+        if (dist < 1) continue
+
+        const repulsion = REPULSION_STRENGTH / distSq
+        const fx = (dx / dist) * repulsion
+        const fy = (dy / dist) * repulsion
+        
+        const f1 = forces.get(p1.id)!
+        const f2 = forces.get(p2.id)!
+        f1.fx -= fx
+        f1.fy -= fy
+        f2.fx += fx
+        f2.fy += fy
+      }
+    }
+
+    connections.forEach(conn => {
+      const p1 = result.find(p => p.id === conn.fromPersonId)
+      const p2 = result.find(p => p.id === conn.toPersonId)
+      
+      if (!p1 || !p2) return
+      
+      const dx = p2.x - p1.x
+      const dy = p2.y - p1.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      
+      if (dist < 1) return
+      
+      const displacement = dist - OPTIMAL_DISTANCE
+      const force = displacement * ATTRACTION_STRENGTH
+      
+      const fx = (dx / dist) * force
+      const fy = (dy / dist) * force
+      
+      const f1 = forces.get(p1.id)!
+      const f2 = forces.get(p2.id)!
+      f1.fx += fx
+      f1.fy += fy
+      f2.fx -= fx
+      f2.fy -= fy
+    })
+
+    let maxVelocity = 0
+    result.forEach(person => {
+      const force = forces.get(person.id)!
+      const vel = velocities.get(person.id)!
+      
+      vel.vx = (vel.vx + force.fx) * DAMPING
+      vel.vy = (vel.vy + force.fy) * DAMPING
+      
+      const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy)
+      maxVelocity = Math.max(maxVelocity, speed)
+      
+      const maxSpeed = 35
+      if (speed > maxSpeed) {
+        vel.vx = (vel.vx / speed) * maxSpeed
+        vel.vy = (vel.vy / speed) * maxSpeed
+      }
+      
+      person.x += vel.vx
+      person.y += vel.vy
+    })
+
+    if (maxVelocity < VELOCITY_THRESHOLD) {
+      break
+    }
+  }
+
+  const COMPACT_CARD_WIDTH = 200
+  const COMPACT_CARD_HEIGHT = 280
+  const TIGHT_SPACING = 50
+
+  for (let iter = 0; iter < 250; iter++) {
+    let anyMoved = false
+
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const p1 = result[i]
+        const p2 = result[j]
+        
+        const dx = p2.x - p1.x
+        const dy = p2.y - p1.y
+        
+        const minDistX = COMPACT_CARD_WIDTH + TIGHT_SPACING
+        const minDistY = COMPACT_CARD_HEIGHT + TIGHT_SPACING
+        
+        const absX = Math.abs(dx)
+        const absY = Math.abs(dy)
+        
+        if (absX < minDistX && absY < minDistY) {
+          anyMoved = true
+          
+          if (Math.sqrt(dx * dx + dy * dy) < 1) {
+            const angle = Math.random() * 2 * Math.PI
+            const pushDist = (minDistX + minDistY) / 4
+            p1.x -= Math.cos(angle) * pushDist
+            p1.y -= Math.sin(angle) * pushDist
+            p2.x += Math.cos(angle) * pushDist
+            p2.y += Math.sin(angle) * pushDist
+          } else {
+            const overlapX = Math.max(0, minDistX - absX)
+            const overlapY = Math.max(0, minDistY - absY)
+            
+            if (overlapX > 0 || overlapY > 0) {
+              const pushX = overlapX > 0 ? ((overlapX / 2) + 10) * Math.sign(dx) : 0
+              const pushY = overlapY > 0 ? ((overlapY / 2) + 10) * Math.sign(dy) : 0
+              
+              p1.x -= pushX
+              p1.y -= pushY
+              p2.x += pushX
+              p2.y += pushY
+            }
+          }
+        }
+      }
+    }
+
+    if (!anyMoved) break
+  }
+
+  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
+  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
+  
+  result.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return result
+}
