@@ -31,12 +31,11 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   const lastSavedTransformRef = useRef<{ x: number; y: number; scale: number } | null>(null)
   const updateTransformTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isInitialMount = useRef(true)
-
   const updateCanvasTransformRef = useRef(workspaceState.updateCanvasTransform)
   
   useEffect(() => {
     updateCanvasTransformRef.current = workspaceState.updateCanvasTransform
-  }, [workspaceState.updateCanvasTransform])
+  })
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -63,12 +62,13 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       }
       
       updateTransformTimeoutRef.current = setTimeout(() => {
-        lastSavedTransformRef.current = { 
+        const transformToSave = { 
           x: newTransform.x, 
           y: newTransform.y, 
           scale: newTransform.scale 
         }
-        updateCanvasTransformRef.current(newTransform)
+        lastSavedTransformRef.current = transformToSave
+        updateCanvasTransformRef.current(transformToSave)
         updateTransformTimeoutRef.current = null
       }, 200)
     }
