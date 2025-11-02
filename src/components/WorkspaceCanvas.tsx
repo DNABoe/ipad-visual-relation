@@ -522,6 +522,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                 }
                 
                 controller.interaction.endDrag()
+              } else if (controller.interaction.dragState.type === 'person') {
+                controller.interaction.endDrag()
               }
             }}
             onClick={(e) => {
