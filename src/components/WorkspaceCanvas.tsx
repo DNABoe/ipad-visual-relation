@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import { PersonNode } from './PersonNode'
 import { GroupFrame } from './GroupFrame'
 import { CanvasEdges, getConnectionsInRect } from './CanvasEdges'
@@ -25,6 +25,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   const organicLines = workspaceSettings.organicLines
   const gridOpacity = workspaceSettings.gridOpacity
   const showGrid = workspaceSettings.showGrid
+
+  const pendingUpdate = useRef<{
+    updates: Map<string, Partial<Person>>
+    animationFrame?: number
+  }>({ updates: new Map() })
 
   const collapsedBranchesMap = useMemo(() => {
     const map = new Map<string, { collapsedPersonIds: string[] }>()
@@ -60,21 +65,44 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     }
   }, [gridSize, gridOpacity, showGrid, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
 
-  const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number) => {
-    const updates = new Map()
+  const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number, skipUndo = true) => {
     const personsMap = new Map(controller.workspace.persons.map(p => [p.id, p]))
     
     for (const personId of personIds) {
       const person = personsMap.get(personId)
       if (person) {
-        updates.set(personId, { x: person.x + dx, y: person.y + dy })
+        const newX = person.x + dx
+        const newY = person.y + dy
+        if (person.x !== newX || person.y !== newY) {
+          pendingUpdate.current.updates.set(personId, { x: newX, y: newY })
+        }
       }
     }
     
-    if (updates.size > 0) {
-      controller.handlers.updatePersonsInBulk(updates)
+    if (pendingUpdate.current.animationFrame) {
+      cancelAnimationFrame(pendingUpdate.current.animationFrame)
     }
+    
+    pendingUpdate.current.animationFrame = requestAnimationFrame(() => {
+      if (pendingUpdate.current.updates.size > 0) {
+        const updates = new Map(pendingUpdate.current.updates)
+        pendingUpdate.current.updates.clear()
+        controller.handlers.updatePersonsInBulk(updates, skipUndo)
+      }
+      pendingUpdate.current.animationFrame = undefined
+    })
   }, [controller.workspace.persons, controller.handlers])
+
+  useEffect(() => {
+    return () => {
+      if (pendingUpdate.current.animationFrame) {
+        cancelAnimationFrame(pendingUpdate.current.animationFrame)
+        if (pendingUpdate.current.updates.size > 0) {
+          controller.handlers.updatePersonsInBulk(new Map(pendingUpdate.current.updates), true)
+        }
+      }
+    }
+  }, [controller.handlers])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers, workspace, selection } = controller

@@ -196,6 +196,7 @@
   -webkit-backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
   will-change: transform;
+  contain: layout style paint;
 }
 
 .node-dragging * {
@@ -204,9 +205,9 @@
 }
 
 .node-dragging img,
-.node-dragging [style*="backgroundImage"] {
-  visibility: hidden;
-  image-rendering: pixelated;
+.node-dragging [style*="backgroundImage"],
+.node-dragging div[style*="background-image"] {
+  visibility: hidden !important;
   will-change: transform;
 }
 

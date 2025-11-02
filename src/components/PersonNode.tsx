@@ -129,6 +129,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
             : '0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
           transform: 'translateZ(0)',
           willChange: isDragging ? 'transform' : 'auto',
+          contentVisibility: isDragging ? 'auto' : 'visible',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -161,7 +162,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           <div 
             className="w-full h-40 overflow-hidden"
             style={{ 
-              backgroundImage: (!isDragging && person.photo) ? `url(${person.photo})` : undefined,
+              backgroundImage: person.photo ? `url(${person.photo})` : undefined,
               backgroundSize: person.photo ? `${photoZoom}%` : 'cover',
               backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
               backgroundRepeat: 'no-repeat',
@@ -170,9 +171,10 @@ const PersonNodeInner = memo(function PersonNodeInner({
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
               willChange: isDragging ? 'transform' : 'auto',
+              visibility: isDragging && person.photo ? 'hidden' : 'visible',
             }}
           >
-            {(!person.photo || isDragging) && (
+            {!person.photo && (
               <div className="w-full h-full flex items-center justify-center">
                 <span 
                   className={cn(

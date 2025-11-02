@@ -35,6 +35,7 @@ export function useInteractionState() {
   const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([])
   const [isSpacebarPressed, setIsSpacebarPressed] = useState(false)
   const dragAccumulator = useRef({ x: 0, y: 0 })
+  const hasCreatedDragUndo = useRef(false)
 
   const enableSelectMode = useCallback(() => {
     setMode('select')
@@ -51,11 +52,13 @@ export function useInteractionState() {
 
   const startPersonDrag = useCallback((personId: string) => {
     dragAccumulator.current = { x: 0, y: 0 }
+    hasCreatedDragUndo.current = false
     setDragState({ type: 'person', id: personId, hasMoved: false })
   }, [])
 
   const startGroupDrag = useCallback((groupId: string) => {
     dragAccumulator.current = { x: 0, y: 0 }
+    hasCreatedDragUndo.current = false
     setDragState({ type: 'group', id: groupId, hasMoved: false })
   }, [])
 
@@ -105,6 +108,7 @@ export function useInteractionState() {
     setSelectionRect(null)
     setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
+    hasCreatedDragUndo.current = false
     return wasDragging
   }, [dragState])
 
@@ -123,6 +127,7 @@ export function useInteractionState() {
     setSelectionRect(null)
     setAlignmentGuides([])
     dragAccumulator.current = { x: 0, y: 0 }
+    hasCreatedDragUndo.current = false
   }, [])
 
   const updateAlignmentGuides = useCallback((guides: AlignmentGuide[]) => {
@@ -144,6 +149,7 @@ export function useInteractionState() {
     selectionRect,
     alignmentGuides,
     dragAccumulator,
+    hasCreatedDragUndo,
     isSpacebarPressed,
     setSpacebarPressed,
     startPersonDrag,
