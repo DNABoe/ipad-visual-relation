@@ -269,21 +269,9 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   }, [controller, magneticSnap, gridSize, updatePersonPositions])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    const { interaction, workspace, transform, selection, handlers } = controller
+    const { interaction, transform } = controller
 
     if (interaction.dragState.type === 'connection') {
-            selection.selectPersons(Array.from(currentPersons))
-            
-            const currentConnections = new Set(selection.selectedConnections)
-            selectedConnectionIds.forEach(id => currentConnections.add(id))
-            selection.selectConnections(Array.from(currentConnections))
-          } else {
-            selection.selectPersons(selectedPersons)
-            selection.selectConnections(selectedConnectionIds)
-          }
-        }
-      }
-      
       interaction.endDrag()
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
