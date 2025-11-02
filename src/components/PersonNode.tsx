@@ -54,7 +54,14 @@ const PersonNodeInner = memo(function PersonNodeInner({
     <motion.div 
       className="absolute" 
       initial={false}
-      animate={isDragging ? { left: person.x, top: person.y } : {
+      animate={isDragging ? { 
+        left: person.x, 
+        top: person.y,
+        transition: {
+          duration: 0,
+          ease: 'linear'
+        }
+      } : {
         left: person.x,
         top: person.y,
         opacity: 1,
@@ -64,23 +71,20 @@ const PersonNodeInner = memo(function PersonNodeInner({
         opacity: 0,
         scale: 0.8,
       }}
-      transition={isDragging ? { 
-        duration: 0, 
-        type: 'tween',
-        ease: 'linear'
-      } : {
+      transition={!isDragging ? {
         type: 'spring',
         stiffness: 400,
         damping: 35,
         mass: 0.5,
         opacity: { duration: 0.15 },
-      }}
+      } : undefined}
       style={{ 
         width: 200,
         height: 280,
         willChange: isDragging ? 'transform' : 'auto',
         transform: 'translateZ(0)',
         contain: isDragging ? 'layout style paint' : 'none',
+        pointerEvents: isDragging ? 'none' : 'auto',
       }}
     >
       {!isDragging && stackCount > 0 && Array.from({ length: stackCount }).map((_, index) => (
@@ -105,7 +109,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
       <Card
         className={cn(
           'cursor-grab select-none border-[2px] backdrop-blur-none relative overflow-hidden p-0 h-full flex flex-col',
-          isDragging ? 'node-dragging scale-[1.03]' : 'transition-all duration-200',
+          isDragging ? 'node-dragging scale-[1.03] shadow-2xl' : 'transition-all duration-200',
           !isDragging && 'hover:shadow-lg hover:border-primary',
           isSelected && 'scale-[1.02]',
           isHighlighted && 'ring-2 ring-success ring-offset-2 ring-offset-canvas-bg glow-accent-strong scale-105',
@@ -116,13 +120,15 @@ const PersonNodeInner = memo(function PersonNodeInner({
           ...style,
           borderColor: frameColor,
           backgroundColor: 'oklch(0.21 0.03 230)',
-          boxShadow: isSelected
+          boxShadow: isDragging
+            ? '0 8px 32px rgba(0, 0, 0, 0.6)'
+            : isSelected
             ? `0 0 0 3px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.7), 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4)`
             : isHighlighted 
             ? '0 3px 16px rgba(0, 255, 128, 0.4), 0 1px 6px rgba(0, 0, 0, 0.3)' 
             : '0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
           transform: 'translateZ(0)',
-          willChange: isDragging ? 'transform, box-shadow' : 'auto',
+          willChange: isDragging ? 'transform' : 'auto',
         }}
         onMouseDown={onMouseDown}
         onClick={onClick}
@@ -155,18 +161,18 @@ const PersonNodeInner = memo(function PersonNodeInner({
           <div 
             className="w-full h-40 overflow-hidden"
             style={{ 
-              backgroundImage: person.photo ? `url(${person.photo})` : undefined,
+              backgroundImage: (!isDragging && person.photo) ? `url(${person.photo})` : undefined,
               backgroundSize: person.photo ? `${photoZoom}%` : 'cover',
               backgroundPosition: `${50 + photoOffsetX}% ${50 + photoOffsetY}%`,
               backgroundRepeat: 'no-repeat',
-              backgroundColor: person.photo ? undefined : frameColor,
+              backgroundColor: frameColor,
               boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
               willChange: isDragging ? 'transform' : 'auto',
             }}
           >
-            {!person.photo && (
+            {(!person.photo || isDragging) && (
               <div className="w-full h-full flex items-center justify-center">
                 <span 
                   className={cn(

@@ -195,6 +195,7 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
+  will-change: transform;
 }
 
 .node-dragging * {
@@ -204,8 +205,13 @@
 
 .node-dragging img,
 .node-dragging [style*="backgroundImage"] {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  visibility: hidden;
+  image-rendering: pixelated;
   will-change: transform;
+}
+
+.node-dragging .badge,
+.node-dragging .text-content {
+  will-change: contents;
 }
 

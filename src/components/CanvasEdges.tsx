@@ -356,13 +356,24 @@ export function CanvasEdges({
           ctx.restore()
         }
 
-        if (connectionDirection === 'forward' || connectionDirection === 'bidirectional') {
-          drawArrow(toX, toY, angle)
-        }
-        
-        if (connectionDirection === 'backward' || connectionDirection === 'bidirectional') {
+        if (connectionDirection === 'forward') {
+          const midX = (fromX + toX) / 2
+          const midY = (fromY + toY) / 2
+          drawArrow(midX, midY, angle)
+        } else if (connectionDirection === 'backward') {
+          const midX = (fromX + toX) / 2
+          const midY = (fromY + toY) / 2
           const backAngle = angle + Math.PI
-          drawArrow(fromX, fromY, backAngle)
+          drawArrow(midX, midY, backAngle)
+        } else if (connectionDirection === 'bidirectional') {
+          const oneThirdX = fromX + (toX - fromX) * 0.33
+          const oneThirdY = fromY + (toY - fromY) * 0.33
+          const twoThirdX = fromX + (toX - fromX) * 0.67
+          const twoThirdY = fromY + (toY - fromY) * 0.67
+          
+          drawArrow(twoThirdX, twoThirdY, angle)
+          const backAngle = angle + Math.PI
+          drawArrow(oneThirdX, oneThirdY, backAngle)
         }
 
         const r = ((connectionIndex + 1) * 37) % 256
