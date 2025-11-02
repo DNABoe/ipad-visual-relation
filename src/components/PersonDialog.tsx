@@ -159,6 +159,21 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     document.body.removeChild(link)
   }
 
+  const handleViewAttachment = (attachment: Attachment) => {
+    if (attachment.type === 'application/pdf') {
+      window.open(attachment.data, '_blank')
+    } else if (attachment.type.startsWith('image/')) {
+      window.open(attachment.data, '_blank')
+    } else {
+      toast.info('Preview not available for this file type. Use download instead.')
+    }
+  }
+
+  const handleAttachmentContextMenu = (e: React.MouseEvent, attachment: Attachment) => {
+    e.preventDefault()
+    handleDownloadAttachment(attachment)
+  }
+
   const handleRemovePhoto = () => {
     setPhoto(undefined)
     setPhotoOffsetX(0)
@@ -728,11 +743,18 @@ Format your response as a professional intelligence brief with clear sections an
                     {attachments.map(attachment => (
                       <div
                         key={attachment.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                        onDoubleClick={() => handleViewAttachment(attachment)}
+                        title={attachment.type === 'application/pdf' ? 'Double-click to view • Right-click filename to download' : 'Double-click to view'}
                       >
                         <Paperclip size={20} className="text-muted-foreground flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{attachment.name}</p>
+                        <div 
+                          className="flex-1 min-w-0"
+                          onContextMenu={(e) => handleAttachmentContextMenu(e, attachment)}
+                        >
+                          <p className="text-sm font-medium truncate hover:text-primary transition-colors">
+                            {attachment.name}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {formatFileSize(attachment.size)} • {formatTimestamp(attachment.addedAt)}
                           </p>
@@ -741,8 +763,12 @@ Format your response as a professional intelligence brief with clear sections an
                           type="button"
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleDownloadAttachment(attachment)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDownloadAttachment(attachment)
+                          }}
                           className="flex-shrink-0"
+                          title="Download file"
                         >
                           <DownloadSimple size={16} />
                         </Button>
@@ -750,8 +776,12 @@ Format your response as a professional intelligence brief with clear sections an
                           type="button"
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleRemoveAttachment(attachment.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRemoveAttachment(attachment.id)
+                          }}
                           className="flex-shrink-0 hover:text-destructive"
+                          title="Remove attachment"
                         >
                           <X size={16} />
                         </Button>
