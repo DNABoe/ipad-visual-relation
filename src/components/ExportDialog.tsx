@@ -391,14 +391,17 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             const renderWidth = baseWidth * (photoZoom / 100)
             const renderHeight = baseHeight * (photoZoom / 100)
             
-            const centerX = person.x + cardWidth / 2
-            const centerY = person.y + photoHeight / 2
+            const containerCenterX = person.x + cardWidth / 2
+            const containerCenterY = person.y + photoHeight / 2
             
-            const offsetX = (photoOffsetX / 100) * renderWidth
-            const offsetY = (photoOffsetY / 100) * renderHeight
+            const maxOffsetX = (renderWidth - cardWidth) / 2
+            const maxOffsetY = (renderHeight - photoHeight) / 2
             
-            const imgX = centerX - renderWidth / 2 + offsetX
-            const imgY = centerY - renderHeight / 2 + offsetY
+            const actualOffsetX = (photoOffsetX / 100) * maxOffsetX
+            const actualOffsetY = (photoOffsetY / 100) * maxOffsetY
+            
+            const imgX = containerCenterX - renderWidth / 2 + actualOffsetX
+            const imgY = containerCenterY - renderHeight / 2 + actualOffsetY
             
             ctx.drawImage(img, imgX, imgY, renderWidth, renderHeight)
             ctx.restore()
