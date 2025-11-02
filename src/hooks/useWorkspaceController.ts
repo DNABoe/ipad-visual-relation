@@ -32,6 +32,12 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   const updateTransformTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isInitialMount = useRef(true)
 
+  const updateCanvasTransformRef = useRef(workspaceState.updateCanvasTransform)
+  
+  useEffect(() => {
+    updateCanvasTransformRef.current = workspaceState.updateCanvasTransform
+  }, [workspaceState.updateCanvasTransform])
+
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false
@@ -62,7 +68,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
           y: newTransform.y, 
           scale: newTransform.scale 
         }
-        workspaceState.updateCanvasTransform(newTransform)
+        updateCanvasTransformRef.current(newTransform)
         updateTransformTimeoutRef.current = null
       }, 200)
     }
