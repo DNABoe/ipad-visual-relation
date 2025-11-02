@@ -206,7 +206,7 @@ export function CanvasEdges({
         const connectionWeight = conn.weight || 'medium'
         const connectionDirection = conn.direction || 'none'
 
-        const weightMap = { thin: 2, medium: 5, thick: 9 }
+        const weightMap = { thin: 1.5, medium: 4, thick: 10 }
         const baseLineWidth = weightMap[connectionWeight]
 
         ctx.beginPath()
@@ -289,7 +289,7 @@ export function CanvasEdges({
           ctx.setLineDash([])
         }
 
-        const arrowSize = isShortestPath ? 16 : (12 + baseLineWidth * 1.2)
+        const arrowSize = isShortestPath ? 18 : (14 + baseLineWidth * 1.8)
         const dx = toX - fromX
         const dy = toY - fromY
         let angle: number
@@ -318,10 +318,10 @@ export function CanvasEdges({
           ctx.rotate(rotation)
           
           ctx.beginPath()
-          ctx.moveTo(arrowSize * 0.1, 0)
-          ctx.lineTo(-arrowSize * 1.3, -arrowSize * 0.7)
-          ctx.lineTo(-arrowSize * 0.5, 0)
-          ctx.lineTo(-arrowSize * 1.3, arrowSize * 0.7)
+          ctx.moveTo(arrowSize * 0.15, 0)
+          ctx.lineTo(-arrowSize * 1.5, -arrowSize * 0.85)
+          ctx.lineTo(-arrowSize * 0.4, 0)
+          ctx.lineTo(-arrowSize * 1.5, arrowSize * 0.85)
           ctx.closePath()
           
           if (filled) {
@@ -338,10 +338,10 @@ export function CanvasEdges({
             
             if (isShortestPath) {
               ctx.strokeStyle = 'oklch(1 0.3 185)'
-              ctx.lineWidth = 2
+              ctx.lineWidth = 2.5
             } else {
               ctx.strokeStyle = isSelected ? 'oklch(0.95 0.2 185)' : 'oklch(0.15 0.02 240)'
-              ctx.lineWidth = 2
+              ctx.lineWidth = 2.5
             }
             ctx.globalAlpha = 1
             ctx.stroke()
