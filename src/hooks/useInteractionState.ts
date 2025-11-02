@@ -36,6 +36,7 @@ export function useInteractionState() {
   const [isSpacebarPressed, setIsSpacebarPressed] = useState(false)
   const dragAccumulator = useRef({ x: 0, y: 0 })
   const hasCreatedDragUndo = useRef(false)
+  const selectionDragStart = useRef<{ x: number; y: number } | null>(null)
 
   const enableSelectMode = useCallback(() => {
     setMode('select')
@@ -75,25 +76,29 @@ export function useInteractionState() {
   }, [])
 
   const startSelectionDrag = useCallback((x: number, y: number) => {
+    selectionDragStart.current = { x, y }
     setDragState({ type: 'selection', startX: x, startY: y, hasMoved: false })
     setSelectionRect({ x, y, width: 0, height: 0 })
   }, [])
 
   const updateSelectionDrag = useCallback((currentX: number, currentY: number) => {
+    if (!selectionDragStart.current) return
+    
+    const startX = selectionDragStart.current.x
+    const startY = selectionDragStart.current.y
+    
+    const rectData = {
+      x: Math.min(startX, currentX),
+      y: Math.min(startY, currentY),
+      width: Math.abs(currentX - startX),
+      height: Math.abs(currentY - startY),
+    }
+    
+    setSelectionRect(rectData)
+    
     setDragState(prev => {
-      if (prev.type !== 'selection' || prev.startX === undefined || prev.startY === undefined) return prev
-
-      const rectData = {
-        x: Math.min(prev.startX, currentX),
-        y: Math.min(prev.startY, currentY),
-        width: Math.abs(currentX - prev.startX),
-        height: Math.abs(currentY - prev.startY),
-      }
-
-      setSelectionRect(rectData)
-      
+      if (prev.type !== 'selection') return prev
       const shouldMarkAsMoved = !prev.hasMoved && (rectData.width > 5 || rectData.height > 5)
-      
       return shouldMarkAsMoved ? { ...prev, hasMoved: true } : prev
     })
   }, [])
@@ -104,6 +109,7 @@ export function useInteractionState() {
 
   const endDrag = useCallback(() => {
     const wasDragging = dragState.type !== null && dragState.hasMoved
+    selectionDragStart.current = null
     setDragState({ type: null, hasMoved: false })
     setSelectionRect(null)
     setAlignmentGuides([])
@@ -121,6 +127,7 @@ export function useInteractionState() {
   }, [])
 
   const resetInteraction = useCallback(() => {
+    selectionDragStart.current = null
     setDragState({ type: null, hasMoved: false })
     setResizeState(null)
     setConnectFrom(null)
