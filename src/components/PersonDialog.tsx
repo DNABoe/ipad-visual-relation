@@ -819,24 +819,39 @@ Format your response as a professional intelligence brief with clear sections an
                   </p>
                 </div>
 
-                <Button
-                  onClick={handleInvestigate}
-                  disabled={isInvestigating || !name.trim()}
-                  className="w-full bg-gradient-to-r from-primary to-accent"
-                  size="default"
-                >
-                  {isInvestigating ? (
-                    <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                      Investigating...
-                    </>
-                  ) : (
-                    <>
-                      <Detective className="mr-2" size={18} />
-                      Investigate
-                    </>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleInvestigate}
+                    disabled={isInvestigating || !name.trim()}
+                    className="flex-1 bg-gradient-to-r from-primary to-accent"
+                    size="default"
+                  >
+                    {isInvestigating ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Investigating...
+                      </>
+                    ) : (
+                      <>
+                        <Detective className="mr-2" size={18} />
+                        Investigate
+                      </>
+                    )}
+                  </Button>
+                  {investigationReport && (
+                    <Button
+                      onClick={() => {
+                        setInvestigationReport('')
+                        setCountry('')
+                      }}
+                      variant="outline"
+                      size="default"
+                      title="Clear investigation results"
+                    >
+                      <X size={18} />
+                    </Button>
                   )}
-                </Button>
+                </div>
 
                 {investigationReport && (
                   <div className="space-y-2 mt-4 p-4 rounded-lg bg-card border border-border">
