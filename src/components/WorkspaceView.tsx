@@ -570,6 +570,11 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
                   },
                   () => {
                     if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleStartConnection(controller.contextMenu!.targetId)
+                    }
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
                       controller.handlers.handleInfluenceArrange(controller.contextMenu!.targetId)
                     }
                   }

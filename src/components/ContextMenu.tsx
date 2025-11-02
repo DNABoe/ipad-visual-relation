@@ -12,7 +12,8 @@ import {
   Palette,
   TextAlignCenter,
   Crosshair,
-  TreeStructure
+  TreeStructure,
+  Link
 } from '@phosphor-icons/react'
 
 export type ContextMenuType = 'canvas' | 'person' | 'connection' | 'group'
@@ -146,6 +147,7 @@ export function getCanvasMenuItems(
 export function getPersonMenuItems(
   onEdit: () => void,
   onDelete: () => void,
+  onConnect?: () => void,
   onArrangeToInfluence?: () => void
 ): ContextMenuItem[] {
   const items: ContextMenuItem[] = [
@@ -155,6 +157,14 @@ export function getPersonMenuItems(
       onClick: onEdit,
     },
   ]
+  
+  if (onConnect) {
+    items.push({
+      label: 'Connect',
+      icon: <Link size={18} />,
+      onClick: onConnect,
+    })
+  }
   
   if (onArrangeToInfluence) {
     items.push({

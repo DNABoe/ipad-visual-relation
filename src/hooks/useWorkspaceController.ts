@@ -792,6 +792,23 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     toast.success(`Network arranged to show influence paths to ${targetPerson.name}`)
   }, [workspaceState, handleZoomToFit])
 
+  const handleStartConnection = useCallback((personId: string) => {
+    const person = workspaceState.workspace.persons.find(p => p.id === personId)
+    if (!person) return
+
+    setContextMenu(null)
+    
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    const personCenterX = person.x + NODE_WIDTH / 2
+    const personCenterY = person.y + NODE_HEIGHT / 2
+    
+    interaction.startConnectionDrag(personId, personCenterX, personCenterY)
+    
+    toast.info('Drag to another card to create connection')
+  }, [workspaceState.workspace.persons, interaction, canvasRef])
+
   return {
     workspace: workspaceState.workspace,
     selection,
@@ -846,6 +863,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleAutoFitGroup,
       handleRenameGroup,
       handleInfluenceArrange,
+      handleStartConnection,
       addPersons,
       updatePersonsScore,
       nudgePersons,
