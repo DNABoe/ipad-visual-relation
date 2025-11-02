@@ -8,9 +8,9 @@ export interface ResampleOptions {
 export async function resampleImage(
   dataUrl: string,
   options: ResampleOptions = {}
-): Promise<{ original: string; resampled: string }> {
+): Promise<{ resampled: string }> {
   const {
-    maxWidth = 480,
+    maxWidth = 600,
     maxHeight = 480,
     quality = 0.85,
     format = 'image/jpeg'
@@ -24,7 +24,7 @@ export async function resampleImage(
       let height = img.height
 
       if (width <= maxWidth && height <= maxHeight) {
-        resolve({ original: dataUrl, resampled: dataUrl })
+        resolve({ resampled: dataUrl })
         return
       }
 
@@ -68,7 +68,6 @@ export async function resampleImage(
       const resampled = canvas.toDataURL(format, quality)
       
       resolve({
-        original: dataUrl,
         resampled: resampled
       })
     }
