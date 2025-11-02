@@ -206,7 +206,7 @@ export function CanvasEdges({
         const connectionWeight = conn.weight || 'medium'
         const connectionDirection = conn.direction || 'none'
 
-        const weightMap = { thin: 1.5, medium: 4, thick: 10 }
+        const weightMap = { thin: 1.5, medium: 5, thick: 10 }
         const baseLineWidth = weightMap[connectionWeight]
 
         ctx.beginPath()

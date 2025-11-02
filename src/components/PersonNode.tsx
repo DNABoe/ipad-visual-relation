@@ -119,7 +119,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           boxShadow: isDragging
             ? '0 8px 32px rgba(0, 0, 0, 0.6)'
             : isSelected
-            ? `0 0 0 3px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.7), 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4)`
+            ? `0 0 0 4px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.8), 0 0 80px oklch(0.88 0.18 185 / 0.4), 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4)`
             : isHighlighted 
             ? '0 3px 16px rgba(0, 255, 128, 0.4), 0 1px 6px rgba(0, 0, 0, 0.3)' 
             : '0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
