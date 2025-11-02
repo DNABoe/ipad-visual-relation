@@ -72,7 +72,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
         clearTimeout(updateTransformTimeoutRef.current)
       }
     }
-  }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState.updateCanvasTransform])
+  }, [transform.transform.x, transform.transform.y, transform.transform.scale])
 
   const handlePersonClick = useCallback((personId: string, shiftKey: boolean) => {
     if (interaction.isConnecting) {
