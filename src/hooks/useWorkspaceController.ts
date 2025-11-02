@@ -29,19 +29,48 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   const dialogs = useDialogState()
   const canvasRef = useRef<HTMLDivElement>(null)
   const lastSavedTransformRef = useRef<{ x: number; y: number; scale: number } | null>(null)
+  const updateTransformTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isInitialMount = useRef(true)
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      lastSavedTransformRef.current = { 
+        x: transform.transform.x, 
+        y: transform.transform.y, 
+        scale: transform.transform.scale 
+      }
+      return
+    }
+
     const newTransform = transform.transform
     const lastSaved = lastSavedTransformRef.current
     
     if (
-      !lastSaved ||
-      lastSaved.x !== newTransform.x ||
-      lastSaved.y !== newTransform.y ||
-      lastSaved.scale !== newTransform.scale
+      lastSaved &&
+      (Math.abs(lastSaved.x - newTransform.x) > 0.5 ||
+       Math.abs(lastSaved.y - newTransform.y) > 0.5 ||
+       Math.abs(lastSaved.scale - newTransform.scale) > 0.001)
     ) {
-      lastSavedTransformRef.current = { x: newTransform.x, y: newTransform.y, scale: newTransform.scale }
-      workspaceState.updateCanvasTransform(newTransform)
+      if (updateTransformTimeoutRef.current) {
+        clearTimeout(updateTransformTimeoutRef.current)
+      }
+      
+      updateTransformTimeoutRef.current = setTimeout(() => {
+        lastSavedTransformRef.current = { 
+          x: newTransform.x, 
+          y: newTransform.y, 
+          scale: newTransform.scale 
+        }
+        workspaceState.updateCanvasTransform(newTransform)
+        updateTransformTimeoutRef.current = null
+      }, 200)
+    }
+    
+    return () => {
+      if (updateTransformTimeoutRef.current) {
+        clearTimeout(updateTransformTimeoutRef.current)
+      }
     }
   }, [transform.transform.x, transform.transform.y, transform.transform.scale, workspaceState.updateCanvasTransform])
 

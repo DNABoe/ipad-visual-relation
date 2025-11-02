@@ -214,6 +214,10 @@ const PersonNodeInner = memo(function PersonNodeInner({
     </motion.div>
   )
 }, (prevProps, nextProps) => {
+  if (prevProps.isDragging || nextProps.isDragging) {
+    return false
+  }
+  
   return (
     prevProps.person.id === nextProps.person.id &&
     prevProps.person.x === nextProps.person.x &&
@@ -230,7 +234,6 @@ const PersonNodeInner = memo(function PersonNodeInner({
     prevProps.person.frameColor === nextProps.person.frameColor &&
     prevProps.person.advocate === nextProps.person.advocate &&
     prevProps.isSelected === nextProps.isSelected &&
-    prevProps.isDragging === nextProps.isDragging &&
     prevProps.isHighlighted === nextProps.isHighlighted &&
     prevProps.isDimmed === nextProps.isDimmed &&
     prevProps.hasCollapsedBranch === nextProps.hasCollapsedBranch &&
