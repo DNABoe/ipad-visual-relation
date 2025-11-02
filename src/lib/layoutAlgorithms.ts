@@ -132,11 +132,11 @@ export function forceDirectedLayout(
   const result = persons.map(p => ({ ...p }))
   const adjacency = buildAdjacencyMap(connections)
 
-  const OPTIMAL_DISTANCE = 450
-  const REPULSION_STRENGTH = 120000
-  const ATTRACTION_STRENGTH = 0.05
+  const OPTIMAL_DISTANCE = 380
+  const REPULSION_STRENGTH = 100000
+  const ATTRACTION_STRENGTH = 0.08
   const DAMPING = 0.85
-  const MAX_ITERATIONS = 250
+  const MAX_ITERATIONS = 300
   const VELOCITY_THRESHOLD = 0.5
 
   const velocities = new Map<string, { vx: number; vy: number }>()
@@ -435,12 +435,12 @@ export function circularClusterLayout(
     center.y = 0
     
     const remaining = sortedPersons.slice(1)
-    const baseRadius = 500
+    const baseRadius = 420
     const ringsNeeded = Math.ceil(remaining.length / 6)
     
     let personIndex = 0
     for (let ring = 0; ring < ringsNeeded && personIndex < remaining.length; ring++) {
-      const radius = baseRadius + ring * 380
+      const radius = baseRadius + ring * 340
       const personsInRing = Math.min(6 + ring * 3, remaining.length - personIndex)
       
       for (let i = 0; i < personsInRing && personIndex < remaining.length; i++) {
@@ -452,8 +452,8 @@ export function circularClusterLayout(
       }
     }
   } else {
-    const clusterRadius = 400
-    const mainRadius = Math.max(600, clusterGroups.length * 250)
+    const clusterRadius = 350
+    const mainRadius = Math.max(550, clusterGroups.length * 220)
     
     clusterGroups.forEach((cluster, clusterIndex) => {
       const clusterAngle = (clusterIndex / clusterGroups.length) * 2 * Math.PI
@@ -559,14 +559,14 @@ export function arrangeByImportanceAndAttitude(
     let personIndex = 0
     
     for (let ring = 0; ring < ringsNeeded && personIndex < people.length; ring++) {
-      const radius = baseRadius + ring * 450
+      const radius = baseRadius + ring * 380
       const personsInRing = Math.min(5 + ring * 2, people.length - personIndex)
       
       for (let i = 0; i < personsInRing && personIndex < people.length; i++) {
         const angle = startAngle + ((endAngle - startAngle) * i / Math.max(personsInRing - 1, 1))
         const person = people[personIndex]
         
-        const importanceFactor = 1 + (person.score - 1) * 0.15
+        const importanceFactor = 1 + (person.score - 1) * 0.12
         person.x = Math.cos(angle) * radius * importanceFactor
         person.y = Math.sin(angle) * radius * importanceFactor
         personIndex++
@@ -574,10 +574,10 @@ export function arrangeByImportanceAndAttitude(
     }
   }
 
-  const topRadius = 550
+  const topRadius = 450
   placeInRing(positivePeople, -Math.PI * 0.65, -Math.PI * 0.35, topRadius)
-  placeInRing(neutralPeople, -Math.PI * 0.3, Math.PI * 0.3, topRadius + 150)
-  placeInRing(negativePeople, Math.PI * 0.35, Math.PI * 0.65, topRadius + 250)
+  placeInRing(neutralPeople, -Math.PI * 0.3, Math.PI * 0.3, topRadius + 120)
+  placeInRing(negativePeople, Math.PI * 0.35, Math.PI * 0.65, topRadius + 200)
 
   for (let iter = 0; iter < 80; iter++) {
     result.forEach(person => {
@@ -648,14 +648,14 @@ export function arrangeByImportanceAndAdvocate(
     let personIndex = 0
     
     for (let ring = 0; ring < ringsNeeded && personIndex < people.length; ring++) {
-      const radius = (baseRadius + ring * 420) * radiusMultiplier
+      const radius = (baseRadius + ring * 360) * radiusMultiplier
       const personsInRing = Math.min(6 + ring * 3, people.length - personIndex)
       
       for (let i = 0; i < personsInRing && personIndex < people.length; i++) {
         const angle = (i / personsInRing) * 2 * Math.PI - Math.PI / 2
         const person = people[personIndex]
         
-        const importanceFactor = 1 + (person.score - 1) * 0.12
+        const importanceFactor = 1 + (person.score - 1) * 0.1
         person.x = Math.cos(angle) * radius * importanceFactor
         person.y = Math.sin(angle) * radius * importanceFactor
         personIndex++
@@ -663,8 +663,8 @@ export function arrangeByImportanceAndAdvocate(
     }
   }
 
-  placeInRing(advocates, 500, 0.85)
-  placeInRing(nonAdvocates, 550, 1.15)
+  placeInRing(advocates, 420, 0.85)
+  placeInRing(nonAdvocates, 470, 1.15)
 
   for (let iter = 0; iter < 80; iter++) {
     result.forEach(person => {
@@ -902,18 +902,18 @@ export function influenceHierarchyLayout(
   })
   
   targetPerson.x = 0
-  targetPerson.y = -150
+  targetPerson.y = -400
   
   const sortedLayers = Array.from(layerGroups.keys())
     .filter(l => l !== 0)
     .sort((a, b) => a - b)
   
-  const VERTICAL_SPACING = 420
-  const BASE_HORIZONTAL_SPACING = 360
+  const VERTICAL_SPACING = 380
+  const BASE_HORIZONTAL_SPACING = 320
   
   sortedLayers.forEach((layerNum) => {
     const layerPersons = layerGroups.get(layerNum)!
-    const y = layerNum * VERTICAL_SPACING + 200
+    const y = layerNum * VERTICAL_SPACING
     
     if (layerPersons.length === 1) {
       layerPersons[0].x = 0
@@ -933,11 +933,11 @@ export function influenceHierarchyLayout(
         
         let xOffset = 0
         if (person.advocate) {
-          xOffset = (index % 2 === 0 ? -1 : 1) * 30
+          xOffset = (index % 2 === 0 ? -1 : 1) * 20
         }
         
         person.x = startX + index * BASE_HORIZONTAL_SPACING + xOffset
-        person.y = y - (normalizedInfluence * 40)
+        person.y = y - (normalizedInfluence * 30)
       })
     }
   })
@@ -945,7 +945,7 @@ export function influenceHierarchyLayout(
   const unconnectedPersons = layerGroups.get(999)
   if (unconnectedPersons && unconnectedPersons.length > 0) {
     const maxLayer = Math.max(...Array.from(layerGroups.keys()).filter(k => k !== 999))
-    const unconnectedY = (maxLayer + 2) * VERTICAL_SPACING + 200
+    const unconnectedY = (maxLayer + 2) * VERTICAL_SPACING
     
     unconnectedPersons.forEach((person, index) => {
       const totalWidth = (unconnectedPersons.length - 1) * BASE_HORIZONTAL_SPACING
@@ -955,7 +955,7 @@ export function influenceHierarchyLayout(
     })
   }
   
-  for (let iter = 0; iter < 60; iter++) {
+  for (let iter = 0; iter < 100; iter++) {
     result.forEach(person => {
       if (person.id === targetPersonId) return
       
@@ -963,7 +963,8 @@ export function influenceHierarchyLayout(
         .filter(c => c.fromPersonId === person.id || c.toPersonId === person.id)
         .map(c => {
           const otherId = c.fromPersonId === person.id ? c.toPersonId : c.fromPersonId
-          return result.find(p => p.id === otherId)
+          const connectedPerson = result.find(p => p.id === otherId)
+          return connectedPerson
         })
         .filter(p => p !== undefined) as Person[]
       
@@ -973,15 +974,63 @@ export function influenceHierarchyLayout(
         Math.abs((layers.get(p.id) || 0) - (layers.get(person.id) || 0)) === 0
       )
       
+      const adjacentLayerPersons = connectedPersons.filter(p => {
+        const layerDiff = Math.abs((layers.get(p.id) || 0) - (layers.get(person.id) || 0))
+        return layerDiff === 1
+      })
+      
       if (sameLayerPersons.length > 0) {
         const avgX = sameLayerPersons.reduce((sum, p) => sum + p.x, 0) / sameLayerPersons.length
         const dx = avgX - person.x
-        person.x += dx * 0.08
+        person.x += dx * 0.15
+      }
+      
+      if (adjacentLayerPersons.length > 0) {
+        const avgX = adjacentLayerPersons.reduce((sum, p) => sum + p.x, 0) / adjacentLayerPersons.length
+        const dx = avgX - person.x
+        person.x += dx * 0.12
       }
     })
   }
   
-  const finalResult = resolveOverlaps(result, 200)
+  for (let iter = 0; iter < 80; iter++) {
+    const attractionStrength = 0.08
+    
+    connections.forEach(conn => {
+      const personA = result.find(p => p.id === conn.fromPersonId)
+      const personB = result.find(p => p.id === conn.toPersonId)
+      
+      if (!personA || !personB) return
+      if (personA.id === targetPersonId || personB.id === targetPersonId) return
+      
+      const layerA = layers.get(personA.id) || 0
+      const layerB = layers.get(personB.id) || 0
+      
+      if (layerA !== layerB) return
+      
+      const dx = personB.x - personA.x
+      const dy = personB.y - personA.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      
+      if (dist < 1) return
+      
+      const idealDistance = BASE_HORIZONTAL_SPACING * 1.2
+      const diff = dist - idealDistance
+      
+      if (Math.abs(diff) > 50) {
+        const force = diff * attractionStrength
+        const fx = (dx / dist) * force
+        const fy = (dy / dist) * force
+        
+        personA.x += fx * 0.5
+        personA.y += fy * 0.15
+        personB.x -= fx * 0.5
+        personB.y -= fy * 0.15
+      }
+    })
+  }
+  
+  const finalResult = resolveOverlaps(result, 250)
   
   const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
   const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
