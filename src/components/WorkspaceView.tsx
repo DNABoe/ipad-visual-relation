@@ -107,8 +107,11 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
       const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+      const isDialogOpen = controller.dialogs.personDialog.open || controller.dialogs.groupDialog.open || 
+                           controller.dialogs.settingsDialog || controller.dialogs.connectionDialog.open ||
+                           controller.dialogs.exportDialog || controller.dialogs.collapseBranchDialog.open
 
-      if (e.key === ' ' && !isInputFocused) {
+      if (e.key === ' ' && !isInputFocused && !isDialogOpen) {
         e.preventDefault()
         controller.interaction.setSpacebarPressed(true)
         return
