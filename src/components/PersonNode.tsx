@@ -187,8 +187,8 @@ const PersonNodeInner = memo(function PersonNodeInner({
           </Badge>
         </div>
 
-        <div className="px-3 pt-1 pb-2 flex flex-col justify-start flex-1 min-h-0" style={{ height: 80 }}>
-          <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-1 mb-1">
+        <div className="px-3 pt-0 pb-2 flex flex-col justify-start flex-1 min-h-0" style={{ height: 80 }}>
+          <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-1 mb-0.5">
             {person.name}
           </h3>
           <p className="text-xs leading-[1.35] break-words text-muted-foreground line-clamp-3 mb-0.5">
