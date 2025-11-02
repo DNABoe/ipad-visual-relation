@@ -558,19 +558,39 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             ctx.fillStyle = mutedForegroundColor
             ctx.font = '400 12px Inter, sans-serif'
             const maxWidth = textWidth
-            const lineHeight = 16.2
             
             if (person.position) {
-              const lines = person.position.split('\n')
+              const lineHeight = 16.2
               const maxLines = 3
-              let linesRendered = 0
+              let wrappedLines: string[] = []
               
-              for (let i = 0; i < lines.length && linesRendered < maxLines; i++) {
-                let line = lines[i]
-                let metrics = ctx.measureText(line)
+              const words = person.position.split(' ')
+              let currentLine = ''
+              
+              for (const word of words) {
+                const testLine = currentLine ? currentLine + ' ' + word : word
+                const metrics = ctx.measureText(testLine)
                 
-                if (metrics.width > maxWidth) {
-                  while (metrics.width > maxWidth - 20 && line.length > 0) {
+                if (metrics.width > maxWidth && currentLine) {
+                  wrappedLines.push(currentLine)
+                  currentLine = word
+                } else {
+                  currentLine = testLine
+                }
+              }
+              
+              if (currentLine) {
+                wrappedLines.push(currentLine)
+              }
+              
+              const linesToRender = wrappedLines.slice(0, maxLines)
+              
+              for (let i = 0; i < linesToRender.length; i++) {
+                let line = linesToRender[i]
+                
+                if (i === maxLines - 1 && wrappedLines.length > maxLines) {
+                  let metrics = ctx.measureText(line + '...')
+                  while (metrics.width > maxWidth && line.length > 0) {
                     line = line.slice(0, -1)
                     metrics = ctx.measureText(line + '...')
                   }
@@ -579,19 +599,19 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 
                 ctx.fillText(line, textX, currentY)
                 currentY += lineHeight
-                linesRendered++
               }
               
-              if (linesRendered === 0) {
+              if (linesToRender.length === 0) {
                 currentY += lineHeight
               }
             } else {
-              currentY += lineHeight
+              currentY += 16.2
             }
             
             currentY += 2
             
             if (person.position2) {
+              const lineHeight = 15
               let displayPos2 = person.position2
               let metrics = ctx.measureText(displayPos2)
               if (metrics.width > maxWidth) {
@@ -602,7 +622,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 displayPos2 += '...'
               }
               ctx.fillText(displayPos2, textX, currentY)
-              currentY += 15 + 2
+              currentY += lineHeight + 2
             } else {
               currentY += 15 + 2
             }
