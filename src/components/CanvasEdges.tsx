@@ -206,7 +206,7 @@ export function CanvasEdges({
         const connectionWeight = conn.weight || 'medium'
         const connectionDirection = conn.direction || 'none'
 
-        const weightMap = { thin: 1.5, medium: 2, thick: 3 }
+        const weightMap = { thin: 2, medium: 3.5, thick: 6 }
         const baseLineWidth = weightMap[connectionWeight]
 
         ctx.beginPath()
@@ -263,7 +263,9 @@ export function CanvasEdges({
           ctx.globalAlpha = glowIntensity
           
           if (connectionStyle === 'dashed') {
-            ctx.setLineDash([8, 4])
+            const dashLength = (4 + pulseIntensity * 2) * 3
+            const gapLength = (4 + pulseIntensity * 2) * 2
+            ctx.setLineDash([dashLength, gapLength])
           }
           
           ctx.stroke()
@@ -273,11 +275,13 @@ export function CanvasEdges({
           ctx.globalAlpha = 1
         } else {
           ctx.strokeStyle = isSelected ? accentColor : edgeColor
-          ctx.lineWidth = isSelected ? baseLineWidth + 1 : baseLineWidth
-          ctx.globalAlpha = isSelected ? 1 : 1
+          ctx.lineWidth = isSelected ? baseLineWidth + 1.5 : baseLineWidth
+          ctx.globalAlpha = isSelected ? 1 : 0.8
           
           if (connectionStyle === 'dashed') {
-            ctx.setLineDash([8, 4])
+            const dashLength = baseLineWidth * 3
+            const gapLength = baseLineWidth * 2
+            ctx.setLineDash([dashLength, gapLength])
           }
           
           ctx.stroke()
@@ -285,7 +289,7 @@ export function CanvasEdges({
           ctx.globalAlpha = 1
         }
 
-        const arrowSize = isShortestPath ? 10 : 8
+        const arrowSize = isShortestPath ? 12 : (10 + baseLineWidth * 0.5)
         const dx = toX - fromX
         const dy = toY - fromY
         let angle: number
