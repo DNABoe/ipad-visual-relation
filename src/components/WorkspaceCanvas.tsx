@@ -489,6 +489,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               }
               controller.interaction.startGroupDrag(group.id)
             }}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              controller.handlers.handleGroupContextMenu(group.id, e)
+            }}
             onResizeStart={(e, handle) => {
               const rect = controller.canvasRef.current?.getBoundingClientRect()
               if (!rect) return

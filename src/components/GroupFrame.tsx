@@ -26,10 +26,11 @@ interface GroupFrameProps {
   onRemove?: (groupId: string) => void
   onDragStart?: (e: React.MouseEvent) => void
   onResizeStart?: (e: React.MouseEvent, handle: string) => void
+  onContextMenu?: (e: React.MouseEvent) => void
   style?: React.CSSProperties
 }
 
-export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, onRemove, onDragStart, onResizeStart, style }: GroupFrameProps) {
+export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, onRemove, onDragStart, onResizeStart, onContextMenu, style }: GroupFrameProps) {
   const groupColor = GROUP_COLORS[group.color]
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(group.name)
@@ -96,6 +97,13 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
         ...style,
       }}
       onClick={onClick}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (onContextMenu) {
+          onContextMenu(e)
+        }
+      }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && onDragStart) {
           onDragStart(e)

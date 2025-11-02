@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from 'react'
+import { useCallback, useRef, useEffect, useState } from 'react'
 import { useWorkspaceState } from './useWorkspaceState'
 import { useSelection } from './useSelection'
 import { useCanvasTransform } from './useCanvasTransform'
@@ -17,6 +17,15 @@ import {
   arrangeByImportanceAndAdvocate
 } from '@/lib/layoutAlgorithms'
 
+export type ContextMenuState = {
+  type: 'canvas' | 'person' | 'connection' | 'group'
+  x: number
+  y: number
+  targetId?: string
+  canvasX?: number
+  canvasY?: number
+} | null
+
 interface UseWorkspaceControllerOptions {
   initialWorkspace: Workspace
 }
@@ -32,6 +41,8 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   const updateTransformTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isInitialMount = useRef(true)
   const updateCanvasTransformRef = useRef(workspaceState.updateCanvasTransform)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null)
+  const [copiedData, setCopiedData] = useState<{persons: Person[], connections: Connection[]} | null>(null)
   
   useEffect(() => {
     updateCanvasTransformRef.current = workspaceState.updateCanvasTransform
@@ -140,16 +151,18 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
         dialogs.openPersonDialog(person)
       }
     } else {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-
-      const mouseX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
-      const mouseY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
-
-      interaction.startConnectionDrag(personId, mouseX, mouseY)
-      toast.info('Drag to another person to connect')
+      if (!selection.selectedPersons.includes(personId)) {
+        selection.clearSelection()
+        selection.selectPerson(personId, false)
+      }
+      setContextMenu({
+        type: 'person',
+        x: e.clientX,
+        y: e.clientY,
+        targetId: personId
+      })
     }
-  }, [workspaceState.workspace.persons, dialogs, transform.transform, interaction])
+  }, [workspaceState.workspace.persons, dialogs, selection])
 
   const handleConnectionClick = useCallback((connectionId: string, shiftKey: boolean) => {
     if (shiftKey) {
@@ -178,6 +191,12 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       selection.clearSelection()
       selection.selectConnection(connectionId, false)
     }
+    setContextMenu({
+      type: 'connection',
+      x: e.clientX,
+      y: e.clientY,
+      targetId: connectionId
+    })
   }, [selection])
 
   const handleCollapseBranch = useCallback((parentId: string, childIds: string[]) => {
@@ -247,9 +266,15 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
   }, [selection.selectedPersons, workspaceState, selection])
 
   const handleSaveGroup = useCallback((group: Group) => {
-    workspaceState.addGroup(group)
+    const existing = workspaceState.workspace.groups.find(g => g.id === group.id)
+    if (existing) {
+      workspaceState.updateGroup(group.id, group)
+      toast.success('Group updated')
+    } else {
+      workspaceState.addGroup(group)
+      toast.success('Group created')
+    }
     dialogs.closeGroupDialog()
-    toast.success('Group created')
   }, [workspaceState, dialogs])
 
   const handleUpdateGroup = useCallback((groupId: string, updates: Partial<Group>) => {
@@ -330,6 +355,19 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     }
     
     if (e.button === 2) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      
+      const canvasX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
+      const canvasY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
+      
+      setContextMenu({
+        type: 'canvas',
+        x: e.clientX,
+        y: e.clientY,
+        canvasX,
+        canvasY
+      })
       return
     }
     
@@ -554,6 +592,156 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     })
   }, [transform])
 
+  const handleGroupContextMenu = useCallback((groupId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!selection.selectedGroups.includes(groupId)) {
+      selection.clearSelection()
+      selection.selectGroup(groupId, false)
+    }
+    setContextMenu({
+      type: 'group',
+      x: e.clientX,
+      y: e.clientY,
+      targetId: groupId
+    })
+  }, [selection])
+
+  const handleCopySelected = useCallback(() => {
+    const selectedPersonIds = new Set(selection.selectedPersons)
+    const persons = workspaceState.workspace.persons.filter(p => selectedPersonIds.has(p.id))
+    const connections = workspaceState.workspace.connections.filter(c => 
+      selectedPersonIds.has(c.fromPersonId) && selectedPersonIds.has(c.toPersonId)
+    )
+    setCopiedData({ persons, connections })
+    toast.success(`Copied ${persons.length} person${persons.length !== 1 ? 's' : ''}`)
+  }, [selection.selectedPersons, workspaceState.workspace.persons, workspaceState.workspace.connections])
+
+  const handlePaste = useCallback((pasteX?: number, pasteY?: number) => {
+    if (!copiedData || copiedData.persons.length === 0) {
+      toast.info('Nothing to paste')
+      return
+    }
+
+    let minX = Infinity
+    let minY = Infinity
+    copiedData.persons.forEach(p => {
+      if (p.x < minX) minX = p.x
+      if (p.y < minY) minY = p.y
+    })
+
+    const offsetX = pasteX !== undefined ? pasteX - minX : 40
+    const offsetY = pasteY !== undefined ? pasteY - minY : 40
+
+    const idMap = new Map<string, string>()
+    const newPersons: Person[] = copiedData.persons.map(p => {
+      const newId = generateId()
+      idMap.set(p.id, newId)
+      return {
+        ...p,
+        id: newId,
+        x: p.x + offsetX,
+        y: p.y + offsetY,
+        createdAt: Date.now()
+      }
+    })
+
+    const newConnections: Connection[] = copiedData.connections.map(c => ({
+      ...c,
+      id: generateId(),
+      fromPersonId: idMap.get(c.fromPersonId) || c.fromPersonId,
+      toPersonId: idMap.get(c.toPersonId) || c.toPersonId,
+    }))
+
+    newPersons.forEach(p => workspaceState.addPerson(p))
+    newConnections.forEach(c => workspaceState.addConnection(c))
+
+    selection.clearSelection()
+    selection.selectPersons(newPersons.map(p => p.id))
+
+    toast.success(`Pasted ${newPersons.length} person${newPersons.length !== 1 ? 's' : ''}`)
+  }, [copiedData, workspaceState, selection])
+
+  const handleSelectAll = useCallback(() => {
+    selection.selectPersons(workspaceState.workspace.persons.map(p => p.id))
+    toast.success('All persons selected')
+  }, [workspaceState.workspace.persons, selection])
+
+  const handleAddPersonAt = useCallback((x: number, y: number) => {
+    const newPerson: Person = {
+      id: generateId(),
+      name: 'New Person',
+      position: '',
+      score: 0,
+      frameColor: 'white',
+      x,
+      y,
+      createdAt: Date.now()
+    }
+    workspaceState.addPerson(newPerson)
+    selection.clearSelection()
+    selection.selectPerson(newPerson.id, false)
+    dialogs.openPersonDialog(newPerson)
+  }, [workspaceState, selection, dialogs])
+
+  const handleToggleConnectionStyle = useCallback((connectionId: string) => {
+    const connection = workspaceState.workspace.connections.find(c => c.id === connectionId)
+    if (!connection) return
+    
+    const newStyle = connection.style === 'dashed' ? 'solid' : 'dashed'
+    workspaceState.updateConnection(connectionId, { style: newStyle })
+    toast.success(`Connection style changed to ${newStyle}`)
+  }, [workspaceState])
+
+  const handleChangeConnectionDirection = useCallback((connectionId: string, direction: 'none' | 'forward' | 'backward' | 'bidirectional') => {
+    workspaceState.updateConnection(connectionId, { direction })
+    toast.success(`Influence direction updated`)
+  }, [workspaceState])
+
+  const handleAutoFitGroup = useCallback((groupId: string) => {
+    const group = workspaceState.workspace.groups.find(g => g.id === groupId)
+    if (!group) return
+
+    const personsInGroup = workspaceState.workspace.persons.filter(p => {
+      const personCenterX = p.x + NODE_WIDTH / 2
+      const personCenterY = p.y + NODE_HEIGHT / 2
+      return (
+        personCenterX >= group.x &&
+        personCenterX <= group.x + group.width &&
+        personCenterY >= group.y &&
+        personCenterY <= group.y + group.height
+      )
+    })
+
+    if (personsInGroup.length === 0) {
+      toast.info('No persons in group to fit')
+      return
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    personsInGroup.forEach(p => {
+      if (p.x < minX) minX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.x + NODE_WIDTH > maxX) maxX = p.x + NODE_WIDTH
+      if (p.y + NODE_HEIGHT > maxY) maxY = p.y + NODE_HEIGHT
+    })
+
+    const padding = 40
+    workspaceState.updateGroup(groupId, {
+      x: minX - padding,
+      y: minY - padding,
+      width: maxX - minX + padding * 2,
+      height: maxY - minY + padding * 2
+    })
+    toast.success('Group resized to fit contents')
+  }, [workspaceState])
+
+  const handleRenameGroup = useCallback((groupId: string) => {
+    const group = workspaceState.workspace.groups.find(g => g.id === groupId)
+    if (group) {
+      dialogs.openGroupDialog(group)
+    }
+  }, [workspaceState.workspace.groups, dialogs])
+
   return {
     workspace: workspaceState.workspace,
     selection,
@@ -564,6 +752,9 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     interaction,
     dialogs,
     canvasRef,
+    contextMenu,
+    setContextMenu,
+    copiedData,
     handlers: {
       handlePersonClick,
       handlePersonDoubleClick,
@@ -574,6 +765,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleUpdateConnection,
       handleConnectionContextMenu,
       handleGroupClick,
+      handleGroupContextMenu,
       handleSavePerson,
       handleDeletePerson,
       handleDeleteSelectedPersons,
@@ -594,6 +786,14 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleCollapseBranch,
       handleExpandBranch,
       handleExpandBranchFromPerson,
+      handleCopySelected,
+      handlePaste,
+      handleSelectAll,
+      handleAddPersonAt,
+      handleToggleConnectionStyle,
+      handleChangeConnectionDirection,
+      handleAutoFitGroup,
+      handleRenameGroup,
       addPersons,
       updatePersonsScore,
       nudgePersons,

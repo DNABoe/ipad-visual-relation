@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
-import type { Person, Connection } from '@/lib/types'
+import type { Person, Connection, Group } from '@/lib/types'
 
 export function useDialogState() {
   const [personDialog, setPersonDialog] = useState<{ open: boolean; editPerson?: Person }>({ open: false })
-  const [groupDialog, setGroupDialog] = useState(false)
+  const [groupDialog, setGroupDialog] = useState<{ open: boolean; editGroup?: Group }>({ open: false })
   const [settingsDialog, setSettingsDialog] = useState(false)
   const [photoViewer, setPhotoViewer] = useState<{ open: boolean; photoUrl?: string; name?: string }>({ open: false })
   const [exportDialog, setExportDialog] = useState(false)
@@ -19,12 +19,12 @@ export function useDialogState() {
     setPersonDialog({ open: false })
   }, [])
 
-  const openGroupDialog = useCallback(() => {
-    setGroupDialog(true)
+  const openGroupDialog = useCallback((editGroup?: Group) => {
+    setGroupDialog({ open: true, editGroup })
   }, [])
 
   const closeGroupDialog = useCallback(() => {
-    setGroupDialog(false)
+    setGroupDialog({ open: false })
   }, [])
 
   const openSettingsDialog = useCallback(() => {

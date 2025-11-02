@@ -12,6 +12,13 @@ import { ExportDialog } from './ExportDialog'
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { CollapseBranchDialog } from './CollapseBranchDialog'
 import { ConnectionDialog } from './ConnectionDialog'
+import { 
+  ContextMenu, 
+  getCanvasMenuItems, 
+  getPersonMenuItems, 
+  getConnectionMenuItems,
+  getGroupMenuItems
+} from './ContextMenu'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import type { Workspace, Person } from '@/lib/types'
@@ -235,10 +242,31 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         return
       }
 
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isInputFocused) {
+        if (controller.selection.selectedPersons.length > 0) {
+          e.preventDefault()
+          controller.handlers.handleCopySelected()
+        }
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInputFocused) {
+        e.preventDefault()
+        controller.handlers.handlePaste()
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !isInputFocused) {
+        e.preventDefault()
+        controller.handlers.handleSelectAll()
+        return
+      }
+
       if (e.key === 'Escape') {
         controller.interaction.enableSelectMode()
         controller.interaction.setConnectFromPerson(null)
         controller.selection.clearSelection()
+        controller.setContextMenu(null)
         return
       }
     }
@@ -411,11 +439,13 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
       />
 
       <GroupDialog
-        open={controller.dialogs.groupDialog}
+        open={controller.dialogs.groupDialog.open}
         onOpenChange={(open) => {
           if (!open) controller.dialogs.closeGroupDialog()
         }}
         onSave={controller.handlers.handleSaveGroup}
+        editGroup={controller.dialogs.groupDialog.editGroup}
+        onRemove={controller.handlers.handleDeleteGroup}
       />
 
       <SettingsDialog
@@ -497,6 +527,81 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
               p => p.id === controller.dialogs.connectionDialog.connection?.toPersonId
             )?.name || ''
           }
+        />
+      )}
+
+      {controller.contextMenu && (
+        <ContextMenu
+          x={controller.contextMenu.x}
+          y={controller.contextMenu.y}
+          items={
+            controller.contextMenu.type === 'canvas'
+              ? getCanvasMenuItems(
+                  () => controller.handlers.handleAddPersonAt(controller.contextMenu!.canvasX!, controller.contextMenu!.canvasY!),
+                  () => controller.handlers.handlePaste(controller.contextMenu!.canvasX, controller.contextMenu!.canvasY),
+                  controller.handlers.handleSelectAll,
+                  !!controller.copiedData && controller.copiedData.persons.length > 0
+                )
+              : controller.contextMenu.type === 'person'
+              ? getPersonMenuItems(
+                  () => {
+                    const person = controller.workspace.persons.find(p => p.id === controller.contextMenu!.targetId)
+                    if (person) controller.dialogs.openPersonDialog(person)
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleDeletePerson(controller.contextMenu!.targetId)
+                    }
+                  }
+                )
+              : controller.contextMenu.type === 'connection'
+              ? getConnectionMenuItems(
+                  () => {
+                    const connection = controller.workspace.connections.find(c => c.id === controller.contextMenu!.targetId)
+                    if (connection) controller.dialogs.openConnectionDialog(connection)
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleDeleteSelectedConnections()
+                    }
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleToggleConnectionStyle(controller.contextMenu!.targetId)
+                    }
+                  },
+                  (direction) => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleChangeConnectionDirection(controller.contextMenu!.targetId, direction)
+                    }
+                  },
+                  controller.workspace.connections.find(c => c.id === controller.contextMenu!.targetId)?.direction
+                )
+              : getGroupMenuItems(
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleRenameGroup(controller.contextMenu!.targetId)
+                    }
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      const group = controller.workspace.groups.find(g => g.id === controller.contextMenu!.targetId)
+                      if (group) controller.dialogs.openGroupDialog(group)
+                    }
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleAutoFitGroup(controller.contextMenu!.targetId)
+                    }
+                  },
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleDeleteGroup(controller.contextMenu!.targetId)
+                    }
+                  }
+                )
+          }
+          onClose={() => controller.setContextMenu(null)}
         />
       )}
 
