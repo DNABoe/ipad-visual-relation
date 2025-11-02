@@ -26,8 +26,8 @@ export const GROUP_COLOR_NAMES: GroupColor[] = ['blue', 'purple', 'pink', 'yello
 export const DEFAULT_USERNAME = 'admin'
 export const DEFAULT_PASSWORD = 'admin'
 
-export const NODE_WIDTH = 240
-export const NODE_HEIGHT = 340
+export const NODE_WIDTH = 200
+export const NODE_HEIGHT = 280
 export const GRID_SIZE = 20
 export const MIN_ZOOM = 0.1
 export const MAX_ZOOM = 2

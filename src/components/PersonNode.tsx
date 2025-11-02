@@ -76,8 +76,8 @@ const PersonNodeInner = memo(function PersonNodeInner({
         opacity: { duration: 0.15 },
       }}
       style={{ 
-        width: 240,
-        height: 340,
+        width: 200,
+        height: 280,
         willChange: isDragging ? 'transform' : 'auto',
         transform: 'translateZ(0)',
         contain: isDragging ? 'layout style paint' : 'none',
@@ -91,12 +91,12 @@ const PersonNodeInner = memo(function PersonNodeInner({
           transition={{ delay: 0.05 * (index + 1), duration: 0.3 }}
           className="absolute inset-0 rounded-lg pointer-events-none"
           style={{
-            top: (stackCount - index) * 3,
-            left: (stackCount - index) * 2,
-            right: -(stackCount - index) * 2,
+            top: (stackCount - index) * 2.5,
+            left: (stackCount - index) * 1.5,
+            right: -(stackCount - index) * 1.5,
             borderColor: frameColor,
             backgroundColor: 'oklch(0.18 0.03 230)',
-            border: '3px solid',
+            border: '2px solid',
             zIndex: -index - 1,
             transform: 'translateZ(0)',
           }}
@@ -104,7 +104,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
       ))}
       <Card
         className={cn(
-          'cursor-grab select-none border-[3px] backdrop-blur-none relative overflow-hidden p-0 h-full flex flex-col',
+          'cursor-grab select-none border-[2px] backdrop-blur-none relative overflow-hidden p-0 h-full flex flex-col',
           isDragging ? 'node-dragging scale-[1.03]' : 'transition-all duration-200',
           !isDragging && 'hover:shadow-lg hover:border-primary',
           isSelected && 'scale-[1.02]',
@@ -117,10 +117,10 @@ const PersonNodeInner = memo(function PersonNodeInner({
           borderColor: frameColor,
           backgroundColor: 'oklch(0.21 0.03 230)',
           boxShadow: isSelected
-            ? `0 0 0 5px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.8), 0 6px 20px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.4)`
+            ? `0 0 0 3px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.7), 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4)`
             : isHighlighted 
-            ? '0 4px 20px rgba(0, 255, 128, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)' 
-            : '0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
+            ? '0 3px 16px rgba(0, 255, 128, 0.4), 0 1px 6px rgba(0, 0, 0, 0.3)' 
+            : '0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
           transform: 'translateZ(0)',
           willChange: isDragging ? 'transform, box-shadow' : 'auto',
         }}
@@ -131,29 +131,29 @@ const PersonNodeInner = memo(function PersonNodeInner({
       >
         {person.advocate && (
           <div 
-            className="absolute top-2 left-2 bg-yellow-400 text-background rounded-full p-2 shadow-lg z-20"
+            className="absolute top-1.5 left-1.5 bg-yellow-400 text-background rounded-full p-1.5 shadow-lg z-20"
             title="Advocate - Actively promotes messages"
           >
-            <Star size={20} weight="fill" />
+            <Star size={16} weight="fill" />
           </div>
         )}
         {hasCollapsedBranch && collapsedCount > 0 && (
           <div 
-            className="absolute top-14 right-2 bg-primary text-primary-foreground rounded-full px-2.5 py-1.5 shadow-lg flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform z-20"
+            className="absolute top-12 right-1.5 bg-primary text-primary-foreground rounded-full px-2 py-1 shadow-lg flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform z-20"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
             onClick={(e) => {
               e.stopPropagation()
               onExpandBranch?.(e)
             }}
           >
-            <Stack size={16} weight="fill" />
+            <Stack size={14} weight="fill" />
             <span className="text-xs font-bold">{collapsedCount}</span>
           </div>
         )}
         
         <div className="relative flex-shrink-0">
           <div 
-            className="w-full h-48 overflow-hidden"
+            className="w-full h-40 overflow-hidden"
             style={{ 
               backgroundImage: person.photo ? `url(${person.photo})` : undefined,
               backgroundSize: person.photo ? `${photoZoom}%` : 'cover',
@@ -170,7 +170,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
               <div className="w-full h-full flex items-center justify-center">
                 <span 
                   className={cn(
-                    "text-5xl font-bold",
+                    "text-4xl font-bold",
                     person.frameColor === 'white' ? 'text-background' : 'text-foreground'
                   )}
                 >
@@ -181,24 +181,24 @@ const PersonNodeInner = memo(function PersonNodeInner({
           </div>
           
           <Badge 
-            className="absolute top-2 right-2 font-bold text-base px-3 py-1.5 border-0 bg-primary text-primary-foreground" 
+            className="absolute top-1.5 right-1.5 font-bold text-sm px-2.5 py-1 border-0 bg-primary text-primary-foreground" 
             style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}
           >
             {person.score}
           </Badge>
         </div>
 
-        <div className="p-4 flex flex-col justify-start flex-1 min-h-0" style={{ height: 92 }}>
-          <h3 className="font-semibold text-lg leading-tight break-words text-foreground line-clamp-1 mb-1">
+        <div className="p-3 flex flex-col justify-start flex-1 min-h-0" style={{ height: 80 }}>
+          <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-1 mb-1">
             {person.name}
           </h3>
-          <p className="text-sm leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
+          <p className="text-xs leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
             {person.position || '\u00A0'}
           </p>
-          <p className="text-sm leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
+          <p className="text-xs leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
             {person.position2 || '\u00A0'}
           </p>
-          <p className="text-sm leading-snug break-words text-muted-foreground line-clamp-1">
+          <p className="text-xs leading-snug break-words text-muted-foreground line-clamp-1">
             {person.position3 || '\u00A0'}
           </p>
         </div>

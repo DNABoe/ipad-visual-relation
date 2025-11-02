@@ -206,7 +206,7 @@ export function CanvasEdges({
         const connectionWeight = conn.weight || 'medium'
         const connectionDirection = conn.direction || 'none'
 
-        const weightMap = { thin: 2, medium: 3.5, thick: 6 }
+        const weightMap = { thin: 1, medium: 2, thick: 3.5 }
         const baseLineWidth = weightMap[connectionWeight]
 
         ctx.beginPath()
@@ -257,14 +257,14 @@ export function CanvasEdges({
         if (isShortestPath) {
           const glowIntensity = 0.6 + pulseIntensity * 0.4
           ctx.strokeStyle = accentColor
-          ctx.lineWidth = 4 + pulseIntensity * 2
+          ctx.lineWidth = 3 + pulseIntensity * 1.5
           ctx.shadowColor = accentColor
-          ctx.shadowBlur = 15 + pulseIntensity * 10
+          ctx.shadowBlur = 12 + pulseIntensity * 8
           ctx.globalAlpha = glowIntensity
           
           if (connectionStyle === 'dashed') {
-            const dashLength = (4 + pulseIntensity * 2) * 3
-            const gapLength = (4 + pulseIntensity * 2) * 2
+            const dashLength = (3 + pulseIntensity * 1.5) * 3
+            const gapLength = (3 + pulseIntensity * 1.5) * 2
             ctx.setLineDash([dashLength, gapLength])
           }
           
@@ -275,7 +275,7 @@ export function CanvasEdges({
           ctx.globalAlpha = 1
         } else {
           ctx.strokeStyle = isSelected ? accentColor : edgeColor
-          ctx.lineWidth = isSelected ? baseLineWidth + 1.5 : baseLineWidth
+          ctx.lineWidth = isSelected ? baseLineWidth + 1 : baseLineWidth
           ctx.globalAlpha = isSelected ? 1 : 0.8
           
           if (connectionStyle === 'dashed') {
@@ -289,7 +289,7 @@ export function CanvasEdges({
           ctx.globalAlpha = 1
         }
 
-        const arrowSize = isShortestPath ? 12 : (10 + baseLineWidth * 0.5)
+        const arrowSize = isShortestPath ? 10 : (8 + baseLineWidth * 0.4)
         const dx = toX - fromX
         const dy = toY - fromY
         let angle: number
@@ -386,7 +386,7 @@ export function CanvasEdges({
         }
         
         hitCtx.strokeStyle = hitColor
-        hitCtx.lineWidth = 10
+        hitCtx.lineWidth = 8
         hitCtx.stroke()
       })
 
@@ -435,7 +435,7 @@ export function CanvasEdges({
             py = fromY + dy * particle.progress
           }
           
-          const particleSize = 6 + pulseIntensity * 2
+          const particleSize = 4 + pulseIntensity * 1.5
           const gradient = ctx.createRadialGradient(px, py, 0, px, py, particleSize)
           gradient.addColorStop(0, 'oklch(1 0.3 185)')
           gradient.addColorStop(0.5, accentColor)
@@ -445,7 +445,7 @@ export function CanvasEdges({
           ctx.arc(px, py, particleSize, 0, Math.PI * 2)
           ctx.fillStyle = gradient
           ctx.shadowColor = accentColor
-          ctx.shadowBlur = 10
+          ctx.shadowBlur = 8
           ctx.fill()
           ctx.shadowBlur = 0
           

@@ -58,14 +58,14 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
   }
 
   const resizeHandles = [
-    { position: 'nw', cursor: 'nw-resize', style: { top: -4, left: -4 } },
-    { position: 'ne', cursor: 'ne-resize', style: { top: -4, right: -4 } },
-    { position: 'sw', cursor: 'sw-resize', style: { bottom: -4, left: -4 } },
-    { position: 'se', cursor: 'se-resize', style: { bottom: -4, right: -4 } },
-    { position: 'n', cursor: 'n-resize', style: { top: -4, left: '50%', transform: 'translateX(-50%)' } },
-    { position: 's', cursor: 's-resize', style: { bottom: -4, left: '50%', transform: 'translateX(-50%)' } },
-    { position: 'w', cursor: 'w-resize', style: { left: -4, top: '50%', transform: 'translateY(-50%)' } },
-    { position: 'e', cursor: 'e-resize', style: { right: -4, top: '50%', transform: 'translateY(-50%)' } },
+    { position: 'nw', cursor: 'nw-resize', style: { top: -3, left: -3 } },
+    { position: 'ne', cursor: 'ne-resize', style: { top: -3, right: -3 } },
+    { position: 'sw', cursor: 'sw-resize', style: { bottom: -3, left: -3 } },
+    { position: 'se', cursor: 'se-resize', style: { bottom: -3, right: -3 } },
+    { position: 'n', cursor: 'n-resize', style: { top: -3, left: '50%', transform: 'translateX(-50%)' } },
+    { position: 's', cursor: 's-resize', style: { bottom: -3, left: '50%', transform: 'translateX(-50%)' } },
+    { position: 'w', cursor: 'w-resize', style: { left: -3, top: '50%', transform: 'translateY(-50%)' } },
+    { position: 'e', cursor: 'e-resize', style: { right: -3, top: '50%', transform: 'translateY(-50%)' } },
   ]
 
   const getBackgroundColor = () => {
@@ -78,7 +78,7 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
   return (
     <div
       className={cn(
-        'absolute rounded-xl border-[3px] group/frame cursor-move transition-all duration-200',
+        'absolute rounded-xl border-[2px] group/frame cursor-move transition-all duration-200',
         group.solidBackground ? 'border-solid' : 'border-dashed',
         isSelected && 'shadow-xl scale-[1.01]'
       )}
@@ -91,8 +91,8 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
         backgroundColor: getBackgroundColor(),
         transition: 'none',
         boxShadow: isSelected
-          ? `0 0 0 5px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.8), 0 6px 20px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.4)`
-          : '0 2px 8px rgba(0, 0, 0, 0.2)',
+          ? `0 0 0 3px oklch(0.88 0.18 185 / 1), 0 0 30px oklch(0.88 0.18 185 / 0.7), 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4)`
+          : '0 2px 6px rgba(0, 0, 0, 0.2)',
         ...style,
       }}
       onClick={onClick}
@@ -203,7 +203,7 @@ export function GroupFrame({ group, isSelected, isDragging, onClick, onUpdate, o
       {isSelected && onResizeStart && resizeHandles.map((handle) => (
         <div
           key={handle.position}
-          className="absolute w-2.5 h-2.5 bg-accent border-2 border-background rounded-sm opacity-0 group-hover/frame:opacity-100 hover:scale-150 transition-all z-10 shadow-md"
+          className="absolute w-2 h-2 bg-accent border border-background rounded-sm opacity-0 group-hover/frame:opacity-100 hover:scale-150 transition-all z-10 shadow-md"
           style={{
             ...handle.style,
             cursor: handle.cursor,
