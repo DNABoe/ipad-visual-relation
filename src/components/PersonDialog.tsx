@@ -76,6 +76,19 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     }
   }, [open, editPerson])
 
+  useEffect(() => {
+    if (!editPerson || !open) return
+    
+    const initialNotes = editPerson.notes || ''
+    if (notes === initialNotes) return
+
+    const timeoutId = setTimeout(() => {
+      autoSaveNotes()
+    }, 1000)
+
+    return () => clearTimeout(timeoutId)
+  }, [notes, editPerson, open])
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -122,7 +135,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     if (files) {
       Array.from(files).forEach(file => {
         if (file.size > 10 * 1024 * 1024) {
-          alert(`File ${file.name} is too large. Maximum size is 10MB.`)
+          toast.error(`File ${file.name} is too large. Maximum size is 10MB.`)
           return
         }
         
@@ -136,7 +149,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
             size: file.size,
             addedAt: Date.now()
           }
-          setAttachments(prev => [...prev, newAttachment])
+          setAttachments(prev => {
+            const updated = [...prev, newAttachment]
+            if (editPerson) {
+              autoSaveAttachments(updated)
+            }
+            return updated
+          })
+          toast.success(`Added ${file.name}`)
         }
         reader.readAsDataURL(file)
       })
@@ -147,7 +167,95 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   }
 
   const handleRemoveAttachment = (attachmentId: string) => {
-    setAttachments(prev => prev.filter(a => a.id !== attachmentId))
+    setAttachments(prev => {
+      const updated = prev.filter(a => a.id !== attachmentId)
+      if (editPerson) {
+        const removedAttachment = prev.find(a => a.id === attachmentId)
+        if (removedAttachment) {
+          toast.success(`Removed ${removedAttachment.name}`)
+        }
+        autoSaveAttachments(updated)
+      }
+      return updated
+    })
+  }
+
+  const autoSaveAttachments = (updatedAttachments: Attachment[]) => {
+    if (!editPerson) return
+
+    const positionLines = position.split('\n').map(line => line.trim()).slice(0, 3)
+    
+    const activityLog = editPerson.activityLog || []
+    const newActivityLog = [...activityLog]
+    
+    const prevAttachmentIds = new Set((editPerson.attachments || []).map(a => a.id))
+    const currentAttachmentIds = new Set(updatedAttachments.map(a => a.id))
+    
+    const addedAttachments = updatedAttachments.filter(a => !prevAttachmentIds.has(a.id))
+    const removedAttachments = (editPerson.attachments || []).filter(a => !currentAttachmentIds.has(a.id))
+    
+    addedAttachments.forEach(att => {
+      newActivityLog.push(createActivityLogEntry('attachment_added', `Added "${att.name}"`))
+    })
+    
+    removedAttachments.forEach(att => {
+      newActivityLog.push(createActivityLogEntry('attachment_removed', `Removed "${att.name}"`))
+    })
+
+    const updatedPerson: Person = {
+      ...editPerson,
+      name: name.trim() || editPerson.name,
+      position: positionLines[0] || editPerson.position,
+      position2: positionLines[1] || editPerson.position2,
+      position3: positionLines[2] || editPerson.position3,
+      score,
+      frameColor,
+      photo,
+      photoOffsetX,
+      photoOffsetY,
+      photoZoom,
+      advocate,
+      notes,
+      attachments: updatedAttachments,
+      activityLog: newActivityLog,
+      modifiedAt: Date.now(),
+    }
+
+    onSave(updatedPerson)
+  }
+
+  const autoSaveNotes = () => {
+    if (!editPerson) return
+
+    const positionLines = position.split('\n').map(line => line.trim()).slice(0, 3)
+    
+    const activityLog = editPerson.activityLog || []
+    const newActivityLog = [...activityLog]
+    
+    if (editPerson.notes !== notes) {
+      newActivityLog.push(createActivityLogEntry('note_updated', `Notes updated`))
+    }
+
+    const updatedPerson: Person = {
+      ...editPerson,
+      name: name.trim() || editPerson.name,
+      position: positionLines[0] || editPerson.position,
+      position2: positionLines[1] || editPerson.position2,
+      position3: positionLines[2] || editPerson.position3,
+      score,
+      frameColor,
+      photo,
+      photoOffsetX,
+      photoOffsetY,
+      photoZoom,
+      advocate,
+      notes,
+      attachments,
+      activityLog: newActivityLog,
+      modifiedAt: Date.now(),
+    }
+
+    onSave(updatedPerson)
   }
 
   const handleDownloadAttachment = (attachment: Attachment) => {
@@ -697,7 +805,10 @@ Format your response as a professional intelligence brief with clear sections an
 
             <TabsContent value="notes" className="mt-4 space-y-4 m-0">
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+                  {editPerson && <p className="text-xs text-success">✓ Auto-saved</p>}
+                </div>
                 <Textarea
                   id="notes"
                   value={notes}
@@ -707,22 +818,25 @@ Format your response as a professional intelligence brief with clear sections an
                   className="resize-none font-sans"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use this space for detailed notes, observations, or any relevant information
+                  {editPerson ? 'Changes are automatically saved after 1 second' : 'Notes will be saved when you add the person'}
                 </p>
               </div>
 
               <div className="space-y-3 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Attached Files</Label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => attachmentInputRef.current?.click()}
-                  >
-                    <Paperclip className="mr-2" size={16} />
-                    Add File
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    {editPerson && <p className="text-xs text-success">✓ Auto-saved</p>}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => attachmentInputRef.current?.click()}
+                    >
+                      <Paperclip className="mr-2" size={16} />
+                      Add File
+                    </Button>
+                  </div>
                   <input
                     ref={attachmentInputRef}
                     type="file"
