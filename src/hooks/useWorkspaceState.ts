@@ -32,14 +32,9 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   }, [])
 
   const updatePerson = useCallback((personId: string, updates: Partial<Person>) => {
+    let oldPerson: Person | undefined
     setWorkspace(prev => {
-      const oldPerson = prev.persons.find(p => p.id === personId)
-      if (oldPerson) {
-        setUndoStack(stack => [...stack, {
-          type: 'update-persons',
-          persons: [{ ...oldPerson }],
-        }])
-      }
+      oldPerson = prev.persons.find(p => p.id === personId)
       return {
         ...prev,
         persons: prev.persons.map(p =>
@@ -47,38 +42,40 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
         ),
       }
     })
+    if (oldPerson) {
+      setUndoStack(stack => [...stack, {
+        type: 'update-persons',
+        persons: [{ ...oldPerson! }],
+      }])
+    }
   }, [])
 
   const replacePerson = useCallback((person: Person) => {
+    let oldPerson: Person | undefined
     setWorkspace(prev => {
-      const oldPerson = prev.persons.find(p => p.id === person.id)
-      if (oldPerson) {
-        setUndoStack(stack => [...stack, {
-          type: 'update-persons',
-          persons: [{ ...oldPerson }],
-        }])
-      }
+      oldPerson = prev.persons.find(p => p.id === person.id)
       return {
         ...prev,
         persons: prev.persons.map(p => p.id === person.id ? person : p),
       }
     })
+    if (oldPerson) {
+      setUndoStack(stack => [...stack, {
+        type: 'update-persons',
+        persons: [{ ...oldPerson! }],
+      }])
+    }
   }, [])
 
   const deletePerson = useCallback((personId: string) => {
+    let personToDelete: Person | undefined
+    let connectionsToDelete: Connection[] = []
+    
     setWorkspace(prev => {
-      const personToDelete = prev.persons.find(p => p.id === personId)
-      const connectionsToDelete = prev.connections.filter(
+      personToDelete = prev.persons.find(p => p.id === personId)
+      connectionsToDelete = prev.connections.filter(
         c => c.fromPersonId === personId || c.toPersonId === personId
       )
-
-      if (personToDelete) {
-        setUndoStack(stack => [...stack, {
-          type: 'delete-persons',
-          persons: [personToDelete],
-          connections: connectionsToDelete,
-        }])
-      }
 
       return {
         ...prev,
@@ -88,22 +85,25 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
         ),
       }
     })
+    
+    if (personToDelete) {
+      setUndoStack(stack => [...stack, {
+        type: 'delete-persons',
+        persons: [personToDelete!],
+        connections: connectionsToDelete,
+      }])
+    }
   }, [])
 
   const deletePersons = useCallback((personIds: string[]) => {
+    let personsToDelete: Person[] = []
+    let connectionsToDelete: Connection[] = []
+    
     setWorkspace(prev => {
-      const personsToDelete = prev.persons.filter(p => personIds.includes(p.id))
-      const connectionsToDelete = prev.connections.filter(
+      personsToDelete = prev.persons.filter(p => personIds.includes(p.id))
+      connectionsToDelete = prev.connections.filter(
         c => personIds.includes(c.fromPersonId) || personIds.includes(c.toPersonId)
       )
-
-      if (personsToDelete.length > 0) {
-        setUndoStack(stack => [...stack, {
-          type: 'delete-persons',
-          persons: personsToDelete,
-          connections: connectionsToDelete,
-        }])
-      }
 
       return {
         ...prev,
@@ -113,6 +113,14 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
         ),
       }
     })
+    
+    if (personsToDelete.length > 0) {
+      setUndoStack(stack => [...stack, {
+        type: 'delete-persons',
+        persons: personsToDelete,
+        connections: connectionsToDelete,
+      }])
+    }
   }, [])
 
   const addConnection = useCallback((connection: Connection) => {
@@ -141,35 +149,41 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   }, [])
 
   const deleteConnection = useCallback((connectionId: string) => {
+    let connectionToDelete: Connection | undefined
+    
     setWorkspace(prev => {
-      const connectionToDelete = prev.connections.find(c => c.id === connectionId)
-      if (connectionToDelete) {
-        setUndoStack(stack => [...stack, {
-          type: 'delete-connections',
-          connections: [connectionToDelete],
-        }])
-      }
+      connectionToDelete = prev.connections.find(c => c.id === connectionId)
       return {
         ...prev,
         connections: prev.connections.filter(c => c.id !== connectionId),
       }
     })
+    
+    if (connectionToDelete) {
+      setUndoStack(stack => [...stack, {
+        type: 'delete-connections',
+        connections: [connectionToDelete!],
+      }])
+    }
   }, [])
 
   const deleteConnections = useCallback((connectionIds: string[]) => {
+    let connectionsToDelete: Connection[] = []
+    
     setWorkspace(prev => {
-      const connectionsToDelete = prev.connections.filter(c => connectionIds.includes(c.id))
-      if (connectionsToDelete.length > 0) {
-        setUndoStack(stack => [...stack, {
-          type: 'delete-connections',
-          connections: connectionsToDelete,
-        }])
-      }
+      connectionsToDelete = prev.connections.filter(c => connectionIds.includes(c.id))
       return {
         ...prev,
         connections: prev.connections.filter(c => !connectionIds.includes(c.id)),
       }
     })
+    
+    if (connectionsToDelete.length > 0) {
+      setUndoStack(stack => [...stack, {
+        type: 'delete-connections',
+        connections: connectionsToDelete,
+      }])
+    }
   }, [])
 
   const addGroup = useCallback((group: Group) => {
@@ -189,35 +203,41 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   }, [])
 
   const deleteGroup = useCallback((groupId: string) => {
+    let groupToDelete: Group | undefined
+    
     setWorkspace(prev => {
-      const groupToDelete = prev.groups.find(g => g.id === groupId)
-      if (groupToDelete) {
-        setUndoStack(stack => [...stack, {
-          type: 'delete-groups',
-          groups: [groupToDelete],
-        }])
-      }
+      groupToDelete = prev.groups.find(g => g.id === groupId)
       return {
         ...prev,
         groups: prev.groups.filter(g => g.id !== groupId),
       }
     })
+    
+    if (groupToDelete) {
+      setUndoStack(stack => [...stack, {
+        type: 'delete-groups',
+        groups: [groupToDelete!],
+      }])
+    }
   }, [])
 
   const deleteGroups = useCallback((groupIds: string[]) => {
+    let groupsToDelete: Group[] = []
+    
     setWorkspace(prev => {
-      const groupsToDelete = prev.groups.filter(g => groupIds.includes(g.id))
-      if (groupsToDelete.length > 0) {
-        setUndoStack(stack => [...stack, {
-          type: 'delete-groups',
-          groups: groupsToDelete,
-        }])
-      }
+      groupsToDelete = prev.groups.filter(g => groupIds.includes(g.id))
       return {
         ...prev,
         groups: prev.groups.filter(g => !groupIds.includes(g.id)),
       }
     })
+    
+    if (groupsToDelete.length > 0) {
+      setUndoStack(stack => [...stack, {
+        type: 'delete-groups',
+        groups: groupsToDelete,
+      }])
+    }
   }, [])
 
   const undo = useCallback(() => {
@@ -262,18 +282,13 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   }, [undoStack])
 
   const updatePersonsInBulk = useCallback((updates: Map<string, Partial<Person>>, skipUndo = false) => {
+    let previousPersons: Person[] = []
+    
     setWorkspace(prev => {
       if (!skipUndo) {
-        const previousPersons = prev.persons
+        previousPersons = prev.persons
           .filter(p => updates.has(p.id))
           .map(p => ({ ...p }))
-        
-        if (previousPersons.length > 0) {
-          setUndoStack(stack => [...stack, {
-            type: 'update-persons',
-            persons: previousPersons,
-          }])
-        }
       }
 
       const newPersons = prev.persons.map(p => {
@@ -296,6 +311,13 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
         persons: newPersons,
       }
     })
+    
+    if (!skipUndo && previousPersons.length > 0) {
+      setUndoStack(stack => [...stack, {
+        type: 'update-persons',
+        persons: previousPersons,
+      }])
+    }
   }, [])
 
   const replaceWorkspace = useCallback((newWorkspace: Workspace) => {
