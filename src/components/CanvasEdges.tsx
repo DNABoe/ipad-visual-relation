@@ -206,7 +206,7 @@ export function CanvasEdges({
         const connectionWeight = conn.weight || 'medium'
         const connectionDirection = conn.direction || 'none'
 
-        const weightMap = { thin: 1, medium: 2, thick: 3.5 }
+        const weightMap = { thin: 2, medium: 4, thick: 7 }
         const baseLineWidth = weightMap[connectionWeight]
 
         ctx.beginPath()
@@ -274,22 +274,22 @@ export function CanvasEdges({
           ctx.shadowBlur = 0
           ctx.globalAlpha = 1
         } else {
-          ctx.strokeStyle = isSelected ? accentColor : edgeColor
-          ctx.lineWidth = isSelected ? baseLineWidth + 1 : baseLineWidth
-          ctx.globalAlpha = isSelected ? 1 : 0.8
+          const lineOpacity = isSelected ? 1 : 0.75
+          ctx.strokeStyle = isSelected ? accentColor : `oklch(0.88 0.18 185 / ${lineOpacity})`
+          ctx.lineWidth = isSelected ? baseLineWidth + 2 : baseLineWidth
+          ctx.globalAlpha = 1
           
           if (connectionStyle === 'dashed') {
-            const dashLength = baseLineWidth * 3
-            const gapLength = baseLineWidth * 2
+            const dashLength = baseLineWidth * 2.5
+            const gapLength = baseLineWidth * 1.5
             ctx.setLineDash([dashLength, gapLength])
           }
           
           ctx.stroke()
           ctx.setLineDash([])
-          ctx.globalAlpha = 1
         }
 
-        const arrowSize = isShortestPath ? 10 : (8 + baseLineWidth * 0.4)
+        const arrowSize = isShortestPath ? 14 : (10 + baseLineWidth * 0.8)
         const dx = toX - fromX
         const dy = toY - fromY
         let angle: number
@@ -319,8 +319,9 @@ export function CanvasEdges({
           
           ctx.beginPath()
           ctx.moveTo(0, 0)
-          ctx.lineTo(-arrowSize, -arrowSize * 0.5)
-          ctx.lineTo(-arrowSize, arrowSize * 0.5)
+          ctx.lineTo(-arrowSize * 1.2, -arrowSize * 0.6)
+          ctx.lineTo(-arrowSize * 0.4, 0)
+          ctx.lineTo(-arrowSize * 1.2, arrowSize * 0.6)
           ctx.closePath()
           
           if (filled) {
@@ -330,12 +331,18 @@ export function CanvasEdges({
               ctx.shadowBlur = 15 + pulseIntensity * 10
               ctx.globalAlpha = 0.6 + pulseIntensity * 0.4
             } else {
-              ctx.fillStyle = isSelected ? accentColor : edgeColor
+              ctx.fillStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185 / 0.9)'
+              ctx.globalAlpha = isSelected ? 1 : 0.9
             }
             ctx.fill()
+            
+            ctx.strokeStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185)'
+            ctx.lineWidth = 1.5
+            ctx.globalAlpha = 1
+            ctx.stroke()
           } else {
-            ctx.strokeStyle = isSelected ? accentColor : edgeColor
-            ctx.lineWidth = baseLineWidth
+            ctx.strokeStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185)'
+            ctx.lineWidth = baseLineWidth * 0.8
             ctx.stroke()
           }
           
@@ -386,7 +393,7 @@ export function CanvasEdges({
         }
         
         hitCtx.strokeStyle = hitColor
-        hitCtx.lineWidth = 8
+        hitCtx.lineWidth = 12
         hitCtx.stroke()
       })
 
