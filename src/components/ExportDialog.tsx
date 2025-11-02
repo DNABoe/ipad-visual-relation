@@ -527,7 +527,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         if (includeName || includePosition) {
           const textX = person.x + 12
-          const textStartY = person.y + photoHeight + 2
+          const textStartY = person.y + photoHeight
           const textWidth = cardWidth - 24
           
           ctx.save()
@@ -551,7 +551,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               displayName += '...'
             }
             ctx.fillText(displayName, textX, currentY)
-            currentY += 18
+            currentY += 20 + 2
           }
           
           if (includePosition) {
@@ -586,8 +586,10 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 currentY += lineHeight
               }
             } else {
-              currentY += 16
+              currentY += lineHeight
             }
+            
+            currentY += 2
             
             if (person.position2) {
               let displayPos2 = person.position2
@@ -600,9 +602,9 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 displayPos2 += '...'
               }
               ctx.fillText(displayPos2, textX, currentY)
-              currentY += 15
+              currentY += 15 + 2
             } else {
-              currentY += 15
+              currentY += 15 + 2
             }
             
             if (person.position3) {
