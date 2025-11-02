@@ -723,18 +723,18 @@ export function influenceHierarchyLayout(
   const getConnectionWeight = (conn: Connection, fromId: string, toId: string): number => {
     let weight = 1.0
     
-    if (conn.weight === 'thick') weight *= 2.5
-    else if (conn.weight === 'medium') weight *= 1.5
+    if (conn.weight === 'thick') weight *= 3.0
+    else if (conn.weight === 'medium') weight *= 1.8
     else weight *= 1.0
     
     if (conn.direction === 'forward' && conn.fromPersonId === fromId && conn.toPersonId === toId) {
-      weight *= 2.0
+      weight *= 2.5
     } else if (conn.direction === 'backward' && conn.fromPersonId === toId && conn.toPersonId === fromId) {
-      weight *= 2.0
+      weight *= 2.5
     } else if (conn.direction === 'bidirectional') {
-      weight *= 1.5
+      weight *= 1.8
     } else if (conn.direction === 'none') {
-      weight *= 0.8
+      weight *= 0.7
     }
     
     return weight
@@ -743,13 +743,13 @@ export function influenceHierarchyLayout(
   const getPersonMultiplier = (person: Person): number => {
     let multiplier = 1.0
     
-    if (person.advocate) multiplier *= 2.5
+    if (person.advocate) multiplier *= 3.0
     
-    if (person.frameColor === 'green') multiplier *= 2.0
-    else if (person.frameColor === 'orange') multiplier *= 1.2
-    else if (person.frameColor === 'red') multiplier *= 0.3
+    if (person.frameColor === 'green') multiplier *= 2.5
+    else if (person.frameColor === 'orange') multiplier *= 1.3
+    else if (person.frameColor === 'red') multiplier *= 0.25
     
-    const importanceWeight = Math.pow(1.3, (10 - person.score))
+    const importanceWeight = Math.pow(1.5, (11 - person.score))
     multiplier *= importanceWeight
     
     return multiplier
@@ -795,7 +795,7 @@ export function influenceHierarchyLayout(
           const personMult = getPersonMultiplier(fromPerson)
           
           const stepInfluence = connWeight * personMult
-          const depthDecay = Math.pow(0.7, i)
+          const depthDecay = Math.pow(0.65, i)
           pathInfluence += stepInfluence * depthDecay
         }
         
@@ -879,14 +879,16 @@ export function influenceHierarchyLayout(
     layerGroups.get(layer)!.push(person)
   })
   
-  layerGroups.forEach((layerPersons, layerNum) => {
+  layerGroups.forEach((layerPersons) => {
     layerPersons.sort((a, b) => {
       const aInfluence = influenceScores.get(a.id) || 0
       const bInfluence = influenceScores.get(b.id) || 0
       
-      if (Math.abs(aInfluence - bInfluence) > 0.1) {
+      if (Math.abs(aInfluence - bInfluence) > 0.5) {
         return bInfluence - aInfluence
       }
+      
+      if (a.score !== b.score) return a.score - b.score
       
       if (a.advocate !== b.advocate) return a.advocate ? -1 : 1
       
@@ -895,49 +897,70 @@ export function influenceHierarchyLayout(
       const bAttitude = attitudeOrder[b.frameColor as keyof typeof attitudeOrder] ?? 4
       if (aAttitude !== bAttitude) return aAttitude - bAttitude
       
-      if (a.score !== b.score) return a.score - b.score
-      
       return 0
     })
   })
   
   targetPerson.x = 0
-  targetPerson.y = -400
+  targetPerson.y = -1000
   
   const sortedLayers = Array.from(layerGroups.keys())
     .filter(l => l !== 0)
     .sort((a, b) => a - b)
   
-  const VERTICAL_SPACING = 380
-  const BASE_HORIZONTAL_SPACING = 320
+  const VERTICAL_SPACING = 400
+  const BASE_HORIZONTAL_SPACING = 340
   
   sortedLayers.forEach((layerNum) => {
     const layerPersons = layerGroups.get(layerNum)!
-    const y = layerNum * VERTICAL_SPACING
+    const y = (layerNum * VERTICAL_SPACING) - 600
     
     if (layerPersons.length === 1) {
       layerPersons[0].x = 0
       layerPersons[0].y = y
-    } else if (layerPersons.length === 2) {
-      layerPersons[0].x = -BASE_HORIZONTAL_SPACING / 2
-      layerPersons[0].y = y
-      layerPersons[1].x = BASE_HORIZONTAL_SPACING / 2
-      layerPersons[1].y = y
     } else {
-      const totalWidth = (layerPersons.length - 1) * BASE_HORIZONTAL_SPACING
+      const connections_map = new Map<string, Person[]>()
+      
+      layerPersons.forEach(person => {
+        const connectedToPreviousLayer = connections
+          .filter(c => 
+            (c.fromPersonId === person.id || c.toPersonId === person.id)
+          )
+          .map(c => {
+            const otherId = c.fromPersonId === person.id ? c.toPersonId : c.fromPersonId
+            return result.find(p => p.id === otherId)
+          })
+          .filter(p => p && (layers.get(p.id) || 0) < layerNum) as Person[]
+        
+        connections_map.set(person.id, connectedToPreviousLayer)
+      })
+      
+      layerPersons.sort((a, b) => {
+        const aConns = connections_map.get(a.id) || []
+        const bConns = connections_map.get(b.id) || []
+        
+        if (aConns.length === 0 && bConns.length === 0) {
+          const aInfluence = influenceScores.get(a.id) || 0
+          const bInfluence = influenceScores.get(b.id) || 0
+          return bInfluence - aInfluence
+        }
+        
+        if (aConns.length === 0) return 1
+        if (bConns.length === 0) return -1
+        
+        const aAvgX = aConns.reduce((sum, p) => sum + p.x, 0) / aConns.length
+        const bAvgX = bConns.reduce((sum, p) => sum + p.x, 0) / bConns.length
+        
+        return aAvgX - bAvgX
+      })
+      
+      const totalWidth = Math.max((layerPersons.length - 1) * BASE_HORIZONTAL_SPACING, 400)
+      const spacing = layerPersons.length > 1 ? totalWidth / (layerPersons.length - 1) : 0
       const startX = -totalWidth / 2
       
       layerPersons.forEach((person, index) => {
-        const influenceScore = influenceScores.get(person.id) || 0
-        const normalizedInfluence = influenceScore / Math.max(...Array.from(influenceScores.values()))
-        
-        let xOffset = 0
-        if (person.advocate) {
-          xOffset = (index % 2 === 0 ? -1 : 1) * 20
-        }
-        
-        person.x = startX + index * BASE_HORIZONTAL_SPACING + xOffset
-        person.y = y - (normalizedInfluence * 30)
+        person.x = startX + index * spacing
+        person.y = y
       })
     }
   })
@@ -945,7 +968,7 @@ export function influenceHierarchyLayout(
   const unconnectedPersons = layerGroups.get(999)
   if (unconnectedPersons && unconnectedPersons.length > 0) {
     const maxLayer = Math.max(...Array.from(layerGroups.keys()).filter(k => k !== 999))
-    const unconnectedY = (maxLayer + 2) * VERTICAL_SPACING
+    const unconnectedY = ((maxLayer + 2) * VERTICAL_SPACING) - 600
     
     unconnectedPersons.forEach((person, index) => {
       const totalWidth = (unconnectedPersons.length - 1) * BASE_HORIZONTAL_SPACING
@@ -955,9 +978,11 @@ export function influenceHierarchyLayout(
     })
   }
   
-  for (let iter = 0; iter < 100; iter++) {
+  for (let iter = 0; iter < 200; iter++) {
     result.forEach(person => {
       if (person.id === targetPersonId) return
+      
+      const personLayer = layers.get(person.id) || 0
       
       const connectedPersons = connections
         .filter(c => c.fromPersonId === person.id || c.toPersonId === person.id)
@@ -970,74 +995,95 @@ export function influenceHierarchyLayout(
       
       if (connectedPersons.length === 0) return
       
-      const sameLayerPersons = connectedPersons.filter(p => 
-        Math.abs((layers.get(p.id) || 0) - (layers.get(person.id) || 0)) === 0
-      )
-      
       const adjacentLayerPersons = connectedPersons.filter(p => {
-        const layerDiff = Math.abs((layers.get(p.id) || 0) - (layers.get(person.id) || 0))
-        return layerDiff === 1
+        const pLayer = layers.get(p.id) || 0
+        return Math.abs(pLayer - personLayer) === 1
       })
-      
-      if (sameLayerPersons.length > 0) {
-        const avgX = sameLayerPersons.reduce((sum, p) => sum + p.x, 0) / sameLayerPersons.length
-        const dx = avgX - person.x
-        person.x += dx * 0.15
-      }
       
       if (adjacentLayerPersons.length > 0) {
         const avgX = adjacentLayerPersons.reduce((sum, p) => sum + p.x, 0) / adjacentLayerPersons.length
         const dx = avgX - person.x
-        person.x += dx * 0.12
+        person.x += dx * 0.08
       }
     })
   }
   
-  for (let iter = 0; iter < 80; iter++) {
-    const attractionStrength = 0.08
+  for (let crossingReduction = 0; crossingReduction < 100; crossingReduction++) {
+    let improved = false
     
-    connections.forEach(conn => {
-      const personA = result.find(p => p.id === conn.fromPersonId)
-      const personB = result.find(p => p.id === conn.toPersonId)
+    sortedLayers.forEach((layerNum) => {
+      const layerPersons = layerGroups.get(layerNum)!
+      if (layerPersons.length < 2) return
       
-      if (!personA || !personB) return
-      if (personA.id === targetPersonId || personB.id === targetPersonId) return
-      
-      const layerA = layers.get(personA.id) || 0
-      const layerB = layers.get(personB.id) || 0
-      
-      if (layerA !== layerB) return
-      
-      const dx = personB.x - personA.x
-      const dy = personB.y - personA.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      
-      if (dist < 1) return
-      
-      const idealDistance = BASE_HORIZONTAL_SPACING * 1.2
-      const diff = dist - idealDistance
-      
-      if (Math.abs(diff) > 50) {
-        const force = diff * attractionStrength
-        const fx = (dx / dist) * force
-        const fy = (dy / dist) * force
-        
-        personA.x += fx * 0.5
-        personA.y += fy * 0.15
-        personB.x -= fx * 0.5
-        personB.y -= fy * 0.15
+      for (let i = 0; i < layerPersons.length - 1; i++) {
+        for (let j = i + 1; j < layerPersons.length; j++) {
+          const p1 = layerPersons[i]
+          const p2 = layerPersons[j]
+          
+          const p1Conns = connections
+            .filter(c => c.fromPersonId === p1.id || c.toPersonId === p1.id)
+            .map(c => c.fromPersonId === p1.id ? c.toPersonId : c.fromPersonId)
+          
+          const p2Conns = connections
+            .filter(c => c.fromPersonId === p2.id || c.toPersonId === p2.id)
+            .map(c => c.fromPersonId === p2.id ? c.toPersonId : c.fromPersonId)
+          
+          let currentCrossings = 0
+          let swappedCrossings = 0
+          
+          p1Conns.forEach(p1ConnId => {
+            const p1ConnPerson = result.find(p => p.id === p1ConnId)
+            if (!p1ConnPerson) return
+            
+            p2Conns.forEach(p2ConnId => {
+              const p2ConnPerson = result.find(p => p.id === p2ConnId)
+              if (!p2ConnPerson) return
+              
+              if ((p1.x < p2.x && p1ConnPerson.x > p2ConnPerson.x) ||
+                  (p1.x > p2.x && p1ConnPerson.x < p2ConnPerson.x)) {
+                currentCrossings++
+              }
+              
+              if ((p2.x < p1.x && p1ConnPerson.x > p2ConnPerson.x) ||
+                  (p2.x > p1.x && p1ConnPerson.x < p2ConnPerson.x)) {
+                swappedCrossings++
+              }
+            })
+          })
+          
+          if (swappedCrossings < currentCrossings) {
+            const tempX = p1.x
+            p1.x = p2.x
+            p2.x = tempX
+            
+            const tempIndex = layerPersons.indexOf(p1)
+            const otherIndex = layerPersons.indexOf(p2)
+            layerPersons[tempIndex] = p2
+            layerPersons[otherIndex] = p1
+            
+            improved = true
+          }
+        }
       }
     })
+    
+    if (!improved) break
   }
   
-  const finalResult = resolveOverlaps(result, 250)
+  const finalResult = resolveOverlaps(result, 300)
+  
+  const minY = Math.min(...finalResult.map(p => p.y))
+  const targetY = -800
+  const yOffset = targetY - minY
+  
+  finalResult.forEach(person => {
+    person.y += yOffset
+  })
   
   const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
-  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
   
   finalResult.forEach(person => {
     person.x -= centerX
-    person.y -= centerY
   })
 
   return finalResult
