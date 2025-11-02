@@ -171,10 +171,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
             {!person.photo && (
               <div className="w-full h-full flex items-center justify-center">
                 <span 
-                  className={cn(
-                    "text-4xl font-bold",
-                    person.frameColor === 'white' ? 'text-background' : 'text-foreground'
-                  )}
+                  className="text-4xl font-bold text-foreground"
                 >
                   {getInitials(person.name)}
                 </span>

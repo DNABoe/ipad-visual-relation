@@ -48,7 +48,7 @@
   --frame-red: oklch(0.6 0.25 15);
   --frame-green: oklch(0.78 0.25 165);
   --frame-orange: oklch(0.72 0.18 45);
-  --frame-white: oklch(1 0 0);
+  --frame-white: oklch(0.65 0.02 240);
   
   --group-blue: oklch(0.65 0.11 185);
   --group-purple: oklch(0.63 0.24 290);

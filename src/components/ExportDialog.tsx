@@ -420,7 +420,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               ctx.closePath()
               ctx.fill()
               
-              ctx.fillStyle = person.frameColor === 'white' ? 'oklch(0.15 0.02 240)' : 'oklch(1 0 0)'
+              ctx.fillStyle = 'oklch(1 0 0)'
               ctx.font = 'bold 36px Inter, sans-serif'
               ctx.textAlign = 'center'
               ctx.textBaseline = 'middle'
@@ -445,7 +445,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           ctx.fill()
           
           if (includeName) {
-            ctx.fillStyle = person.frameColor === 'white' ? 'oklch(0.15 0.02 240)' : 'oklch(1 0 0)'
+            ctx.fillStyle = 'oklch(1 0 0)'
             ctx.font = 'bold 36px Inter, sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'

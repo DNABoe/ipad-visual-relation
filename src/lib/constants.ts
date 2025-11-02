@@ -4,7 +4,7 @@ export const FRAME_COLORS: Record<FrameColor, string> = {
   red: 'oklch(0.6 0.25 15)',
   green: 'oklch(0.78 0.25 165)',
   orange: 'oklch(0.72 0.18 45)',
-  white: 'oklch(1 0 0)',
+  white: 'oklch(0.65 0.02 240)',
 }
 
 export const GROUP_COLORS: Record<GroupColor, string> = {

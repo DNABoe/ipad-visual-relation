@@ -1104,98 +1104,21 @@ export function compactNetworkLayout(
   }
 
   const result = persons.map(p => ({ ...p }))
-  const adjacency = buildAdjacencyMap(connections)
 
-  const OPTIMAL_DISTANCE = 260
-  const REPULSION_STRENGTH = 60000
-  const ATTRACTION_STRENGTH = 0.15
-  const DAMPING = 0.82
-  const MAX_ITERATIONS = 400
-  const VELOCITY_THRESHOLD = 0.3
+  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
+  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
 
-  const velocities = new Map<string, { vx: number; vy: number }>()
-  result.forEach(p => velocities.set(p.id, { vx: 0, vy: 0 }))
+  result.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
 
-  for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
-    const forces = new Map<string, { fx: number; fy: number }>()
-    result.forEach(p => forces.set(p.id, { fx: 0, fy: 0 }))
+  const SCALE_FACTOR = 0.7
 
-    for (let i = 0; i < result.length; i++) {
-      for (let j = i + 1; j < result.length; j++) {
-        const p1 = result[i]
-        const p2 = result[j]
-        
-        const dx = p2.x - p1.x
-        const dy = p2.y - p1.y
-        const distSq = dx * dx + dy * dy
-        const dist = Math.sqrt(distSq)
-        
-        if (dist < 1) continue
-
-        const repulsion = REPULSION_STRENGTH / distSq
-        const fx = (dx / dist) * repulsion
-        const fy = (dy / dist) * repulsion
-        
-        const f1 = forces.get(p1.id)!
-        const f2 = forces.get(p2.id)!
-        f1.fx -= fx
-        f1.fy -= fy
-        f2.fx += fx
-        f2.fy += fy
-      }
-    }
-
-    connections.forEach(conn => {
-      const p1 = result.find(p => p.id === conn.fromPersonId)
-      const p2 = result.find(p => p.id === conn.toPersonId)
-      
-      if (!p1 || !p2) return
-      
-      const dx = p2.x - p1.x
-      const dy = p2.y - p1.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      
-      if (dist < 1) return
-      
-      const displacement = dist - OPTIMAL_DISTANCE
-      const force = displacement * ATTRACTION_STRENGTH
-      
-      const fx = (dx / dist) * force
-      const fy = (dy / dist) * force
-      
-      const f1 = forces.get(p1.id)!
-      const f2 = forces.get(p2.id)!
-      f1.fx += fx
-      f1.fy += fy
-      f2.fx -= fx
-      f2.fy -= fy
-    })
-
-    let maxVelocity = 0
-    result.forEach(person => {
-      const force = forces.get(person.id)!
-      const vel = velocities.get(person.id)!
-      
-      vel.vx = (vel.vx + force.fx) * DAMPING
-      vel.vy = (vel.vy + force.fy) * DAMPING
-      
-      const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy)
-      maxVelocity = Math.max(maxVelocity, speed)
-      
-      const maxSpeed = 35
-      if (speed > maxSpeed) {
-        vel.vx = (vel.vx / speed) * maxSpeed
-        vel.vy = (vel.vy / speed) * maxSpeed
-      }
-      
-      person.x += vel.vx
-      person.y += vel.vy
-    })
-
-    if (maxVelocity < VELOCITY_THRESHOLD) {
-      break
-    }
-  }
+  result.forEach(person => {
+    person.x *= SCALE_FACTOR
+    person.y *= SCALE_FACTOR
+  })
 
   const COMPACT_CARD_WIDTH = 200
   const COMPACT_CARD_HEIGHT = 280
@@ -1249,12 +1172,12 @@ export function compactNetworkLayout(
     if (!anyMoved) break
   }
 
-  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
-  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
+  const finalCenterX = result.reduce((sum, p) => sum + p.x, 0) / result.length
+  const finalCenterY = result.reduce((sum, p) => sum + p.y, 0) / result.length
   
   result.forEach(person => {
-    person.x -= centerX
-    person.y -= centerY
+    person.x -= finalCenterX
+    person.y -= finalCenterY
   })
 
   return result

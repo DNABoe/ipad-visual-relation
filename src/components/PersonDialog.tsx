@@ -395,10 +395,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                       >
                         {!photo && (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className={cn(
-                              "text-5xl font-bold",
-                              frameColor === 'white' ? 'text-background' : 'text-foreground'
-                            )}>
+                            <span className="text-5xl font-bold text-foreground">
                               {name ? getInitials(name) : '?'}
                             </span>
                           </div>
@@ -569,7 +566,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                           red: 'Negative',
                           green: 'Positive',
                           orange: 'Neutral',
-                          white: 'Uncategorized'
+                          white: 'None'
                         }
                         return (
                           <button
