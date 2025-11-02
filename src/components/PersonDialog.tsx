@@ -12,10 +12,11 @@ import { Slider } from '@/components/ui/slider'
 import type { Person, FrameColor, Attachment, ActivityLogEntry } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
-import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
+import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus, Detective } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { resampleImage } from '@/lib/imageProcessing'
 import { toast } from 'sonner'
+import { generateInvestigationPDF } from '@/lib/pdfGenerator'
 
 interface PersonDialogProps {
   open: boolean
@@ -39,6 +40,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [advocate, setAdvocate] = useState(false)
   const [notes, setNotes] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [country, setCountry] = useState('')
+  const [isInvestigating, setIsInvestigating] = useState(false)
+  const [investigationReport, setInvestigationReport] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
   const photoPreviewRef = useRef<HTMLDivElement>(null)
@@ -329,6 +333,73 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     return labels[action]
   }
 
+  const handleInvestigate = async () => {
+    if (!name.trim()) {
+      toast.error('Please enter a name first')
+      return
+    }
+
+    setIsInvestigating(true)
+    toast.info('Investigating...')
+
+    try {
+      const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
+      const positionText = positionLines.join(', ')
+      
+      const promptText = `You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
+
+Name: ${name}
+Position: ${positionText || 'Not specified'}
+Country: ${country || 'Not specified'}
+
+Please provide:
+1. Professional Background Overview (based on typical career trajectories for this position)
+2. Areas of Influence and Expertise
+3. Potential Network Connections (types of people/organizations they might interact with)
+4. Strategic Importance Assessment
+5. Key Considerations for Engagement
+
+Format your response as a professional intelligence brief with clear sections and detailed analysis. Be thorough but realistic based on the position and context provided.`
+
+      const report = await window.spark.llm(promptText, 'gpt-4o-mini')
+      setInvestigationReport(report)
+
+      const pdfBlob = await generateInvestigationPDF({
+        name: name.trim(),
+        position: positionText || 'Not specified',
+        country: country || 'Not specified',
+        report,
+        photo
+      })
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const pdfDataUrl = reader.result as string
+        const timestamp = Date.now()
+        const fileName = `Investigation_${name.trim().replace(/\s+/g, '_')}_${new Date(timestamp).toISOString().split('T')[0]}.pdf`
+        
+        const newAttachment: Attachment = {
+          id: generateId(),
+          name: fileName,
+          type: 'application/pdf',
+          data: pdfDataUrl,
+          size: pdfBlob.size,
+          addedAt: timestamp
+        }
+        
+        setAttachments(prev => [...prev, newAttachment])
+        toast.success('Investigation report generated and added to attachments')
+      }
+      reader.readAsDataURL(pdfBlob)
+
+    } catch (error) {
+      console.error('Investigation error:', error)
+      toast.error('Failed to generate investigation report')
+    } finally {
+      setIsInvestigating(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] h-[740px] max-w-5xl flex flex-col p-0">
@@ -347,11 +418,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="notes">
                 <Note className="mr-1.5" size={16} />
-                Notes
+                Notes {attachments.length > 0 && `(${attachments.length})`}
               </TabsTrigger>
-              <TabsTrigger value="attachments">
-                <Paperclip className="mr-1.5" size={16} />
-                Attachments {attachments.length > 0 && `(${attachments.length})`}
+              <TabsTrigger value="investigate">
+                <Detective className="mr-1.5" size={16} />
+                Investigate
               </TabsTrigger>
               <TabsTrigger value="activity">
                 <ClockCounterClockwise className="mr-1.5" size={16} />
@@ -609,7 +680,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
               </div>
             </TabsContent>
 
-            <TabsContent value="notes" className="mt-4 space-y-3 m-0">
+            <TabsContent value="notes" className="mt-4 space-y-4 m-0">
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
                 <Textarea
@@ -617,17 +688,15 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add notes about this person..."
-                  rows={14}
+                  rows={8}
                   className="resize-none font-sans"
                 />
                 <p className="text-xs text-muted-foreground">
                   Use this space for detailed notes, observations, or any relevant information
                 </p>
               </div>
-            </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 space-y-3 m-0">
-              <div className="space-y-3">
+              <div className="space-y-3 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Attached Files</Label>
                   <Button
@@ -649,11 +718,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 </div>
 
                 {attachments.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Paperclip size={48} className="mx-auto mb-2 opacity-50" />
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Paperclip size={36} className="mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No attachments yet</p>
                     <p className="text-xs mt-1">Click "Add File" to attach documents, images, or other files</p>
-                    <p className="text-xs text-muted-foreground/60 mt-2">Max 10MB per file</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -689,6 +757,68 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                         </Button>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="investigate" className="mt-4 space-y-4 m-0">
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                  <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <Detective size={18} />
+                    AI-Powered Investigation
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Generate a professional intelligence brief based on the person's name, position, and country. 
+                    The report will be automatically saved to attachments.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="investigate-country" className="text-sm font-medium">Country</Label>
+                  <Input
+                    id="investigate-country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    placeholder="Enter country (optional)"
+                    className="h-9"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Providing a country helps generate more contextual analysis
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleInvestigate}
+                  disabled={isInvestigating || !name.trim()}
+                  className="w-full bg-gradient-to-r from-primary to-accent"
+                  size="default"
+                >
+                  {isInvestigating ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                      Investigating...
+                    </>
+                  ) : (
+                    <>
+                      <Detective className="mr-2" size={18} />
+                      Investigate
+                    </>
+                  )}
+                </Button>
+
+                {investigationReport && (
+                  <div className="space-y-2 mt-4 p-4 rounded-lg bg-card border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Investigation Report Preview</Label>
+                      <p className="text-xs text-success">✓ Added to attachments</p>
+                    </div>
+                    <ScrollArea className="h-64 rounded-md border border-border p-3">
+                      <div className="text-xs whitespace-pre-wrap font-mono">
+                        {investigationReport}
+                      </div>
+                    </ScrollArea>
                   </div>
                 )}
               </div>
