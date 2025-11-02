@@ -131,6 +131,15 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     })
   }, [])
 
+  const updateConnection = useCallback((connectionId: string, updates: Partial<Connection>) => {
+    setWorkspace(prev => ({
+      ...prev,
+      connections: prev.connections.map(c =>
+        c.id === connectionId ? { ...c, ...updates } : c
+      ),
+    }))
+  }, [])
+
   const deleteConnection = useCallback((connectionId: string) => {
     setWorkspace(prev => {
       const connectionToDelete = prev.connections.find(c => c.id === connectionId)
@@ -364,6 +373,7 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
     deletePerson,
     deletePersons,
     addConnection,
+    updateConnection,
     deleteConnection,
     deleteConnections,
     addGroup,

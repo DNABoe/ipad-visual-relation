@@ -11,6 +11,7 @@ import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 import { ExportDialog } from './ExportDialog'
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { CollapseBranchDialog } from './CollapseBranchDialog'
+import { ConnectionDialog } from './ConnectionDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import type { Workspace, Person } from '@/lib/types'
@@ -476,6 +477,27 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
         connections={controller.workspace.connections}
         onConfirm={controller.handlers.handleCollapseBranch}
       />
+
+      {controller.dialogs.connectionDialog.connection && (
+        <ConnectionDialog
+          open={controller.dialogs.connectionDialog.open}
+          onOpenChange={(open) => {
+            if (!open) controller.dialogs.closeConnectionDialog()
+          }}
+          connection={controller.dialogs.connectionDialog.connection}
+          onSave={controller.handlers.handleUpdateConnection}
+          fromPersonName={
+            controller.workspace.persons.find(
+              p => p.id === controller.dialogs.connectionDialog.connection?.fromPersonId
+            )?.name || ''
+          }
+          toPersonName={
+            controller.workspace.persons.find(
+              p => p.id === controller.dialogs.connectionDialog.connection?.toPersonId
+            )?.name || ''
+          }
+        />
+      )}
 
       <Toaster />
     </div>

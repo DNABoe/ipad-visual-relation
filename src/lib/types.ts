@@ -43,12 +43,19 @@ export interface Person {
   modifiedAt?: number
 }
 
+export type ConnectionStyle = 'solid' | 'dashed'
+export type ConnectionWeight = 'thin' | 'medium' | 'thick'
+export type ConnectionDirection = 'none' | 'forward' | 'backward' | 'bidirectional'
+
 export interface Connection {
   id: string
   fromPersonId: string
   toPersonId: string
   fromSide?: ConnectionSide
   toSide?: ConnectionSide
+  style?: ConnectionStyle
+  weight?: ConnectionWeight
+  direction?: ConnectionDirection
 }
 
 export interface Group {

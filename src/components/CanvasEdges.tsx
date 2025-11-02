@@ -78,6 +78,7 @@ interface CanvasEdgesProps {
   selectedConnections: string[]
   selectionRect?: { x: number; y: number; width: number; height: number } | null
   onConnectionClick?: (connectionId: string, e: React.MouseEvent) => void
+  onConnectionDoubleClick?: (connectionId: string, e: React.MouseEvent) => void
   onConnectionContextMenu?: (connectionId: string, e: React.MouseEvent) => void
   organicLines?: boolean
   shortestPathPersonIds?: string[]
@@ -91,6 +92,7 @@ export function CanvasEdges({
   selectedConnections,
   selectionRect,
   onConnectionClick,
+  onConnectionDoubleClick,
   onConnectionContextMenu,
   organicLines = false,
   shortestPathPersonIds = [],
@@ -200,6 +202,13 @@ export function CanvasEdges({
         const isSelected = selectedConnections.includes(conn.id)
         const isShortestPath = shortestPathConnectionIds.has(conn.id)
 
+        const connectionStyle = conn.style || 'solid'
+        const connectionWeight = conn.weight || 'medium'
+        const connectionDirection = conn.direction || 'none'
+
+        const weightMap = { thin: 1.5, medium: 2, thick: 3 }
+        const baseLineWidth = weightMap[connectionWeight]
+
         ctx.beginPath()
         ctx.moveTo(fromX, fromY)
         
@@ -252,15 +261,27 @@ export function CanvasEdges({
           ctx.shadowColor = accentColor
           ctx.shadowBlur = 15 + pulseIntensity * 10
           ctx.globalAlpha = glowIntensity
+          
+          if (connectionStyle === 'dashed') {
+            ctx.setLineDash([8, 4])
+          }
+          
           ctx.stroke()
+          ctx.setLineDash([])
           
           ctx.shadowBlur = 0
           ctx.globalAlpha = 1
         } else {
           ctx.strokeStyle = isSelected ? accentColor : edgeColor
-          ctx.lineWidth = isSelected ? 3 : 2
+          ctx.lineWidth = isSelected ? baseLineWidth + 1 : baseLineWidth
           ctx.globalAlpha = isSelected ? 1 : 1
+          
+          if (connectionStyle === 'dashed') {
+            ctx.setLineDash([8, 4])
+          }
+          
           ctx.stroke()
+          ctx.setLineDash([])
           ctx.globalAlpha = 1
         }
 
@@ -287,29 +308,45 @@ export function CanvasEdges({
           angle = Math.atan2(dy, dx)
         }
 
-        ctx.beginPath()
-        ctx.moveTo(toX, toY)
-        ctx.lineTo(
-          toX - arrowSize * Math.cos(angle - Math.PI / 6),
-          toY - arrowSize * Math.sin(angle - Math.PI / 6)
-        )
-        ctx.lineTo(
-          toX - arrowSize * Math.cos(angle + Math.PI / 6),
-          toY - arrowSize * Math.sin(angle + Math.PI / 6)
-        )
-        ctx.closePath()
-        
-        if (isShortestPath) {
-          ctx.fillStyle = accentColor
-          ctx.shadowColor = accentColor
-          ctx.shadowBlur = 15 + pulseIntensity * 10
-          ctx.globalAlpha = 0.6 + pulseIntensity * 0.4
-          ctx.fill()
+        const drawArrow = (x: number, y: number, rotation: number, filled: boolean = true) => {
+          ctx.save()
+          ctx.translate(x, y)
+          ctx.rotate(rotation)
+          
+          ctx.beginPath()
+          ctx.moveTo(0, 0)
+          ctx.lineTo(-arrowSize, -arrowSize * 0.5)
+          ctx.lineTo(-arrowSize, arrowSize * 0.5)
+          ctx.closePath()
+          
+          if (filled) {
+            if (isShortestPath) {
+              ctx.fillStyle = accentColor
+              ctx.shadowColor = accentColor
+              ctx.shadowBlur = 15 + pulseIntensity * 10
+              ctx.globalAlpha = 0.6 + pulseIntensity * 0.4
+            } else {
+              ctx.fillStyle = isSelected ? accentColor : edgeColor
+            }
+            ctx.fill()
+          } else {
+            ctx.strokeStyle = isSelected ? accentColor : edgeColor
+            ctx.lineWidth = baseLineWidth
+            ctx.stroke()
+          }
+          
           ctx.shadowBlur = 0
           ctx.globalAlpha = 1
-        } else {
-          ctx.fillStyle = ctx.strokeStyle
-          ctx.fill()
+          ctx.restore()
+        }
+
+        if (connectionDirection === 'forward' || connectionDirection === 'bidirectional') {
+          drawArrow(toX, toY, angle)
+        }
+        
+        if (connectionDirection === 'backward' || connectionDirection === 'bidirectional') {
+          const backAngle = angle + Math.PI
+          drawArrow(fromX, fromY, backAngle)
         }
 
         const r = ((connectionIndex + 1) * 37) % 256
@@ -481,6 +518,8 @@ export function CanvasEdges({
   const clickedConnectionRef = useRef<string | null>(null)
   const mouseDownConnectionRef = useRef<string | null>(null)
   const lastMouseMoveTime = useRef<number>(0)
+  const lastClickTime = useRef<number>(0)
+  const lastClickedConnection = useRef<string | null>(null)
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
     const now = Date.now()
@@ -510,8 +549,22 @@ export function CanvasEdges({
     
     if (connectionId && connectionId === clickedConnectionRef.current && connectionId === mouseDownConnectionRef.current) {
       e.stopPropagation()
-      if (onConnectionClick) {
-        onConnectionClick(connectionId, e)
+      
+      const now = Date.now()
+      const timeSinceLastClick = now - lastClickTime.current
+      
+      if (timeSinceLastClick < 300 && lastClickedConnection.current === connectionId) {
+        if (onConnectionDoubleClick) {
+          onConnectionDoubleClick(connectionId, e)
+        }
+        lastClickTime.current = 0
+        lastClickedConnection.current = null
+      } else {
+        if (onConnectionClick) {
+          onConnectionClick(connectionId, e)
+        }
+        lastClickTime.current = now
+        lastClickedConnection.current = connectionId
       }
     }
     

@@ -9,6 +9,7 @@ export function useDialogState() {
   const [exportDialog, setExportDialog] = useState(false)
   const [unsavedDialog, setUnsavedDialog] = useState<{ open: boolean; action?: 'new' | 'load' }>({ open: false })
   const [collapseBranchDialog, setCollapseBranchDialog] = useState<{ open: boolean; connection?: Connection }>({ open: false })
+  const [connectionDialog, setConnectionDialog] = useState<{ open: boolean; connection?: Connection }>({ open: false })
 
   const openPersonDialog = useCallback((editPerson?: Person) => {
     setPersonDialog({ open: true, editPerson })
@@ -66,6 +67,14 @@ export function useDialogState() {
     setCollapseBranchDialog({ open: false })
   }, [])
 
+  const openConnectionDialog = useCallback((connection: Connection) => {
+    setConnectionDialog({ open: true, connection })
+  }, [])
+
+  const closeConnectionDialog = useCallback(() => {
+    setConnectionDialog({ open: false })
+  }, [])
+
   return {
     personDialog,
     groupDialog,
@@ -74,6 +83,7 @@ export function useDialogState() {
     exportDialog,
     unsavedDialog,
     collapseBranchDialog,
+    connectionDialog,
     openPersonDialog,
     closePersonDialog,
     openGroupDialog,
@@ -88,5 +98,7 @@ export function useDialogState() {
     closeUnsavedDialog,
     openCollapseBranchDialog,
     closeCollapseBranchDialog,
+    openConnectionDialog,
+    closeConnectionDialog,
   }
 }

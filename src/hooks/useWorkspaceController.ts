@@ -123,6 +123,18 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     }
   }, [selection])
 
+  const handleConnectionDoubleClick = useCallback((connectionId: string) => {
+    const connection = workspaceState.workspace.connections.find(c => c.id === connectionId)
+    if (connection) {
+      dialogs.openConnectionDialog(connection)
+    }
+  }, [workspaceState.workspace.connections, dialogs])
+
+  const handleUpdateConnection = useCallback((connectionId: string, updates: Partial<Connection>) => {
+    workspaceState.updateConnection(connectionId, updates)
+    toast.success('Connection updated')
+  }, [workspaceState])
+
   const handleConnectionContextMenu = useCallback((connectionId: string, e: React.MouseEvent) => {
     e.preventDefault()
     if (!selection.selectedConnections.includes(connectionId)) {
@@ -521,6 +533,8 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handlePhotoDoubleClick,
       handlePersonContextMenu,
       handleConnectionClick,
+      handleConnectionDoubleClick,
+      handleUpdateConnection,
       handleConnectionContextMenu,
       handleGroupClick,
       handleSavePerson,

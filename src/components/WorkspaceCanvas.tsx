@@ -414,6 +414,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             e.stopPropagation()
             controller.handlers.handleConnectionClick(connectionId, e.shiftKey)
           }}
+          onConnectionDoubleClick={(connectionId, e) => {
+            e.stopPropagation()
+            controller.handlers.handleConnectionDoubleClick(connectionId)
+          }}
           onConnectionContextMenu={(connectionId, e) => {
             e.preventDefault()
             e.stopPropagation()
