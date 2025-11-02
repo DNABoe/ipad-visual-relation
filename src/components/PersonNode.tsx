@@ -191,7 +191,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-1 mb-1">
             {person.name}
           </h3>
-          <p className="text-xs leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
+          <p className="text-xs leading-[1.3] break-words text-muted-foreground line-clamp-2 mb-0.5">
             {person.position || '\u00A0'}
           </p>
           <p className="text-xs leading-snug break-words text-muted-foreground line-clamp-1 mb-0.5">
