@@ -419,6 +419,23 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     }
   }, [controller])
 
+  const handleCanvasContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const rect = controller.canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    
+    const canvasX = (e.clientX - rect.left - controller.transform.transform.x) / controller.transform.transform.scale
+    const canvasY = (e.clientY - rect.top - controller.transform.transform.y) / controller.transform.transform.scale
+    
+    controller.setContextMenu({
+      type: 'canvas',
+      x: e.clientX,
+      y: e.clientY,
+      canvasX,
+      canvasY
+    })
+  }, [controller])
+
   return (
     <div
       ref={controller.canvasRef}
@@ -434,7 +451,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={handleCanvasContextMenu}
     >
       <div className="absolute inset-0 z-0">
         <CanvasEdges

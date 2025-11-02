@@ -355,19 +355,6 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     }
     
     if (e.button === 2) {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-      
-      const canvasX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
-      const canvasY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
-      
-      setContextMenu({
-        type: 'canvas',
-        x: e.clientX,
-        y: e.clientY,
-        canvasX,
-        canvasY
-      })
       return
     }
     

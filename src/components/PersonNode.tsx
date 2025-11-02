@@ -107,19 +107,19 @@ const PersonNodeInner = memo(function PersonNodeInner({
           'cursor-grab select-none border-[2px] backdrop-blur-none relative overflow-hidden p-0 h-full flex flex-col',
           isDragging ? 'node-dragging scale-[1.03] shadow-2xl' : 'transition-all duration-200',
           !isDragging && 'hover:shadow-lg hover:border-primary',
-          isSelected && 'scale-[1.02]',
+          isSelected && 'scale-[1.02] ring-4 ring-accent ring-offset-0',
           isHighlighted && 'ring-2 ring-success ring-offset-2 ring-offset-canvas-bg glow-accent-strong scale-105',
           isDimmed && 'opacity-30 grayscale',
           hasCollapsedBranch && 'cursor-pointer relative z-10'
         )}
         style={{
           ...style,
-          borderColor: frameColor,
+          borderColor: isSelected ? 'oklch(0.88 0.18 185)' : frameColor,
           backgroundColor: 'oklch(0.21 0.03 230)',
           boxShadow: isDragging
             ? '0 8px 32px rgba(0, 0, 0, 0.6)'
             : isSelected
-            ? `0 0 0 4px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.8), 0 0 80px oklch(0.88 0.18 185 / 0.4), 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4)`
+            ? `0 0 0 4px oklch(0.88 0.18 185 / 1), 0 0 40px oklch(0.88 0.18 185 / 0.9), 0 0 80px oklch(0.88 0.18 185 / 0.6), 0 8px 24px rgba(0, 0, 0, 0.6)`
             : isHighlighted 
             ? '0 3px 16px rgba(0, 255, 128, 0.4), 0 1px 6px rgba(0, 0, 0, 0.3)' 
             : '0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2)',
