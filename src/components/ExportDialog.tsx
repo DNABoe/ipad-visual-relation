@@ -349,6 +349,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         ctx.restore()
         
         const photoHeight = 160
+        const textAreaHeight = 120
         const photoOffsetX = person.photoOffsetX || 0
         const photoOffsetY = person.photoOffsetY || 0
         const photoZoom = person.photoZoom || 100
@@ -515,7 +516,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         if (includeName || includePosition) {
           const textX = person.x + 12
-          const textStartY = person.y + photoHeight
+          const textStartY = person.y + photoHeight + 0
           const textWidth = cardWidth - 24
           
           ctx.save()
@@ -539,7 +540,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               displayName += '...'
             }
             ctx.fillText(displayName, textX, currentY)
-            currentY += 20 + 2
+            currentY += 18 + 2
           }
           
           if (includePosition) {
@@ -589,11 +590,11 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 currentY += lineHeight
               }
               
-              if (linesToRender.length === 0) {
-                currentY += lineHeight
+              if (linesToRender.length < maxLines) {
+                currentY += lineHeight * (maxLines - linesToRender.length)
               }
             } else {
-              currentY += 16.2
+              currentY += 16.2 * 3
             }
             
             currentY += 2
