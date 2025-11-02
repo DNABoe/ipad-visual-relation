@@ -394,14 +394,20 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !e.repeat) {
+      const target = e.target as HTMLElement
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+      
+      if (e.code === 'Space' && !e.repeat && !isInputField) {
         e.preventDefault()
         controller.interaction.setSpacebarPressed(true)
       }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
+      const target = e.target as HTMLElement
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+      
+      if (e.code === 'Space' && !isInputField) {
         e.preventDefault()
         controller.interaction.setSpacebarPressed(false)
         controller.transform.stopPanning()
