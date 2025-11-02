@@ -527,7 +527,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         if (includeName || includePosition) {
           const textX = person.x + 12
-          const textStartY = person.y + photoHeight + 12
+          const textStartY = person.y + photoHeight + 2
           const textWidth = cardWidth - 24
           
           ctx.save()
@@ -551,26 +551,40 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
               displayName += '...'
             }
             ctx.fillText(displayName, textX, currentY)
-            currentY += 20
+            currentY += 18
           }
           
           if (includePosition) {
             ctx.fillStyle = mutedForegroundColor
             ctx.font = '400 12px Inter, sans-serif'
             const maxWidth = textWidth
+            const lineHeight = 16.2
             
             if (person.position) {
-              let displayPos = person.position
-              let metrics = ctx.measureText(displayPos)
-              if (metrics.width > maxWidth) {
-                while (metrics.width > maxWidth - 20 && displayPos.length > 0) {
-                  displayPos = displayPos.slice(0, -1)
-                  metrics = ctx.measureText(displayPos + '...')
+              const lines = person.position.split('\n')
+              const maxLines = 3
+              let linesRendered = 0
+              
+              for (let i = 0; i < lines.length && linesRendered < maxLines; i++) {
+                let line = lines[i]
+                let metrics = ctx.measureText(line)
+                
+                if (metrics.width > maxWidth) {
+                  while (metrics.width > maxWidth - 20 && line.length > 0) {
+                    line = line.slice(0, -1)
+                    metrics = ctx.measureText(line + '...')
+                  }
+                  line += '...'
                 }
-                displayPos += '...'
+                
+                ctx.fillText(line, textX, currentY)
+                currentY += lineHeight
+                linesRendered++
               }
-              ctx.fillText(displayPos, textX, currentY)
-              currentY += 16
+              
+              if (linesRendered === 0) {
+                currentY += lineHeight
+              }
             } else {
               currentY += 16
             }
@@ -586,9 +600,9 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
                 displayPos2 += '...'
               }
               ctx.fillText(displayPos2, textX, currentY)
-              currentY += 16
+              currentY += 15
             } else {
-              currentY += 16
+              currentY += 15
             }
             
             if (person.position3) {
