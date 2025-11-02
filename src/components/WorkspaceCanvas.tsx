@@ -65,8 +65,16 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     }
   }, [gridSize, gridOpacity, showGrid, controller.transform.transform.x, controller.transform.transform.y, controller.transform.transform.scale, controller.canvasRef])
 
+  const workspacePersonsRef = useRef(controller.workspace.persons)
+  const updatePersonsInBulkRef = useRef(controller.handlers.updatePersonsInBulk)
+  
+  useEffect(() => {
+    workspacePersonsRef.current = controller.workspace.persons
+    updatePersonsInBulkRef.current = controller.handlers.updatePersonsInBulk
+  })
+
   const updatePersonPositions = useCallback((personIds: string[], dx: number, dy: number, skipUndo = true) => {
-    const personsMap = new Map(controller.workspace.persons.map(p => [p.id, p]))
+    const personsMap = new Map(workspacePersonsRef.current.map(p => [p.id, p]))
     
     for (const personId of personIds) {
       const person = personsMap.get(personId)
@@ -87,22 +95,22 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       if (pendingUpdate.current.updates.size > 0) {
         const updates = new Map(pendingUpdate.current.updates)
         pendingUpdate.current.updates.clear()
-        controller.handlers.updatePersonsInBulk(updates, skipUndo)
+        updatePersonsInBulkRef.current(updates, skipUndo)
       }
       pendingUpdate.current.animationFrame = undefined
     })
-  }, [controller.workspace.persons, controller.handlers])
+  }, [])
 
   useEffect(() => {
     return () => {
       if (pendingUpdate.current.animationFrame) {
         cancelAnimationFrame(pendingUpdate.current.animationFrame)
         if (pendingUpdate.current.updates.size > 0) {
-          controller.handlers.updatePersonsInBulk(new Map(pendingUpdate.current.updates), true)
+          updatePersonsInBulkRef.current(new Map(pendingUpdate.current.updates), true)
         }
       }
     }
-  }, [controller.handlers])
+  }, [])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { interaction, transform, handlers, workspace, selection } = controller
