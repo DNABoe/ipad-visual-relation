@@ -22,8 +22,11 @@ function App() {
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
+    if (isInitialized) return
+    
     const initializeAuth = async () => {
       try {
         console.log('[App] Initializing auth...', { userCredentials })
@@ -53,15 +56,17 @@ function App() {
         }
         
         setIsCheckingAuth(false)
+        setIsInitialized(true)
         console.log('[App] Auth check complete')
       } catch (error) {
         console.error('[App] Auth initialization error:', error)
         setIsCheckingAuth(false)
+        setIsInitialized(true)
       }
     }
     
     initializeAuth()
-  }, [userCredentials, setUserCredentials, appSettings, setAppSettings])
+  }, [isInitialized, userCredentials, setUserCredentials, appSettings, setAppSettings])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)
