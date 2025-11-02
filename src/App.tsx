@@ -34,9 +34,12 @@ function App() {
           console.log('[App] No credentials found, creating defaults...')
           const defaultHash = await getDefaultPasswordHash()
           console.log('[App] Default hash generated:', defaultHash)
-          await setUserCredentials({
-            username: 'admin',
-            passwordHash: defaultHash
+          setUserCredentials((current) => {
+            if (current) return current
+            return {
+              username: 'admin',
+              passwordHash: defaultHash
+            }
           })
           console.log('[App] Default credentials saved')
         } else {
@@ -45,13 +48,16 @@ function App() {
         
         if (!appSettings || Object.keys(appSettings).length === 0) {
           console.log('[App] No app settings found, initializing defaults...')
-          await setAppSettings(DEFAULT_APP_SETTINGS)
+          setAppSettings((current) => {
+            if (current && Object.keys(current).length > 0) return current
+            return DEFAULT_APP_SETTINGS
+          })
           console.log('[App] Default app settings saved')
         } else {
           const mergedSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings }
           if (JSON.stringify(mergedSettings) !== JSON.stringify(appSettings)) {
             console.log('[App] Updating app settings with missing defaults...')
-            await setAppSettings(mergedSettings)
+            setAppSettings(mergedSettings)
           }
         }
         
@@ -66,7 +72,7 @@ function App() {
     }
     
     initializeAuth()
-  }, [isInitialized, userCredentials, setUserCredentials, appSettings, setAppSettings])
+  }, [isInitialized])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)

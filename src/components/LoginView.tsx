@@ -28,16 +28,19 @@ export function LoginView({ onLogin }: LoginViewProps) {
     const initializeCredentials = async () => {
       if (!userSettings) {
         const defaultHash = await getDefaultPasswordHash()
-        await setUserSettings({
-          username: 'admin',
-          passwordHash: defaultHash
+        setUserSettings((current) => {
+          if (current) return current
+          return {
+            username: 'admin',
+            passwordHash: defaultHash
+          }
         })
       }
       setIsInitializing(false)
     }
     
     initializeCredentials()
-  }, [userSettings, setUserSettings])
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

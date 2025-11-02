@@ -51,8 +51,10 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
 
   const currentWorkspaceStr = useMemo(() => serializeWorkspace(controller.workspace), [controller.workspace])
 
+  const initialWorkspaceStrRef = useRef<string>(currentWorkspaceStr)
+  
   useEffect(() => {
-    setSavedWorkspaceStr(currentWorkspaceStr)
+    setSavedWorkspaceStr(initialWorkspaceStrRef.current)
   }, [])
 
   useEffect(() => {
@@ -254,7 +256,7 @@ export function WorkspaceView({ workspace, setWorkspace, fileName, password, onN
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [controller, downloadUrl, fileName])
+  }, [controller, downloadUrl])
 
   const handleUnsavedAction = useCallback(() => {
     if (controller.dialogs.unsavedDialog.action === 'new') {
