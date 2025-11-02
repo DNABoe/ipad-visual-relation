@@ -111,9 +111,11 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
                            controller.dialogs.settingsDialog || controller.dialogs.connectionDialog.open ||
                            controller.dialogs.exportDialog || controller.dialogs.collapseBranchDialog.open
 
-      if (e.key === ' ' && !isInputFocused && !isDialogOpen) {
-        e.preventDefault()
-        controller.interaction.setSpacebarPressed(true)
+      if (e.key === ' ') {
+        if (!isInputFocused && !isDialogOpen) {
+          e.preventDefault()
+          controller.interaction.setSpacebarPressed(true)
+        }
         return
       }
 
