@@ -22,57 +22,51 @@ function App() {
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
-  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    if (isInitialized) return
-    
     const initializeAuth = async () => {
       try {
-        console.log('[App] Initializing auth...', { userCredentials })
-        if (!userCredentials) {
+        console.log('[App] Initializing auth...')
+        
+        setUserCredentials((current) => {
+          if (current) {
+            console.log('[App] Existing credentials found')
+            return current
+          }
           console.log('[App] No credentials found, creating defaults...')
-          const defaultHash = await getDefaultPasswordHash()
-          console.log('[App] Default hash generated:', defaultHash)
-          setUserCredentials((current) => {
-            if (current) return current
-            return {
+          getDefaultPasswordHash().then(defaultHash => {
+            console.log('[App] Default hash generated:', defaultHash)
+            setUserCredentials({
               username: 'admin',
               passwordHash: defaultHash
-            }
+            })
           })
-          console.log('[App] Default credentials saved')
-        } else {
-          console.log('[App] Existing credentials found')
-        }
+          return null
+        })
         
-        if (!appSettings || Object.keys(appSettings).length === 0) {
-          console.log('[App] No app settings found, initializing defaults...')
-          setAppSettings((current) => {
-            if (current && Object.keys(current).length > 0) return current
-            return DEFAULT_APP_SETTINGS
-          })
-          console.log('[App] Default app settings saved')
-        } else {
-          const mergedSettings = { ...DEFAULT_APP_SETTINGS, ...appSettings }
-          if (JSON.stringify(mergedSettings) !== JSON.stringify(appSettings)) {
-            console.log('[App] Updating app settings with missing defaults...')
-            setAppSettings(mergedSettings)
+        setAppSettings((current) => {
+          if (current && Object.keys(current).length > 0) {
+            const mergedSettings = { ...DEFAULT_APP_SETTINGS, ...current }
+            if (JSON.stringify(mergedSettings) !== JSON.stringify(current)) {
+              console.log('[App] Updating app settings with missing defaults...')
+              return mergedSettings
+            }
+            return current
           }
-        }
+          console.log('[App] No app settings found, initializing defaults...')
+          return DEFAULT_APP_SETTINGS
+        })
         
         setIsCheckingAuth(false)
-        setIsInitialized(true)
         console.log('[App] Auth check complete')
       } catch (error) {
         console.error('[App] Auth initialization error:', error)
         setIsCheckingAuth(false)
-        setIsInitialized(true)
       }
     }
     
     initializeAuth()
-  }, [isInitialized])
+  }, [])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)
