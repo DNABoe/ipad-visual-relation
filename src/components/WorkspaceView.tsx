@@ -413,6 +413,13 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
             groups={controller.workspace.groups}
             selectedPersons={controller.selection.selectedPersons}
             onPersonClick={(id) => controller.handlers.handleFocusPerson(id)}
+            onPersonEdit={(person) => controller.dialogs.openPersonDialog(person)}
+            onPersonDelete={(personId) => {
+              const person = controller.workspace.persons.find(p => p.id === personId)
+              if (person) {
+                controller.handlers.handleDeletePerson(person.id)
+              }
+            }}
             searchQuery={searchQuery}
             highlightedPersonIds={highlightedPersonIds}
           />

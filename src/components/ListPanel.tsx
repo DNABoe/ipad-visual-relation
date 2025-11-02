@@ -5,6 +5,13 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import { NotePencil, Trash } from '@phosphor-icons/react'
 import type { Person, Group } from '@/lib/types'
 import { getInitials } from '@/lib/helpers'
 import { FRAME_COLORS } from '@/lib/constants'
@@ -15,13 +22,15 @@ interface ListPanelProps {
   groups: Group[]
   selectedPersons: string[]
   onPersonClick: (id: string) => void
+  onPersonEdit?: (person: Person) => void
+  onPersonDelete?: (personId: string) => void
   searchQuery?: string
   highlightedPersonIds?: Set<string>
 }
 
 type SortBy = 'name-asc' | 'name-desc' | 'position-asc' | 'position-desc' | 'score-asc' | 'score-desc' | 'created-new' | 'created-old'
 
-export function ListPanel({ persons, groups, selectedPersons, onPersonClick, searchQuery, highlightedPersonIds }: ListPanelProps) {
+export function ListPanel({ persons, groups, selectedPersons, onPersonClick, onPersonEdit, onPersonDelete, searchQuery, highlightedPersonIds }: ListPanelProps) {
   const [sortBy, setSortBy] = useState<SortBy>('created-new')
   const [filterGroup, setFilterGroup] = useState<string>('all')
 
@@ -104,44 +113,67 @@ export function ListPanel({ persons, groups, selectedPersons, onPersonClick, sea
             const isSelected = selectedPersons.includes(person.id)
             
             return (
-              <Button
-                key={person.id}
-                variant="ghost"
-                className={cn(
-                  'w-full justify-start h-auto p-3',
-                  isSelected && 'glow-accent'
-                )}
-                style={{
-                  backgroundColor: isSelected ? '#66FCF1' : 'transparent',
-                  color: isSelected ? '#0B0C10' : '#FFFFFF',
-                }}
-                onClick={() => onPersonClick(person.id)}
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-10 w-10 flex-shrink-0">
-                    <AvatarFallback
-                      className={cn(
-                        "font-bold",
-                        person.frameColor === 'white' ? 'text-background' : 'text-foreground'
-                      )}
-                      style={{
-                        backgroundColor: frameColor,
-                      }}
+              <ContextMenu key={person.id}>
+                <ContextMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      'w-full justify-start h-auto p-3',
+                      isSelected && 'glow-accent'
+                    )}
+                    style={{
+                      backgroundColor: isSelected ? '#66FCF1' : 'transparent',
+                      color: isSelected ? '#0B0C10' : '#FFFFFF',
+                    }}
+                    onClick={() => onPersonClick(person.id)}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarFallback
+                          className={cn(
+                            "font-bold",
+                            person.frameColor === 'white' ? 'text-background' : 'text-foreground'
+                          )}
+                          style={{
+                            backgroundColor: frameColor,
+                          }}
+                        >
+                          {getInitials(person.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="font-medium text-sm truncate" style={{ color: '#FFFFFF' }}>{person.name}</div>
+                        {person.position && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position}</div>}
+                        {person.position2 && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position2}</div>}
+                        {person.position3 && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position3}</div>}
+                      </div>
+                      <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs" style={{ backgroundColor: '#45A29E', color: '#0B0C10' }}>
+                        {person.score}
+                      </Badge>
+                    </div>
+                  </Button>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  {onPersonEdit && (
+                    <ContextMenuItem 
+                      onClick={() => onPersonEdit(person)}
+                      className="cursor-pointer gap-2"
                     >
-                      {getInitials(person.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="font-medium text-sm truncate" style={{ color: '#FFFFFF' }}>{person.name}</div>
-                    {person.position && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position}</div>}
-                    {person.position2 && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position2}</div>}
-                    {person.position3 && <div className="text-xs truncate" style={{ color: '#C5C6C7' }}>{person.position3}</div>}
-                  </div>
-                  <Badge variant="secondary" className="flex-shrink-0 font-bold text-xs" style={{ backgroundColor: '#45A29E', color: '#0B0C10' }}>
-                    {person.score}
-                  </Badge>
-                </div>
-              </Button>
+                      <NotePencil size={16} weight="duotone" className="text-primary" />
+                      Edit
+                    </ContextMenuItem>
+                  )}
+                  {onPersonDelete && (
+                    <ContextMenuItem 
+                      onClick={() => onPersonDelete(person.id)}
+                      className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                    >
+                      <Trash size={16} weight="duotone" className="text-destructive" />
+                      Delete
+                    </ContextMenuItem>
+                  )}
+                </ContextMenuContent>
+              </ContextMenu>
             )
           })}
         </div>
