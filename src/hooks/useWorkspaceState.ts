@@ -14,8 +14,14 @@ export function useWorkspaceState(initialWorkspace: Workspace) {
   const [workspace, setWorkspace] = useState<Workspace>(initialWorkspace)
   const [undoStack, setUndoStack] = useState<UndoAction[]>([])
   const initialWorkspaceRef = useRef<string>(JSON.stringify(initialWorkspace))
+  const isFirstMount = useRef(true)
 
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      return
+    }
+    
     const newInitialStr = JSON.stringify(initialWorkspace)
     if (newInitialStr !== initialWorkspaceRef.current) {
       initialWorkspaceRef.current = newInitialStr

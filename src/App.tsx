@@ -18,7 +18,7 @@ function App() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
@@ -79,40 +79,29 @@ function App() {
   }, [])
 
   const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
-    setWorkspace(loadedWorkspace)
+    setInitialWorkspace(loadedWorkspace)
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
   }, [])
 
   const handleNewNetwork = useCallback(() => {
-    setWorkspace(null)
+    setInitialWorkspace(null)
     setFileName('')
     setPassword('')
     setShowFileManager(true)
   }, [])
 
   const handleLoadNetwork = useCallback(() => {
-    setWorkspace(null)
+    setInitialWorkspace(null)
     setFileName('')
     setPassword('')
     setShowFileManager(true)
   }, [])
 
-  const handleSetWorkspace = useCallback((update: Workspace | ((current: Workspace) => Workspace)) => {
-    if (typeof update === 'function') {
-      setWorkspace((current) => {
-        if (!current) return current
-        return update(current)
-      })
-    } else {
-      setWorkspace(update)
-    }
-  }, [])
-
   const handleLogout = useCallback(() => {
     setIsAuthenticated(false)
-    setWorkspace(null)
+    setInitialWorkspace(null)
     setFileName('')
     setPassword('')
     setShowFileManager(true)
@@ -140,8 +129,8 @@ function App() {
     )
   }
 
-  if (showFileManager || !workspace) {
-    console.log('[App] Showing file manager', { showFileManager, hasWorkspace: !!workspace })
+  if (showFileManager || !initialWorkspace) {
+    console.log('[App] Showing file manager', { showFileManager, hasWorkspace: !!initialWorkspace })
     return (
       <>
         <FileManager onLoad={handleLoad} />
@@ -154,8 +143,7 @@ function App() {
   return (
     <>
       <WorkspaceView
-        workspace={workspace}
-        setWorkspace={handleSetWorkspace}
+        workspace={initialWorkspace}
         fileName={fileName}
         password={password}
         onNewNetwork={handleNewNetwork}

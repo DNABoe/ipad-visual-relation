@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,8 +23,11 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
+    if (hasInitialized.current) return
+    
     const initializeCredentials = async () => {
       if (!userSettings) {
         const defaultHash = await getDefaultPasswordHash()
@@ -37,6 +40,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
         })
       }
       setIsInitializing(false)
+      hasInitialized.current = true
     }
     
     initializeCredentials()

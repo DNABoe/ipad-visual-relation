@@ -23,7 +23,6 @@ import type { SearchBarRef } from './SearchBar'
 
 interface WorkspaceViewProps {
   workspace: Workspace
-  setWorkspace: (update: Workspace | ((current: Workspace) => Workspace)) => void
   fileName: string
   password: string
   onNewNetwork: () => void
@@ -31,7 +30,7 @@ interface WorkspaceViewProps {
   onLogout?: () => void
 }
 
-export function WorkspaceView({ workspace, setWorkspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
+export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [highlightedPersonIds, setHighlightedPersonIds] = useState<Set<string>>(new Set())
