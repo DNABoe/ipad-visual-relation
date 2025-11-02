@@ -206,7 +206,7 @@ export function CanvasEdges({
         const connectionWeight = conn.weight || 'medium'
         const connectionDirection = conn.direction || 'none'
 
-        const weightMap = { thin: 2, medium: 4, thick: 7 }
+        const weightMap = { thin: 2, medium: 5, thick: 9 }
         const baseLineWidth = weightMap[connectionWeight]
 
         ctx.beginPath()
@@ -289,7 +289,7 @@ export function CanvasEdges({
           ctx.setLineDash([])
         }
 
-        const arrowSize = isShortestPath ? 14 : (10 + baseLineWidth * 0.8)
+        const arrowSize = isShortestPath ? 16 : (12 + baseLineWidth * 1.2)
         const dx = toX - fromX
         const dy = toY - fromY
         let angle: number
@@ -318,26 +318,31 @@ export function CanvasEdges({
           ctx.rotate(rotation)
           
           ctx.beginPath()
-          ctx.moveTo(0, 0)
-          ctx.lineTo(-arrowSize * 1.2, -arrowSize * 0.6)
-          ctx.lineTo(-arrowSize * 0.4, 0)
-          ctx.lineTo(-arrowSize * 1.2, arrowSize * 0.6)
+          ctx.moveTo(arrowSize * 0.1, 0)
+          ctx.lineTo(-arrowSize * 1.3, -arrowSize * 0.7)
+          ctx.lineTo(-arrowSize * 0.5, 0)
+          ctx.lineTo(-arrowSize * 1.3, arrowSize * 0.7)
           ctx.closePath()
           
           if (filled) {
             if (isShortestPath) {
               ctx.fillStyle = accentColor
               ctx.shadowColor = accentColor
-              ctx.shadowBlur = 15 + pulseIntensity * 10
-              ctx.globalAlpha = 0.6 + pulseIntensity * 0.4
+              ctx.shadowBlur = 18 + pulseIntensity * 12
+              ctx.globalAlpha = 0.85 + pulseIntensity * 0.15
             } else {
-              ctx.fillStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185 / 0.9)'
-              ctx.globalAlpha = isSelected ? 1 : 0.9
+              ctx.fillStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185)'
+              ctx.globalAlpha = 1
             }
             ctx.fill()
             
-            ctx.strokeStyle = isSelected ? accentColor : 'oklch(0.88 0.18 185)'
-            ctx.lineWidth = 1.5
+            if (isShortestPath) {
+              ctx.strokeStyle = 'oklch(1 0.3 185)'
+              ctx.lineWidth = 2
+            } else {
+              ctx.strokeStyle = isSelected ? 'oklch(0.95 0.2 185)' : 'oklch(0.15 0.02 240)'
+              ctx.lineWidth = 2
+            }
             ctx.globalAlpha = 1
             ctx.stroke()
           } else {
