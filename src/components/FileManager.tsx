@@ -34,6 +34,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
   
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [showLoadDialog, setShowLoadDialog] = useState(false)
   const [newFileName, setNewFileName] = useState('')
@@ -43,6 +44,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
   const [loadPassword, setLoadPassword] = useState('')
   const [createdNetwork, setCreatedNetwork] = useState<CreatedNetwork | null>(null)
+
+  useEffect(() => {
+    const checkCredentials = async () => {
+      const credentials = await window.spark.kv.get<{
+        username: string
+        passwordHash: PasswordHash
+      }>('user-credentials')
+      setIsLoadingCredentials(false)
+      if (!credentials) {
+        console.warn('[FileManager] No credentials found during initial load')
+      }
+    }
+    checkCredentials()
+  }, [])
 
   const handleResetNewDialog = useCallback(() => {
     setShowNewDialog(false)
@@ -78,24 +93,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
-      console.log('[FileManager] Fetching user credentials...')
-      const credentials = await window.spark.kv.get<{
-        username: string
-        passwordHash: PasswordHash
-      }>('user-credentials')
+      console.log('[FileManager] Using credentials from hook:', userCredentials)
       
-      if (!credentials) {
-        console.error('[FileManager] No credentials found')
-        toast.error('User credentials not found. Please refresh the page.')
+      if (!userCredentials) {
+        console.error('[FileManager] No credentials available')
+        toast.error('User credentials not loaded yet. Please try again.')
         return
       }
 
-      console.log('[FileManager] Creating new workspace for user:', credentials.username)
+      console.log('[FileManager] Creating new workspace for user:', userCredentials.username)
       
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
-        username: credentials.username,
+        username: userCredentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
         addedBy: 'system',
@@ -300,20 +311,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="space-y-5">
           <Button
             onClick={() => setShowNewDialog(true)}
-            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
+            disabled={isLoadingCredentials || !userCredentials}
+            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <UsersThree size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            Generate New Network
+            {isLoadingCredentials ? 'Loading...' : 'Generate New Network'}
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
+            disabled={isLoadingCredentials || !userCredentials}
+            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            Load Existing Network
+            {isLoadingCredentials ? 'Loading...' : 'Load Existing Network'}
           </Button>
         </div>
 
