@@ -69,12 +69,20 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   })
 
   useEffect(() => {
-    if (!userCredentials) return
+    if (!userCredentials) {
+      console.log('[WorkspaceView] No user credentials available')
+      return
+    }
 
     const currentUser = controller.workspace.users?.find(u => u.username === userCredentials.username)
     
+    console.log('[WorkspaceView] Checking admin user...')
+    console.log('[WorkspaceView] userCredentials.username:', userCredentials.username)
+    console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
+    console.log('[WorkspaceView] currentUser:', currentUser)
+    
     if (!currentUser) {
-      console.log('[WorkspaceView] Current user not found in workspace, adding...')
+      console.log('[WorkspaceView] ⚠️  Current user not found in workspace, adding...')
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
@@ -85,13 +93,21 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         status: 'active' as const
       }
       
-      controller.handlers.setWorkspace((current) => ({
-        ...current,
-        users: [...(current.users || []), adminUser],
-        ownerId: current.ownerId || userId
-      }))
+      console.log('[WorkspaceView] Adding admin user:', adminUser)
+      
+      controller.handlers.setWorkspace((current) => {
+        const updated = {
+          ...current,
+          users: [...(current.users || []), adminUser],
+          ownerId: current.ownerId || userId
+        }
+        console.log('[WorkspaceView] Updated workspace with admin user:', updated.users)
+        return updated
+      })
+    } else {
+      console.log('[WorkspaceView] ✅ Current user found:', currentUser.role)
     }
-  }, [controller, userCredentials])
+  }, [controller.workspace.users, userCredentials, controller.handlers])
 
   useEffect(() => {
     console.log('[WorkspaceView] Controller workspace changed')

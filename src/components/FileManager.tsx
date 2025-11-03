@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ import { APP_VERSION } from '@/lib/version'
 import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { createFileIconDataUrl } from '@/lib/fileIcon'
+import type { PasswordHash } from '@/lib/auth'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -27,6 +29,11 @@ interface CreatedNetwork {
 }
 
 export function FileManager({ onLoad }: FileManagerProps) {
+  const [userCredentials] = useKV<{
+    username: string
+    passwordHash: PasswordHash
+  } | null>('user-credentials', null)
+  
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [showLoadDialog, setShowLoadDialog] = useState(false)
   const [newFileName, setNewFileName] = useState('')
@@ -70,8 +77,27 @@ export function FileManager({ onLoad }: FileManagerProps) {
       return
     }
 
+    if (!userCredentials) {
+      toast.error('User credentials not found. Please refresh the page.')
+      return
+    }
+
     try {
-      const newWorkspace: Workspace = includeSampleData
+      console.log('[FileManager] Creating new workspace for user:', userCredentials.username)
+      
+      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const adminUser = {
+        userId: userId,
+        username: userCredentials.username,
+        role: 'admin' as const,
+        addedAt: Date.now(),
+        addedBy: 'system',
+        status: 'active' as const
+      }
+      
+      console.log('[FileManager] Creating admin user:', adminUser)
+      
+      const baseWorkspace: Workspace = includeSampleData
         ? generateSampleData()
         : { 
             persons: [], 
@@ -82,6 +108,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
             users: [],
             activityLog: []
           }
+      
+      const newWorkspace: Workspace = {
+        ...baseWorkspace,
+        users: [adminUser],
+        ownerId: userId,
+        createdAt: Date.now(),
+        modifiedAt: Date.now()
+      }
+      
+      console.log('[FileManager] New workspace created with users:', newWorkspace.users)
 
       const workspaceJson = serializeWorkspace(newWorkspace)
       const encrypted = await encryptData(workspaceJson, newPassword)

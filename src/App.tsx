@@ -149,7 +149,7 @@ function App() {
     console.log('[App] ===== LOADING WORKSPACE =====')
     console.log('[App] Workspace name:', loadedFileName)
     console.log('[App] Current username:', userCredentials.username)
-    console.log('[App] Workspace users (before):', JSON.stringify(loadedWorkspace.users, null, 2))
+    console.log('[App] Workspace users:', JSON.stringify(loadedWorkspace.users, null, 2))
     
     let updatedWorkspace = { ...loadedWorkspace }
     
@@ -182,7 +182,7 @@ function App() {
       updatedWorkspace = {
         ...updatedWorkspace,
         users: [...updatedWorkspace.users, adminUser],
-        ownerId: userId
+        ownerId: updatedWorkspace.ownerId || userId
       }
       
       console.log('[App] ✅ Admin user created:', JSON.stringify(adminUser, null, 2))
@@ -192,16 +192,9 @@ function App() {
       console.log('[App] User ID:', currentUser.userId)
       console.log('[App] User role:', currentUser.role)
       console.log('[App] User status:', currentUser.status)
-      
-      if (currentUser.role !== 'admin') {
-        console.warn('[App] ⚠️  User exists but is NOT admin')
-        console.warn('[App] User role:', currentUser.role)
-      } else {
-        console.log('[App] ✅ User is confirmed ADMIN')
-      }
     }
     
-    console.log('[App] Workspace users (after):', JSON.stringify(updatedWorkspace.users, null, 2))
+    console.log('[App] Final workspace users:', JSON.stringify(updatedWorkspace.users, null, 2))
     console.log('[App] Setting workspace state and closing file manager...')
     
     setInitialWorkspace(updatedWorkspace)
