@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster, toast } from 'sonner'
 import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
@@ -65,17 +65,25 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
+      console.log('[App] Creating admin account:', username)
       const passwordHash = await hashPassword(password)
       
-      await setUserCredentials({
+      const credentials = {
         username,
         passwordHash
-      })
-
+      }
+      
+      await setUserCredentials(credentials)
+      
+      console.log('[App] Credentials saved, waiting for persistence...')
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      console.log('[App] First-time setup complete')
       setNeedsSetup(false)
       setIsAuthenticated(true)
     } catch (error) {
       console.error('[App] First-time setup error:', error)
+      toast.error('Failed to create admin account. Please try again.')
     }
   }, [setUserCredentials])
 
@@ -111,15 +119,27 @@ function App() {
   const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     if (!userCredentials) {
       console.error('[App] Cannot load workspace without user credentials')
+      toast.error('Authentication error. Please reload the page.')
       return
     }
 
-    const currentUser = loadedWorkspace.users?.find(u => u.username === userCredentials.username)
+    console.log('[App] Loading workspace:', loadedFileName)
+    console.log('[App] Current username:', userCredentials.username)
+    console.log('[App] Workspace users before:', loadedWorkspace.users)
+    
+    let updatedWorkspace = { ...loadedWorkspace }
+    
+    if (!updatedWorkspace.users) {
+      updatedWorkspace.users = []
+    }
+    
+    const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
     
     if (!currentUser) {
       console.log('[App] Current user not found in workspace, adding as admin')
+      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
-        userId: loadedWorkspace.ownerId || `user-${Date.now()}`,
+        userId: userId,
         username: userCredentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
@@ -127,17 +147,23 @@ function App() {
         status: 'active' as const
       }
       
-      const updatedWorkspace = {
-        ...loadedWorkspace,
-        users: [...(loadedWorkspace.users || []), adminUser],
-        ownerId: adminUser.userId
+      updatedWorkspace = {
+        ...updatedWorkspace,
+        users: [...updatedWorkspace.users, adminUser],
+        ownerId: userId
       }
       
-      setInitialWorkspace(updatedWorkspace)
+      console.log('[App] Admin user added:', adminUser)
     } else {
-      setInitialWorkspace(loadedWorkspace)
+      console.log('[App] Current user found in workspace:', currentUser)
+      if (currentUser.role !== 'admin') {
+        console.warn('[App] User exists but is not admin. Role:', currentUser.role)
+      }
     }
     
+    console.log('[App] Workspace users after:', updatedWorkspace.users)
+    
+    setInitialWorkspace(updatedWorkspace)
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)

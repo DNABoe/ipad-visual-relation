@@ -55,11 +55,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const isAdmin = currentUser?.role === 'admin'
 
   useEffect(() => {
+    console.log('[SettingsDialog] === Workspace User Check ===')
     console.log('[SettingsDialog] userCredentials:', userCredentials)
     console.log('[SettingsDialog] username:', userCredentials?.username)
-    console.log('[SettingsDialog] currentUser:', currentUser)
-    console.log('[SettingsDialog] isAdmin:', isAdmin)
     console.log('[SettingsDialog] workspace.users:', workspace.users)
+    console.log('[SettingsDialog] currentUser:', currentUser)
+    console.log('[SettingsDialog] currentUser role:', currentUser?.role)
+    console.log('[SettingsDialog] isAdmin:', isAdmin)
+    console.log('[SettingsDialog] ========================')
   }, [userCredentials, currentUser, isAdmin, workspace.users])
 
   useEffect(() => {
