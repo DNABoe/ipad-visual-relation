@@ -54,7 +54,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
   useEffect(() => {
     console.log('[SettingsDialog] userCredentials:', userCredentials)
+    console.log('[SettingsDialog] username:', userCredentials?.username)
     console.log('[SettingsDialog] isAdmin:', isAdmin)
+    console.log('[SettingsDialog] Comparison:', userCredentials?.username, '===', 'admin', '=', userCredentials?.username === 'admin')
   }, [userCredentials, isAdmin])
 
   useEffect(() => {
@@ -182,6 +184,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           <DialogTitle className="text-xl">Settings</DialogTitle>
           <DialogDescription>
             Manage your system preferences and account
+            <span className="block text-xs mt-1">
+              User: {userCredentials?.username || 'Loading...'}
+              {isAdmin && <span className="text-primary ml-2">● Admin</span>}
+            </span>
           </DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
