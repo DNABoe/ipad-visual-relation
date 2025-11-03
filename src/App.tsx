@@ -91,12 +91,30 @@ function App() {
       }
       
       console.log('[App] Saving credentials to spark.kv cloud storage...')
-      setUserCredentials(credentials)
       
-      console.log('[App] Waiting for cloud persistence (1000ms)...')
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await setUserCredentials((current) => {
+        console.log('[App] Current credentials:', current)
+        return credentials
+      })
       
-      console.log('[App] ✅ Credentials saved to cloud')
+      console.log('[App] Waiting for cloud persistence and verifying...')
+      
+      let savedCreds: {username: string; passwordHash: PasswordHash} | undefined = undefined
+      let attempts = 0
+      const maxAttempts = 10
+      
+      while (!savedCreds && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        savedCreds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+        attempts++
+        console.log(`[App] Verification attempt ${attempts}:`, savedCreds ? 'Found' : 'Not found')
+      }
+      
+      if (!savedCreds || savedCreds.username !== username) {
+        throw new Error('Failed to verify saved credentials after ' + attempts + ' attempts')
+      }
+      
+      console.log('[App] ✅ Credentials saved and verified after', attempts, 'attempts')
       console.log('[App] Authenticating user...')
       
       setNeedsSetup(false)
@@ -139,16 +157,20 @@ function App() {
     setIsAuthenticated(true)
   }, [])
 
-  const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
-    if (!userCredentials) {
+  const handleLoad = useCallback(async (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
+    console.log('[App] ===== LOADING WORKSPACE =====')
+    console.log('[App] Checking credentials...')
+    
+    const credentials = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+    
+    if (!credentials) {
       console.error('[App] ❌ Cannot load workspace without user credentials')
-      toast.error('Authentication error. Please reload the page.')
+      toast.error('User credentials not found. Please refresh the page.')
       return
     }
 
-    console.log('[App] ===== LOADING WORKSPACE =====')
     console.log('[App] Workspace name:', loadedFileName)
-    console.log('[App] Current username:', userCredentials.username)
+    console.log('[App] Current username:', credentials.username)
     console.log('[App] Workspace users:', JSON.stringify(loadedWorkspace.users, null, 2))
     
     let updatedWorkspace = { ...loadedWorkspace }
@@ -163,7 +185,7 @@ function App() {
       updatedWorkspace.activityLog = []
     }
     
-    const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
+    const currentUser = updatedWorkspace.users.find(u => u.username === credentials.username)
     
     if (!currentUser) {
       console.log('[App] ⚠️  Current user NOT FOUND in workspace.users')
@@ -172,7 +194,7 @@ function App() {
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
-        username: userCredentials.username,
+        username: credentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
         addedBy: 'system',
@@ -203,7 +225,7 @@ function App() {
     setShowFileManager(false)
     
     console.log('[App] ===== WORKSPACE LOAD COMPLETE =====')
-  }, [userCredentials])
+  }, [])
 
   const handleNewNetwork = useCallback(() => {
     setInitialWorkspace(null)

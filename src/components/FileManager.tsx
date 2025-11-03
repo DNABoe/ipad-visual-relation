@@ -81,18 +81,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
     if (!credentials) {
       console.log('[FileManager] Credentials not immediately available, checking spark.kv directly...')
       try {
-        credentials = await window.spark.kv.get<{
-          username: string
-          passwordHash: PasswordHash
-        }>('user-credentials')
+        let attempts = 0
+        const maxAttempts = 10
         
-        if (!credentials) {
-          console.log('[FileManager] Waiting 500ms and trying again...')
-          await new Promise(resolve => setTimeout(resolve, 500))
+        while (!credentials && attempts < maxAttempts) {
           credentials = await window.spark.kv.get<{
             username: string
             passwordHash: PasswordHash
           }>('user-credentials')
+          
+          if (!credentials) {
+            console.log(`[FileManager] Attempt ${attempts + 1}: Credentials not found, waiting 500ms...`)
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+          attempts++
         }
       } catch (error) {
         console.error('[FileManager] Error fetching credentials:', error)
