@@ -59,25 +59,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
     console.log('[SettingsDialog] username:', userCredentials?.username)
     console.log('[SettingsDialog] currentUser:', currentUser)
     console.log('[SettingsDialog] isAdmin:', isAdmin)
-  }, [userCredentials, currentUser, isAdmin])
-
-  useEffect(() => {
-    if (userCredentials && (!workspace.users || workspace.users.length === 0)) {
-      const adminUser = {
-        userId: `user-${Date.now()}`,
-        username: userCredentials.username,
-        role: 'admin' as const,
-        addedAt: Date.now(),
-        addedBy: 'system',
-        status: 'active' as const
-      }
-      setWorkspace((current) => ({
-        ...current,
-        users: [adminUser],
-        ownerId: adminUser.userId
-      }))
-    }
-  }, [userCredentials, workspace.users, setWorkspace])
+    console.log('[SettingsDialog] workspace.users:', workspace.users)
+  }, [userCredentials, currentUser, isAdmin, workspace.users])
 
   useEffect(() => {
     if (userCredentials) {

@@ -109,11 +109,39 @@ function App() {
   }, [])
 
   const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
-    setInitialWorkspace(loadedWorkspace)
+    if (!userCredentials) {
+      console.error('[App] Cannot load workspace without user credentials')
+      return
+    }
+
+    const currentUser = loadedWorkspace.users?.find(u => u.username === userCredentials.username)
+    
+    if (!currentUser) {
+      console.log('[App] Current user not found in workspace, adding as admin')
+      const adminUser = {
+        userId: loadedWorkspace.ownerId || `user-${Date.now()}`,
+        username: userCredentials.username,
+        role: 'admin' as const,
+        addedAt: Date.now(),
+        addedBy: 'system',
+        status: 'active' as const
+      }
+      
+      const updatedWorkspace = {
+        ...loadedWorkspace,
+        users: [...(loadedWorkspace.users || []), adminUser],
+        ownerId: adminUser.userId
+      }
+      
+      setInitialWorkspace(updatedWorkspace)
+    } else {
+      setInitialWorkspace(loadedWorkspace)
+    }
+    
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
-  }, [])
+  }, [userCredentials])
 
   const handleNewNetwork = useCallback(() => {
     setInitialWorkspace(null)

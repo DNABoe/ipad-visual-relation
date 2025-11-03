@@ -10,31 +10,68 @@ A web-based network visualization tool that lets users build and explore visual 
 **Complexity Level**: Complex Application (advanced functionality, local encryption)
 This is a full-featured network visualization tool with encrypted local file storage, persistent state, canvas manipulation, and sophisticated interaction patterns requiring careful state management and performance optimization. All operations run entirely client-side with no server communication.
 
+## Data Persistence Architecture
+
+RelEye uses a hybrid storage model that balances security and usability:
+
+### User Credentials (Cloud Storage)
+- **Storage**: User credentials (username and password hash) are stored in the cloud using `spark.kv` API
+- **Purpose**: Enables authentication without needing to re-enter credentials on every page load
+- **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256
+- **Persistence**: Survives browser refreshes and is accessible across sessions
+- **Key**: `user-credentials` in spark.kv
+
+### Workspace Data (Local Files)
+- **Storage**: All relationship network data (persons, connections, groups) is stored in encrypted local files (.enc.releye)
+- **Purpose**: Maximum privacy - workspace content never leaves your device
+- **Security**: AES-256-GCM encryption with password-based key derivation
+- **Persistence**: Must be explicitly saved and loaded by the user
+- **Format**: JSON-serialized workspace encrypted with user-provided password
+
+### User Management Data (Hybrid)
+- **Storage**: Workspace user list (roles, permissions) is embedded in the encrypted workspace file
+- **Purpose**: Each workspace tracks its own access control independently
+- **Initialization**: When a workspace is created or first loaded, the current authenticated user is automatically added as admin
+- **Persistence**: Saved with workspace data when file is saved
+
 ## Essential Features
 
-### Multi-User Collaboration System
-- **Functionality**: GitHub-based multi-user workspace with role-based access control (Admin, Editor, Viewer)
-- **Purpose**: Enable secure collaboration where workspace owner (admin) can invite users, manage permissions, and track activity
-- **Trigger**: Admin clicks Settings → Admin tab → Manage Users button
-- **Progression**: Admin Dashboard opens → Invite user (username, optional email, role) → System generates secure invite link → Admin copies and shares link → Invited user clicks link → User logs in with GitHub account → User sets password → User gains access based on assigned role
+### First-Time Setup & Authentication
+- **Functionality**: Administrator account creation and password-based authentication
+- **Purpose**: Secure access control without relying on external authentication providers
+- **Trigger**: First app launch shows "Create Administrator Account" screen
+- **Progression**: Enter username (min 3 chars) → Enter password (min 8 chars) → Confirm password → Account created and stored in spark.kv → User automatically logged in → Can now create/load workspaces
 - **Success criteria**: 
-  - Owner automatically becomes admin with full permissions
+  - First user to set up account becomes the admin
+  - Credentials persist across browser refreshes
+  - Password is hashed before storage (never stored in plain text)
+  - Login screen appears on subsequent visits
+  - Wrong credentials show clear error message
+  - Admin tab appears in Settings after authentication
+
+### Multi-User Collaboration System
+- **Functionality**: Invite-based multi-user workspace with role-based access control (Admin, Editor, Viewer)
+- **Purpose**: Enable secure collaboration where workspace owner (admin) can invite users, manage permissions, and track activity
+- **Trigger**: Admin clicks Settings → Admin tab → Open Admin Dashboard button
+- **Progression**: Admin Dashboard opens → Invite user (username, optional email, role) → System generates secure invite link → Admin shares link via email or other means → Invited user clicks link → User creates account (username + password) → User gains access based on assigned role → User can now load the shared workspace file
+- **Success criteria**: 
+  - First user to set up the application becomes admin automatically
+  - When workspace is created/loaded, current user is added to workspace.users as admin if not already present
   - Admins can add/remove users, change roles, suspend accounts
-  - Editors can create/edit/delete content but not manage users
-  - Viewers can only view and export
-  - All user data encrypted and stored in spark.kv
+  - Editors can create/edit/delete content but not manage users (future feature)
+  - Viewers can only view and export (future feature)
+  - User list stored in workspace file (encrypted with workspace data)
   - Activity log tracks all user actions with timestamps
   - Invite links expire after 7 days
-  - Users identified by GitHub login via spark.user() API
-  - Each user's permissions enforced before any write operation
+  - Each user's permissions stored in workspace.users array
   - Dashboard shows user stats, activity history, and role distribution
 
 ### Admin Dashboard
 - **Functionality**: Comprehensive administration interface for workspace management
 - **Purpose**: Centralized control panel for user management, activity monitoring, and workspace settings
-- **Trigger**: Admin-only "Admin" tab in Settings dialog, or direct "Manage Users" button
-- **Progression**: Open Settings → Click Admin tab → Full-screen dashboard → Three tabs (Users, Activity, Stats) → Manage users with role changes, suspensions, deletions → View activity log with filters → Monitor workspace statistics
-- **Success criteria**: Only visible to users with admin role; displays user list with avatars, roles, status badges; search/filter functionality; inline role changes; copy invite links for pending users; activity log with filtering by type; statistics cards showing user distribution
+- **Trigger**: Admin-only "Admin" tab in Settings dialog → "Open Admin Dashboard" button
+- **Progression**: Open Settings → Click Admin tab → Click "Open Admin Dashboard" → Full-screen dashboard → Three tabs (Users, Activity, Stats) → Manage users with role changes, suspensions, deletions → View activity log with filters → Monitor workspace statistics
+- **Success criteria**: Only visible to users with admin role in workspace.users array; displays user list with avatars (if available), roles, status badges; search/filter functionality; inline role changes; copy invite links for pending users; activity log with filtering by user/type/date; statistics cards showing user distribution and activity metrics
 
 
 
