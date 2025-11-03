@@ -93,8 +93,8 @@ function App() {
       console.log('[App] Saving credentials to spark.kv cloud storage...')
       setUserCredentials(credentials)
       
-      console.log('[App] Waiting for cloud persistence (500ms)...')
-      await new Promise(resolve => setTimeout(resolve, 500))
+      console.log('[App] Waiting for cloud persistence (1000ms)...')
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
       console.log('[App] ✅ Credentials saved to cloud')
       console.log('[App] Authenticating user...')

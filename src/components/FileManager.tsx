@@ -77,18 +77,40 @@ export function FileManager({ onLoad }: FileManagerProps) {
       return
     }
 
-    if (!userCredentials) {
-      toast.error('User credentials not found. Please refresh the page.')
-      return
+    let credentials = userCredentials
+    if (!credentials) {
+      console.log('[FileManager] Credentials not immediately available, checking spark.kv directly...')
+      try {
+        credentials = await window.spark.kv.get<{
+          username: string
+          passwordHash: PasswordHash
+        }>('user-credentials')
+        
+        if (!credentials) {
+          console.log('[FileManager] Waiting 500ms and trying again...')
+          await new Promise(resolve => setTimeout(resolve, 500))
+          credentials = await window.spark.kv.get<{
+            username: string
+            passwordHash: PasswordHash
+          }>('user-credentials')
+        }
+      } catch (error) {
+        console.error('[FileManager] Error fetching credentials:', error)
+      }
+      
+      if (!credentials) {
+        toast.error('User credentials not found. Please refresh the page.')
+        return
+      }
     }
 
     try {
-      console.log('[FileManager] Creating new workspace for user:', userCredentials.username)
+      console.log('[FileManager] Creating new workspace for user:', credentials.username)
       
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
-        username: userCredentials.username,
+        username: credentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
         addedBy: 'system',
