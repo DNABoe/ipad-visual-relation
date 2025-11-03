@@ -404,6 +404,44 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
           <TabsContent value="user" className="space-y-3 py-3 m-0">
             <div className="space-y-3">
+              <h3 className="font-semibold text-sm">Workspace Role</h3>
+              
+              <div className="rounded-xl bg-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Current User</p>
+                    <p className="text-xs text-muted-foreground">
+                      Your role in this workspace
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {currentUser ? (
+                      <div className="space-y-1">
+                        <div className="text-sm font-semibold text-foreground">
+                          {currentUser.username}
+                        </div>
+                        <div className={`text-xs px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1 ${
+                          currentUser.role === 'admin' 
+                            ? 'bg-accent/20 text-accent' 
+                            : currentUser.role === 'editor'
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-secondary/20 text-secondary-foreground'
+                        }`}>
+                          {currentUser.role === 'admin' && '👑 '}
+                          {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">
+                        Loading...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px bg-border my-2"></div>
+
               <h3 className="font-semibold text-sm">Account Security</h3>
               
               <div className="space-y-3 rounded-xl bg-card p-3">

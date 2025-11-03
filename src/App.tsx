@@ -31,31 +31,42 @@ function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('[App] Initializing auth...')
+        console.log('[App] ===== AUTH INITIALIZATION =====')
+        console.log('[App] Checking for stored credentials in spark.kv...')
+        console.log('[App] userCredentials value:', userCredentials)
+        console.log('[App] userCredentials type:', typeof userCredentials)
         
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('invite')
         const workspaceId = urlParams.get('workspace')
         
         if (token && workspaceId) {
-          console.log('[App] Invite link detected')
+          console.log('[App] Invite link detected, showing invite accept view')
           setInviteToken(token)
           setInviteWorkspaceId(workspaceId)
           setIsCheckingAuth(false)
           return
         }
         
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         if (!userCredentials) {
-          console.log('[App] No credentials found, needs first-time setup')
+          console.log('[App] ❌ No credentials found in cloud storage')
+          console.log('[App] Showing first-time setup')
           setNeedsSetup(true)
           setIsCheckingAuth(false)
           return
         }
         
-        console.log('[App] Existing credentials found')
+        console.log('[App] ✅ Credentials found in cloud storage')
+        console.log('[App] Username:', userCredentials.username)
+        console.log('[App] Has password hash:', !!userCredentials.passwordHash)
+        console.log('[App] Showing login screen')
+        setNeedsSetup(false)
         setIsCheckingAuth(false)
+        console.log('[App] ===== AUTH INITIALIZATION COMPLETE =====')
       } catch (error) {
-        console.error('[App] Auth initialization error:', error)
+        console.error('[App] ❌ Auth initialization error:', error)
         setIsCheckingAuth(false)
       }
     }
@@ -65,32 +76,36 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
-      console.log('[App] ===== FIRST TIME SETUP =====')
+      console.log('[App] ===== FIRST TIME SETUP START =====')
       console.log('[App] Creating admin account for username:', username)
       
       const passwordHash = await hashPassword(password)
-      console.log('[App] Password hashed successfully')
+      console.log('[App] ✅ Password hashed successfully')
+      console.log('[App] Hash length:', passwordHash.hash.length)
+      console.log('[App] Salt length:', passwordHash.salt.length)
+      console.log('[App] Iterations:', passwordHash.iterations)
       
       const credentials = {
         username,
         passwordHash
       }
       
-      console.log('[App] Saving credentials to KV store...')
-      await setUserCredentials(credentials)
+      console.log('[App] Saving credentials to spark.kv cloud storage...')
+      setUserCredentials(credentials)
       
-      console.log('[App] Waiting for KV persistence...')
-      await new Promise(resolve => setTimeout(resolve, 200))
+      console.log('[App] Waiting for cloud persistence (500ms)...')
+      await new Promise(resolve => setTimeout(resolve, 500))
       
-      console.log('[App] Credentials saved successfully')
-      console.log('[App] Setting needsSetup=false, isAuthenticated=true')
+      console.log('[App] ✅ Credentials saved to cloud')
+      console.log('[App] Authenticating user...')
       
       setNeedsSetup(false)
       setIsAuthenticated(true)
       
+      toast.success('Admin account created successfully!')
       console.log('[App] ===== FIRST TIME SETUP COMPLETE =====')
     } catch (error) {
-      console.error('[App] First-time setup error:', error)
+      console.error('[App] ❌ First-time setup error:', error)
       toast.error('Failed to create admin account. Please try again.')
     }
   }, [setUserCredentials])
@@ -126,7 +141,7 @@ function App() {
 
   const handleLoad = useCallback((loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     if (!userCredentials) {
-      console.error('[App] Cannot load workspace without user credentials')
+      console.error('[App] ❌ Cannot load workspace without user credentials')
       toast.error('Authentication error. Please reload the page.')
       return
     }
@@ -139,19 +154,21 @@ function App() {
     let updatedWorkspace = { ...loadedWorkspace }
     
     if (!updatedWorkspace.users) {
-      console.log('[App] users array is null/undefined, initializing to []')
+      console.log('[App] ⚠️  users array is null/undefined, initializing to []')
       updatedWorkspace.users = []
     }
     
     if (!updatedWorkspace.activityLog) {
-      console.log('[App] activityLog is null/undefined, initializing to []')
+      console.log('[App] ⚠️  activityLog is null/undefined, initializing to []')
       updatedWorkspace.activityLog = []
     }
     
     const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
     
     if (!currentUser) {
-      console.log('[App] Current user NOT FOUND in workspace, adding as admin')
+      console.log('[App] ⚠️  Current user NOT FOUND in workspace.users')
+      console.log('[App] Adding user as admin...')
+      
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
@@ -168,19 +185,24 @@ function App() {
         ownerId: userId
       }
       
-      console.log('[App] Admin user created:', JSON.stringify(adminUser, null, 2))
+      console.log('[App] ✅ Admin user created:', JSON.stringify(adminUser, null, 2))
+      console.log('[App] ✅ Set as workspace owner')
     } else {
-      console.log('[App] Current user FOUND in workspace')
-      console.log('[App] User details:', JSON.stringify(currentUser, null, 2))
+      console.log('[App] ✅ Current user FOUND in workspace')
+      console.log('[App] User ID:', currentUser.userId)
+      console.log('[App] User role:', currentUser.role)
+      console.log('[App] User status:', currentUser.status)
+      
       if (currentUser.role !== 'admin') {
-        console.warn('[App] WARNING: User exists but is NOT admin. Role:', currentUser.role)
+        console.warn('[App] ⚠️  User exists but is NOT admin')
+        console.warn('[App] User role:', currentUser.role)
       } else {
-        console.log('[App] User is confirmed ADMIN')
+        console.log('[App] ✅ User is confirmed ADMIN')
       }
     }
     
     console.log('[App] Workspace users (after):', JSON.stringify(updatedWorkspace.users, null, 2))
-    console.log('[App] Setting initialWorkspace state...')
+    console.log('[App] Setting workspace state and closing file manager...')
     
     setInitialWorkspace(updatedWorkspace)
     setFileName(loadedFileName)
@@ -213,12 +235,17 @@ function App() {
   }, [])
 
   if (isCheckingAuth) {
-    console.log('[App] Still checking auth...')
+    console.log('[App] Checking authentication...')
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-muted-foreground mb-2">Initializing RelEye...</div>
-          <div className="text-xs text-muted-foreground/60">Checking authentication</div>
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-lg font-semibold text-foreground">Initializing RelEye...</div>
+            <div className="text-sm text-muted-foreground">Checking cloud credentials</div>
+          </div>
         </div>
       </div>
     )
