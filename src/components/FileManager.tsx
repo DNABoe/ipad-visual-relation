@@ -34,6 +34,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
   
+  const [actualCredentials, setActualCredentials] = useState<{username: string; passwordHash: PasswordHash} | null>(null)
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [showLoadDialog, setShowLoadDialog] = useState(false)
   const [newFileName, setNewFileName] = useState('')
@@ -43,6 +45,46 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
   const [loadPassword, setLoadPassword] = useState('')
   const [createdNetwork, setCreatedNetwork] = useState<CreatedNetwork | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    
+    const loadCredentials = async () => {
+      console.log('[FileManager] Loading credentials...')
+      console.log('[FileManager] userCredentials from hook:', userCredentials)
+      
+      try {
+        await new Promise(resolve => setTimeout(resolve, 200))
+        
+        const creds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+        console.log('[FileManager] Direct KV fetch result:', creds)
+        
+        if (mounted) {
+          if (creds) {
+            console.log('[FileManager] Setting actual credentials:', creds.username)
+            setActualCredentials(creds)
+          } else if (userCredentials) {
+            console.log('[FileManager] Using hook credentials:', userCredentials.username)
+            setActualCredentials(userCredentials)
+          } else {
+            console.warn('[FileManager] No credentials found in either source')
+          }
+          setIsLoadingCredentials(false)
+        }
+      } catch (error) {
+        console.error('[FileManager] Error loading credentials:', error)
+        if (mounted) {
+          setIsLoadingCredentials(false)
+        }
+      }
+    }
+    
+    loadCredentials()
+    
+    return () => {
+      mounted = false
+    }
+  }, [userCredentials])
 
   const handleResetNewDialog = useCallback(() => {
     setShowNewDialog(false)
@@ -78,20 +120,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
-      console.log('[FileManager] Using credentials from hook:', userCredentials)
+      console.log('[FileManager] Using credentials from state:', actualCredentials)
       
-      if (!userCredentials) {
+      if (!actualCredentials) {
         console.error('[FileManager] No credentials available')
         toast.error('User credentials not loaded yet. Please try again.')
         return
       }
 
-      console.log('[FileManager] Creating new workspace for user:', userCredentials.username)
+      console.log('[FileManager] Creating new workspace for user:', actualCredentials.username)
       
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
-        username: userCredentials.username,
+        username: actualCredentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
         addedBy: 'system',
@@ -296,22 +338,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="space-y-5">
           <Button
             onClick={() => setShowNewDialog(true)}
-            disabled={!userCredentials}
+            disabled={isLoadingCredentials || !actualCredentials}
             className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <UsersThree size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            {!userCredentials ? 'Loading...' : 'Generate New Network'}
+            {isLoadingCredentials || !actualCredentials ? 'Loading...' : 'Generate New Network'}
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            disabled={!userCredentials}
+            disabled={isLoadingCredentials || !actualCredentials}
             className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            {!userCredentials ? 'Loading...' : 'Load Existing Network'}
+            {isLoadingCredentials || !actualCredentials ? 'Loading...' : 'Load Existing Network'}
           </Button>
         </div>
 

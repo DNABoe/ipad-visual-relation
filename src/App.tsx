@@ -27,6 +27,13 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
+    console.log('[App] Component rendered/updated')
+    console.log('[App] userCredentials:', userCredentials)
+    console.log('[App] isAuthenticated:', isAuthenticated)
+    console.log('[App] showFileManager:', showFileManager)
+  }, [userCredentials, isAuthenticated, showFileManager])
+
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const token = urlParams.get('invite')
     const workspaceId = urlParams.get('workspace')
@@ -43,10 +50,21 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      console.log('[App] Password hashed, saving credentials...')
-      setUserCredentials(credentials)
+      console.log('[App] Password hashed, saving credentials with functional update...')
       
-      console.log('[App] Credentials saved successfully')
+      setUserCredentials((current) => {
+        console.log('[App] Current credentials before update:', current)
+        console.log('[App] Setting new credentials:', credentials)
+        return credentials
+      })
+      
+      console.log('[App] Waiting for storage to persist...')
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      const savedCreds = await window.spark.kv.get('user-credentials')
+      console.log('[App] Verified saved credentials:', savedCreds)
+      
+      console.log('[App] Credentials saved successfully, setting authenticated')
       setIsAuthenticated(true)
       
       toast.success('Administrator account created successfully!')
