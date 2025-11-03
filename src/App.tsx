@@ -65,22 +65,30 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
-      console.log('[App] Creating admin account:', username)
+      console.log('[App] ===== FIRST TIME SETUP =====')
+      console.log('[App] Creating admin account for username:', username)
+      
       const passwordHash = await hashPassword(password)
+      console.log('[App] Password hashed successfully')
       
       const credentials = {
         username,
         passwordHash
       }
       
+      console.log('[App] Saving credentials to KV store...')
       await setUserCredentials(credentials)
       
-      console.log('[App] Credentials saved, waiting for persistence...')
-      await new Promise(resolve => setTimeout(resolve, 100))
+      console.log('[App] Waiting for KV persistence...')
+      await new Promise(resolve => setTimeout(resolve, 200))
       
-      console.log('[App] First-time setup complete')
+      console.log('[App] Credentials saved successfully')
+      console.log('[App] Setting needsSetup=false, isAuthenticated=true')
+      
       setNeedsSetup(false)
       setIsAuthenticated(true)
+      
+      console.log('[App] ===== FIRST TIME SETUP COMPLETE =====')
     } catch (error) {
       console.error('[App] First-time setup error:', error)
       toast.error('Failed to create admin account. Please try again.')
@@ -123,24 +131,27 @@ function App() {
       return
     }
 
-    console.log('[App] Loading workspace:', loadedFileName)
+    console.log('[App] ===== LOADING WORKSPACE =====')
+    console.log('[App] Workspace name:', loadedFileName)
     console.log('[App] Current username:', userCredentials.username)
-    console.log('[App] Workspace users before:', loadedWorkspace.users)
+    console.log('[App] Workspace users (before):', JSON.stringify(loadedWorkspace.users, null, 2))
     
     let updatedWorkspace = { ...loadedWorkspace }
     
     if (!updatedWorkspace.users) {
+      console.log('[App] users array is null/undefined, initializing to []')
       updatedWorkspace.users = []
     }
     
     if (!updatedWorkspace.activityLog) {
+      console.log('[App] activityLog is null/undefined, initializing to []')
       updatedWorkspace.activityLog = []
     }
     
     const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
     
     if (!currentUser) {
-      console.log('[App] Current user not found in workspace, adding as admin')
+      console.log('[App] Current user NOT FOUND in workspace, adding as admin')
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
@@ -157,20 +168,26 @@ function App() {
         ownerId: userId
       }
       
-      console.log('[App] Admin user added:', adminUser)
+      console.log('[App] Admin user created:', JSON.stringify(adminUser, null, 2))
     } else {
-      console.log('[App] Current user found in workspace:', currentUser)
+      console.log('[App] Current user FOUND in workspace')
+      console.log('[App] User details:', JSON.stringify(currentUser, null, 2))
       if (currentUser.role !== 'admin') {
-        console.warn('[App] User exists but is not admin. Role:', currentUser.role)
+        console.warn('[App] WARNING: User exists but is NOT admin. Role:', currentUser.role)
+      } else {
+        console.log('[App] User is confirmed ADMIN')
       }
     }
     
-    console.log('[App] Workspace users after:', updatedWorkspace.users)
+    console.log('[App] Workspace users (after):', JSON.stringify(updatedWorkspace.users, null, 2))
+    console.log('[App] Setting initialWorkspace state...')
     
     setInitialWorkspace(updatedWorkspace)
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
+    
+    console.log('[App] ===== WORKSPACE LOAD COMPLETE =====')
   }, [userCredentials])
 
   const handleNewNetwork = useCallback(() => {

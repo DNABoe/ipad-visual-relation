@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
 import { WorkspaceCanvas } from './WorkspaceCanvas'
@@ -22,6 +23,7 @@ import {
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 import type { Workspace, Person } from '@/lib/types'
+import type { PasswordHash } from '@/lib/auth'
 import { encryptData } from '@/lib/encryption'
 import { searchPersons, findShortestPath, findLeafTerminatedBranches, type SearchCriteria } from '@/lib/search'
 import { generateId, getBounds, serializeWorkspace } from '@/lib/helpers'
@@ -38,6 +40,11 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
+  const [userCredentials] = useKV<{
+    username: string
+    passwordHash: PasswordHash
+  } | null>('user-credentials', null)
+  
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [highlightedPersonIds, setHighlightedPersonIds] = useState<Set<string>>(new Set())
@@ -51,9 +58,20 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [savedWorkspaceStr, setSavedWorkspaceStr] = useState<string>('')
 
+  useEffect(() => {
+    console.log('[WorkspaceView] Workspace prop changed')
+    console.log('[WorkspaceView] workspace.users:', workspace.users)
+    console.log('[WorkspaceView] userCredentials:', userCredentials)
+  }, [workspace, userCredentials])
+
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
   })
+
+  useEffect(() => {
+    console.log('[WorkspaceView] Controller workspace changed')
+    console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
+  }, [controller.workspace.users])
 
   const currentWorkspaceStr = useMemo(() => serializeWorkspace(controller.workspace), [controller.workspace])
 
@@ -412,6 +430,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
         hasUnsavedChanges={hasUnsavedChanges}
         onMarkAsSaved={handleMarkAsSaved}
+        currentUsername={userCredentials?.username}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -469,7 +488,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
           if (!open) controller.dialogs.closeSettingsDialog()
         }}
         workspace={controller.workspace}
-        setWorkspace={controller.handlers.replaceWorkspace}
+        setWorkspace={controller.handlers.setWorkspace}
         onLogout={onLogout}
       />
 

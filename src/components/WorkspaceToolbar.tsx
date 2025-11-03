@@ -59,6 +59,7 @@ interface WorkspaceToolbarProps {
   onShowKeyboardShortcuts: () => void
   hasUnsavedChanges?: boolean
   onMarkAsSaved?: () => void
+  currentUsername?: string
 }
 
 export function WorkspaceToolbar({
@@ -76,6 +77,7 @@ export function WorkspaceToolbar({
   onShowKeyboardShortcuts,
   hasUnsavedChanges = false,
   onMarkAsSaved,
+  currentUsername,
 }: WorkspaceToolbarProps) {
 
   const downloadFileName = fileName.endsWith('.enc.releye') 
@@ -101,6 +103,15 @@ export function WorkspaceToolbar({
               </Tooltip>
             )}
           </div>
+          {currentUsername && (
+            <>
+              <Separator orientation="vertical" className="h-6 bg-border" />
+              <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md border border-primary/30">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-sm font-medium text-foreground">{currentUsername}</span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
