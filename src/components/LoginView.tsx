@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,7 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [userSettings, setUserSettings] = useKV<{
+  const [userSettings] = useKV<{
     username: string
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
@@ -22,20 +22,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [isInitializing, setIsInitializing] = useState(true)
-  const hasInitialized = useRef(false)
-
-  useEffect(() => {
-    if (hasInitialized.current) return
-    
-    if (userSettings) {
-      setIsInitializing(false)
-      hasInitialized.current = true
-    } else {
-      setIsInitializing(false)
-      hasInitialized.current = true
-    }
-  }, [userSettings])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,14 +60,6 @@ export function LoginView({ onLogin }: LoginViewProps) {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (isInitializing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Initializing...</div>
-      </div>
-    )
   }
 
   return (

@@ -19,8 +19,6 @@ function App() {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const [needsSetup, setNeedsSetup] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [inviteWorkspaceId, setInviteWorkspaceId] = useState<string | null>(null)
   const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
@@ -29,99 +27,30 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        console.log('[App] ===== AUTH INITIALIZATION =====')
-        console.log('[App] Checking for stored credentials in spark.kv...')
-        console.log('[App] userCredentials value:', userCredentials)
-        console.log('[App] userCredentials type:', typeof userCredentials)
-        
-        const urlParams = new URLSearchParams(window.location.search)
-        const token = urlParams.get('invite')
-        const workspaceId = urlParams.get('workspace')
-        
-        if (token && workspaceId) {
-          console.log('[App] Invite link detected, showing invite accept view')
-          setInviteToken(token)
-          setInviteWorkspaceId(workspaceId)
-          setIsCheckingAuth(false)
-          return
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        if (!userCredentials) {
-          console.log('[App] ❌ No credentials found in cloud storage')
-          console.log('[App] Showing first-time setup')
-          setNeedsSetup(true)
-          setIsCheckingAuth(false)
-          return
-        }
-        
-        console.log('[App] ✅ Credentials found in cloud storage')
-        console.log('[App] Username:', userCredentials.username)
-        console.log('[App] Has password hash:', !!userCredentials.passwordHash)
-        console.log('[App] Showing login screen')
-        setNeedsSetup(false)
-        setIsCheckingAuth(false)
-        console.log('[App] ===== AUTH INITIALIZATION COMPLETE =====')
-      } catch (error) {
-        console.error('[App] ❌ Auth initialization error:', error)
-        setIsCheckingAuth(false)
-      }
-    }
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('invite')
+    const workspaceId = urlParams.get('workspace')
     
-    initializeAuth()
-  }, [userCredentials])
+    if (token && workspaceId) {
+      setInviteToken(token)
+      setInviteWorkspaceId(workspaceId)
+    }
+  }, [])
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
-      console.log('[App] ===== FIRST TIME SETUP START =====')
-      console.log('[App] Creating admin account for username:', username)
-      
       const passwordHash = await hashPassword(password)
-      console.log('[App] ✅ Password hashed successfully')
-      console.log('[App] Hash length:', passwordHash.hash.length)
-      console.log('[App] Salt length:', passwordHash.salt.length)
-      console.log('[App] Iterations:', passwordHash.iterations)
-      
-      const credentials = {
-        username,
-        passwordHash
-      }
-      
-      console.log('[App] Saving credentials to spark.kv cloud storage...')
-      
-      await window.spark.kv.set('user-credentials', credentials)
-      console.log('[App] ✅ Credentials set via spark.kv.set')
-      
-      console.log('[App] Waiting for cloud persistence and verifying...')
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const savedCreds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-      console.log('[App] Verification result:', savedCreds ? 'Found' : 'Not found')
-      
-      if (!savedCreds || savedCreds.username !== username) {
-        console.error('[App] ❌ Verification failed - credentials not matching')
-        console.error('[App] Expected username:', username)
-        console.error('[App] Found username:', savedCreds?.username)
-        throw new Error('Failed to verify saved credentials')
-      }
-      
-      console.log('[App] ✅ Credentials saved and verified successfully')
+      const credentials = { username, passwordHash }
       
       await setUserCredentials(() => credentials)
-      
-      console.log('[App] Authenticating user...')
-      setNeedsSetup(false)
       setIsAuthenticated(true)
       
-      toast.success('Admin account created successfully!')
-      console.log('[App] ===== FIRST TIME SETUP COMPLETE =====')
+      toast.success('Administrator account created successfully!')
     } catch (error) {
-      console.error('[App] ❌ First-time setup error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      toast.error(`Failed to create admin account: ${errorMessage}`)
+      console.error('[App] Setup error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
+      toast.error(errorMessage)
+      throw error
     }
   }, [setUserCredentials])
 
@@ -129,10 +58,7 @@ function App() {
     try {
       const passwordHash = await hashPassword(password)
       
-      await setUserCredentials({
-        username,
-        passwordHash
-      })
+      await setUserCredentials({ username, passwordHash })
 
       setInviteToken(null)
       setInviteWorkspaceId(null)
@@ -140,6 +66,7 @@ function App() {
       setIsAuthenticated(true)
     } catch (error) {
       console.error('[App] Invite accept error:', error)
+      toast.error('Failed to complete invite setup')
     }
   }, [setUserCredentials])
 
@@ -147,47 +74,33 @@ function App() {
     setInviteToken(null)
     setInviteWorkspaceId(null)
     window.history.replaceState({}, '', window.location.pathname)
-    setNeedsSetup(!userCredentials)
-  }, [userCredentials])
+  }, [])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)
   }, [])
 
   const handleLoad = useCallback(async (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
-    console.log('[App] ===== LOADING WORKSPACE =====')
-    console.log('[App] Checking credentials...')
-    
     const credentials = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
     
     if (!credentials) {
-      console.error('[App] ❌ Cannot load workspace without user credentials')
       toast.error('User credentials not found. Please refresh the page.')
       return
     }
 
-    console.log('[App] Workspace name:', loadedFileName)
-    console.log('[App] Current username:', credentials.username)
-    console.log('[App] Workspace users:', JSON.stringify(loadedWorkspace.users, null, 2))
-    
     let updatedWorkspace = { ...loadedWorkspace }
     
     if (!updatedWorkspace.users) {
-      console.log('[App] ⚠️  users array is null/undefined, initializing to []')
       updatedWorkspace.users = []
     }
     
     if (!updatedWorkspace.activityLog) {
-      console.log('[App] ⚠️  activityLog is null/undefined, initializing to []')
       updatedWorkspace.activityLog = []
     }
     
     const currentUser = updatedWorkspace.users.find(u => u.username === credentials.username)
     
     if (!currentUser) {
-      console.log('[App] ⚠️  Current user NOT FOUND in workspace.users')
-      console.log('[App] Adding user as admin...')
-      
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
@@ -203,25 +116,12 @@ function App() {
         users: [...updatedWorkspace.users, adminUser],
         ownerId: updatedWorkspace.ownerId || userId
       }
-      
-      console.log('[App] ✅ Admin user created:', JSON.stringify(adminUser, null, 2))
-      console.log('[App] ✅ Set as workspace owner')
-    } else {
-      console.log('[App] ✅ Current user FOUND in workspace')
-      console.log('[App] User ID:', currentUser.userId)
-      console.log('[App] User role:', currentUser.role)
-      console.log('[App] User status:', currentUser.status)
     }
-    
-    console.log('[App] Final workspace users:', JSON.stringify(updatedWorkspace.users, null, 2))
-    console.log('[App] Setting workspace state and closing file manager...')
     
     setInitialWorkspace(updatedWorkspace)
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
-    
-    console.log('[App] ===== WORKSPACE LOAD COMPLETE =====')
   }, [])
 
   const handleNewNetwork = useCallback(() => {
@@ -246,25 +146,7 @@ function App() {
     setShowFileManager(true)
   }, [])
 
-  if (isCheckingAuth) {
-    console.log('[App] Checking authentication...')
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-lg font-semibold text-foreground">Initializing RelEye...</div>
-            <div className="text-sm text-muted-foreground">Checking cloud credentials</div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   if (inviteToken && inviteWorkspaceId) {
-    console.log('[App] Showing invite accept view')
     return (
       <>
         <InviteAcceptView
@@ -278,8 +160,7 @@ function App() {
     )
   }
 
-  if (needsSetup) {
-    console.log('[App] Showing first-time setup')
+  if (!userCredentials) {
     return (
       <>
         <FirstTimeSetup onComplete={handleFirstTimeSetup} />
@@ -289,7 +170,6 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    console.log('[App] Not authenticated, showing login view')
     return (
       <>
         <LoginView onLogin={handleLogin} />
@@ -299,7 +179,6 @@ function App() {
   }
 
   if (showFileManager || !initialWorkspace) {
-    console.log('[App] Showing file manager', { showFileManager, hasWorkspace: !!initialWorkspace })
     return (
       <>
         <FileManager onLoad={handleLoad} />
@@ -308,7 +187,6 @@ function App() {
     )
   }
 
-  console.log('[App] Showing workspace view')
   return (
     <>
       <WorkspaceView
