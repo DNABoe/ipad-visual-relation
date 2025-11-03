@@ -34,7 +34,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
     passwordHash: PasswordHash
   } | null>('user-credentials', null)
   
-  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [showLoadDialog, setShowLoadDialog] = useState(false)
   const [newFileName, setNewFileName] = useState('')
@@ -44,20 +43,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
   const [loadPassword, setLoadPassword] = useState('')
   const [createdNetwork, setCreatedNetwork] = useState<CreatedNetwork | null>(null)
-
-  useEffect(() => {
-    const checkCredentials = async () => {
-      const credentials = await window.spark.kv.get<{
-        username: string
-        passwordHash: PasswordHash
-      }>('user-credentials')
-      setIsLoadingCredentials(false)
-      if (!credentials) {
-        console.warn('[FileManager] No credentials found during initial load')
-      }
-    }
-    checkCredentials()
-  }, [])
 
   const handleResetNewDialog = useCallback(() => {
     setShowNewDialog(false)
@@ -311,22 +296,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="space-y-5">
           <Button
             onClick={() => setShowNewDialog(true)}
-            disabled={isLoadingCredentials || !userCredentials}
+            disabled={!userCredentials}
             className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <UsersThree size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            {isLoadingCredentials ? 'Loading...' : 'Generate New Network'}
+            {!userCredentials ? 'Loading...' : 'Generate New Network'}
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            disabled={isLoadingCredentials || !userCredentials}
+            disabled={!userCredentials}
             className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            {isLoadingCredentials ? 'Loading...' : 'Load Existing Network'}
+            {!userCredentials ? 'Loading...' : 'Load Existing Network'}
           </Button>
         </div>
 
