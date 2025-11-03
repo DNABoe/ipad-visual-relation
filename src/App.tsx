@@ -92,31 +92,27 @@ function App() {
       
       console.log('[App] Saving credentials to spark.kv cloud storage...')
       
-      await setUserCredentials((current) => {
-        console.log('[App] Current credentials:', current)
-        return credentials
-      })
+      await window.spark.kv.set('user-credentials', credentials)
+      console.log('[App] ✅ Credentials set via spark.kv.set')
       
       console.log('[App] Waiting for cloud persistence and verifying...')
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      let savedCreds: {username: string; passwordHash: PasswordHash} | undefined = undefined
-      let attempts = 0
-      const maxAttempts = 10
-      
-      while (!savedCreds && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        savedCreds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-        attempts++
-        console.log(`[App] Verification attempt ${attempts}:`, savedCreds ? 'Found' : 'Not found')
-      }
+      const savedCreds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+      console.log('[App] Verification result:', savedCreds ? 'Found' : 'Not found')
       
       if (!savedCreds || savedCreds.username !== username) {
-        throw new Error('Failed to verify saved credentials after ' + attempts + ' attempts')
+        console.error('[App] ❌ Verification failed - credentials not matching')
+        console.error('[App] Expected username:', username)
+        console.error('[App] Found username:', savedCreds?.username)
+        throw new Error('Failed to verify saved credentials')
       }
       
-      console.log('[App] ✅ Credentials saved and verified after', attempts, 'attempts')
-      console.log('[App] Authenticating user...')
+      console.log('[App] ✅ Credentials saved and verified successfully')
       
+      await setUserCredentials(() => credentials)
+      
+      console.log('[App] Authenticating user...')
       setNeedsSetup(false)
       setIsAuthenticated(true)
       
@@ -124,7 +120,8 @@ function App() {
       console.log('[App] ===== FIRST TIME SETUP COMPLETE =====')
     } catch (error) {
       console.error('[App] ❌ First-time setup error:', error)
-      toast.error('Failed to create admin account. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Failed to create admin account: ${errorMessage}`)
     }
   }, [setUserCredentials])
 

@@ -51,10 +51,13 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
     setIsLoading(true)
     
     try {
-      onComplete(username.trim(), password)
+      console.log('[FirstTimeSetup] Calling onComplete with username:', username.trim())
+      await onComplete(username.trim(), password)
+      console.log('[FirstTimeSetup] onComplete finished successfully')
     } catch (err) {
-      console.error('Setup error:', err)
-      setError('An error occurred during setup')
+      console.error('[FirstTimeSetup] Setup error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during setup'
+      setError(errorMessage)
       setIsLoading(false)
     }
   }
