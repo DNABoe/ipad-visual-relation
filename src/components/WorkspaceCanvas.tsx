@@ -272,7 +272,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const { interaction, transform } = controller
 
     if (interaction.dragState.type === 'connection') {
-      return
+      interaction.endDrag()
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
     } else if (transform.isPanning) {
@@ -522,7 +522,10 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                 }
                 
                 controller.interaction.endDrag()
-              } else if (controller.interaction.dragState.type === 'person') {
+                return
+              }
+              
+              if (controller.interaction.dragState.type === 'person' && controller.interaction.dragState.hasMoved) {
                 controller.interaction.endDrag()
               }
             }}
