@@ -121,7 +121,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const currentX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
     const currentY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
-    if (e.buttons === 0 && (interaction.dragState.type === 'person' || interaction.dragState.type === 'group' || interaction.dragState.type === 'connection')) {
+    if (e.buttons === 0 && (interaction.dragState.type === 'person' || interaction.dragState.type === 'group')) {
       interaction.endDrag()
       return
     }
@@ -277,7 +277,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const { interaction, transform } = controller
 
     if (interaction.dragState.type === 'connection') {
-      interaction.endDrag()
+      return
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
     } else if (transform.isPanning) {
@@ -595,7 +595,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
           />
         ))}
 
-        {controller.interaction.dragState.type === 'connection' && (
+        {controller.interaction.dragState.type === 'connection' && controller.interaction.dragState.mouseX !== undefined && controller.interaction.dragState.mouseY !== undefined && (
           <svg
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -647,6 +647,12 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
       {controller.interaction.isConnecting && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-lg shadow-lg">
           {controller.interaction.connectFrom ? 'Click target person to connect' : 'Click first person to start'}
+        </div>
+      )}
+      
+      {controller.interaction.dragState.type === 'connection' && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-lg shadow-lg">
+          Click target card to create connection
         </div>
       )}
     </div>

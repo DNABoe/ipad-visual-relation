@@ -798,16 +798,10 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
 
     setContextMenu(null)
     
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return
+    interaction.startConnectionDrag(personId)
     
-    const personCenterX = person.x + NODE_WIDTH / 2
-    const personCenterY = person.y + NODE_HEIGHT / 2
-    
-    interaction.startConnectionDrag(personId, personCenterX, personCenterY)
-    
-    toast.info('Drag to another card to create connection')
-  }, [workspaceState.workspace.persons, interaction, canvasRef])
+    toast.info('Move mouse to another card to create connection')
+  }, [workspaceState.workspace.persons, interaction])
 
   return {
     workspace: workspaceState.workspace,

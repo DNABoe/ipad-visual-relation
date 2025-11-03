@@ -63,7 +63,7 @@ export function useInteractionState() {
     setDragState({ type: 'group', id: groupId, hasMoved: false })
   }, [])
 
-  const startConnectionDrag = useCallback((fromPersonId: string, mouseX: number, mouseY: number) => {
+  const startConnectionDrag = useCallback((fromPersonId: string, mouseX?: number, mouseY?: number) => {
     setDragState({ type: 'connection', id: fromPersonId, mouseX, mouseY, hasMoved: true })
   }, [])
 
