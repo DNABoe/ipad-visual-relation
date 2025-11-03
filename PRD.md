@@ -14,12 +14,17 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 RelEye uses a hybrid storage model that balances security and usability:
 
-### User Credentials (Cloud Storage)
+### User Credentials (Cloud Storage via spark.kv)
 - **Storage**: User credentials (username and password hash) are stored in the cloud using `spark.kv` API
+- **Implementation**: Direct writes to `window.spark.kv.set()` followed by React state updates via `setUserCredentials()`
 - **Purpose**: Enables authentication without needing to re-enter credentials on every page load
-- **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256
+- **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256 before storage
 - **Persistence**: Survives browser refreshes and is accessible across sessions
 - **Key**: `user-credentials` in spark.kv
+- **Access Pattern**: 
+  1. Write: `await window.spark.kv.set('user-credentials', credentials)` (primary)
+  2. Read: `await window.spark.kv.get('user-credentials')` (direct) or `useKV('user-credentials')` (reactive)
+  3. Always use direct KV writes for critical updates, then sync React state
 
 ### Workspace Data (Local Files)
 - **Storage**: All relationship network data (persons, connections, groups) is stored in encrypted local files (.enc.releye)
@@ -31,8 +36,9 @@ RelEye uses a hybrid storage model that balances security and usability:
 ### User Management Data (Hybrid)
 - **Storage**: Workspace user list (roles, permissions) is embedded in the encrypted workspace file
 - **Purpose**: Each workspace tracks its own access control independently
-- **Initialization**: When a workspace is created or first loaded, the current authenticated user is automatically added as admin
+- **Initialization**: When a workspace is created or first loaded, the current authenticated user is automatically added as admin if not present
 - **Persistence**: Saved with workspace data when file is saved
+- **Auto-injection**: WorkspaceView and FileManager automatically ensure the current authenticated user exists in workspace.users array with admin role
 
 ## Essential Features
 

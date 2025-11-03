@@ -51,23 +51,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
     
     const loadCredentials = async () => {
       console.log('[FileManager] Loading credentials...')
-      console.log('[FileManager] userCredentials from hook:', userCredentials)
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 200))
-        
         const creds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-        console.log('[FileManager] Direct KV fetch result:', creds)
+        console.log('[FileManager] Credentials loaded:', creds ? creds.username : 'none')
         
         if (mounted) {
           if (creds) {
-            console.log('[FileManager] Setting actual credentials:', creds.username)
             setActualCredentials(creds)
-          } else if (userCredentials) {
-            console.log('[FileManager] Using hook credentials:', userCredentials.username)
-            setActualCredentials(userCredentials)
           } else {
-            console.warn('[FileManager] No credentials found in either source')
+            console.warn('[FileManager] No credentials found')
           }
           setIsLoadingCredentials(false)
         }

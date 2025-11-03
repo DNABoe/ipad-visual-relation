@@ -69,45 +69,61 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   })
 
   useEffect(() => {
-    if (!userCredentials) {
-      console.log('[WorkspaceView] No user credentials available')
-      return
-    }
-
-    const currentUser = controller.workspace.users?.find(u => u.username === userCredentials.username)
+    let mounted = true
     
-    console.log('[WorkspaceView] Checking admin user...')
-    console.log('[WorkspaceView] userCredentials.username:', userCredentials.username)
-    console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
-    console.log('[WorkspaceView] currentUser:', currentUser)
-    
-    if (!currentUser) {
-      console.log('[WorkspaceView] ⚠️  Current user not found in workspace, adding...')
-      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-      const adminUser = {
-        userId: userId,
-        username: userCredentials.username,
-        role: 'admin' as const,
-        addedAt: Date.now(),
-        addedBy: 'system',
-        status: 'active' as const
-      }
-      
-      console.log('[WorkspaceView] Adding admin user:', adminUser)
-      
-      controller.handlers.setWorkspace((current) => {
-        const updated = {
-          ...current,
-          users: [...(current.users || []), adminUser],
-          ownerId: current.ownerId || userId
+    const ensureCurrentUserInWorkspace = async () => {
+      try {
+        const creds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+        
+        if (!creds || !mounted) {
+          console.log('[WorkspaceView] No credentials available')
+          return
         }
-        console.log('[WorkspaceView] Updated workspace with admin user:', updated.users)
-        return updated
-      })
-    } else {
-      console.log('[WorkspaceView] ✅ Current user found:', currentUser.role)
+
+        const currentUser = controller.workspace.users?.find(u => u.username === creds.username)
+        
+        console.log('[WorkspaceView] Checking admin user...')
+        console.log('[WorkspaceView] creds.username:', creds.username)
+        console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
+        console.log('[WorkspaceView] currentUser:', currentUser)
+        
+        if (!currentUser) {
+          console.log('[WorkspaceView] ⚠️  Current user not found in workspace, adding...')
+          const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+          const adminUser = {
+            userId: userId,
+            username: creds.username,
+            role: 'admin' as const,
+            addedAt: Date.now(),
+            addedBy: 'system',
+            status: 'active' as const
+          }
+          
+          console.log('[WorkspaceView] Adding admin user:', adminUser)
+          
+          controller.handlers.setWorkspace((current) => {
+            const updated = {
+              ...current,
+              users: [...(current.users || []), adminUser],
+              ownerId: current.ownerId || userId
+            }
+            console.log('[WorkspaceView] Updated workspace with admin user:', updated.users)
+            return updated
+          })
+        } else {
+          console.log('[WorkspaceView] ✅ Current user found:', currentUser.role)
+        }
+      } catch (error) {
+        console.error('[WorkspaceView] Error ensuring user in workspace:', error)
+      }
     }
-  }, [controller.workspace.users, userCredentials, controller.handlers])
+    
+    ensureCurrentUserInWorkspace()
+    
+    return () => {
+      mounted = false
+    }
+  }, [controller.workspace.users, controller.handlers])
 
   useEffect(() => {
     console.log('[WorkspaceView] Controller workspace changed')

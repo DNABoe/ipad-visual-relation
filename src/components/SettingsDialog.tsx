@@ -113,17 +113,25 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
         }
 
         const newHash = await hashPassword(newPassword)
-        await setUserCredentials({
+        const newCreds = {
           username: username.trim(),
           passwordHash: newHash,
-        })
+        }
+        
+        await window.spark.kv.set('user-credentials', newCreds)
+        await new Promise(resolve => setTimeout(resolve, 300))
+        setUserCredentials(() => newCreds)
 
         toast.success('Username and password updated successfully')
       } else {
-        await setUserCredentials((current) => ({
-          ...current!,
+        const newCreds = {
+          ...userCredentials!,
           username: username.trim(),
-        }))
+        }
+        
+        await window.spark.kv.set('user-credentials', newCreds)
+        await new Promise(resolve => setTimeout(resolve, 300))
+        setUserCredentials(() => newCreds)
 
         toast.success('Username updated successfully')
       }

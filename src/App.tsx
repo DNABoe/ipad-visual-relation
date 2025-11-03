@@ -50,19 +50,21 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      console.log('[App] Password hashed, saving credentials with functional update...')
-      
-      setUserCredentials((current) => {
-        console.log('[App] Current credentials before update:', current)
-        console.log('[App] Setting new credentials:', credentials)
-        return credentials
-      })
+      console.log('[App] Password hashed, saving credentials directly to KV...')
+      await window.spark.kv.set('user-credentials', credentials)
       
       console.log('[App] Waiting for storage to persist...')
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       const savedCreds = await window.spark.kv.get('user-credentials')
       console.log('[App] Verified saved credentials:', savedCreds)
+      
+      if (!savedCreds) {
+        throw new Error('Failed to save credentials - verification failed')
+      }
+      
+      console.log('[App] Now updating React state with functional update...')
+      setUserCredentials(() => credentials)
       
       console.log('[App] Credentials saved successfully, setting authenticated')
       setIsAuthenticated(true)
@@ -78,14 +80,30 @@ function App() {
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
+      console.log('[App] Completing invite for username:', username)
       const passwordHash = await hashPassword(password)
+      const credentials = { username, passwordHash }
       
-      await setUserCredentials({ username, passwordHash })
+      console.log('[App] Saving credentials directly to KV...')
+      await window.spark.kv.set('user-credentials', credentials)
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      const savedCreds = await window.spark.kv.get('user-credentials')
+      console.log('[App] Verified saved credentials:', savedCreds)
+      
+      if (!savedCreds) {
+        throw new Error('Failed to save credentials - verification failed')
+      }
+      
+      setUserCredentials(() => credentials)
 
       setInviteToken(null)
       setInviteWorkspaceId(null)
       window.history.replaceState({}, '', window.location.pathname)
       setIsAuthenticated(true)
+      
+      toast.success('Account created successfully!')
     } catch (error) {
       console.error('[App] Invite accept error:', error)
       toast.error('Failed to complete invite setup')
