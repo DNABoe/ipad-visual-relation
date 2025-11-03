@@ -12,6 +12,32 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 ## Essential Features
 
+### Multi-User Collaboration System
+- **Functionality**: GitHub-based multi-user workspace with role-based access control (Admin, Editor, Viewer)
+- **Purpose**: Enable secure collaboration where workspace owner (admin) can invite users, manage permissions, and track activity
+- **Trigger**: Admin clicks Settings → Admin tab → Manage Users button
+- **Progression**: Admin Dashboard opens → Invite user (username, optional email, role) → System generates secure invite link → Admin copies and shares link → Invited user clicks link → User logs in with GitHub account → User sets password → User gains access based on assigned role
+- **Success criteria**: 
+  - Owner automatically becomes admin with full permissions
+  - Admins can add/remove users, change roles, suspend accounts
+  - Editors can create/edit/delete content but not manage users
+  - Viewers can only view and export
+  - All user data encrypted and stored in spark.kv
+  - Activity log tracks all user actions with timestamps
+  - Invite links expire after 7 days
+  - Users identified by GitHub login via spark.user() API
+  - Each user's permissions enforced before any write operation
+  - Dashboard shows user stats, activity history, and role distribution
+
+### Admin Dashboard
+- **Functionality**: Comprehensive administration interface for workspace management
+- **Purpose**: Centralized control panel for user management, activity monitoring, and workspace settings
+- **Trigger**: Admin-only "Admin" tab in Settings dialog, or direct "Manage Users" button
+- **Progression**: Open Settings → Click Admin tab → Full-screen dashboard → Three tabs (Users, Activity, Stats) → Manage users with role changes, suspensions, deletions → View activity log with filters → Monitor workspace statistics
+- **Success criteria**: Only visible to users with admin role; displays user list with avatars, roles, status badges; search/filter functionality; inline role changes; copy invite links for pending users; activity log with filtering by type; statistics cards showing user distribution
+
+
+
 ### Encrypted File Management
 - **Functionality**: Create and load encrypted network database files with password protection
 - **Purpose**: Ensure data privacy and security - all data stays on the user's computer, never transmitted online

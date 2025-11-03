@@ -70,6 +70,50 @@ export interface Group {
   createdAt: number
 }
 
+export type UserRole = 'admin' | 'editor' | 'viewer'
+
+export interface UserInfo {
+  id: string
+  username: string
+  email?: string
+  role: UserRole
+  githubLogin?: string
+  githubAvatar?: string
+  invitedAt: number
+  activatedAt?: number
+  lastActiveAt?: number
+}
+
+export interface UserCredentials {
+  userId: string
+  passwordHash: string
+}
+
+export interface WorkspaceUser {
+  userId: string
+  username: string
+  email?: string
+  role: UserRole
+  githubLogin?: string
+  githubAvatar?: string
+  addedAt: number
+  addedBy: string
+  inviteToken?: string
+  inviteExpiry?: number
+  status: 'pending' | 'active' | 'suspended'
+}
+
+export interface ActivityLog {
+  id: string
+  timestamp: number
+  userId: string
+  username: string
+  action: string
+  entityType?: 'person' | 'connection' | 'group' | 'user' | 'workspace'
+  entityId?: string
+  details?: string
+}
+
 export interface AppSettings {
   username: string
   passwordHash: string
@@ -91,12 +135,20 @@ export interface CollapsedBranch {
 }
 
 export interface Workspace {
+  id?: string
+  name?: string
+  ownerId?: string
   persons: Person[]
   connections: Connection[]
   groups: Group[]
   collapsedBranches?: CollapsedBranch[]
   settings?: WorkspaceSettings
   canvasTransform?: ViewTransform
+  users?: WorkspaceUser[]
+  activityLog?: ActivityLog[]
+  createdAt?: number
+  modifiedAt?: number
+  modifiedBy?: string
 }
 
 export interface ViewTransform {
