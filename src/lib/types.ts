@@ -72,23 +72,6 @@ export interface Group {
 
 export type UserRole = 'admin' | 'editor' | 'viewer'
 
-export interface UserInfo {
-  id: string
-  username: string
-  email?: string
-  role: UserRole
-  githubLogin?: string
-  githubAvatar?: string
-  invitedAt: number
-  activatedAt?: number
-  lastActiveAt?: number
-}
-
-export interface UserCredentials {
-  userId: string
-  passwordHash: string
-}
-
 export interface WorkspaceUser {
   userId: string
   username: string
@@ -115,8 +98,6 @@ export interface ActivityLog {
 }
 
 export interface AppSettings {
-  username: string
-  passwordHash: string
   showMinimap: boolean
 }
 

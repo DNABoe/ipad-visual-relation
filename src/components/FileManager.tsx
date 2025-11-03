@@ -78,7 +78,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
             connections: [], 
             groups: [], 
             collapsedBranches: [],
-            settings: DEFAULT_WORKSPACE_SETTINGS
+            settings: DEFAULT_WORKSPACE_SETTINGS,
+            users: [],
+            activityLog: []
           }
 
       const workspaceJson = serializeWorkspace(newWorkspace)

@@ -133,6 +133,10 @@ function App() {
       updatedWorkspace.users = []
     }
     
+    if (!updatedWorkspace.activityLog) {
+      updatedWorkspace.activityLog = []
+    }
+    
     const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
     
     if (!currentUser) {

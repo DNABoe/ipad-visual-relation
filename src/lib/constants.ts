@@ -23,9 +23,6 @@ export const GROUP_COLORS: Record<GroupColor, string> = {
 export const FRAME_COLOR_NAMES: FrameColor[] = ['red', 'green', 'orange', 'white']
 export const GROUP_COLOR_NAMES: GroupColor[] = ['blue', 'purple', 'pink', 'yellow', 'teal', 'indigo', 'rose', 'emerald', 'amber', 'cyan']
 
-export const DEFAULT_USERNAME = 'admin'
-export const DEFAULT_PASSWORD = 'admin'
-
 export const NODE_WIDTH = 200
 export const NODE_HEIGHT = 280
 export const GRID_SIZE = 20
@@ -34,8 +31,6 @@ export const MAX_ZOOM = 2
 export const ZOOM_STEP = 0.1
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
-  username: 'admin',
-  passwordHash: '',
   showMinimap: true,
 }
 
