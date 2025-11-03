@@ -18,6 +18,7 @@ interface PersonNodeProps {
   hasCollapsedBranch?: boolean
   collapsedCount?: number
   connectionCount?: number
+  isConnectionTarget?: boolean
   onMouseDown: (e: React.MouseEvent) => void
   onMouseUp?: (e: React.MouseEvent) => void
   onClick: (e: React.MouseEvent) => void
@@ -36,6 +37,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
   hasCollapsedBranch,
   collapsedCount = 0,
   connectionCount = 0,
+  isConnectionTarget = false,
   onMouseDown,
   onMouseUp,
   onClick,
@@ -127,6 +129,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           transform: 'translateZ(0)',
           willChange: isDragging ? 'transform' : 'auto',
           contentVisibility: isDragging ? 'auto' : 'visible',
+          pointerEvents: 'auto',
         }}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
@@ -138,6 +141,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           <div 
             className="absolute top-1.5 left-1.5 bg-yellow-400 text-background rounded-full p-1.5 shadow-lg z-20"
             title="Advocate - Actively promotes messages"
+            style={{ pointerEvents: isConnectionTarget ? 'none' : 'auto' }}
           >
             <Star size={16} weight="fill" />
           </div>
@@ -146,6 +150,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           <div 
             className="absolute top-12 right-1.5 bg-primary text-primary-foreground rounded-full px-2 py-1 shadow-lg flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform z-20"
             title={`${collapsedCount} person${collapsedCount > 1 ? 's' : ''} collapsed - click to expand`}
+            style={{ pointerEvents: isConnectionTarget ? 'none' : 'auto' }}
             onClick={(e) => {
               e.stopPropagation()
               onExpandBranch?.(e)
@@ -156,7 +161,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           </div>
         )}
         
-        <div className="relative flex-shrink-0">
+        <div className="relative flex-shrink-0" style={{ pointerEvents: isConnectionTarget ? 'none' : 'auto' }}>
           <div 
             className="w-full h-40 overflow-hidden bg-image-container rounded-t-lg"
             style={{ 
@@ -190,7 +195,7 @@ const PersonNodeInner = memo(function PersonNodeInner({
           </Badge>
         </div>
 
-        <div className="px-3 pt-0 pb-2 flex flex-col justify-start flex-1 min-h-0" style={{ height: 80 }}>
+        <div className="px-3 pt-0 pb-2 flex flex-col justify-start flex-1 min-h-0" style={{ height: 80, pointerEvents: isConnectionTarget ? 'none' : 'auto' }}>
           <h3 className="font-semibold text-base leading-tight break-words text-foreground line-clamp-1 mb-0.5">
             {person.name}
           </h3>
@@ -231,7 +236,8 @@ const PersonNodeInner = memo(function PersonNodeInner({
     prevProps.isHighlighted === nextProps.isHighlighted &&
     prevProps.isDimmed === nextProps.isDimmed &&
     prevProps.hasCollapsedBranch === nextProps.hasCollapsedBranch &&
-    prevProps.collapsedCount === nextProps.collapsedCount
+    prevProps.collapsedCount === nextProps.collapsedCount &&
+    prevProps.isConnectionTarget === nextProps.isConnectionTarget
   )
 })
 

@@ -467,6 +467,8 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             controller.interaction.dragState.hasMoved
           )
           
+          const isConnectionTarget = controller.interaction.dragState.type === 'connection'
+          
           return (
           <PersonNode
             key={person.id}
@@ -478,6 +480,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
             hasCollapsedBranch={hasCollapsedBranch}
             collapsedCount={collapsedCount}
             connectionCount={0}
+            isConnectionTarget={isConnectionTarget}
             onMouseDown={(e) => {
               e.stopPropagation()
               if (e.button !== 0) return
@@ -486,7 +489,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                 e.preventDefault()
                 return
               }
-              if (controller.interaction.isConnecting) return
               
               const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
               
