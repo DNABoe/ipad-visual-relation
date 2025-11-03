@@ -121,6 +121,11 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
     const currentX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
     const currentY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
 
+    if (e.buttons === 0 && (interaction.dragState.type === 'person' || interaction.dragState.type === 'group' || interaction.dragState.type === 'connection')) {
+      interaction.endDrag()
+      return
+    }
+
     if (interaction.dragState.type === 'connection') {
       const mouseX = (e.clientX - rect.left - transform.transform.x) / transform.transform.scale
       const mouseY = (e.clientY - rect.top - transform.transform.y) / transform.transform.scale
@@ -478,6 +483,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               if (e.button !== 0) return
               
               if (controller.interaction.dragState.type === 'connection') {
+                e.preventDefault()
                 return
               }
               if (controller.interaction.isConnecting) return
@@ -498,6 +504,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
               if (e.button !== 0) return
               
               if (controller.interaction.dragState.type === 'connection' && controller.interaction.dragState.id) {
+                e.preventDefault()
                 const fromPersonId = controller.interaction.dragState.id
                 const toPersonId = person.id
                 
@@ -514,7 +521,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                       toPersonId: toPersonId,
                     }
                     controller.handlers.addConnection(newConnection)
-                    controller.selection.clearSelection()
                     toast.success('Connection created')
                   } else {
                     toast.info('Connection already exists')
@@ -522,6 +528,7 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                 }
                 
                 controller.interaction.endDrag()
+                controller.selection.clearSelection()
                 return
               }
               
