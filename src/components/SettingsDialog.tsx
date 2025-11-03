@@ -53,6 +53,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const isAdmin = userCredentials?.username === 'admin'
 
   useEffect(() => {
+    console.log('[SettingsDialog] userCredentials:', userCredentials)
+    console.log('[SettingsDialog] isAdmin:', isAdmin)
+  }, [userCredentials, isAdmin])
+
+  useEffect(() => {
     if (isAdmin && (!workspace.users || workspace.users.length === 0)) {
       const adminUser = {
         userId: 'admin-user',
