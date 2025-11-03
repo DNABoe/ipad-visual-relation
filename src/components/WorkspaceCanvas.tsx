@@ -528,7 +528,6 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
                 }
                 
                 controller.interaction.endDrag()
-                controller.selection.clearSelection()
                 return
               }
               
