@@ -69,6 +69,31 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   })
 
   useEffect(() => {
+    if (!userCredentials) return
+
+    const currentUser = controller.workspace.users?.find(u => u.username === userCredentials.username)
+    
+    if (!currentUser) {
+      console.log('[WorkspaceView] Current user not found in workspace, adding...')
+      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const adminUser = {
+        userId: userId,
+        username: userCredentials.username,
+        role: 'admin' as const,
+        addedAt: Date.now(),
+        addedBy: 'system',
+        status: 'active' as const
+      }
+      
+      controller.handlers.setWorkspace((current) => ({
+        ...current,
+        users: [...(current.users || []), adminUser],
+        ownerId: current.ownerId || userId
+      }))
+    }
+  }, [controller, userCredentials])
+
+  useEffect(() => {
     console.log('[WorkspaceView] Controller workspace changed')
     console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
   }, [controller.workspace.users])
