@@ -9,7 +9,7 @@ export function GridAnalysisHelper() {
   const runAnalysis = async () => {
     setIsAnalyzing(true)
     
-    const codeContext = `
+    const codeContext = window.spark.llmPrompt`
 # Grid Toggle and Canvas Settings Analysis
 
 ## Issue Description
