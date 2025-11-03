@@ -470,7 +470,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       const positionText = positionLines.join(', ')
       const countryText = country || 'Not specified'
       
-      const prompt = window.spark.llmPrompt`You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
+      const prompt = (window.spark.llmPrompt as any)`You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
 
 Name: ${name}
 Position: ${positionText || 'Not specified'}

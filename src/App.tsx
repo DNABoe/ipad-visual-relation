@@ -39,9 +39,21 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
+      console.log('[App] Starting first-time setup for username:', username)
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
+      console.log('[App] Password hashed, saving credentials...')
+      await window.spark.kv.set('user-credentials', credentials)
+      
+      console.log('[App] Credentials saved, verifying...')
+      const saved = await window.spark.kv.get<typeof credentials>('user-credentials')
+      
+      if (!saved || saved.username !== username) {
+        throw new Error('Failed to save credentials - verification failed')
+      }
+      
+      console.log('[App] Credentials verified successfully')
       await setUserCredentials(() => credentials)
       setIsAuthenticated(true)
       
