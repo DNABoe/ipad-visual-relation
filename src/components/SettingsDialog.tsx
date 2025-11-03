@@ -13,10 +13,11 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Shield } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
+import { AdminDashboard } from '@/components/AdminDashboard'
 
 interface SettingsDialogProps {
   open: boolean
@@ -46,8 +47,28 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [logoClicks, setLogoClicks] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showFileIconDialog, setShowFileIconDialog] = useState(false)
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false)
 
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
+  const isAdmin = userCredentials?.username === 'admin'
+
+  useEffect(() => {
+    if (isAdmin && (!workspace.users || workspace.users.length === 0)) {
+      const adminUser = {
+        userId: 'admin-user',
+        username: 'admin',
+        role: 'admin' as const,
+        addedAt: Date.now(),
+        addedBy: 'system',
+        status: 'active' as const
+      }
+      setWorkspace((current) => ({
+        ...current,
+        users: [adminUser],
+        ownerId: 'admin-user'
+      }))
+    }
+  }, [isAdmin])
 
   useEffect(() => {
     if (userCredentials) {
@@ -159,9 +180,15 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           </DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'} flex-shrink-0`}>
             <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
             <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="admin" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">
+                <Shield className="w-4 h-4 mr-1.5" />
+                Admin
+              </TabsTrigger>
+            )}
             <TabsTrigger value="about" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">About</TabsTrigger>
           </TabsList>
           
@@ -308,6 +335,70 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     }}
                   />
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="admin" className="space-y-3 py-3 m-0">
+            <div className="space-y-4">
+              <div className="rounded-xl bg-card p-4 border-2 border-primary/20">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Shield className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">Administrator Panel</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Manage users, control access permissions, and monitor workspace activity
+                    </p>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={() => {
+                    setShowAdminDashboard(true)
+                  }}
+                  className="w-full gap-2 bg-gradient-to-r from-primary to-accent shadow-lg"
+                  size="lg"
+                >
+                  <Shield className="w-5 h-5" />
+                  Open Admin Dashboard
+                </Button>
+              </div>
+
+              <div className="rounded-xl bg-card p-4 space-y-3">
+                <h4 className="font-semibold text-sm">Admin Capabilities</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Invite and manage workspace users</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Assign roles and permissions (Admin, Editor, Viewer)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Suspend or remove user access</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Monitor workspace activity and changes</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Generate secure invite links with email support</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-accent text-sm mt-0.5">💡</span>
+                  <span>
+                    The admin dashboard provides comprehensive user management tools. All user data is encrypted and stored securely in the cloud, while workspace files remain local-only.
+                  </span>
+                </p>
               </div>
             </div>
           </TabsContent>
@@ -625,6 +716,32 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
         </DialogFooter>
       </DialogContent>
       <FileIconDialog open={showFileIconDialog} onOpenChange={setShowFileIconDialog} />
+      {isAdmin && (
+        <AdminDashboard
+          open={showAdminDashboard}
+          onOpenChange={setShowAdminDashboard}
+          users={workspace.users || []}
+          activityLog={workspace.activityLog || []}
+          currentUserId={userCredentials?.username || 'admin'}
+          workspaceId={workspace.id || 'default-workspace'}
+          onUpdateUsers={(updatedUsers) => {
+            setWorkspace((current) => ({
+              ...current,
+              users: updatedUsers,
+              modifiedAt: Date.now(),
+              modifiedBy: userCredentials?.username || 'admin'
+            }))
+          }}
+          onLogActivity={(log) => {
+            setWorkspace((current) => ({
+              ...current,
+              activityLog: [...(current.activityLog || []), log],
+              modifiedAt: Date.now(),
+              modifiedBy: userCredentials?.username || 'admin'
+            }))
+          }}
+        />
+      )}
     </Dialog>
   )
 }
