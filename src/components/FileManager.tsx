@@ -126,15 +126,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
       
       console.log('[FileManager] New workspace created with users:', newWorkspace.users)
 
+      console.log('[FileManager] Serializing workspace...')
       const workspaceJson = serializeWorkspace(newWorkspace)
+      
+      console.log('[FileManager] Encrypting workspace...')
       const encrypted = await encryptData(workspaceJson, newPassword)
 
+      console.log('[FileManager] Creating download blob...')
       const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const fullFileName = trimmedFileName.endsWith('.enc.releye')
         ? trimmedFileName
         : `${trimmedFileName}.enc.releye`
 
+      console.log('[FileManager] Network created successfully!')
       setCreatedNetwork({
         workspace: newWorkspace,
         fileName: fullFileName,
@@ -144,8 +149,9 @@ export function FileManager({ onLoad }: FileManagerProps) {
 
       toast.success('Network created successfully!')
     } catch (error) {
-      toast.error('Failed to create network')
-      console.error(error)
+      console.error('[FileManager] Error creating network:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create network'
+      toast.error(`Failed to create network: ${errorMessage}`)
     }
   }
 
