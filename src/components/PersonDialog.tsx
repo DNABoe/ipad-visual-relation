@@ -468,12 +468,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     try {
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
       const positionText = positionLines.join(', ')
+      const countryText = country || 'Not specified'
       
-      const promptText = `You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
+      const prompt = (window.spark.llmPrompt as any)`You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
 
 Name: ${name}
 Position: ${positionText || 'Not specified'}
-Country: ${country || 'Not specified'}
+Country: ${countryText}
 
 Please provide:
 1. Professional Background Overview (based on typical career trajectories for this position)
@@ -484,7 +485,7 @@ Please provide:
 
 Format your response as a professional intelligence brief with clear sections and detailed analysis. Be thorough but realistic based on the position and context provided.`
 
-      const report = await window.spark.llm(promptText, 'gpt-4o-mini')
+      const report = await window.spark.llm(prompt, 'gpt-4o-mini')
       setInvestigationReport(report)
 
       const pdfBlob = await generateInvestigationPDF({
