@@ -50,20 +50,22 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [showAdminDashboard, setShowAdminDashboard] = useState(false)
 
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
-  const isAdmin = userCredentials?.username === 'admin'
+  
+  const currentUser = workspace.users?.find(u => u.username === userCredentials?.username)
+  const isAdmin = currentUser?.role === 'admin'
 
   useEffect(() => {
     console.log('[SettingsDialog] userCredentials:', userCredentials)
     console.log('[SettingsDialog] username:', userCredentials?.username)
+    console.log('[SettingsDialog] currentUser:', currentUser)
     console.log('[SettingsDialog] isAdmin:', isAdmin)
-    console.log('[SettingsDialog] Comparison:', userCredentials?.username, '===', 'admin', '=', userCredentials?.username === 'admin')
-  }, [userCredentials, isAdmin])
+  }, [userCredentials, currentUser, isAdmin])
 
   useEffect(() => {
-    if (isAdmin && (!workspace.users || workspace.users.length === 0)) {
+    if (userCredentials && (!workspace.users || workspace.users.length === 0)) {
       const adminUser = {
-        userId: 'admin-user',
-        username: 'admin',
+        userId: `user-${Date.now()}`,
+        username: userCredentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
         addedBy: 'system',
@@ -72,10 +74,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
       setWorkspace((current) => ({
         ...current,
         users: [adminUser],
-        ownerId: 'admin-user'
+        ownerId: adminUser.userId
       }))
     }
-  }, [isAdmin])
+  }, [userCredentials, workspace.users, setWorkspace])
 
   useEffect(() => {
     if (userCredentials) {
@@ -727,20 +729,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
         </DialogFooter>
       </DialogContent>
       <FileIconDialog open={showFileIconDialog} onOpenChange={setShowFileIconDialog} />
-      {isAdmin && (
+      {isAdmin && currentUser && (
         <AdminDashboard
           open={showAdminDashboard}
           onOpenChange={setShowAdminDashboard}
           users={workspace.users || []}
           activityLog={workspace.activityLog || []}
-          currentUserId={userCredentials?.username || 'admin'}
+          currentUserId={currentUser.userId}
           workspaceId={workspace.id || 'default-workspace'}
           onUpdateUsers={(updatedUsers) => {
             setWorkspace((current) => ({
               ...current,
               users: updatedUsers,
               modifiedAt: Date.now(),
-              modifiedBy: userCredentials?.username || 'admin'
+              modifiedBy: currentUser.username
             }))
           }}
           onLogActivity={(log) => {
@@ -748,7 +750,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               ...current,
               activityLog: [...(current.activityLog || []), log],
               modifiedAt: Date.now(),
-              modifiedBy: userCredentials?.username || 'admin'
+              modifiedBy: currentUser.username
             }))
           }}
         />

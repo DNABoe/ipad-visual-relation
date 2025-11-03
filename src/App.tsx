@@ -4,7 +4,9 @@ import { Toaster } from '@/components/ui/sonner'
 import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
-import { getDefaultPasswordHash, type PasswordHash } from './lib/auth'
+import { FirstTimeSetup } from './components/FirstTimeSetup'
+import { InviteAcceptView } from './components/InviteAcceptView'
+import { hashPassword, type PasswordHash } from './lib/auth'
 import type { Workspace, AppSettings } from './lib/types'
 import { DEFAULT_APP_SETTINGS } from './lib/constants'
 
@@ -18,6 +20,9 @@ function App() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [needsSetup, setNeedsSetup] = useState(false)
+  const [inviteToken, setInviteToken] = useState<string | null>(null)
+  const [inviteWorkspaceId, setInviteWorkspaceId] = useState<string | null>(null)
   const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
@@ -28,37 +33,27 @@ function App() {
       try {
         console.log('[App] Initializing auth...')
         
-        setUserCredentials((current) => {
-          if (current) {
-            console.log('[App] Existing credentials found')
-            return current
-          }
-          console.log('[App] No credentials found, creating defaults...')
-          getDefaultPasswordHash().then(defaultHash => {
-            console.log('[App] Default hash generated:', defaultHash)
-            setUserCredentials({
-              username: 'admin',
-              passwordHash: defaultHash
-            })
-          })
-          return null
-        })
+        const urlParams = new URLSearchParams(window.location.search)
+        const token = urlParams.get('invite')
+        const workspaceId = urlParams.get('workspace')
         
-        setAppSettings((current) => {
-          if (current && Object.keys(current).length > 0) {
-            const mergedSettings = { ...DEFAULT_APP_SETTINGS, ...current }
-            if (JSON.stringify(mergedSettings) !== JSON.stringify(current)) {
-              console.log('[App] Updating app settings with missing defaults...')
-              return mergedSettings
-            }
-            return current
-          }
-          console.log('[App] No app settings found, initializing defaults...')
-          return DEFAULT_APP_SETTINGS
-        })
+        if (token && workspaceId) {
+          console.log('[App] Invite link detected')
+          setInviteToken(token)
+          setInviteWorkspaceId(workspaceId)
+          setIsCheckingAuth(false)
+          return
+        }
         
+        if (!userCredentials) {
+          console.log('[App] No credentials found, needs first-time setup')
+          setNeedsSetup(true)
+          setIsCheckingAuth(false)
+          return
+        }
+        
+        console.log('[App] Existing credentials found')
         setIsCheckingAuth(false)
-        console.log('[App] Auth check complete')
       } catch (error) {
         console.error('[App] Auth initialization error:', error)
         setIsCheckingAuth(false)
@@ -66,7 +61,48 @@ function App() {
     }
     
     initializeAuth()
-  }, [])
+  }, [userCredentials])
+
+  const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
+    try {
+      const passwordHash = await hashPassword(password)
+      
+      await setUserCredentials({
+        username,
+        passwordHash
+      })
+
+      setNeedsSetup(false)
+      setIsAuthenticated(true)
+    } catch (error) {
+      console.error('[App] First-time setup error:', error)
+    }
+  }, [setUserCredentials])
+
+  const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
+    try {
+      const passwordHash = await hashPassword(password)
+      
+      await setUserCredentials({
+        username,
+        passwordHash
+      })
+
+      setInviteToken(null)
+      setInviteWorkspaceId(null)
+      window.history.replaceState({}, '', window.location.pathname)
+      setIsAuthenticated(true)
+    } catch (error) {
+      console.error('[App] Invite accept error:', error)
+    }
+  }, [setUserCredentials])
+
+  const handleInviteCancel = useCallback(() => {
+    setInviteToken(null)
+    setInviteWorkspaceId(null)
+    window.history.replaceState({}, '', window.location.pathname)
+    setNeedsSetup(!userCredentials)
+  }, [userCredentials])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)
@@ -110,6 +146,31 @@ function App() {
           <div className="text-xs text-muted-foreground/60">Checking authentication</div>
         </div>
       </div>
+    )
+  }
+
+  if (inviteToken && inviteWorkspaceId) {
+    console.log('[App] Showing invite accept view')
+    return (
+      <>
+        <InviteAcceptView
+          inviteToken={inviteToken}
+          workspaceId={inviteWorkspaceId}
+          onComplete={handleInviteComplete}
+          onCancel={handleInviteCancel}
+        />
+        <Toaster />
+      </>
+    )
+  }
+
+  if (needsSetup) {
+    console.log('[App] Showing first-time setup')
+    return (
+      <>
+        <FirstTimeSetup onComplete={handleFirstTimeSetup} />
+        <Toaster />
+      </>
     )
   }
 

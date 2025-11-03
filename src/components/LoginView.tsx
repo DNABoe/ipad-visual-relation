@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { verifyPassword, getDefaultPasswordHash, type PasswordHash, isPasswordHash } from '@/lib/auth'
+import { verifyPassword, type PasswordHash, isPasswordHash } from '@/lib/auth'
 import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
 
 interface LoginViewProps {
@@ -28,23 +28,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
   useEffect(() => {
     if (hasInitialized.current) return
     
-    const initializeCredentials = async () => {
-      if (!userSettings) {
-        const defaultHash = await getDefaultPasswordHash()
-        setUserSettings((current) => {
-          if (current) return current
-          return {
-            username: 'admin',
-            passwordHash: defaultHash
-          }
-        })
-      }
+    if (userSettings) {
+      setIsInitializing(false)
+      hasInitialized.current = true
+    } else {
       setIsInitializing(false)
       hasInitialized.current = true
     }
-    
-    initializeCredentials()
-  }, [])
+  }, [userSettings])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

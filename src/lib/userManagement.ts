@@ -9,7 +9,7 @@ export function generateInviteToken(): string {
 
 export function generateInviteLink(workspaceId: string, token: string): string {
   const baseUrl = window.location.origin + window.location.pathname
-  return `${baseUrl}?invite=${workspaceId}&token=${token}`
+  return `${baseUrl}?workspace=${workspaceId}&invite=${token}`
 }
 
 export function createWorkspaceUser(

@@ -119,19 +119,3 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
     typeof (value as PasswordHash).iterations === 'number'
   )
 }
-
-const DEFAULT_USERNAME = 'admin'
-const DEFAULT_PASSWORD = 'admin'
-const DEFAULT_SALT = 'cmVsZXllMjAyNGRlZmF1bHRzYWx0MTIzNDU2Nzg5MGFiY2RlZmdoaWo='
-const DEFAULT_ITERATIONS = 210000
-
-let computedDefaultHash: PasswordHash | null = null
-
-export async function getDefaultPasswordHash(): Promise<PasswordHash> {
-  if (computedDefaultHash) {
-    return computedDefaultHash
-  }
-  
-  computedDefaultHash = await hashPassword(DEFAULT_PASSWORD, DEFAULT_SALT)
-  return computedDefaultHash
-}
