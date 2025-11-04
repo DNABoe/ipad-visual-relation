@@ -42,6 +42,7 @@ import {
 } from '@/lib/userManagement'
 import { format } from 'date-fns'
 import { storage } from '@/lib/storage'
+import { InviteEmailDialog } from '@/components/InviteEmailDialog'
 
 interface AdminDashboardProps {
   open: boolean
@@ -67,6 +68,14 @@ export function AdminDashboard({
   const [showAddUserDialog, setShowAddUserDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
+  const [showInviteEmailDialog, setShowInviteEmailDialog] = useState(false)
+  const [inviteEmailData, setInviteEmailData] = useState<{
+    userName: string
+    userEmail: string
+    userRole: string
+    roleDescription: string
+    inviteLink: string
+  } | null>(null)
   const [resetConfirmStep, setResetConfirmStep] = useState(0)
   const [resetConfirmText, setResetConfirmText] = useState('')
   const [selectedUser, setSelectedUser] = useState<WorkspaceUser | null>(null)
@@ -134,38 +143,6 @@ export function AdminDashboard({
 
     const inviteLink = generateInviteLink(workspaceId, newUser.inviteToken!)
     
-    const emailSubject = `You've been invited to join RelEye`
-    const emailBody = `Hello ${newUserName},
-
-You've been invited to join RelEye - a secure relationship network visualization platform.
-
-🔐 Secure & Private
-RelEye uses end-to-end encryption and zero-knowledge architecture to keep your data safe. All network files are stored locally and encrypted.
-
-👤 Your Account Details
-• Email: ${newUserEmail}
-• Role: ${getRoleDisplayName(newUserRole)}
-• Access: ${getRoleDescription(newUserRole)}
-
-🚀 Get Started
-Click the link below to set up your account:
-${inviteLink}
-
-📋 What You Can Do
-• Map relationships between people and organizations
-• Visualize connections with advanced analytics
-• Collaborate securely with your team
-• Export and share insights
-
-This invitation expires in 7 days.
-
-Welcome to RelEye!
-
----
-This is an automated invitation from RelEye. If you received this email in error, please disregard it.`
-
-    const mailtoLink = `mailto:${newUserEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
-    
     onUpdateUsers([...users, newUser])
     
     onLogActivity({
@@ -179,14 +156,21 @@ This is an automated invitation from RelEye. If you received this email in error
       details: `Invited ${newUserName} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
     })
 
-    window.open(mailtoLink, '_blank')
-    navigator.clipboard.writeText(inviteLink)
-    toast.success('Email template opened! Invitation link also copied to clipboard')
+    setInviteEmailData({
+      userName: newUserName.trim(),
+      userEmail: newUserEmail.trim(),
+      userRole: getRoleDisplayName(newUserRole),
+      roleDescription: getRoleDescription(newUserRole),
+      inviteLink
+    })
     
     setNewUserName('')
     setNewUserEmail('')
     setNewUserRole('viewer')
     setShowAddUserDialog(false)
+    setShowInviteEmailDialog(true)
+    
+    toast.success('User invited successfully!')
   }
 
   const handleDeleteUser = () => {
@@ -1076,6 +1060,18 @@ This is an automated invitation from RelEye. If you received this email in error
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {inviteEmailData && (
+        <InviteEmailDialog
+          open={showInviteEmailDialog}
+          onOpenChange={setShowInviteEmailDialog}
+          userName={inviteEmailData.userName}
+          userEmail={inviteEmailData.userEmail}
+          userRole={inviteEmailData.userRole}
+          roleDescription={inviteEmailData.roleDescription}
+          inviteLink={inviteEmailData.inviteLink}
+        />
+      )}
     </>
   )
 }

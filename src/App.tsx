@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
@@ -15,6 +16,7 @@ function App() {
     passwordHash: PasswordHash
   } | null>(null)
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
+  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
@@ -39,6 +41,7 @@ function App() {
         if (!storageReady) {
           console.error('[App] ❌ Storage failed to become ready')
           setUserCredentials(null)
+          setIsFirstTimeSetup(true)
           setIsLoadingCredentials(false)
           return
         }
@@ -64,9 +67,13 @@ function App() {
             hasSalt: !!credentials.passwordHash?.salt,
             hasIterations: !!credentials.passwordHash?.iterations
           })
+          setUserCredentials(credentials)
+          setIsFirstTimeSetup(false)
+        } else {
+          setUserCredentials(null)
+          setIsFirstTimeSetup(true)
         }
         
-        setUserCredentials(credentials || null)
         console.log('[App] ========== INITIALIZATION COMPLETE ==========')
       } catch (error) {
         console.error('[App] ❌ Failed to load credentials:', error)
@@ -75,6 +82,7 @@ function App() {
           stack: error instanceof Error ? error.stack : undefined
         })
         setUserCredentials(null)
+        setIsFirstTimeSetup(true)
       } finally {
         setIsLoadingCredentials(false)
       }
@@ -150,6 +158,7 @@ function App() {
       setIsSettingUpCredentials(false)
       
       toast.success('Administrator account created successfully!')
+      setIsFirstTimeSetup(false)
     } catch (error) {
       console.error('[App] Setup error:', error)
       setIsSettingUpCredentials(false)
@@ -316,10 +325,24 @@ function App() {
     )
   }
 
-  if (!userCredentials) {
+  if (!userCredentials && isFirstTimeSetup) {
     return (
       <>
         <FirstTimeSetup onComplete={handleFirstTimeSetup} />
+        <Toaster />
+      </>
+    )
+  }
+
+  if (!userCredentials) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <div className="text-muted-foreground">Unable to load credentials. Please refresh the page.</div>
+            <Button onClick={() => window.location.reload()}>Refresh</Button>
+          </div>
+        </div>
         <Toaster />
       </>
     )
