@@ -107,7 +107,6 @@ export function WorkspaceToolbar({
             <>
               <Separator orientation="vertical" className="h-6 bg-border" />
               <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md border border-primary/30">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 <span className="text-sm font-medium text-foreground">{currentUsername}</span>
               </div>
             </>

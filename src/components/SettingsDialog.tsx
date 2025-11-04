@@ -31,10 +31,12 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, onLogout }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
-  const [userCredentials, setUserCredentials] = useKV<{
+  const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
-  } | null>('user-credentials', null)
+  } | null>(null)
+  
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
 
   const [activeTab, setActiveTab] = useState('system')
   const [username, setUsername] = useState('')
@@ -54,6 +56,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   
   const currentUser = workspace.users?.find(u => u.username === userCredentials?.username)
   const isAdmin = currentUser?.role === 'admin'
+  
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+        setUserCredentials(creds || null)
+      } catch (error) {
+        console.error('[SettingsDialog] Failed to load credentials:', error)
+      } finally {
+        setIsLoadingCredentials(false)
+      }
+    }
+    loadCredentials()
+  }, [])
 
   useEffect(() => {
     console.log('[SettingsDialog] ====== Admin Check ======')
@@ -183,10 +199,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           <DialogTitle className="text-xl">Settings</DialogTitle>
           <DialogDescription>
             Manage your system preferences and account
-            <span className="block text-xs mt-1">
-              User: {userCredentials?.username || 'Loading...'}
-              {isAdmin && <span className="text-primary ml-2">● Admin</span>}
-            </span>
+            {!isLoadingCredentials && (
+              <span className="block text-xs mt-1">
+                User: {userCredentials?.username || 'Not logged in'}
+                {isAdmin && <span className="text-accent ml-2 font-semibold">👑 Admin</span>}
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -426,7 +444,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     </p>
                   </div>
                   <div className="text-right">
-                    {currentUser ? (
+                    {isLoadingCredentials ? (
+                      <div className="text-xs text-muted-foreground">
+                        Loading...
+                      </div>
+                    ) : currentUser ? (
                       <div className="space-y-1">
                         <div className="text-sm font-semibold text-foreground">
                           {currentUser.username}
@@ -442,9 +464,18 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                           {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
                         </div>
                       </div>
+                    ) : userCredentials ? (
+                      <div className="space-y-1">
+                        <div className="text-sm font-semibold text-foreground">
+                          {userCredentials.username}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Not in workspace
+                        </div>
+                      </div>
                     ) : (
                       <div className="text-xs text-muted-foreground">
-                        Loading...
+                        No user
                       </div>
                     )}
                   </div>
