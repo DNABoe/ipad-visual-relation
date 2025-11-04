@@ -28,26 +28,52 @@ function App() {
   useEffect(() => {
     const loadCredentials = async () => {
       try {
-        console.log('[App] Waiting for storage to be ready...')
+        console.log('[App] ========== INITIALIZATION START ==========')
+        console.log('[App] Checking storage availability...')
+        console.log('[App] window.spark exists:', !!window.spark)
+        console.log('[App] window.spark.kv exists:', !!window.spark?.kv)
+        
         const storageReady = await storage.isReady()
+        console.log('[App] Storage ready:', storageReady)
         
         if (!storageReady) {
-          console.error('[App] Storage failed to become ready')
+          console.error('[App] ❌ Storage failed to become ready')
           setUserCredentials(null)
           setIsLoadingCredentials(false)
           return
         }
         
-        console.log('[App] Storage ready, loading credentials...')
+        console.log('[App] ✓ Storage is ready')
+        console.log('[App] Checking for existing credentials...')
+        
+        const allKeys = await storage.keys()
+        console.log('[App] All storage keys:', allKeys)
+        
         const credentials = await storage.get<{
           username: string
           passwordHash: PasswordHash
         }>('user-credentials')
         
-        console.log('[App] Credentials loaded:', credentials ? 'exists' : 'not found')
+        console.log('[App] Credentials loaded:', credentials ? `exists (username: ${credentials.username})` : 'not found')
+        
+        if (credentials) {
+          console.log('[App] Credentials structure check:', {
+            hasUsername: !!credentials.username,
+            hasPasswordHash: !!credentials.passwordHash,
+            hasHash: !!credentials.passwordHash?.hash,
+            hasSalt: !!credentials.passwordHash?.salt,
+            hasIterations: !!credentials.passwordHash?.iterations
+          })
+        }
+        
         setUserCredentials(credentials || null)
+        console.log('[App] ========== INITIALIZATION COMPLETE ==========')
       } catch (error) {
-        console.error('[App] Failed to load credentials:', error)
+        console.error('[App] ❌ Failed to load credentials:', error)
+        console.error('[App] Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        })
         setUserCredentials(null)
       } finally {
         setIsLoadingCredentials(false)
@@ -69,20 +95,43 @@ function App() {
       
       console.log('[App] Hashing password...')
       const passwordHash = await hashPassword(password)
-      console.log('[App] Password hashed successfully')
+      console.log('[App] Password hashed successfully:', { 
+        hasHash: !!passwordHash.hash, 
+        hasSalt: !!passwordHash.salt,
+        iterations: passwordHash.iterations 
+      })
       
       const credentials = { username, passwordHash }
       console.log('[App] Attempting to save credentials to storage...')
+      console.log('[App] Credentials object:', JSON.stringify(credentials, null, 2))
       
       await storage.set('user-credentials', credentials)
       console.log('[App] Credentials saved successfully to storage')
       
       console.log('[App] Verifying credentials were saved...')
-      const savedCredentials = await storage.get('user-credentials')
+      await new Promise(resolve => setTimeout(resolve, 200))
+      
+      const savedCredentials = await storage.get<{
+        username: string
+        passwordHash: PasswordHash
+      }>('user-credentials')
+      
       if (!savedCredentials) {
-        throw new Error('Failed to verify credentials were saved. Please try again.')
+        console.error('[App] Verification failed: savedCredentials is null/undefined')
+        throw new Error('Failed to verify credentials were saved. Storage returned empty.')
       }
-      console.log('[App] Credentials verified in storage')
+      
+      if (savedCredentials.username !== username) {
+        console.error('[App] Verification failed: username mismatch')
+        throw new Error('Failed to verify credentials were saved. Username mismatch.')
+      }
+      
+      if (!savedCredentials.passwordHash || !savedCredentials.passwordHash.hash) {
+        console.error('[App] Verification failed: passwordHash invalid')
+        throw new Error('Failed to verify credentials were saved. Password hash invalid.')
+      }
+      
+      console.log('[App] ✓ Credentials verified in storage')
       
       setUserCredentials(credentials)
       setIsAuthenticated(true)

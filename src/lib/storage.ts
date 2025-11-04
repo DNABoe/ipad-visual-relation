@@ -4,6 +4,15 @@ export interface StorageAdapter {
   delete(key: string): Promise<void>
   keys(): Promise<string[]>
   isReady(): Promise<boolean>
+  checkHealth(): Promise<StorageHealthStatus>
+}
+
+export interface StorageHealthStatus {
+  isReady: boolean
+  canRead: boolean
+  canWrite: boolean
+  canDelete: boolean
+  error?: string
 }
 
 class SparkKVAdapter implements StorageAdapter {
@@ -57,7 +66,7 @@ class SparkKVAdapter implements StorageAdapter {
     try {
       console.log(`[SparkKVAdapter] Getting key: ${key}`)
       const value = await window.spark.kv.get<T>(key)
-      console.log(`[SparkKVAdapter] Got value for ${key}:`, value ? 'exists' : 'undefined')
+      console.log(`[SparkKVAdapter] Got value for ${key}:`, value ? 'exists' : 'undefined', value)
       return value
     } catch (error) {
       console.error(`[SparkKVAdapter] Error getting ${key}:`, error)
@@ -73,18 +82,26 @@ class SparkKVAdapter implements StorageAdapter {
     }
 
     try {
-      console.log(`[SparkKVAdapter] Setting key: ${key}`)
+      console.log(`[SparkKVAdapter] Setting key: ${key}`, value)
+      
       await window.spark.kv.set(key, value)
       console.log(`[SparkKVAdapter] Successfully set ${key}`)
       
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       const verification = await window.spark.kv.get<T>(key)
-      if (!verification) {
-        throw new Error(`Failed to verify ${key} was saved`)
+      console.log(`[SparkKVAdapter] Verification result for ${key}:`, verification)
+      
+      if (verification === null || verification === undefined) {
+        console.error(`[SparkKVAdapter] Verification failed - value is null or undefined`)
+        throw new Error(`Failed to verify ${key} was saved - storage returned ${verification}`)
       }
-      console.log(`[SparkKVAdapter] Verified ${key} was saved`)
+      
+      console.log(`[SparkKVAdapter] ✓ Verified ${key} was saved successfully`)
     } catch (error) {
       console.error(`[SparkKVAdapter] Error setting ${key}:`, error)
-      throw error
+      console.error(`[SparkKVAdapter] Value that failed to save:`, value)
+      throw new Error(`Storage error for ${key}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -115,6 +132,55 @@ class SparkKVAdapter implements StorageAdapter {
     } catch (error) {
       console.error('[SparkKVAdapter] Error getting keys:', error)
       throw error
+    }
+  }
+
+  async checkHealth(): Promise<StorageHealthStatus> {
+    const status: StorageHealthStatus = {
+      isReady: false,
+      canRead: false,
+      canWrite: false,
+      canDelete: false
+    }
+
+    try {
+      status.isReady = await this.isReady()
+      
+      if (!status.isReady) {
+        status.error = 'Storage not ready'
+        return status
+      }
+
+      const testKey = '_health_check_test_key'
+      const testValue = { test: true, timestamp: Date.now() }
+
+      try {
+        await window.spark!.kv.set(testKey, testValue)
+        status.canWrite = true
+      } catch (error) {
+        status.error = `Write failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        return status
+      }
+
+      try {
+        const retrieved = await window.spark!.kv.get(testKey)
+        status.canRead = !!retrieved
+      } catch (error) {
+        status.error = `Read failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        return status
+      }
+
+      try {
+        await window.spark!.kv.delete(testKey)
+        status.canDelete = true
+      } catch (error) {
+        status.error = `Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }
+
+      return status
+    } catch (error) {
+      status.error = `Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      return status
     }
   }
 }
