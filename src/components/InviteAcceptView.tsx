@@ -42,54 +42,83 @@ export function InviteAcceptView({ inviteToken, workspaceId, inviteEmail, onComp
   useEffect(() => {
     const loadInvite = async () => {
       try {
-        console.log('[InviteAcceptView] Loading invitation...')
+        console.log('[InviteAcceptView] ========== LOADING INVITATION ==========')
         console.log('[InviteAcceptView] inviteToken:', inviteToken)
+        console.log('[InviteAcceptView] workspaceId:', workspaceId)
         console.log('[InviteAcceptView] inviteEmail:', inviteEmail)
 
+        console.log('[InviteAcceptView] Fetching pending invites from storage...')
         const invites = await storage.get<PendingInvite[]>('pending-invites')
-        console.log('[InviteAcceptView] All pending invites:', invites)
+        console.log('[InviteAcceptView] Raw storage result:', invites)
+        console.log('[InviteAcceptView] Number of pending invites:', invites?.length || 0)
 
         if (!invites || invites.length === 0) {
-          console.log('[InviteAcceptView] No pending invites found')
+          console.log('[InviteAcceptView] ❌ No pending invites found in storage')
           setError('Invalid or expired invitation.')
           setIsLoading(false)
           return
         }
 
-        let invite = invites.find(inv => inv.token === inviteToken)
+        console.log('[InviteAcceptView] All pending invites:')
+        invites.forEach((inv, idx) => {
+          console.log(`  [${idx}] Token: ${inv.token}, Email: ${inv.email}, Name: ${inv.name}, Expiry: ${new Date(inv.expiry).toISOString()}`)
+        })
+
+        console.log('[InviteAcceptView] Looking for matching invite...')
+        console.log('[InviteAcceptView] Matching token:', inviteToken)
         
-        if (inviteEmail && !invite) {
+        let invite = invites.find(inv => inv.token === inviteToken)
+        console.log('[InviteAcceptView] Invite found by token:', !!invite)
+        
+        if (!invite && inviteEmail) {
+          console.log('[InviteAcceptView] Trying to match by email + token...')
           invite = invites.find(inv => inv.email === inviteEmail && inv.token === inviteToken)
+          console.log('[InviteAcceptView] Invite found by email+token:', !!invite)
         }
         
-        console.log('[InviteAcceptView] Found invite:', invite)
-        
         if (!invite) {
-          console.log('[InviteAcceptView] No matching invite found')
+          console.log('[InviteAcceptView] ❌ No matching invite found')
+          console.log('[InviteAcceptView] Available tokens:', invites.map(i => i.token).join(', '))
           setError('Invalid or expired invitation. The invitation may have been revoked.')
           setIsLoading(false)
           return
         }
 
-        if (invite.expiry < Date.now()) {
-          console.log('[InviteAcceptView] Invitation expired')
+        console.log('[InviteAcceptView] ✓ Found matching invite:', {
+          name: invite.name,
+          email: invite.email,
+          role: invite.role,
+          token: invite.token,
+          expiry: new Date(invite.expiry).toISOString()
+        })
+
+        const now = Date.now()
+        if (invite.expiry < now) {
+          console.log('[InviteAcceptView] ❌ Invitation expired')
+          console.log('[InviteAcceptView] Expiry:', new Date(invite.expiry).toISOString())
+          console.log('[InviteAcceptView] Current:', new Date(now).toISOString())
           setError('This invitation has expired. Please contact the administrator for a new invitation.')
           setIsLoading(false)
           return
         }
 
-        console.log('[InviteAcceptView] Invitation valid')
+        console.log('[InviteAcceptView] ✓ Invitation is valid and not expired')
+        console.log('[InviteAcceptView] ========== INVITATION LOADED SUCCESSFULLY ==========')
         setInviteData(invite)
         setIsLoading(false)
       } catch (err) {
-        console.error('[InviteAcceptView] Error loading invite:', err)
+        console.error('[InviteAcceptView] ❌ Error loading invite:', err)
+        console.error('[InviteAcceptView] Error details:', {
+          message: err instanceof Error ? err.message : 'Unknown',
+          stack: err instanceof Error ? err.stack : undefined
+        })
         setError('Failed to load invitation. Please try again.')
         setIsLoading(false)
       }
     }
 
     loadInvite()
-  }, [inviteToken, inviteEmail])
+  }, [inviteToken, inviteEmail, workspaceId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -186,10 +215,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, inviteEmail, onComp
 
             <div className="flex flex-col gap-2">
               <Button 
-                onClick={() => {
-                  window.history.replaceState({}, '', window.location.pathname)
-                  window.location.reload()
-                }} 
+                onClick={onCancel}
                 className="w-full"
               >
                 Return to Login

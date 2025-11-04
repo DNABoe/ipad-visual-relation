@@ -166,8 +166,12 @@ export function AdminDashboard({
       return
     }
 
+    console.log('[AdminDashboard] ========== CREATING INVITATION ==========')
     const inviteToken = generateInviteToken()
+    console.log('[AdminDashboard] Generated invite token:', inviteToken)
+    
     const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000)
+    console.log('[AdminDashboard] Invitation expiry:', new Date(expiry).toISOString())
     
     const pendingInvite = {
       name: newUserName.trim(),
@@ -178,12 +182,36 @@ export function AdminDashboard({
       createdAt: Date.now()
     }
 
+    console.log('[AdminDashboard] Pending invite object:', pendingInvite)
+    console.log('[AdminDashboard] Fetching existing invites from storage...')
+    
     const invites = await storage.get<typeof pendingInvite[]>('pending-invites') || []
+    console.log('[AdminDashboard] Existing invites count:', invites.length)
+    
     const updatedInvites = [...invites, pendingInvite]
+    console.log('[AdminDashboard] Saving updated invites (count:', updatedInvites.length, ')...')
+    
     await storage.set('pending-invites', updatedInvites)
+    console.log('[AdminDashboard] ✓ Invites saved to storage')
+    
+    console.log('[AdminDashboard] Verifying save...')
+    const verifyInvites = await storage.get<typeof pendingInvite[]>('pending-invites')
+    console.log('[AdminDashboard] Verification: found', verifyInvites?.length || 0, 'invites')
+    
+    const foundInvite = verifyInvites?.find(inv => inv.token === inviteToken)
+    console.log('[AdminDashboard] Verification: new invite found:', !!foundInvite)
+    
+    if (!foundInvite) {
+      console.error('[AdminDashboard] ❌ Failed to verify invite was saved!')
+      toast.error('Failed to save invitation. Please try again.')
+      return
+    }
+    
     setPendingInvites(updatedInvites)
 
     const inviteLink = `${generateInviteLink('app', inviteToken)}&email=${encodeURIComponent(newUserEmail.trim())}`
+    console.log('[AdminDashboard] Generated invite link:', inviteLink)
+    console.log('[AdminDashboard] ========== INVITATION CREATED SUCCESSFULLY ==========')
     
     onLogActivity({
       id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
