@@ -54,7 +54,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
         const user = ws.users?.find((u: WorkspaceUser) => u.inviteToken === inviteToken && u.status === 'pending')
         
         if (!user) {
-          setError('Invalid or expired invitation')
+          setError('Invalid, expired, or revoked invitation')
           setIsLoading(false)
           return
         }
@@ -271,10 +271,12 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
                 {inviteUser.email && (
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Email Address</span>
+                      <span className="text-xs text-muted-foreground">Invited Email Address</span>
                       <span className="text-sm font-medium">{inviteUser.email}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">This email is associated with your account</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This email is permanently associated with your account
+                    </p>
                   </div>
                 )}
               </div>

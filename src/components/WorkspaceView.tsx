@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
 import { WorkspaceCanvas } from './WorkspaceCanvas'
@@ -40,6 +41,7 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
+  const [allWorkspaces, setAllWorkspaces] = useKV<Record<string, Workspace>>('all-workspaces', {})
   const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
@@ -75,6 +77,28 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   const controller = useWorkspaceController({
     initialWorkspace: workspace,
   })
+
+  useEffect(() => {
+    const syncWorkspaceToGlobalStore = async () => {
+      if (!controller.workspace.id) {
+        console.log('[WorkspaceView] Workspace has no ID, skipping sync')
+        return
+      }
+
+      try {
+        const workspaceId = controller.workspace.id
+        await setAllWorkspaces((current) => ({
+          ...current,
+          [workspaceId]: controller.workspace
+        }))
+        console.log('[WorkspaceView] Synced workspace to global store:', workspaceId)
+      } catch (error) {
+        console.error('[WorkspaceView] Failed to sync workspace to global store:', error)
+      }
+    }
+
+    syncWorkspaceToGlobalStore()
+  }, [controller.workspace, setAllWorkspaces])
 
   useEffect(() => {
     let mounted = true

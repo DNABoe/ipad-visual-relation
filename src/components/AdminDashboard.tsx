@@ -278,6 +278,29 @@ This is an automated invitation from RelEye. If you received this email in error
     toast.success('Invite link copied to clipboard')
   }
 
+  const handleRevokeInvite = (user: WorkspaceUser) => {
+    if (user.status !== 'pending') {
+      toast.error('Can only revoke pending invitations')
+      return
+    }
+
+    const updatedUsers = users.filter(u => u.userId !== user.userId)
+    onUpdateUsers(updatedUsers)
+
+    onLogActivity({
+      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      timestamp: Date.now(),
+      userId: currentUserId,
+      username: currentUser?.username || 'Unknown',
+      action: 'revoked',
+      entityType: 'user',
+      entityId: user.userId,
+      details: `Revoked invitation for ${user.username} (${user.email || 'no email'})`
+    })
+
+    toast.success(`Invitation revoked for ${user.username}`)
+  }
+
   const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
     const updatedUsers: WorkspaceUser[] = users.map(u => 
       u.userId === user.userId ? { ...u, canInvestigate } : u
@@ -425,6 +448,19 @@ This is an automated invitation from RelEye. If you received this email in error
 
                 <TabsContent value="users" className="flex-1 px-6 pb-6 overflow-hidden">
                   <div className="flex flex-col gap-4 h-full">
+                    {stats.pending > 0 && (
+                      <div className="rounded-lg bg-warning/10 border border-warning/30 p-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="w-4 h-4 text-warning" />
+                          <span className="font-medium text-warning">
+                            {stats.pending} pending invitation{stats.pending !== 1 ? 's' : ''}
+                          </span>
+                          <span className="text-muted-foreground">
+                            · Waiting for user{stats.pending !== 1 ? 's' : ''} to accept
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
                         <Input
@@ -494,6 +530,12 @@ This is an automated invitation from RelEye. If you received this email in error
                                       Added {format(user.addedAt, 'MMM d, yyyy')}
                                     </span>
                                   </div>
+                                  
+                                  {user.status === 'pending' && user.inviteExpiry && (
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                      Invitation expires: {format(user.inviteExpiry, 'MMM d, yyyy h:mm a')}
+                                    </div>
+                                  )}
                                 </div>
 
                                 <div className="flex flex-col gap-2">
@@ -526,24 +568,36 @@ This is an automated invitation from RelEye. If you received this email in error
 
                                       <div className="flex gap-1">
                                         {user.status === 'pending' && user.inviteToken && (
+                                          <>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => handleCopyInviteLink(user)}
+                                              title="Copy invite link"
+                                            >
+                                              <LinkIcon className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                              variant="destructive"
+                                              size="sm"
+                                              onClick={() => handleRevokeInvite(user)}
+                                              title="Revoke invitation"
+                                            >
+                                              <Prohibit className="w-4 h-4" />
+                                            </Button>
+                                          </>
+                                        )}
+                                        
+                                        {user.status !== 'pending' && (
                                           <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => handleCopyInviteLink(user)}
-                                            title="Copy invite link"
+                                            onClick={() => handleSuspendUser(user)}
+                                            title={user.status === 'suspended' ? 'Reactivate' : 'Suspend'}
                                           >
-                                            <LinkIcon className="w-4 h-4" />
+                                            <Prohibit className="w-4 h-4" />
                                           </Button>
                                         )}
-                                        
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => handleSuspendUser(user)}
-                                          title={user.status === 'suspended' ? 'Reactivate' : 'Suspend'}
-                                        >
-                                          <Prohibit className="w-4 h-4" />
-                                        </Button>
 
                                         <Button
                                           variant="destructive"
@@ -915,9 +969,14 @@ This is an automated invitation from RelEye. If you received this email in error
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove User</DialogTitle>
+            <DialogTitle>
+              {selectedUser?.status === 'pending' ? 'Revoke Invitation' : 'Remove User'}
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove {selectedUser?.username}? This action cannot be undone.
+              {selectedUser?.status === 'pending' 
+                ? `Are you sure you want to revoke the invitation for ${selectedUser?.username}? The invitation link will no longer work.`
+                : `Are you sure you want to remove ${selectedUser?.username}? This action cannot be undone.`
+              }
             </DialogDescription>
           </DialogHeader>
 
@@ -927,7 +986,7 @@ This is an automated invitation from RelEye. If you received this email in error
             </Button>
             <Button variant="destructive" onClick={handleDeleteUser}>
               <Trash className="w-4 h-4 mr-2" />
-              Remove User
+              {selectedUser?.status === 'pending' ? 'Revoke Invitation' : 'Remove User'}
             </Button>
           </DialogFooter>
         </DialogContent>

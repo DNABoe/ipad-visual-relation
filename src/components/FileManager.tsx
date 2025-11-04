@@ -89,6 +89,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       console.log('[FileManager] Creating new workspace for user:', userCredentials.username)
       
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const workspaceId = `workspace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
         username: userCredentials.username,
@@ -114,6 +115,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
       
       const newWorkspace: Workspace = {
         ...baseWorkspace,
+        id: workspaceId,
+        name: trimmedFileName,
         users: [adminUser],
         ownerId: userId,
         createdAt: Date.now(),
@@ -167,6 +170,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
       const encrypted: EncryptedData = JSON.parse(fileContent)
       const decrypted = await decryptData(encrypted, loadPassword)
       const workspace: Workspace = deserializeWorkspace(decrypted)
+
+      if (!workspace.id) {
+        workspace.id = `workspace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      }
+
+      if (!workspace.name) {
+        workspace.name = loadingFile.name.replace('.enc.releye', '')
+      }
 
       onLoad(workspace, loadingFile.name, loadPassword)
       toast.success('Network loaded successfully!')
