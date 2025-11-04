@@ -48,14 +48,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!userCredentials) {
-        console.error('[FileManager] Failed to load credentials after 5 seconds')
+        console.error('[FileManager] Failed to load credentials after 10 seconds')
         setInitializationFailed(true)
-        toast.error('Failed to initialize storage system. Please refresh the page.')
       }
-    }, 5000)
+    }, 10000)
 
     if (userCredentials) {
       clearTimeout(timer)
+      setInitializationFailed(false)
     }
 
     return () => clearTimeout(timer)

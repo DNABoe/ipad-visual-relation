@@ -31,9 +31,21 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
+      setUserCredentials(credentials)
+      
       await new Promise<void>((resolve) => {
-        setUserCredentials(credentials)
-        setTimeout(resolve, 100)
+        const checkInterval = setInterval(async () => {
+          const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
+          if (stored && stored.username === username) {
+            clearInterval(checkInterval)
+            resolve()
+          }
+        }, 50)
+        
+        setTimeout(() => {
+          clearInterval(checkInterval)
+          resolve()
+        }, 3000)
       })
       
       setIsAuthenticated(true)
@@ -52,9 +64,21 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
+      setUserCredentials(credentials)
+      
       await new Promise<void>((resolve) => {
-        setUserCredentials(credentials)
-        setTimeout(resolve, 100)
+        const checkInterval = setInterval(async () => {
+          const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
+          if (stored && stored.username === username) {
+            clearInterval(checkInterval)
+            resolve()
+          }
+        }, 50)
+        
+        setTimeout(() => {
+          clearInterval(checkInterval)
+          resolve()
+        }, 3000)
       })
 
       setInviteToken(null)
