@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,11 +11,6 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [userSettings] = useKV<{
-    username: string
-    passwordHash: PasswordHash
-  } | null>('user-credentials', null)
-
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -29,6 +23,11 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsLoading(true)
 
     try {
+      const userSettings = await window.spark.kv.get<{
+        username: string
+        passwordHash: PasswordHash
+      }>('user-credentials')
+
       if (!userSettings || !userSettings.username || !userSettings.passwordHash) {
         setError('System error: credentials not initialized. Please refresh the page.')
         setIsLoading(false)

@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { Toaster, toast } from 'sonner'
 import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
@@ -9,14 +8,18 @@ import { InviteAcceptView } from './components/InviteAcceptView'
 import { hashPassword, type PasswordHash } from './lib/auth'
 import type { Workspace, AppSettings } from './lib/types'
 import { DEFAULT_APP_SETTINGS } from './lib/constants'
+import { waitForSpark } from './lib/sparkReady'
+import { WarningCircle } from '@phosphor-icons/react'
+import { Button } from './components/ui/button'
 
 function App() {
-  const [userCredentials, setUserCredentials] = useKV<{
+  const [sparkReady, setSparkReady] = useState(false)
+  const [sparkError, setSparkError] = useState(false)
+  const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
-  } | null>('user-credentials', null)
-  
-  const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
+  } | null>(null)
+  const [credentialsLoaded, setCredentialsLoaded] = useState(false)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
@@ -28,12 +31,49 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
-    console.log('[App] userCredentials state changed:', userCredentials ? `username: ${userCredentials.username}` : 'null')
-  }, [userCredentials])
+    let mounted = true
 
-  useEffect(() => {
-    console.log('[App] isAuthenticated state changed:', isAuthenticated)
-  }, [isAuthenticated])
+    const initializeSpark = async () => {
+      console.log('[App] Waiting for Spark runtime...')
+      const ready = await waitForSpark(10000)
+      
+      if (!mounted) return
+      
+      if (!ready) {
+        console.error('[App] Spark runtime failed to initialize')
+        setSparkError(true)
+        return
+      }
+
+      console.log('[App] Spark runtime ready')
+      setSparkReady(true)
+
+      try {
+        const storedCredentials = await window.spark.kv.get<{
+          username: string
+          passwordHash: PasswordHash
+        }>('user-credentials')
+        
+        if (mounted) {
+          console.log('[App] Loaded credentials:', storedCredentials ? 'Found' : 'Not found')
+          setUserCredentials(storedCredentials || null)
+          setCredentialsLoaded(true)
+        }
+      } catch (error) {
+        console.error('[App] Failed to load credentials:', error)
+        if (mounted) {
+          setUserCredentials(null)
+          setCredentialsLoaded(true)
+        }
+      }
+    }
+
+    initializeSpark()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
@@ -56,9 +96,6 @@ function App() {
       console.log('[App] Credentials verified in KV store')
       
       setUserCredentials(credentials)
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
       setIsAuthenticated(true)
       setIsSettingUpCredentials(false)
       
@@ -71,7 +108,7 @@ function App() {
       toast.error(errorMessage)
       throw error
     }
-  }, [setUserCredentials])
+  }, [])
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
@@ -94,9 +131,6 @@ function App() {
       console.log('[App] Credentials verified in KV store')
       
       setUserCredentials(credentials)
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
       setInviteToken(null)
       setInviteWorkspaceId(null)
       window.history.replaceState({}, '', window.location.pathname)
@@ -110,7 +144,7 @@ function App() {
       setIsSettingUpCredentials(false)
       toast.error('Failed to complete invite setup')
     }
-  }, [setUserCredentials])
+  }, [])
 
   const handleInviteCancel = useCallback(() => {
     setInviteToken(null)
@@ -123,9 +157,7 @@ function App() {
   }, [])
 
   const handleLoad = useCallback(async (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
-    const credentials = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-    
-    if (!credentials) {
+    if (!userCredentials) {
       toast.error('User credentials not found. Please refresh the page.')
       return
     }
@@ -140,13 +172,13 @@ function App() {
       updatedWorkspace.activityLog = []
     }
     
-    const currentUser = updatedWorkspace.users.find(u => u.username === credentials.username)
+    const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
     
     if (!currentUser) {
       const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
         userId: userId,
-        username: credentials.username,
+        username: userCredentials.username,
         role: 'admin' as const,
         addedAt: Date.now(),
         addedBy: 'system',
@@ -164,7 +196,7 @@ function App() {
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
-  }, [])
+  }, [userCredentials])
 
   const handleNewNetwork = useCallback(() => {
     setInitialWorkspace(null)
@@ -187,6 +219,46 @@ function App() {
     setPassword('')
     setShowFileManager(true)
   }, [])
+
+  if (sparkError) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-6 max-w-md p-6">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-destructive/10 p-4">
+                <WarningCircle size={48} className="text-destructive" weight="duotone" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-semibold text-foreground">Failed to initialize storage system</h1>
+              <p className="text-muted-foreground">
+                The application could not connect to the storage system. This may be due to a network issue or browser compatibility problem.
+              </p>
+            </div>
+            <Button onClick={() => window.location.reload()} variant="outline" className="w-full">
+              Refresh Page
+            </Button>
+          </div>
+        </div>
+        <Toaster />
+      </>
+    )
+  }
+
+  if (!sparkReady || !credentialsLoaded) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Initializing application...</p>
+          </div>
+        </div>
+        <Toaster />
+      </>
+    )
+  }
 
   if (isSettingUpCredentials) {
     return (

@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -29,11 +28,6 @@ interface CreatedNetwork {
 }
 
 export function FileManager({ onLoad }: FileManagerProps) {
-  const [userCredentials] = useKV<{
-    username: string
-    passwordHash: PasswordHash
-  } | null>('user-credentials', null)
-  
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [showLoadDialog, setShowLoadDialog] = useState(false)
   const [newFileName, setNewFileName] = useState('')
@@ -78,6 +72,11 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
+      const userCredentials = await window.spark.kv.get<{
+        username: string
+        passwordHash: PasswordHash
+      }>('user-credentials')
+      
       console.log('[FileManager] Using credentials from KV:', userCredentials)
       
       if (!userCredentials) {
@@ -286,17 +285,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
     )
   }
 
-  if (!userCredentials) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading credentials...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-background via-background to-primary/5">
       <div className="w-full max-w-md space-y-12 animate-fade-in-up">
@@ -307,22 +295,20 @@ export function FileManager({ onLoad }: FileManagerProps) {
         <div className="space-y-5">
           <Button
             onClick={() => setShowNewDialog(true)}
-            disabled={!userCredentials}
-            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
             <UsersThree size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            {!userCredentials ? 'Loading...' : 'Generate New Network'}
+            Generate New Network
           </Button>
 
           <Button
             onClick={() => setShowLoadDialog(true)}
-            disabled={!userCredentials}
-            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-20 text-lg bg-primary hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] group relative overflow-hidden"
             size="lg"
           >
             <FolderOpen size={28} className="mr-3 group-hover:scale-110 transition-transform duration-200" weight="duotone" />
-            {!userCredentials ? 'Loading...' : 'Load Existing Network'}
+            Load Existing Network
           </Button>
         </div>
 
