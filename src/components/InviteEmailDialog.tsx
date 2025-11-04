@@ -94,8 +94,8 @@ This is an automated invitation from RelEye. If you received this email in error
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col gap-0 p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+      <DialogContent className="max-w-3xl max-h-[90vh] p-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <EnvelopeSimple className="w-6 h-6 text-primary" weight="duotone" />
@@ -109,99 +109,97 @@ This is an automated invitation from RelEye. If you received this email in error
           </div>
         </DialogHeader>
 
-        <div className="flex-1 px-6 overflow-y-auto min-h-0">
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4 pb-4">
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <div className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Simple Invitation Process
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  {userName} will get their own independent workspace:
-                </p>
-                <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
-                  <li>Send them this invitation email (using the button below)</li>
-                  <li>They click the link and create their account with a password</li>
-                  <li>They can immediately start creating their own network files</li>
-                  <li>Each user manages their own encrypted files independently</li>
-                </ol>
+        <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
+          <div className="space-y-4 pb-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <div className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Simple Invitation Process
               </div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                {userName} will get their own independent workspace:
+              </p>
+              <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
+                <li>Send them this invitation email (using the button below)</li>
+                <li>They click the link and create their account with a password</li>
+                <li>They can immediately start creating their own network files</li>
+                <li>Each user manages their own encrypted files independently</li>
+              </ol>
+            </div>
 
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <div className="text-sm font-medium text-primary mb-3 flex items-center gap-2">
-                  <EnvelopeSimple className="w-4 h-4" weight="duotone" />
-                  Quick Send Options
-                </div>
-                <div className="flex flex-col gap-2">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <div className="text-sm font-medium text-primary mb-3 flex items-center gap-2">
+                <EnvelopeSimple className="w-4 h-4" weight="duotone" />
+                Quick Send Options
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  onClick={handleOpenMailClient}
+                  className="w-full flex items-center justify-center gap-2"
+                  size="lg"
+                >
+                  <EnvelopeSimple className="w-5 h-5" weight="duotone" />
+                  Open in Default Email App
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
                   <Button 
-                    onClick={handleOpenMailClient}
-                    className="w-full flex items-center justify-center gap-2"
-                    size="lg"
+                    variant="outline" 
+                    onClick={handleCopyEmail}
+                    className="flex items-center justify-center gap-2"
                   >
-                    <EnvelopeSimple className="w-5 h-5" weight="duotone" />
-                    Open in Default Email App
+                    {copied ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy Full Email
+                      </>
+                    )}
                   </Button>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleCopyEmail}
-                      className="flex items-center justify-center gap-2"
-                    >
-                      {copied ? (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy Full Email
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleCopyLink}
-                      className="flex items-center justify-center gap-2"
-                    >
-                      <Copy className="w-4 h-4" />
-                      Copy Link Only
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCopyLink}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy Link Only
+                  </Button>
                 </div>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card/50 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Logo size={32} showText={false} animated={false} />
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
-                    <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
-                  </div>
-                </div>
-                <div className="space-y-1 mt-3">
-                  <div className="flex gap-2 text-sm">
-                    <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
-                    <span className="text-foreground">{userEmail}</span>
-                  </div>
-                  <div className="flex gap-2 text-sm">
-                    <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
-                    <span className="text-foreground">{emailSubject}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-border rounded-lg bg-muted/30 p-4 max-h-[400px] overflow-y-auto">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
-                  {emailBody}
-                </pre>
               </div>
             </div>
-          </ScrollArea>
-        </div>
 
-        <DialogFooter className="flex-shrink-0 px-6 py-4 border-t border-border">
+            <div className="rounded-lg border border-border bg-card/50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Logo size={32} showText={false} animated={false} />
+                <div>
+                  <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
+                  <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
+                </div>
+              </div>
+              <div className="space-y-1 mt-3">
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
+                  <span className="text-foreground break-all">{userEmail}</span>
+                </div>
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
+                  <span className="text-foreground">{emailSubject}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-border rounded-lg bg-muted/30 p-4">
+              <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
+                {emailBody}
+              </pre>
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="px-6 py-4 border-t border-border">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Close
           </Button>

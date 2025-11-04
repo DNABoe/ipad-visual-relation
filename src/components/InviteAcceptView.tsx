@@ -24,11 +24,12 @@ interface PendingInvite {
 interface InviteAcceptViewProps {
   inviteToken: string
   workspaceId: string
+  inviteEmail: string | null
   onComplete: (userId: string, username: string, password: string, email: string | undefined) => void
   onCancel: () => void
 }
 
-export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCancel }: InviteAcceptViewProps) {
+export function InviteAcceptView({ inviteToken, workspaceId, inviteEmail, onComplete, onCancel }: InviteAcceptViewProps) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -43,6 +44,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
       try {
         console.log('[InviteAcceptView] Loading invitation...')
         console.log('[InviteAcceptView] inviteToken:', inviteToken)
+        console.log('[InviteAcceptView] inviteEmail:', inviteEmail)
 
         const invites = await storage.get<PendingInvite[]>('pending-invites')
         console.log('[InviteAcceptView] All pending invites:', invites)
@@ -54,7 +56,12 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
           return
         }
 
-        const invite = invites.find(inv => inv.token === inviteToken)
+        let invite = invites.find(inv => inv.token === inviteToken)
+        
+        if (inviteEmail && !invite) {
+          invite = invites.find(inv => inv.email === inviteEmail && inv.token === inviteToken)
+        }
+        
         console.log('[InviteAcceptView] Found invite:', invite)
         
         if (!invite) {
@@ -82,7 +89,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
     }
 
     loadInvite()
-  }, [inviteToken])
+  }, [inviteToken, inviteEmail])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -118,7 +125,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
       await storage.set('pending-invites', updatedInvites)
 
       toast.success('Account created successfully!')
-      onComplete(userId, inviteData.name, password, inviteData.email)
+      onComplete(userId, inviteData.email, password, inviteData.email)
     } catch (err) {
       console.error('Error accepting invite:', err)
       setError('Failed to create account')
@@ -178,7 +185,13 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
             </div>
 
             <div className="flex flex-col gap-2">
-              <Button onClick={onCancel} className="w-full">
+              <Button 
+                onClick={() => {
+                  window.history.replaceState({}, '', window.location.pathname)
+                  window.location.reload()
+                }} 
+                className="w-full"
+              >
                 Return to Login
               </Button>
             </div>

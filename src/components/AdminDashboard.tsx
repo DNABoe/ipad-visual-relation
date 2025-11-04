@@ -183,7 +183,7 @@ export function AdminDashboard({
     await storage.set('pending-invites', updatedInvites)
     setPendingInvites(updatedInvites)
 
-    const inviteLink = generateInviteLink('app', inviteToken)
+    const inviteLink = `${generateInviteLink('app', inviteToken)}&email=${encodeURIComponent(newUserEmail.trim())}`
     
     onLogActivity({
       id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,

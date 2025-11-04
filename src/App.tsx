@@ -23,6 +23,7 @@ function App() {
   const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [inviteWorkspaceId, setInviteWorkspaceId] = useState<string | null>(null)
+  const [inviteEmail, setInviteEmail] = useState<string | null>(null)
   const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
@@ -106,11 +107,13 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search)
     const workspaceId = urlParams.get('workspace')
     const token = urlParams.get('invite')
+    const email = urlParams.get('email')
     
     if (workspaceId && token) {
-      console.log('[App] Invite link detected:', { workspaceId, token })
+      console.log('[App] Invite link detected:', { workspaceId, token, email })
       setInviteWorkspaceId(workspaceId)
       setInviteToken(token)
+      setInviteEmail(email)
     }
   }, [])
 
@@ -229,12 +232,9 @@ function App() {
   const handleInviteCancel = useCallback(() => {
     setInviteToken(null)
     setInviteWorkspaceId(null)
+    setInviteEmail(null)
     window.history.replaceState({}, '', window.location.pathname)
-    
-    if (!userCredentials && !hasCompletedSetup) {
-      setIsFirstTimeSetup(true)
-    }
-  }, [userCredentials, hasCompletedSetup])
+  }, [])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)
@@ -341,6 +341,7 @@ function App() {
         <InviteAcceptView
           inviteToken={inviteToken}
           workspaceId={inviteWorkspaceId}
+          inviteEmail={inviteEmail}
           onComplete={handleInviteComplete}
           onCancel={handleInviteCancel}
         />
