@@ -35,12 +35,24 @@ function App() {
 
     const initializeSpark = async () => {
       console.log('[App] Waiting for Spark runtime...')
-      const ready = await waitForSpark(10000)
+      console.log('[App] Environment:', {
+        userAgent: navigator.userAgent,
+        location: window.location.href,
+        sparkExists: !!window.spark
+      })
+      
+      const ready = await waitForSpark(30000)
       
       if (!mounted) return
       
       if (!ready) {
-        console.error('[App] Spark runtime failed to initialize')
+        console.error('[App] Spark runtime failed to initialize after 30 seconds')
+        console.error('[App] Final state:', {
+          sparkExists: !!window.spark,
+          kvExists: !!(window.spark && window.spark.kv),
+          setExists: !!(window.spark && window.spark.kv && window.spark.kv.set),
+          getExists: !!(window.spark && window.spark.kv && window.spark.kv.get)
+        })
         setSparkError(true)
         return
       }
@@ -49,6 +61,7 @@ function App() {
       setSparkReady(true)
 
       try {
+        console.log('[App] Loading user credentials...')
         const storedCredentials = await window.spark.kv.get<{
           username: string
           passwordHash: PasswordHash
@@ -224,7 +237,7 @@ function App() {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-6 max-w-md p-6">
+          <div className="text-center space-y-6 max-w-2xl p-6">
             <div className="flex justify-center">
               <div className="rounded-full bg-destructive/10 p-4">
                 <WarningCircle size={48} className="text-destructive" weight="duotone" />
@@ -233,12 +246,29 @@ function App() {
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold text-foreground">Failed to initialize storage system</h1>
               <p className="text-muted-foreground">
-                The application could not connect to the storage system. This may be due to a network issue or browser compatibility problem.
+                The application could not connect to the storage system within 30 seconds. 
+                This may be due to a network issue, browser compatibility problem, or the Spark runtime not being available.
+              </p>
+              <div className="mt-4 p-4 bg-muted/20 rounded-lg text-left">
+                <p className="text-sm text-muted-foreground font-mono">
+                  Diagnostic Information:
+                </p>
+                <ul className="text-xs text-muted-foreground font-mono mt-2 space-y-1">
+                  <li>• Browser: {navigator.userAgent.split(' ').pop()}</li>
+                  <li>• Location: {window.location.href}</li>
+                  <li>• Spark Available: {String(!!window.spark)}</li>
+                  <li>• KV Available: {String(!!(window.spark && window.spark.kv))}</li>
+                </ul>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Button onClick={() => window.location.reload()} className="w-full">
+                Refresh Page
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                If the problem persists, try clearing your browser cache or using a different browser.
               </p>
             </div>
-            <Button onClick={() => window.location.reload()} variant="outline" className="w-full">
-              Refresh Page
-            </Button>
           </div>
         </div>
         <Toaster />
