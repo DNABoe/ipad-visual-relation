@@ -77,32 +77,10 @@ function App() {
       const credentials = { username, passwordHash }
       
       console.log('[App] Saving credentials to storage...')
-      let saveAttempts = 0
-      const maxAttempts = 3
-      let saveError: Error | null = null
-      
-      while (saveAttempts < maxAttempts) {
-        try {
-          await window.spark.kv.set('user-credentials', credentials)
-          console.log('[App] Save attempt', saveAttempts + 1, 'successful')
-          saveError = null
-          break
-        } catch (kvError) {
-          saveAttempts++
-          saveError = kvError instanceof Error ? kvError : new Error('Unknown storage error')
-          console.error(`[App] Save attempt ${saveAttempts} failed:`, kvError)
-          if (saveAttempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-        }
-      }
-      
-      if (saveError) {
-        throw new Error(`Failed to save credentials after ${maxAttempts} attempts: ${saveError.message}`)
-      }
+      await window.spark.kv.set('user-credentials', credentials)
       
       console.log('[App] Verifying saved credentials...')
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       const savedCreds = await window.spark.kv.get('user-credentials')
       console.log('[App] Retrieved credentials:', savedCreds ? 'Found' : 'Not found')
@@ -113,6 +91,10 @@ function App() {
       
       console.log('[App] Updating application state...')
       setUserCredentials(() => credentials)
+      
+      console.log('[App] Waiting for state propagation...')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       setIsAuthenticated(true)
       
       toast.success('Administrator account created successfully!')
