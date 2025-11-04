@@ -88,8 +88,8 @@ This is an automated invitation from RelEye. If you received this email in error
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col gap-0 p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <EnvelopeSimple className="w-6 h-6 text-primary" weight="duotone" />
@@ -103,61 +103,61 @@ This is an automated invitation from RelEye. If you received this email in error
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 min-h-0">
-          <div className="rounded-lg border border-border bg-card/50 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Logo size={32} showText={false} animated={false} />
-              <div>
-                <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
-                <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
+        <ScrollArea className="flex-1 px-6 overflow-y-auto">
+          <div className="space-y-4 pb-4">
+            <div className="rounded-lg border border-border bg-card/50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Logo size={32} showText={false} animated={false} />
+                <div>
+                  <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
+                  <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
+                </div>
+              </div>
+              <div className="space-y-1 mt-3">
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
+                  <span className="text-foreground">{userEmail}</span>
+                </div>
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
+                  <span className="text-foreground">{emailSubject}</span>
+                </div>
               </div>
             </div>
-            <div className="space-y-1 mt-3">
-              <div className="flex gap-2 text-sm">
-                <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
-                <span className="text-foreground">{userEmail}</span>
-              </div>
-              <div className="flex gap-2 text-sm">
-                <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
-                <span className="text-foreground">{emailSubject}</span>
-              </div>
-            </div>
-          </div>
 
-          <ScrollArea className="flex-1 border border-border rounded-lg bg-muted/30">
-            <div className="p-4">
+            <div className="border border-border rounded-lg bg-muted/30 p-4">
               <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
                 {emailBody}
               </pre>
             </div>
-          </ScrollArea>
 
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-            <div className="text-xs font-medium text-primary mb-2">📋 Quick Actions</div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCopyLink}
-                className="flex-1 flex items-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                Copy Link Only
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleOpenMailClient}
-                className="flex-1 flex items-center gap-2"
-              >
-                <EnvelopeSimple className="w-4 h-4" />
-                Open in Mail App
-              </Button>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div className="text-xs font-medium text-primary mb-2">📋 Quick Actions</div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleCopyLink}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Link Only
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleOpenMailClient}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <EnvelopeSimple className="w-4 h-4" />
+                  Open in Mail App
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollArea>
 
-        <DialogFooter className="flex-shrink-0">
+        <DialogFooter className="flex-shrink-0 px-6 py-4 border-t border-border">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
