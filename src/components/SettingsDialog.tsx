@@ -18,7 +18,7 @@ import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constant
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
 import { AdminDashboard } from '@/components/AdminDashboard'
-import { getStorage } from '@/lib/storage'
+import { storage } from '@/lib/storage'
 
 interface SettingsDialogProps {
   open: boolean
@@ -119,7 +119,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           passwordHash: newHash,
         }
         
-        const storage = getStorage()
         await storage.set('user-credentials', newCreds)
         await new Promise(resolve => setTimeout(resolve, 300))
         setUserCredentials(() => newCreds)
@@ -131,7 +130,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           username: username.trim(),
         }
         
-        const storage = getStorage()
         await storage.set('user-credentials', newCreds)
         await new Promise(resolve => setTimeout(resolve, 300))
         setUserCredentials(() => newCreds)

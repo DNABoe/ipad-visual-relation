@@ -15,7 +15,7 @@ import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { createFileIconDataUrl } from '@/lib/fileIcon'
 import type { PasswordHash } from '@/lib/auth'
-import { getStorage } from '@/lib/storage'
+import { storage } from '@/lib/storage'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -73,7 +73,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
-      const storage = getStorage()
       const userCredentials = await storage.get<{
         username: string
         passwordHash: PasswordHash
