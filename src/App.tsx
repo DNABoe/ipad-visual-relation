@@ -26,10 +26,25 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
+      console.log('[App] Starting first time setup for username:', username)
       setIsSettingUpCredentials(true)
       
+      console.log('[App] Hashing password...')
       const passwordHash = await hashPassword(password)
+      console.log('[App] Password hashed successfully')
+      
       const credentials = { username, passwordHash }
+      console.log('[App] Attempting to save credentials to KV store...')
+      
+      await window.spark.kv.set('user-credentials', credentials)
+      console.log('[App] Credentials saved successfully to KV store')
+      
+      console.log('[App] Verifying credentials were saved...')
+      const savedCredentials = await window.spark.kv.get('user-credentials')
+      if (!savedCredentials) {
+        throw new Error('Failed to verify credentials were saved')
+      }
+      console.log('[App] Credentials verified in KV store')
       
       setUserCredentials(credentials)
       setIsAuthenticated(true)
@@ -47,10 +62,18 @@ function App() {
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
+      console.log('[App] Starting invite complete for username:', username)
       setIsSettingUpCredentials(true)
       
+      console.log('[App] Hashing password...')
       const passwordHash = await hashPassword(password)
+      console.log('[App] Password hashed successfully')
+      
       const credentials = { username, passwordHash }
+      console.log('[App] Attempting to save credentials to KV store...')
+      
+      await window.spark.kv.set('user-credentials', credentials)
+      console.log('[App] Credentials saved successfully to KV store')
       
       setUserCredentials(credentials)
       
@@ -64,7 +87,8 @@ function App() {
     } catch (error) {
       console.error('[App] Invite accept error:', error)
       setIsSettingUpCredentials(false)
-      toast.error('Failed to complete invite setup')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to complete invite setup'
+      toast.error(errorMessage)
     }
   }, [setUserCredentials])
 
