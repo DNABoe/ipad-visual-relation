@@ -15,7 +15,11 @@ export interface StorageHealthStatus {
   error?: string
 }
 
-class SparkKVAdapter implements StorageAdapter {
+class IndexedDBAdapter implements StorageAdapter {
+  private dbName = 'RelEyeStorage'
+  private storeName = 'keyValue'
+  private version = 1
+  private db: IDBDatabase | null = null
   private readyPromise: Promise<boolean> | null = null
 
   async isReady(): Promise<boolean> {
@@ -23,116 +27,153 @@ class SparkKVAdapter implements StorageAdapter {
       return this.readyPromise
     }
 
-    this.readyPromise = this.checkSparkKV()
+    this.readyPromise = this.initDB()
     return this.readyPromise
   }
 
-  private async checkSparkKV(): Promise<boolean> {
-    const maxWaitMs = 5000
-    const startTime = Date.now()
+  private async initDB(): Promise<boolean> {
+    console.log('[IndexedDBAdapter] Initializing IndexedDB...')
     
-    console.log('[SparkKVAdapter] Checking for Spark KV availability...')
-
-    while (Date.now() - startTime < maxWaitMs) {
+    return new Promise((resolve, reject) => {
       try {
-        if (window.spark?.kv && 
-            typeof window.spark.kv.get === 'function' &&
-            typeof window.spark.kv.set === 'function' &&
-            typeof window.spark.kv.keys === 'function' &&
-            typeof window.spark.kv.delete === 'function') {
+        const request = indexedDB.open(this.dbName, this.version)
+
+        request.onerror = () => {
+          console.error('[IndexedDBAdapter] ✗ Failed to open IndexedDB:', request.error)
+          resolve(false)
+        }
+
+        request.onsuccess = () => {
+          this.db = request.result
+          console.log('[IndexedDBAdapter] ✓ IndexedDB initialized successfully')
+          resolve(true)
+        }
+
+        request.onupgradeneeded = (event) => {
+          console.log('[IndexedDBAdapter] Creating object store...')
+          const db = (event.target as IDBOpenDBRequest).result
           
-          await window.spark.kv.get('_spark_health_check')
-          console.log('[SparkKVAdapter] ✓ Spark KV is ready')
-          return true
+          if (!db.objectStoreNames.contains(this.storeName)) {
+            db.createObjectStore(this.storeName)
+            console.log('[IndexedDBAdapter] ✓ Object store created')
+          }
         }
       } catch (error) {
-        console.warn('[SparkKVAdapter] Waiting for Spark KV...', error)
+        console.error('[IndexedDBAdapter] ✗ IndexedDB initialization error:', error)
+        resolve(false)
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
+    })
+  }
 
-    console.error('[SparkKVAdapter] ✗ Spark KV not available after timeout')
-    return false
+  private async ensureDB(): Promise<IDBDatabase> {
+    await this.isReady()
+    
+    if (!this.db) {
+      throw new Error('IndexedDB not initialized')
+    }
+    
+    return this.db
   }
 
   async get<T>(key: string): Promise<T | undefined> {
-    await this.isReady()
+    const db = await this.ensureDB()
     
-    if (!window.spark?.kv) {
-      throw new Error('Spark KV not available')
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([this.storeName], 'readonly')
+        const store = transaction.objectStore(this.storeName)
+        const request = store.get(key)
 
-    try {
-      console.log(`[SparkKVAdapter] Getting key: ${key}`)
-      const value = await window.spark.kv.get<T>(key)
-      console.log(`[SparkKVAdapter] Got value for ${key}:`, value ? 'exists' : 'undefined', value)
-      return value
-    } catch (error) {
-      console.error(`[SparkKVAdapter] Error getting ${key}:`, error)
-      throw error
-    }
+        request.onsuccess = () => {
+          console.log(`[IndexedDBAdapter] Got value for ${key}:`, request.result ? 'exists' : 'undefined')
+          resolve(request.result)
+        }
+
+        request.onerror = () => {
+          console.error(`[IndexedDBAdapter] Error getting ${key}:`, request.error)
+          reject(request.error)
+        }
+      } catch (error) {
+        console.error(`[IndexedDBAdapter] Transaction error getting ${key}:`, error)
+        reject(error)
+      }
+    })
   }
 
   async set<T>(key: string, value: T): Promise<void> {
-    await this.isReady()
+    const db = await this.ensureDB()
     
-    if (!window.spark?.kv) {
-      throw new Error('Spark KV not available')
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([this.storeName], 'readwrite')
+        const store = transaction.objectStore(this.storeName)
+        const request = store.put(value, key)
 
-    try {
-      console.log(`[SparkKVAdapter] Setting key: ${key}`, value)
-      
-      await window.spark.kv.set(key, value)
-      console.log(`[SparkKVAdapter] Successfully set ${key}`)
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      const verification = await window.spark.kv.get<T>(key)
-      console.log(`[SparkKVAdapter] Verification result for ${key}:`, verification)
-      
-      if (verification === null || verification === undefined) {
-        console.error(`[SparkKVAdapter] Verification failed - value is null or undefined`)
-        throw new Error(`Failed to verify ${key} was saved - storage returned ${verification}`)
+        request.onsuccess = () => {
+          console.log(`[IndexedDBAdapter] ✓ Successfully set ${key}`)
+          resolve()
+        }
+
+        request.onerror = () => {
+          console.error(`[IndexedDBAdapter] Error setting ${key}:`, request.error)
+          reject(request.error)
+        }
+      } catch (error) {
+        console.error(`[IndexedDBAdapter] Transaction error setting ${key}:`, error)
+        reject(error)
       }
-      
-      console.log(`[SparkKVAdapter] ✓ Verified ${key} was saved successfully`)
-    } catch (error) {
-      console.error(`[SparkKVAdapter] Error setting ${key}:`, error)
-      console.error(`[SparkKVAdapter] Value that failed to save:`, value)
-      throw new Error(`Storage error for ${key}: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
+    })
   }
 
   async delete(key: string): Promise<void> {
-    await this.isReady()
+    const db = await this.ensureDB()
     
-    if (!window.spark?.kv) {
-      throw new Error('Spark KV not available')
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([this.storeName], 'readwrite')
+        const store = transaction.objectStore(this.storeName)
+        const request = store.delete(key)
 
-    try {
-      await window.spark.kv.delete(key)
-    } catch (error) {
-      console.error(`[SparkKVAdapter] Error deleting ${key}:`, error)
-      throw error
-    }
+        request.onsuccess = () => {
+          console.log(`[IndexedDBAdapter] ✓ Successfully deleted ${key}`)
+          resolve()
+        }
+
+        request.onerror = () => {
+          console.error(`[IndexedDBAdapter] Error deleting ${key}:`, request.error)
+          reject(request.error)
+        }
+      } catch (error) {
+        console.error(`[IndexedDBAdapter] Transaction error deleting ${key}:`, error)
+        reject(error)
+      }
+    })
   }
 
   async keys(): Promise<string[]> {
-    await this.isReady()
+    const db = await this.ensureDB()
     
-    if (!window.spark?.kv) {
-      throw new Error('Spark KV not available')
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([this.storeName], 'readonly')
+        const store = transaction.objectStore(this.storeName)
+        const request = store.getAllKeys()
 
-    try {
-      return await window.spark.kv.keys()
-    } catch (error) {
-      console.error('[SparkKVAdapter] Error getting keys:', error)
-      throw error
-    }
+        request.onsuccess = () => {
+          const keys = request.result.map(k => String(k))
+          console.log(`[IndexedDBAdapter] Got ${keys.length} keys`)
+          resolve(keys)
+        }
+
+        request.onerror = () => {
+          console.error('[IndexedDBAdapter] Error getting keys:', request.error)
+          reject(request.error)
+        }
+      } catch (error) {
+        console.error('[IndexedDBAdapter] Transaction error getting keys:', error)
+        reject(error)
+      }
+    })
   }
 
   async checkHealth(): Promise<StorageHealthStatus> {
@@ -155,7 +196,7 @@ class SparkKVAdapter implements StorageAdapter {
       const testValue = { test: true, timestamp: Date.now() }
 
       try {
-        await window.spark!.kv.set(testKey, testValue)
+        await this.set(testKey, testValue)
         status.canWrite = true
       } catch (error) {
         status.error = `Write failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -163,7 +204,7 @@ class SparkKVAdapter implements StorageAdapter {
       }
 
       try {
-        const retrieved = await window.spark!.kv.get(testKey)
+        const retrieved = await this.get(testKey)
         status.canRead = !!retrieved
       } catch (error) {
         status.error = `Read failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -171,7 +212,7 @@ class SparkKVAdapter implements StorageAdapter {
       }
 
       try {
-        await window.spark!.kv.delete(testKey)
+        await this.delete(testKey)
         status.canDelete = true
       } catch (error) {
         status.error = `Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -185,4 +226,4 @@ class SparkKVAdapter implements StorageAdapter {
   }
 }
 
-export const storage: StorageAdapter = new SparkKVAdapter()
+export const storage: StorageAdapter = new IndexedDBAdapter()

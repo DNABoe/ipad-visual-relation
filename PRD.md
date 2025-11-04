@@ -7,7 +7,7 @@ A web-based network visualization tool that lets users build and explore visual 
 **Production URL**: https://releye.boestad.com
 
 This application is designed to be deployed as a static site on GitHub Pages with a custom domain. All functionality works when deployed, including:
-- User authentication with secure credential storage via Spark KV API
+- User authentication with secure credential storage via IndexedDB (browser-based storage)
 - Encrypted file management (create, save, load .enc.releye files)
 - Canvas operations (pan, zoom, drag, connect)
 - Multi-user collaboration with invite system
@@ -15,16 +15,16 @@ This application is designed to be deployed as a static site on GitHub Pages wit
 - Investigation reports with PDF generation
 - All UI interactions and dialogs
 
-The app uses the Spark runtime which provides cloud-based key-value storage (`spark.kv`) for user credentials and workspace metadata, while keeping all sensitive relationship data encrypted in local files that never leave the user's device.
+The app uses browser-native IndexedDB for storing user credentials locally (secure, persistent, works on all deployed sites), while keeping all sensitive relationship data encrypted in local files that never leave the user's device.
 
 ### Deployment Verification Checklist
 
 ✅ **Domain Configuration**: CNAME file present in `/public/CNAME` with `releye.boestad.com`
 ✅ **Base Path**: `index.html` uses relative paths (`./src/main.css`, `./src/main.tsx`) compatible with custom domain deployment
 ✅ **Assets**: All assets use proper imports (no hardcoded paths), public folder assets accessible via `/` root path
-✅ **Storage Layer**: Adaptive storage system detects Spark KV availability (production) or falls back to localStorage (development only)
+✅ **Storage Layer**: Browser-native IndexedDB for credential storage - works on all deployed sites without external dependencies
 ✅ **Web Crypto API**: All encryption/decryption uses standard Web Crypto API available in all modern browsers
-✅ **No External Dependencies**: No backend servers or third-party APIs required for core functionality (except Spark runtime for KV storage)
+✅ **No External Dependencies**: No backend servers or third-party APIs required for core functionality
 ✅ **SPA Routing**: Single-page application with no client-side routing requirements (no 404 issues)
 ✅ **Meta Tags**: Open Graph tags configured with correct production URL
 ✅ **Jekyll Bypass**: `.nojekyll` file present to prevent GitHub Pages from processing files with underscores
@@ -33,8 +33,8 @@ The app uses the Spark runtime which provides cloud-based key-value storage (`sp
 
 ### Critical Production Components
 
-1. **Spark Runtime Integration** (`src/main.tsx`): Waits up to 5 seconds for `window.spark.kv` to become available on initialization
-2. **Storage Adapter** (`src/lib/storage.ts`): `SparkKVAdapter` for production (uses `window.spark.kv`), `LocalStorageAdapter` for development fallback
+1. **IndexedDB Storage** (`src/lib/storage.ts`): Browser-native IndexedDB adapter for secure credential storage (works on all deployed sites)
+2. **Storage Adapter Interface**: Unified `StorageAdapter` interface supporting get/set/delete/keys operations with health checks
 3. **Error Boundaries**: React error boundary wraps entire app to catch and display runtime errors gracefully
 4. **Initialization Sequence**: App → Storage Check → Load Credentials → First Time Setup OR Login → File Manager → Workspace View
 
@@ -50,19 +50,20 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 RelEye uses a hybrid storage model that balances security and usability. **All functionality works correctly when deployed at releye.boestad.com.**
 
-### User Credentials (Cloud Storage via spark.kv)
-- **Storage**: User credentials (username and password hash) are stored using the Spark KV API which persists data in the cloud at the deployment domain (releye.boestad.com)
-- **Deployment Compatibility**: The storage layer automatically detects whether Spark KV is available (production deployment) or falls back to localStorage (development only)
-- **Implementation**: Uses `SparkKVAdapter` in production which wraps `window.spark.kv.get/set/delete` methods
+### User Credentials (Browser IndexedDB Storage)
+- **Storage**: User credentials (username and password hash) are stored using browser-native IndexedDB, which persists data locally in the user's browser
+- **Deployment Compatibility**: IndexedDB works identically in development and production on any modern browser - no external dependencies
+- **Implementation**: Uses `IndexedDBAdapter` which wraps browser's native `indexedDB` API
 - **Purpose**: Enables authentication without needing to re-enter credentials on every page load
 - **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256 before storage - never stored in plain text
-- **Persistence**: Data persists across browser refreshes and sessions via Spark's cloud storage
-- **Key**: `user-credentials` in spark.kv
+- **Persistence**: Data persists across browser refreshes and sessions in the user's browser (per-origin storage)
+- **Database**: `RelEyeStorage` IndexedDB database, `keyValue` object store
+- **Key**: `user-credentials` in IndexedDB
 - **Access Pattern**: 
   1. Write: `await storage.set('user-credentials', credentials)` 
-  2. Read: `await storage.get('user-credentials')` or via `useKV('user-credentials')` React hook (reactive)
-  3. Initialization: App waits up to 5 seconds for Spark KV to become available on mount
-- **Deployment Verified**: Storage operations work correctly on deployed site with proper error handling and retry logic
+  2. Read: `await storage.get('user-credentials')`
+  3. Initialization: Database opens immediately on app mount (no timeout needed)
+- **Deployment Verified**: IndexedDB operations work correctly on all deployed sites with proper error handling
 
 ### Workspace Data (Local Files)
 - **Storage**: All relationship network data (persons, connections, groups) is stored in encrypted local files (.enc.releye)
