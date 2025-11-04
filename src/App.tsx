@@ -26,16 +26,16 @@ function App() {
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
 
-  useEffect(() => {
-    }
-  }, [])
-
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      setUserCredentials(() => credentials)
+      await new Promise<void>((resolve) => {
+        setUserCredentials(credentials)
+        setTimeout(resolve, 100)
+      })
+      
       setIsAuthenticated(true)
       
       toast.success('Administrator account created successfully!')
@@ -52,7 +52,10 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      setUserCredentials(() => credentials)
+      await new Promise<void>((resolve) => {
+        setUserCredentials(credentials)
+        setTimeout(resolve, 100)
+      })
 
       setInviteToken(null)
       setInviteWorkspaceId(null)

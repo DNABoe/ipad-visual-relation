@@ -10,21 +10,21 @@ A web-based network visualization tool that lets users build and explore visual 
 **Complexity Level**: Complex Application (advanced functionality, local encryption)
 This is a full-featured network visualization tool with encrypted local file storage, persistent state, canvas manipulation, and sophisticated interaction patterns requiring careful state management and performance optimization. All operations run entirely client-side with no server communication.
 
-## Data Persistence Architecture
+### Data Persistence Architecture
 
 RelEye uses a hybrid storage model that balances security and usability:
 
 ### User Credentials (Cloud Storage via spark.kv)
 - **Storage**: User credentials (username and password hash) are stored in the cloud using `spark.kv` API
-- **Implementation**: Direct writes to `window.spark.kv.set()` followed by React state updates via `setUserCredentials()`
+- **Implementation**: Direct writes to `setUserCredentials()` with a brief delay to ensure KV store sync before proceeding to next screen
 - **Purpose**: Enables authentication without needing to re-enter credentials on every page load
 - **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256 before storage
 - **Persistence**: Survives browser refreshes and is accessible across sessions
 - **Key**: `user-credentials` in spark.kv
 - **Access Pattern**: 
-  1. Write: `await window.spark.kv.set('user-credentials', credentials)` (primary)
-  2. Read: `await window.spark.kv.get('user-credentials')` (direct) or `useKV('user-credentials')` (reactive)
-  3. Always use direct KV writes for critical updates, then sync React state
+  1. Write: `setUserCredentials(credentials)` followed by 100ms delay to ensure KV sync
+  2. Read: `useKV('user-credentials')` (reactive, auto-syncs to React state)
+  3. Initialization: FileManager shows "Initializing RelEye..." with 5-second timeout and error handling if credentials don't load
 
 ### Workspace Data (Local Files)
 - **Storage**: All relationship network data (persons, connections, groups) is stored in encrypted local files (.enc.releye)
