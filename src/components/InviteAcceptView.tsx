@@ -15,13 +15,14 @@ import { getRoleDisplayName, getRoleDescription } from '@/lib/userManagement'
 interface InviteAcceptViewProps {
   inviteToken: string
   workspaceId: string
-  onComplete: (userId: string, username: string, password: string) => void
+  onComplete: (userId: string, username: string, password: string, email: string | undefined) => void
   onCancel: () => void
 }
 
 export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCancel }: InviteAcceptViewProps) {
   const [allWorkspaces, setAllWorkspaces] = useKV<Record<string, any>>('all-workspaces', {})
   const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -66,6 +67,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
 
         setInviteUser(user)
         setUsername(user.username || '')
+        setEmail(user.email || '')
         setIsLoading(false)
       } catch (err) {
         console.error('Error loading invite:', err)
@@ -150,7 +152,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
       await setAllWorkspaces(updatedWorkspaces)
 
       toast.success('Account activated successfully!')
-      onComplete(inviteUser.userId, username.trim(), password)
+      onComplete(inviteUser.userId, username.trim(), password, inviteUser.email)
     } catch (err) {
       console.error('Error accepting invite:', err)
       setError('Failed to activate account')
@@ -266,6 +268,15 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
                 <p className="text-xs text-muted-foreground">
                   {getRoleDescription(inviteUser.role)}
                 </p>
+                {inviteUser.email && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Email Address</span>
+                      <span className="text-sm font-medium">{inviteUser.email}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">This email is associated with your account</p>
+                  </div>
+                )}
               </div>
             )}
 

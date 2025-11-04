@@ -82,6 +82,18 @@ function App() {
     loadCredentials()
   }, [])
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const workspaceId = urlParams.get('workspace')
+    const token = urlParams.get('invite')
+    
+    if (workspaceId && token) {
+      console.log('[App] Invite link detected:', { workspaceId, token })
+      setInviteWorkspaceId(workspaceId)
+      setInviteToken(token)
+    }
+  }, [])
+
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
       console.log('[App] Starting first time setup for username:', username)
@@ -147,7 +159,7 @@ function App() {
     }
   }, [])
 
-  const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
+  const handleInviteComplete = useCallback(async (userId: string, username: string, password: string, email: string | undefined) => {
     try {
       console.log('[App] Starting invite complete for username:', username)
       setIsSettingUpCredentials(true)

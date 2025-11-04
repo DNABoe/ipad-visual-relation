@@ -454,6 +454,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         <div className="text-sm font-semibold text-foreground">
                           {currentUser.username}
                         </div>
+                        {currentUser.email && (
+                          <div className="text-xs text-muted-foreground">
+                            {currentUser.email}
+                          </div>
+                        )}
                         <div className={`text-xs px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1 ${
                           currentUser.role === 'admin' 
                             ? 'bg-accent/20 text-accent' 
@@ -488,6 +493,18 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               <h3 className="font-semibold text-sm">Account Security</h3>
               
               <div className="space-y-3 rounded-xl bg-card p-3">
+                {currentUser?.email && (
+                  <div className="space-y-2 pb-3 border-b border-border">
+                    <Label className="text-sm font-medium">Email Address</Label>
+                    <div className="px-3 py-2 rounded-md bg-muted/50 border border-border">
+                      <p className="text-sm font-medium text-foreground">{currentUser.email}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Email is associated with your account and cannot be changed
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                   <Input

@@ -114,6 +114,11 @@ export function AdminDashboard({
       return
     }
 
+    if (!newUserEmail || !newUserEmail.trim()) {
+      toast.error('Email address is required for invitations')
+      return
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (newUserEmail && !emailRegex.test(newUserEmail)) {
       toast.error('Please enter a valid email address')
@@ -122,12 +127,44 @@ export function AdminDashboard({
 
     const newUser = createWorkspaceUser(
       newUserName.trim(),
-      newUserEmail.trim() || undefined,
+      newUserEmail.trim(),
       newUserRole,
       currentUserId
     )
 
     const inviteLink = generateInviteLink(workspaceId, newUser.inviteToken!)
+    
+    const emailSubject = `You've been invited to join RelEye`
+    const emailBody = `Hello ${newUserName},
+
+You've been invited to join RelEye - a secure relationship network visualization platform.
+
+🔐 Secure & Private
+RelEye uses end-to-end encryption and zero-knowledge architecture to keep your data safe. All network files are stored locally and encrypted.
+
+👤 Your Account Details
+• Email: ${newUserEmail}
+• Role: ${getRoleDisplayName(newUserRole)}
+• Access: ${getRoleDescription(newUserRole)}
+
+🚀 Get Started
+Click the link below to set up your account:
+${inviteLink}
+
+📋 What You Can Do
+• Map relationships between people and organizations
+• Visualize connections with advanced analytics
+• Collaborate securely with your team
+• Export and share insights
+
+This invitation expires in 7 days.
+
+Welcome to RelEye!
+
+---
+This is an automated invitation from RelEye. If you received this email in error, please disregard it.`
+
+    const mailtoLink = `mailto:${newUserEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
     
     onUpdateUsers([...users, newUser])
     
@@ -139,11 +176,12 @@ export function AdminDashboard({
       action: 'invited',
       entityType: 'user',
       entityId: newUser.userId,
-      details: `Invited ${newUserName} as ${getRoleDisplayName(newUserRole)}`
+      details: `Invited ${newUserName} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
     })
 
+    window.open(mailtoLink, '_blank')
     navigator.clipboard.writeText(inviteLink)
-    toast.success('User invited! Invitation link copied to clipboard')
+    toast.success('Email template opened! Invitation link also copied to clipboard')
     
     setNewUserName('')
     setNewUserEmail('')
@@ -346,7 +384,7 @@ export function AdminDashboard({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl h-[85vh] p-0 flex flex-col">
+        <DialogContent className="max-w-[90vw] w-[1400px] h-[90vh] p-0 flex flex-col">
           <div className="flex flex-col h-full">
             <DialogHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -365,7 +403,7 @@ export function AdminDashboard({
             <div className="flex-1 overflow-hidden min-h-0">
               <Tabs defaultValue="users" className="h-full flex flex-col">
                 <div className="px-6 pt-4 flex-shrink-0">
-                  <TabsList className="grid w-full grid-cols-3 max-w-md">
+                  <TabsList className="grid w-full grid-cols-4 max-w-2xl">
                     <TabsTrigger value="users" className="flex items-center gap-2">
                       <Users className="w-4 h-4" />
                       Users
@@ -377,6 +415,10 @@ export function AdminDashboard({
                     <TabsTrigger value="stats" className="flex items-center gap-2">
                       <ChartBar className="w-4 h-4" />
                       Stats
+                    </TabsTrigger>
+                    <TabsTrigger value="reset" className="flex items-center gap-2">
+                      <Warning className="w-4 h-4" />
+                      Reset
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -732,24 +774,52 @@ export function AdminDashboard({
                           </div>
                         </CardContent>
                       </Card>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
 
+                <TabsContent value="reset" className="flex-1 px-6 pb-6 overflow-hidden">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-6 pr-4">
                       <Card className="border-destructive/50 bg-destructive/5">
                         <CardHeader>
                           <CardTitle className="text-destructive flex items-center gap-2">
                             <Warning className="w-5 h-5" />
-                            Danger Zone
+                            Application Reset
                           </CardTitle>
                           <CardDescription>
-                            Reset the entire application - this cannot be undone
+                            Reset the entire application to its initial state
                           </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-4">
+                          <div className="rounded-lg bg-background border border-destructive/30 p-4 space-y-3">
+                            <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                              <Warning className="w-4 h-4" />
+                              What will be deleted
+                            </p>
+                            <ul className="text-sm text-muted-foreground space-y-2 pl-6">
+                              <li>• All user accounts and credentials</li>
+                              <li>• All login history and permissions</li>
+                              <li>• All application settings</li>
+                              <li>• The application will reload and require a new admin setup</li>
+                            </ul>
+                          </div>
+
+                          <div className="rounded-lg bg-primary/10 border border-primary/20 p-4">
+                            <p className="text-sm font-medium text-primary mb-2">ℹ️ Important Note</p>
+                            <p className="text-sm text-muted-foreground">
+                              This action does NOT delete your workspace files. Only user accounts and application settings will be reset.
+                              Your networks, people, connections, and all data will remain intact.
+                            </p>
+                          </div>
+
                           <Button
                             variant="destructive"
                             onClick={() => setShowResetDialog(true)}
                             className="w-full gap-2"
+                            size="lg"
                           >
-                            <TrashSimple className="w-4 h-4" />
+                            <TrashSimple className="w-5 h-5" />
                             Reset Application
                           </Button>
                         </CardContent>
@@ -781,10 +851,13 @@ export function AdminDashboard({
                 onChange={(e) => setNewUserName(e.target.value)}
                 placeholder="Enter username"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                This will be the initial username (can be changed by user)
+              </p>
             </div>
 
             <div>
-              <Label htmlFor="email">Email (optional)</Label>
+              <Label htmlFor="email">Email Address *</Label>
               <Input
                 id="email"
                 type="email"
@@ -793,7 +866,7 @@ export function AdminDashboard({
                 placeholder="user@example.com"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                You'll need to share the invite link manually
+                An invitation email will be generated with the access link
               </p>
             </div>
 
