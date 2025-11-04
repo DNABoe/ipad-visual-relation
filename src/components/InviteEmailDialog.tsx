@@ -45,6 +45,9 @@ RelEye uses end-to-end encryption and zero-knowledge architecture to keep your d
 Click the link below to set up your account:
 ${inviteLink}
 
+📝 Login Information
+After creating your account, use your email address (${userEmail}) to log in.
+
 📋 What You Can Do
 • Map relationships between people and organizations
 • Visualize connections with advanced analytics

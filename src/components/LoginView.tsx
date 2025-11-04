@@ -77,11 +77,11 @@ export function LoginView({ onLogin }: LoginViewProps) {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email / Username</Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="Enter username"
+                placeholder="Enter email or username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"

@@ -17,6 +17,7 @@ function App() {
   } | null>(null)
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false)
+  const [hasCompletedSetup, setHasCompletedSetup] = useState(false)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
@@ -52,6 +53,9 @@ function App() {
         const allKeys = await storage.keys()
         console.log('[App] All storage keys:', allKeys)
         
+        const setupCompleted = await storage.get<boolean>('setup-completed')
+        console.log('[App] Setup completed flag:', setupCompleted)
+        
         const credentials = await storage.get<{
           username: string
           passwordHash: PasswordHash
@@ -69,9 +73,16 @@ function App() {
           })
           setUserCredentials(credentials)
           setIsFirstTimeSetup(false)
+          setHasCompletedSetup(true)
         } else {
           setUserCredentials(null)
-          setIsFirstTimeSetup(true)
+          if (setupCompleted) {
+            setIsFirstTimeSetup(false)
+            setHasCompletedSetup(true)
+          } else {
+            setIsFirstTimeSetup(true)
+            setHasCompletedSetup(false)
+          }
         }
         
         console.log('[App] ========== INITIALIZATION COMPLETE ==========')
@@ -83,6 +94,7 @@ function App() {
         })
         setUserCredentials(null)
         setIsFirstTimeSetup(true)
+        setHasCompletedSetup(false)
       } finally {
         setIsLoadingCredentials(false)
       }
@@ -153,9 +165,13 @@ function App() {
       
       console.log('[App] ✓ Credentials verified in storage')
       
+      await storage.set('setup-completed', true)
+      console.log('[App] ✓ Setup completed flag set')
+      
       setUserCredentials(credentials)
       setIsAuthenticated(true)
       setIsSettingUpCredentials(false)
+      setHasCompletedSetup(true)
       
       toast.success('Administrator account created successfully!')
       setIsFirstTimeSetup(false)
@@ -189,7 +205,11 @@ function App() {
       await storage.set('user-credentials', credentials)
       console.log('[App] Credentials saved successfully to storage')
       
+      await storage.set('setup-completed', true)
+      console.log('[App] ✓ Setup completed flag set')
+      
       setUserCredentials(credentials)
+      setHasCompletedSetup(true)
       
       setInviteToken(null)
       setInviteWorkspaceId(null)
@@ -325,7 +345,7 @@ function App() {
     )
   }
 
-  if (!userCredentials && isFirstTimeSetup) {
+  if (!userCredentials && isFirstTimeSetup && !hasCompletedSetup) {
     return (
       <>
         <FirstTimeSetup onComplete={handleFirstTimeSetup} />

@@ -21,7 +21,6 @@ interface InviteAcceptViewProps {
 
 export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCancel }: InviteAcceptViewProps) {
   const [allWorkspaces, setAllWorkspaces] = useKV<Record<string, any>>('all-workspaces', {})
-  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -66,7 +65,6 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
         }
 
         setInviteUser(user)
-        setUsername(user.username || '')
         setEmail(user.email || '')
         setIsLoading(false)
       } catch (err) {
@@ -82,16 +80,6 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-
-    if (!username.trim()) {
-      setError('Username is required')
-      return
-    }
-
-    if (username.trim().length < 3) {
-      setError('Username must be at least 3 characters')
-      return
-    }
 
     if (!password) {
       setError('Password is required')
@@ -126,7 +114,6 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
           u.userId === inviteUser.userId
             ? {
                 ...u,
-                username: username.trim(),
                 status: 'active' as const,
                 inviteToken: undefined,
                 inviteExpiry: undefined
@@ -140,11 +127,11 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
             id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
             timestamp: Date.now(),
             userId: inviteUser.userId,
-            username: username.trim(),
+            username: inviteUser.username,
             action: 'accepted',
             entityType: 'user' as const,
             entityId: inviteUser.userId,
-            details: `${username.trim()} accepted invitation as ${getRoleDisplayName(inviteUser.role)}`
+            details: `${inviteUser.username} accepted invitation as ${getRoleDisplayName(inviteUser.role)}`
           }
         ]
       }
@@ -152,7 +139,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
       await setAllWorkspaces(updatedWorkspaces)
 
       toast.success('Account activated successfully!')
-      onComplete(inviteUser.userId, username.trim(), password, inviteUser.email)
+      onComplete(inviteUser.userId, inviteUser.username, password, inviteUser.email)
     } catch (err) {
       console.error('Error accepting invite:', err)
       setError('Failed to activate account')
@@ -270,36 +257,17 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
                 </p>
                 {inviteUser.email && (
                   <div className="mt-3 pt-3 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Invited Email Address</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted-foreground">Your Login Email</span>
                       <span className="text-sm font-medium">{inviteUser.email}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      This email is permanently associated with your account
+                    <p className="text-xs text-muted-foreground">
+                      Use this email address to log in to your account
                     </p>
                   </div>
                 )}
               </div>
             )}
-
-            <div className="space-y-2">
-              <Label htmlFor="username">Choose Your Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck="false"
-                disabled={isSubmitting}
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 3 characters. This will be your login username.
-              </p>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Create Password</Label>

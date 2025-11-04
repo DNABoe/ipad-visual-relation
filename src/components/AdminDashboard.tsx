@@ -118,24 +118,24 @@ export function AdminDashboard({
   }, [users])
 
   const handleAddUser = () => {
-    if (!newUserName.trim()) {
-      toast.error('Please enter a username')
-      return
-    }
-
     if (!newUserEmail || !newUserEmail.trim()) {
       toast.error('Email address is required for invitations')
       return
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (newUserEmail && !emailRegex.test(newUserEmail)) {
+    if (!emailRegex.test(newUserEmail)) {
       toast.error('Please enter a valid email address')
       return
     }
 
+    if (!newUserName.trim()) {
+      toast.error('Please enter the user\'s name')
+      return
+    }
+
     const newUser = createWorkspaceUser(
-      newUserName.trim(),
+      newUserEmail.trim(),
       newUserEmail.trim(),
       newUserRole,
       currentUserId
@@ -153,7 +153,7 @@ export function AdminDashboard({
       action: 'invited',
       entityType: 'user',
       entityId: newUser.userId,
-      details: `Invited ${newUserName} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
+      details: `Invited ${newUserName.trim()} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
     })
 
     setInviteEmailData({
@@ -324,6 +324,7 @@ export function AdminDashboard({
       try {
         await storage.delete('user-credentials')
         await storage.delete('app-settings')
+        await storage.delete('setup-completed')
         
         toast.success('Application reset complete. Reloading...')
         
@@ -876,19 +877,6 @@ export function AdminDashboard({
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="username">Username *</Label>
-              <Input
-                id="username"
-                value={newUserName}
-                onChange={(e) => setNewUserName(e.target.value)}
-                placeholder="Enter username"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                This will be the initial username (can be changed by user)
-              </p>
-            </div>
-
-            <div>
               <Label htmlFor="email">Email Address *</Label>
               <Input
                 id="email"
@@ -898,7 +886,20 @@ export function AdminDashboard({
                 placeholder="user@example.com"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                An invitation email will be generated with the access link
+                This email will be used as their login username
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                placeholder="Enter full name"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                The person's full name (used in the invitation email)
               </p>
             </div>
 
