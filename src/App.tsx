@@ -9,10 +9,8 @@ import { InviteAcceptView } from './components/InviteAcceptView'
 import { hashPassword, type PasswordHash } from './lib/auth'
 import type { Workspace, AppSettings } from './lib/types'
 import { DEFAULT_APP_SETTINGS } from './lib/constants'
-import { waitForSpark } from './lib/sparkReady'
 
 function App() {
-  const [sparkReady, setSparkReady] = useState(false)
   const [userCredentials, setUserCredentials] = useKV<{
     username: string
     passwordHash: PasswordHash
@@ -29,29 +27,6 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
-    const initializeSpark = async () => {
-      console.log('[App] Waiting for Spark runtime...')
-      const ready = await waitForSpark(10000)
-      if (ready) {
-        console.log('[App] Spark runtime ready')
-        setSparkReady(true)
-      } else {
-        console.error('[App] Spark runtime failed to initialize')
-        toast.error('Failed to initialize storage system. Please refresh the page.')
-      }
-    }
-    
-    initializeSpark()
-  }, [])
-
-  useEffect(() => {
-    console.log('[App] Component rendered/updated')
-    console.log('[App] userCredentials:', userCredentials)
-    console.log('[App] isAuthenticated:', isAuthenticated)
-    console.log('[App] showFileManager:', showFileManager)
-  }, [userCredentials, isAuthenticated, showFileManager])
-
-  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const token = urlParams.get('invite')
     const workspaceId = urlParams.get('workspace')
@@ -64,42 +39,13 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
-      console.log('[App] Starting first-time setup for username:', username)
-      
-      console.log('[App] Ensuring Spark runtime is ready...')
-      const sparkIsReady = await waitForSpark(5000)
-      if (!sparkIsReady) {
-        throw new Error('Storage system failed to initialize. Please refresh the page and try again.')
-      }
-      
-      console.log('[App] Hashing password...')
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      console.log('[App] Saving credentials to storage...')
-      await window.spark.kv.set('user-credentials', credentials)
-      
-      console.log('[App] Verifying saved credentials...')
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      const savedCreds = await window.spark.kv.get('user-credentials')
-      console.log('[App] Retrieved credentials:', savedCreds ? 'Found' : 'Not found')
-      
-      if (!savedCreds) {
-        throw new Error('Failed to verify saved credentials. Storage may be unavailable.')
-      }
-      
-      console.log('[App] Updating application state...')
       setUserCredentials(() => credentials)
-      
-      console.log('[App] Waiting for state propagation...')
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
       setIsAuthenticated(true)
       
       toast.success('Administrator account created successfully!')
-      
-      console.log('[App] Setup complete')
     } catch (error) {
       console.error('[App] Setup error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
@@ -110,21 +56,8 @@ function App() {
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
-      console.log('[App] Completing invite for username:', username)
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
-      
-      console.log('[App] Saving credentials directly to KV...')
-      await window.spark.kv.set('user-credentials', credentials)
-      
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      const savedCreds = await window.spark.kv.get('user-credentials')
-      console.log('[App] Verified saved credentials:', savedCreds)
-      
-      if (!savedCreds) {
-        throw new Error('Failed to save credentials - verification failed')
-      }
       
       setUserCredentials(() => credentials)
 
@@ -215,20 +148,6 @@ function App() {
     setPassword('')
     setShowFileManager(true)
   }, [])
-
-  if (!sparkReady) {
-    return (
-      <>
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground">Initializing RelEye...</p>
-          </div>
-        </div>
-        <Toaster />
-      </>
-    )
-  }
 
   if (inviteToken && inviteWorkspaceId) {
     return (
