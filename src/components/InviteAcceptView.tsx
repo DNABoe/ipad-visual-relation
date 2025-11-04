@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { storage } from '@/lib/storage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,8 +9,17 @@ import { Logo } from '@/components/Logo'
 import { Eye, EyeSlash, UserPlus, Crown, PencilSimple, Eye as EyeIcon } from '@phosphor-icons/react'
 import { hashPassword } from '@/lib/auth'
 import { toast } from 'sonner'
-import type { WorkspaceUser, UserRole } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
 import { getRoleDisplayName, getRoleDescription } from '@/lib/userManagement'
+
+interface PendingInvite {
+  name: string
+  email: string
+  role: UserRole
+  token: string
+  expiry: number
+  createdAt: number
+}
 
 interface InviteAcceptViewProps {
   inviteToken: string
@@ -20,8 +29,6 @@ interface InviteAcceptViewProps {
 }
 
 export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCancel }: InviteAcceptViewProps) {
-  const [allWorkspaces, setAllWorkspaces] = useKV<Record<string, any>>('all-workspaces', {})
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -29,67 +36,53 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [inviteUser, setInviteUser] = useState<WorkspaceUser | null>(null)
-  const [workspace, setWorkspace] = useState<any>(null)
+  const [inviteData, setInviteData] = useState<PendingInvite | null>(null)
 
   useEffect(() => {
     const loadInvite = async () => {
       try {
         console.log('[InviteAcceptView] Loading invitation...')
-        console.log('[InviteAcceptView] workspaceId:', workspaceId)
         console.log('[InviteAcceptView] inviteToken:', inviteToken)
-        console.log('[InviteAcceptView] allWorkspaces:', allWorkspaces)
 
-        if (!allWorkspaces) {
-          console.log('[InviteAcceptView] allWorkspaces is null/undefined')
-          setError('Workspace not found. You may need to load the workspace file first.')
+        const invites = await storage.get<PendingInvite[]>('pending-invites')
+        console.log('[InviteAcceptView] All pending invites:', invites)
+
+        if (!invites || invites.length === 0) {
+          console.log('[InviteAcceptView] No pending invites found')
+          setError('Invalid or expired invitation.')
           setIsLoading(false)
           return
         }
 
-        const ws = allWorkspaces[workspaceId]
-        console.log('[InviteAcceptView] Found workspace:', ws)
-
-        if (!ws) {
-          console.log('[InviteAcceptView] Workspace not found in allWorkspaces')
-          setError('Workspace not found. Please ask the person who invited you to share the workspace file with you.')
-          setIsLoading(false)
-          return
-        }
-
-        setWorkspace(ws)
-
-        const user = ws.users?.find((u: WorkspaceUser) => u.inviteToken === inviteToken && u.status === 'pending')
-        console.log('[InviteAcceptView] Found user with matching token:', user)
+        const invite = invites.find(inv => inv.token === inviteToken)
+        console.log('[InviteAcceptView] Found invite:', invite)
         
-        if (!user) {
-          console.log('[InviteAcceptView] No matching user found')
-          console.log('[InviteAcceptView] Looking for users with status=pending:', ws.users?.filter((u: WorkspaceUser) => u.status === 'pending'))
-          setError('Invalid or expired invitation. The invitation may have been revoked or already accepted.')
+        if (!invite) {
+          console.log('[InviteAcceptView] No matching invite found')
+          setError('Invalid or expired invitation. The invitation may have been revoked.')
           setIsLoading(false)
           return
         }
 
-        if (user.inviteExpiry && user.inviteExpiry < Date.now()) {
+        if (invite.expiry < Date.now()) {
           console.log('[InviteAcceptView] Invitation expired')
-          setError('This invitation has expired. Please contact the workspace administrator for a new invitation.')
+          setError('This invitation has expired. Please contact the administrator for a new invitation.')
           setIsLoading(false)
           return
         }
 
-        console.log('[InviteAcceptView] Invitation valid, setting invite user')
-        setInviteUser(user)
-        setEmail(user.email || '')
+        console.log('[InviteAcceptView] Invitation valid')
+        setInviteData(invite)
         setIsLoading(false)
       } catch (err) {
         console.error('[InviteAcceptView] Error loading invite:', err)
-        setError('Failed to load invitation. Please try again or contact the workspace administrator.')
+        setError('Failed to load invitation. Please try again.')
         setIsLoading(false)
       }
     }
 
     loadInvite()
-  }, [inviteToken, workspaceId, allWorkspaces])
+  }, [inviteToken])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,7 +103,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
       return
     }
 
-    if (!inviteUser) {
+    if (!inviteData) {
       setError('Invitation not found')
       return
     }
@@ -118,45 +111,17 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
     setIsSubmitting(true)
 
     try {
-      const passwordHash = await hashPassword(password)
+      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(7)}`
       
-      const updatedWorkspaces = { ...allWorkspaces }
-      const ws = updatedWorkspaces[workspaceId]
-      
-      if (ws && ws.users) {
-        ws.users = ws.users.map((u: WorkspaceUser) => 
-          u.userId === inviteUser.userId
-            ? {
-                ...u,
-                status: 'active' as const,
-                inviteToken: undefined,
-                inviteExpiry: undefined
-              }
-            : u
-        )
-        
-        ws.activityLog = [
-          ...(ws.activityLog || []),
-          {
-            id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-            timestamp: Date.now(),
-            userId: inviteUser.userId,
-            username: inviteUser.username,
-            action: 'accepted',
-            entityType: 'user' as const,
-            entityId: inviteUser.userId,
-            details: `${inviteUser.username} accepted invitation as ${getRoleDisplayName(inviteUser.role)}`
-          }
-        ]
-      }
+      const invites = await storage.get<PendingInvite[]>('pending-invites') || []
+      const updatedInvites = invites.filter(inv => inv.token !== inviteToken)
+      await storage.set('pending-invites', updatedInvites)
 
-      await setAllWorkspaces(updatedWorkspaces)
-
-      toast.success('Account activated successfully!')
-      onComplete(inviteUser.userId, inviteUser.username, password, inviteUser.email)
+      toast.success('Account created successfully!')
+      onComplete(userId, inviteData.name, password, inviteData.email)
     } catch (err) {
       console.error('Error accepting invite:', err)
-      setError('Failed to activate account')
+      setError('Failed to create account')
       setIsSubmitting(false)
     }
   }
@@ -193,7 +158,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
     )
   }
 
-  if (error && !inviteUser) {
+  if (error && !inviteData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
@@ -203,33 +168,18 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
             <CardDescription className="text-base mt-2">{error}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg bg-primary/10 border border-primary/20 p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-primary">📋 How Invitations Work</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                RelEye uses local-only storage for maximum security. To join a workspace:
-              </p>
-              <ol className="text-xs text-muted-foreground space-y-2 pl-4">
-                <li><strong>1. Accept the invitation</strong> - Click the invitation link (you're here now!)</li>
-                <li><strong>2. Create your account</strong> - Set up your login credentials</li>
-                <li><strong>3. Get the workspace file</strong> - Ask the person who invited you to share the encrypted workspace file (.enc.releye)</li>
-                <li><strong>4. Load the file</strong> - Use "Load Network" to open the shared workspace</li>
-              </ol>
-            </div>
-
             <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
               <p className="text-xs font-medium text-warning mb-1">⚠️ Common Issues</p>
               <ul className="text-xs text-muted-foreground space-y-1 pl-4">
                 <li>• The invitation link may have expired (7 days)</li>
-                <li>• The invitation may have been revoked</li>
-                <li>• You may need the workspace file first</li>
+                <li>• The invitation may have been revoked by the administrator</li>
+                <li>• The link may have already been used</li>
               </ul>
             </div>
 
             <div className="flex flex-col gap-2">
               <Button onClick={onCancel} className="w-full">
-                {error.includes('expired') || error.includes('revoked') || error.includes('Invalid') 
-                  ? 'Back to Login' 
-                  : 'Return to Login'}
+                Return to Login
               </Button>
             </div>
           </CardContent>
@@ -250,7 +200,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
             <CardTitle className="text-2xl font-semibold">Welcome to RelEye</CardTitle>
           </div>
           <CardDescription className="text-base">
-            You've been invited to join <strong>{workspace?.name || 'this workspace'}</strong>
+            Create your account to start visualizing relationship networks
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -268,44 +218,43 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
                   <ul className="text-xs text-muted-foreground space-y-1.5 mt-3">
                     <li className="flex items-start gap-2">
                       <span className="text-primary mt-0.5">•</span>
+                      <span>Create your own private network files</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
                       <span>Map relationships between people and organizations</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary mt-0.5">•</span>
-                      <span>Visualize connections with advanced analytics</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span>Your data is encrypted and stored locally only</span>
+                      <span>All data is encrypted and stored locally on your device</span>
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
 
-            {inviteUser && (
+            {inviteData && (
               <div className="rounded-lg bg-card border border-border p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Your Role</span>
-                  <Badge variant={getRoleBadgeVariant(inviteUser.role)} className="flex items-center gap-1">
-                    {getRoleIcon(inviteUser.role)}
-                    {getRoleDisplayName(inviteUser.role)}
+                  <span className="text-sm text-muted-foreground">Your Access Level</span>
+                  <Badge variant={getRoleBadgeVariant(inviteData.role)} className="flex items-center gap-1">
+                    {getRoleIcon(inviteData.role)}
+                    {getRoleDisplayName(inviteData.role)}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {getRoleDescription(inviteUser.role)}
+                  {getRoleDescription(inviteData.role)}
                 </p>
-                {inviteUser.email && (
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-muted-foreground">Your Login Email</span>
-                      <span className="text-sm font-medium">{inviteUser.email}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Use this email address to log in to your account
-                    </p>
+                <div className="mt-3 pt-3 border-t border-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Name</span>
+                    <span className="text-sm font-medium">{inviteData.name}</span>
                   </div>
-                )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Email (Login)</span>
+                    <span className="text-sm font-medium">{inviteData.email}</span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -386,7 +335,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="flex-1">
-                {isSubmitting ? 'Activating...' : 'Accept & Join'}
+                {isSubmitting ? 'Creating Account...' : 'Create Account'}
               </Button>
             </div>
           </form>

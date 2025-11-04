@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +35,8 @@ import { toast } from 'sonner'
 import type { WorkspaceUser, ActivityLog, UserRole } from '@/lib/types'
 import { 
   createWorkspaceUser, 
-  generateInviteLink, 
+  generateInviteLink,
+  generateInviteToken, 
   getRoleDisplayName, 
   getRoleDescription,
   filterActivityLog
@@ -84,15 +85,46 @@ export function AdminDashboard({
   const [newUserRole, setNewUserRole] = useState<UserRole>('viewer')
   const [activityFilter, setActivityFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [pendingInvites, setPendingInvites] = useState<Array<{
+    name: string
+    email: string
+    role: UserRole
+    token: string
+    expiry: number
+    createdAt: number
+  }>>([])
 
   const currentUser = users.find(u => u.userId === currentUserId)
   const isAdmin = currentUser?.role === 'admin'
 
+  useEffect(() => {
+    const loadPendingInvites = async () => {
+      try {
+        const invites = await storage.get<typeof pendingInvites>('pending-invites') || []
+        const now = Date.now()
+        const validInvites = invites.filter(inv => inv.expiry > now)
+        
+        if (validInvites.length !== invites.length) {
+          await storage.set('pending-invites', validInvites)
+        }
+        
+        setPendingInvites(validInvites)
+      } catch (error) {
+        console.error('Failed to load pending invites:', error)
+      }
+    }
+
+    if (open) {
+      loadPendingInvites()
+    }
+  }, [open])
+
   const filteredUsers = useMemo(() => {
     return users.filter(user => 
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.status !== 'pending' &&
+      (user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.githubLogin?.toLowerCase().includes(searchQuery.toLowerCase())
+      user.githubLogin?.toLowerCase().includes(searchQuery.toLowerCase()))
     )
   }, [users, searchQuery])
 
@@ -108,16 +140,16 @@ export function AdminDashboard({
     return {
       total: users.length,
       active: users.filter(u => u.status === 'active').length,
-      pending: users.filter(u => u.status === 'pending').length,
+      pending: pendingInvites.length,
       admins: users.filter(u => u.role === 'admin').length,
       editors: users.filter(u => u.role === 'editor').length,
       viewers: users.filter(u => u.role === 'viewer').length,
       totalLogins,
       maxLogins
     }
-  }, [users])
+  }, [users, pendingInvites])
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (!newUserEmail || !newUserEmail.trim()) {
       toast.error('Email address is required for invitations')
       return
@@ -134,16 +166,24 @@ export function AdminDashboard({
       return
     }
 
-    const newUser = createWorkspaceUser(
-      newUserEmail.trim(),
-      newUserEmail.trim(),
-      newUserRole,
-      currentUserId
-    )
-
-    const inviteLink = generateInviteLink(workspaceId, newUser.inviteToken!)
+    const inviteToken = generateInviteToken()
+    const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000)
     
-    onUpdateUsers([...users, newUser])
+    const pendingInvite = {
+      name: newUserName.trim(),
+      email: newUserEmail.trim(),
+      role: newUserRole,
+      token: inviteToken,
+      expiry,
+      createdAt: Date.now()
+    }
+
+    const invites = await storage.get<typeof pendingInvite[]>('pending-invites') || []
+    const updatedInvites = [...invites, pendingInvite]
+    await storage.set('pending-invites', updatedInvites)
+    setPendingInvites(updatedInvites)
+
+    const inviteLink = generateInviteLink('app', inviteToken)
     
     onLogActivity({
       id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -152,7 +192,7 @@ export function AdminDashboard({
       username: currentUser?.username || 'Unknown',
       action: 'invited',
       entityType: 'user',
-      entityId: newUser.userId,
+      entityId: inviteToken,
       details: `Invited ${newUserName.trim()} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
     })
 
@@ -251,25 +291,16 @@ export function AdminDashboard({
     toast.success(`User ${user.username} ${newStatus === 'suspended' ? 'suspended' : 'reactivated'}`)
   }
 
-  const handleCopyInviteLink = (user: WorkspaceUser) => {
-    if (!user.inviteToken) {
-      toast.error('No invite token available')
-      return
-    }
-
-    const inviteLink = generateInviteLink(workspaceId, user.inviteToken)
+  const handleCopyInviteLink = (invite: typeof pendingInvites[0]) => {
+    const inviteLink = generateInviteLink('app', invite.token)
     navigator.clipboard.writeText(inviteLink)
     toast.success('Invite link copied to clipboard')
   }
 
-  const handleRevokeInvite = (user: WorkspaceUser) => {
-    if (user.status !== 'pending') {
-      toast.error('Can only revoke pending invitations')
-      return
-    }
-
-    const updatedUsers = users.filter(u => u.userId !== user.userId)
-    onUpdateUsers(updatedUsers)
+  const handleRevokeInvite = async (invite: typeof pendingInvites[0]) => {
+    const updatedInvites = pendingInvites.filter(inv => inv.token !== invite.token)
+    await storage.set('pending-invites', updatedInvites)
+    setPendingInvites(updatedInvites)
 
     onLogActivity({
       id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -278,11 +309,11 @@ export function AdminDashboard({
       username: currentUser?.username || 'Unknown',
       action: 'revoked',
       entityType: 'user',
-      entityId: user.userId,
-      details: `Revoked invitation for ${user.username} (${user.email || 'no email'})`
+      entityId: invite.token,
+      details: `Revoked invitation for ${invite.name} (${invite.email})`
     })
 
-    toast.success(`Invitation revoked for ${user.username}`)
+    toast.success(`Invitation revoked for ${invite.name}`)
   }
 
   const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
@@ -546,37 +577,14 @@ export function AdminDashboard({
                                       </div>
 
                                       <div className="flex gap-1">
-                                        {user.status === 'pending' && user.inviteToken && (
-                                          <>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => handleCopyInviteLink(user)}
-                                              title="Copy invite link"
-                                            >
-                                              <LinkIcon className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                              variant="destructive"
-                                              size="sm"
-                                              onClick={() => handleRevokeInvite(user)}
-                                              title="Revoke invitation"
-                                            >
-                                              <Prohibit className="w-4 h-4" />
-                                            </Button>
-                                          </>
-                                        )}
-                                        
-                                        {user.status !== 'pending' && (
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSuspendUser(user)}
-                                            title={user.status === 'suspended' ? 'Reactivate' : 'Suspend'}
-                                          >
-                                            <Prohibit className="w-4 h-4" />
-                                          </Button>
-                                        )}
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleSuspendUser(user)}
+                                          title={user.status === 'suspended' ? 'Reactivate' : 'Suspend'}
+                                        >
+                                          <Prohibit className="w-4 h-4" />
+                                        </Button>
 
                                         <Button
                                           variant="destructive"
@@ -596,6 +604,75 @@ export function AdminDashboard({
                               </div>
                             </Card>
                           ))
+                        )}
+                        
+                        {pendingInvites.length > 0 && (
+                          <>
+                            <Separator className="my-4" />
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2 px-2">
+                                <Clock className="w-4 h-4 text-warning" />
+                                <h3 className="font-semibold text-sm">Pending Invitations</h3>
+                                <Badge variant="secondary">{pendingInvites.length}</Badge>
+                              </div>
+                              {pendingInvites.map(invite => (
+                                <Card key={invite.token} className="p-4 bg-warning/5 border-warning/20">
+                                  <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center text-warning font-semibold">
+                                      {invite.name.substring(0, 2).toUpperCase()}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-semibold truncate">{invite.name}</h4>
+                                        <Badge variant="secondary" className="text-xs">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          Pending
+                                        </Badge>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                                        <EnvelopeSimple className="w-3 h-3" />
+                                        <span className="truncate">{invite.email}</span>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant={getRoleBadgeVariant(invite.role)} className="flex items-center gap-1">
+                                          {getRoleIcon(invite.role)}
+                                          {getRoleDisplayName(invite.role)}
+                                        </Badge>
+                                        <span className="text-xs text-muted-foreground">
+                                          Invited {format(invite.createdAt, 'MMM d, yyyy')}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                          • Expires {format(invite.expiry, 'MMM d, yyyy')}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleCopyInviteLink(invite)}
+                                        title="Copy invite link"
+                                      >
+                                        <LinkIcon className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => handleRevokeInvite(invite)}
+                                        title="Revoke invitation"
+                                      >
+                                        <Prohibit className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          </>
                         )}
                       </div>
                     </ScrollArea>

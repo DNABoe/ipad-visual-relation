@@ -95,9 +95,19 @@ RelEye uses a hybrid storage model that balances security and usability. **All f
   - Wrong credentials show clear error message
   - Admin tab appears in Settings after authentication
 
-### Multi-User Collaboration System
-- **Functionality**: Invite-based multi-user workspace with role-based access control (Admin, Editor, Viewer)
-- **Purpose**: Enable secure collaboration where workspace owner (admin) can invite users, manage permissions, and track activity
+### Multi-User System (Simplified)
+- **Functionality**: Administrator-controlled user invitations with role-based application access
+- **Purpose**: Allow administrators to grant access to the application while keeping each user's network files completely independent
+- **Trigger**: Admin opens Settings → Admin tab → Clicks "Invite User"
+- **Progression**: Enter name and email → Select role (Admin/Editor/Viewer) → Generate invitation → Send email with link → User clicks link → Creates password → Account active → User creates their own network files
+- **Success criteria**:
+  - Admin can invite users via email with custom roles
+  - Each user gets their own independent workspace with local file storage
+  - Users create and manage their own encrypted .enc.releye files
+  - No workspace or file sharing between users
+  - Pending invitations are tracked and can be revoked
+  - Invitations expire after 7 days
+  - Simple, clear invitation email that explains the process
 - **Trigger**: Admin clicks Settings → Admin tab → Open Admin Dashboard button
 - **Progression**: Admin Dashboard opens → Invite user (username, optional email, role) → System generates secure invite link → Admin shares link via email or other means → Invited user clicks link → User creates account (username + password) → User gains access based on assigned role → User can now load the shared workspace file
 - **Success criteria**: 

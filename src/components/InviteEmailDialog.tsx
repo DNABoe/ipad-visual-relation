@@ -34,29 +34,30 @@ export function InviteEmailDialog({
 You've been invited to join RelEye - a secure relationship network visualization platform.
 
 🔐 Secure & Private
-RelEye uses end-to-end encryption and zero-knowledge architecture to keep your data safe. All network files are stored locally and encrypted.
+RelEye uses end-to-end encryption and zero-knowledge architecture to keep your data safe. All network files are stored locally on your device and encrypted.
 
 👤 Your Account Details
 • Email: ${userEmail}
-• Role: ${userRole}
-• Access: ${roleDescription}
+• Name: ${userName}
+• Access Level: ${roleDescription}
 
-🚀 IMPORTANT: Two-Step Setup Process
+🚀 Getting Started
 
-STEP 1: Accept Your Invitation
 Click the link below to create your account:
 ${inviteLink}
 
-STEP 2: Request the Workspace File
-After creating your account, you'll need the encrypted workspace file (.enc.releye) to access the network. Contact the person who invited you to share this file with you. Once you receive it, load it using the "Load Network" button.
+You'll be asked to choose a password to secure your account. Once your account is created, you can immediately start creating your own relationship networks!
 
-📝 Login Information
-After completing both steps, use your email address (${userEmail}) to log in.
+📝 Your Personal Workspace
+• Each user has their own independent network files
+• Create, save, and load as many networks as you need
+• All files are encrypted and stored locally on your device
+• Your networks are completely private to you
 
 📋 What You Can Do
 • Map relationships between people and organizations
 • Visualize connections with advanced analytics
-• Collaborate securely with your team
+• ${userRole === 'admin' ? 'Manage users and system settings' : userRole === 'editor' ? 'Create and edit network visualizations' : 'View and explore network visualizations'}
 • Export and share insights
 
 This invitation expires in 7 days.
@@ -111,19 +112,19 @@ This is an automated invitation from RelEye. If you received this email in error
         <div className="flex-1 px-6 overflow-y-auto min-h-0">
           <ScrollArea className="h-full pr-4">
             <div className="space-y-4 pb-4">
-              <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
-                <div className="text-sm font-semibold text-warning mb-2 flex items-center gap-2">
-                  <Warning className="w-5 h-5" />
-                  Important: You Must Share the Workspace File
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <div className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Simple Invitation Process
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  RelEye uses local-only storage for security. For {userName} to access the workspace, you must:
+                  {userName} will get their own independent workspace:
                 </p>
                 <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
                   <li>Send them this invitation email (using the button below)</li>
-                  <li><strong>Share your encrypted workspace file (.enc.releye)</strong> via email, secure file transfer, or cloud storage</li>
-                  <li>They will accept the invitation and create their account</li>
-                  <li>Then they will load the workspace file you shared</li>
+                  <li>They click the link and create their account with a password</li>
+                  <li>They can immediately start creating their own network files</li>
+                  <li>Each user manages their own encrypted files independently</li>
                 </ol>
               </div>
 
