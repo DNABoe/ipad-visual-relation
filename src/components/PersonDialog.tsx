@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { resampleImage } from '@/lib/imageProcessing'
 import { toast } from 'sonner'
 import { generateInvestigationPDF } from '@/lib/pdfGenerator'
+import { generateIntelligenceReport } from '@/lib/externalLLM'
 
 interface PersonDialogProps {
   open: boolean
@@ -470,22 +471,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       const positionText = positionLines.join(', ')
       const countryText = country || 'Not specified'
       
-      const prompt = (window.spark.llmPrompt as any)`You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
-
-Name: ${name}
-Position: ${positionText || 'Not specified'}
-Country: ${countryText}
-
-Please provide:
-1. Professional Background Overview (based on typical career trajectories for this position)
-2. Areas of Influence and Expertise
-3. Potential Network Connections (types of people/organizations they might interact with)
-4. Strategic Importance Assessment
-5. Key Considerations for Engagement
-
-Format your response as a professional intelligence brief with clear sections and detailed analysis. Be thorough but realistic based on the position and context provided.`
-
-      const report = await window.spark.llm(prompt, 'gpt-4o-mini')
+      const report = await generateIntelligenceReport({
+        name: name.trim(),
+        position: positionText || 'Not specified',
+        country: countryText
+      })
+      
       setInvestigationReport(report)
 
       const pdfBlob = await generateInvestigationPDF({

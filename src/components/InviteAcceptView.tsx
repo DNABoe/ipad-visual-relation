@@ -214,18 +214,46 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <Logo size={64} showText={false} animated={true} />
+            <Logo size={80} showText={false} animated={true} />
           </div>
           <div className="flex items-center justify-center gap-2 mb-2">
             <UserPlus size={24} className="text-primary" weight="duotone" />
-            <CardTitle className="text-2xl font-semibold">Accept Invitation</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Welcome to RelEye</CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="text-base">
             You've been invited to join <strong>{workspace?.name || 'this workspace'}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="rounded-lg bg-primary/10 border border-primary/20 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <Logo size={40} showText={false} animated={false} />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-sm font-semibold text-primary">Getting Started with RelEye</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    RelEye is a secure relationship network visualization platform. Build and explore visual networks of connections with end-to-end encryption and zero-knowledge architecture.
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-1.5 mt-3">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Map relationships between people and organizations</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Visualize connections with advanced analytics</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Your data is encrypted and stored locally only</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
             {inviteUser && (
               <div className="rounded-lg bg-card border border-border p-4 space-y-3">
                 <div className="flex items-center justify-between">
