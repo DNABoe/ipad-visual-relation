@@ -27,13 +27,6 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const token = urlParams.get('invite')
-    const workspaceId = urlParams.get('workspace')
-    
-    if (token && workspaceId) {
-      setInviteToken(token)
-      setInviteWorkspaceId(workspaceId)
     }
   }, [])
 
