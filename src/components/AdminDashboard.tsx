@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
+import { Progress } from '@/components/ui/progress'
 import { 
   UserPlus, 
   Users, 
@@ -23,7 +25,11 @@ import {
   Activity,
   Crown,
   EnvelopeSimple,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Detective,
+  Warning,
+  TrashSimple,
+  ChartBar
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { WorkspaceUser, ActivityLog, UserRole } from '@/lib/types'
@@ -35,6 +41,7 @@ import {
   filterActivityLog
 } from '@/lib/userManagement'
 import { format } from 'date-fns'
+import { storage } from '@/lib/storage'
 
 interface AdminDashboardProps {
   open: boolean
@@ -59,6 +66,9 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const [showAddUserDialog, setShowAddUserDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
+  const [resetConfirmStep, setResetConfirmStep] = useState(0)
+  const [resetConfirmText, setResetConfirmText] = useState('')
   const [selectedUser, setSelectedUser] = useState<WorkspaceUser | null>(null)
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserName, setNewUserName] = useState('')
@@ -83,13 +93,18 @@ export function AdminDashboard({
   }, [activityLog, activityFilter])
 
   const stats = useMemo(() => {
+    const totalLogins = users.reduce((sum, u) => sum + (u.loginCount || 0), 0)
+    const maxLogins = Math.max(...users.map(u => u.loginCount || 0), 1)
+    
     return {
       total: users.length,
       active: users.filter(u => u.status === 'active').length,
       pending: users.filter(u => u.status === 'pending').length,
       admins: users.filter(u => u.role === 'admin').length,
       editors: users.filter(u => u.role === 'editor').length,
-      viewers: users.filter(u => u.role === 'viewer').length
+      viewers: users.filter(u => u.role === 'viewer').length,
+      totalLogins,
+      maxLogins
     }
   }, [users])
 
@@ -225,6 +240,58 @@ export function AdminDashboard({
     toast.success('Invite link copied to clipboard')
   }
 
+  const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
+    const updatedUsers: WorkspaceUser[] = users.map(u => 
+      u.userId === user.userId ? { ...u, canInvestigate } : u
+    )
+    onUpdateUsers(updatedUsers)
+
+    onLogActivity({
+      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      timestamp: Date.now(),
+      userId: currentUserId,
+      username: currentUser?.username || 'Unknown',
+      action: 'updated',
+      entityType: 'user',
+      entityId: user.userId,
+      details: `${canInvestigate ? 'Granted' : 'Revoked'} investigate access for ${user.username}`
+    })
+
+    toast.success(`Investigate access ${canInvestigate ? 'granted' : 'revoked'} for ${user.username}`)
+  }
+
+  const handleResetApplication = async () => {
+    if (resetConfirmStep === 0) {
+      setResetConfirmStep(1)
+      return
+    }
+
+    if (resetConfirmStep === 1) {
+      if (resetConfirmText.toLowerCase() !== 'reset everything') {
+        toast.error('Please type "RESET EVERYTHING" to confirm')
+        return
+      }
+      setResetConfirmStep(2)
+      return
+    }
+
+    if (resetConfirmStep === 2) {
+      try {
+        await storage.delete('user-credentials')
+        await storage.delete('app-settings')
+        
+        toast.success('Application reset complete. Reloading...')
+        
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      } catch (error) {
+        console.error('Failed to reset application:', error)
+        toast.error('Failed to reset application')
+      }
+    }
+  }
+
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
       case 'admin':
@@ -279,9 +346,9 @@ export function AdminDashboard({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl max-h-[90vh] p-0">
+        <DialogContent className="max-w-6xl h-[85vh] p-0 flex flex-col">
           <div className="flex flex-col h-full">
-            <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Shield className="w-6 h-6 text-primary" />
@@ -295,9 +362,9 @@ export function AdminDashboard({
               </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden min-h-0">
               <Tabs defaultValue="users" className="h-full flex flex-col">
-                <div className="px-6 pt-4">
+                <div className="px-6 pt-4 flex-shrink-0">
                   <TabsList className="grid w-full grid-cols-3 max-w-md">
                     <TabsTrigger value="users" className="flex items-center gap-2">
                       <Users className="w-4 h-4" />
@@ -308,7 +375,7 @@ export function AdminDashboard({
                       Activity
                     </TabsTrigger>
                     <TabsTrigger value="stats" className="flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
+                      <ChartBar className="w-4 h-4" />
                       Stats
                     </TabsTrigger>
                   </TabsList>
@@ -403,6 +470,17 @@ export function AdminDashboard({
                                           <SelectItem value="viewer">Viewer</SelectItem>
                                         </SelectContent>
                                       </Select>
+
+                                      <div className="flex items-center gap-2 py-1">
+                                        <Detective className="w-4 h-4 text-warning" />
+                                        <Label htmlFor={`investigate-${user.userId}`} className="text-xs cursor-pointer">Investigate</Label>
+                                        <Switch
+                                          id={`investigate-${user.userId}`}
+                                          checked={user.canInvestigate ?? true}
+                                          onCheckedChange={(checked) => handleToggleInvestigateAccess(user, checked)}
+                                          className="scale-75"
+                                        />
+                                      </div>
 
                                       <div className="flex gap-1">
                                         {user.status === 'pending' && user.inviteToken && (
@@ -503,105 +581,181 @@ export function AdminDashboard({
                   </div>
                 </TabsContent>
 
-                <TabsContent value="stats" className="flex-1 px-6 pb-6 overflow-auto">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{stats.total}</div>
-                      </CardContent>
-                    </Card>
+                <TabsContent value="stats" className="flex-1 px-6 pb-6 overflow-hidden">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-4 pr-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold">{stats.total}</div>
+                          </CardContent>
+                        </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold text-success">{stats.active}</div>
-                      </CardContent>
-                    </Card>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold text-success">{stats.active}</div>
+                          </CardContent>
+                        </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold text-warning">{stats.pending}</div>
-                      </CardContent>
-                    </Card>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold text-warning">{stats.pending}</div>
+                          </CardContent>
+                        </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Administrators</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{stats.admins}</div>
-                      </CardContent>
-                    </Card>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">Total Logins</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold text-accent">{stats.totalLogins}</div>
+                          </CardContent>
+                        </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Editors</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{stats.editors}</div>
-                      </CardContent>
-                    </Card>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">Administrators</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold">{stats.admins}</div>
+                          </CardContent>
+                        </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">Viewers</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{stats.viewers}</div>
-                      </CardContent>
-                    </Card>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">Editors</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold">{stats.editors}</div>
+                          </CardContent>
+                        </Card>
+                      </div>
 
-                    <Card className="md:col-span-2 lg:col-span-3">
-                      <CardHeader>
-                        <CardTitle>User Roles</CardTitle>
-                        <CardDescription>Distribution of permissions across your workspace</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Crown className="w-5 h-5 text-primary" />
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-medium">Administrator</span>
-                                <span className="text-sm text-muted-foreground">{stats.admins}</span>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>User Login Activity</CardTitle>
+                          <CardDescription>Number of times each user has logged in</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {users.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                              <p>No users to display</p>
+                            </div>
+                          ) : (
+                            users.map(user => {
+                              const loginCount = user.loginCount || 0
+                              const percentage = stats.maxLogins > 0 ? (loginCount / stats.maxLogins) * 100 : 0
+                              
+                              return (
+                                <div key={user.userId} className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">{user.username}</span>
+                                      {user.role === 'admin' && <Crown className="w-3 h-3 text-accent" />}
+                                      {user.userId === currentUserId && <Badge variant="secondary" className="text-xs">You</Badge>}
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-muted-foreground">{loginCount} login{loginCount !== 1 ? 's' : ''}</span>
+                                      {user.lastLoginAt && (
+                                        <span className="text-xs text-muted-foreground">
+                                          {format(user.lastLoginAt, 'MMM d, h:mm a')}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="relative">
+                                    <Progress 
+                                      value={percentage} 
+                                      className="h-2"
+                                    />
+                                    <div 
+                                      className="absolute top-0 left-0 h-2 rounded-full bg-gradient-to-r from-primary to-accent transition-all"
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>User Roles</CardTitle>
+                          <CardDescription>Distribution of permissions across your workspace</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Crown className="w-5 h-5 text-primary" />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium">Administrator</span>
+                                  <span className="text-sm text-muted-foreground">{stats.admins}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{getRoleDescription('admin')}</p>
                               </div>
-                              <p className="text-xs text-muted-foreground">{getRoleDescription('admin')}</p>
+                            </div>
+                            <Separator />
+                            <div className="flex items-center gap-3">
+                              <PencilSimple className="w-5 h-5 text-primary" />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium">Editor</span>
+                                  <span className="text-sm text-muted-foreground">{stats.editors}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{getRoleDescription('editor')}</p>
+                              </div>
+                            </div>
+                            <Separator />
+                            <div className="flex items-center gap-3">
+                              <Eye className="w-5 h-5 text-primary" />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium">Viewer</span>
+                                  <span className="text-sm text-muted-foreground">{stats.viewers}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{getRoleDescription('viewer')}</p>
+                              </div>
                             </div>
                           </div>
-                          <Separator />
-                          <div className="flex items-center gap-3">
-                            <PencilSimple className="w-5 h-5 text-primary" />
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-medium">Editor</span>
-                                <span className="text-sm text-muted-foreground">{stats.editors}</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{getRoleDescription('editor')}</p>
-                            </div>
-                          </div>
-                          <Separator />
-                          <div className="flex items-center gap-3">
-                            <Eye className="w-5 h-5 text-primary" />
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-medium">Viewer</span>
-                                <span className="text-sm text-muted-foreground">{stats.viewers}</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{getRoleDescription('viewer')}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-destructive/50 bg-destructive/5">
+                        <CardHeader>
+                          <CardTitle className="text-destructive flex items-center gap-2">
+                            <Warning className="w-5 h-5" />
+                            Danger Zone
+                          </CardTitle>
+                          <CardDescription>
+                            Reset the entire application - this cannot be undone
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Button
+                            variant="destructive"
+                            onClick={() => setShowResetDialog(true)}
+                            className="w-full gap-2"
+                          >
+                            <TrashSimple className="w-4 h-4" />
+                            Reset Application
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </ScrollArea>
                 </TabsContent>
               </Tabs>
             </div>
@@ -701,6 +855,97 @@ export function AdminDashboard({
             <Button variant="destructive" onClick={handleDeleteUser}>
               <Trash className="w-4 h-4 mr-2" />
               Remove User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResetDialog} onOpenChange={(open) => {
+        setShowResetDialog(open)
+        if (!open) {
+          setResetConfirmStep(0)
+          setResetConfirmText('')
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Warning className="w-6 h-6" />
+              Reset Application
+            </DialogTitle>
+            <DialogDescription>
+              {resetConfirmStep === 0 && "This will delete all user credentials and reset the application to its initial state."}
+              {resetConfirmStep === 1 && "This action is IRREVERSIBLE and will require setting up a new admin account."}
+              {resetConfirmStep === 2 && "Final confirmation: This will delete everything and reload the application."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {resetConfirmStep === 0 && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+                <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                  <Warning className="w-4 h-4" />
+                  Warning: The following will be deleted
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 pl-6">
+                  <li>• All user accounts and credentials</li>
+                  <li>• All login history and permissions</li>
+                  <li>• All application settings</li>
+                  <li>• You will need to set up a new admin account</li>
+                </ul>
+              </div>
+            )}
+
+            {resetConfirmStep === 1 && (
+              <div className="space-y-3">
+                <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4">
+                  <p className="text-sm font-semibold text-destructive mb-2">⚠️ Final Warning</p>
+                  <p className="text-sm text-muted-foreground">
+                    Type <span className="font-mono font-bold text-foreground">RESET EVERYTHING</span> below to confirm:
+                  </p>
+                </div>
+                <Input
+                  value={resetConfirmText}
+                  onChange={(e) => setResetConfirmText(e.target.value)}
+                  placeholder="RESET EVERYTHING"
+                  className="font-mono"
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {resetConfirmStep === 2 && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+                <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                  <Warning className="w-4 h-4" />
+                  Last chance to cancel
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Clicking "Reset Now" will immediately delete all data and reload the application.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowResetDialog(false)
+                setResetConfirmStep(0)
+                setResetConfirmText('')
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleResetApplication}
+              disabled={resetConfirmStep === 1 && resetConfirmText.toLowerCase() !== 'reset everything'}
+            >
+              {resetConfirmStep === 0 && "Continue"}
+              {resetConfirmStep === 1 && "Confirm Reset"}
+              {resetConfirmStep === 2 && "Reset Now"}
             </Button>
           </DialogFooter>
         </DialogContent>

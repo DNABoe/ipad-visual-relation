@@ -39,6 +39,7 @@ import {
   EyeSlash,
   Question,
   Star,
+  SignOut,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -60,6 +61,7 @@ interface WorkspaceToolbarProps {
   hasUnsavedChanges?: boolean
   onMarkAsSaved?: () => void
   currentUsername?: string
+  onLogout?: () => void
 }
 
 export function WorkspaceToolbar({
@@ -78,11 +80,16 @@ export function WorkspaceToolbar({
   hasUnsavedChanges = false,
   onMarkAsSaved,
   currentUsername,
+  onLogout,
 }: WorkspaceToolbarProps) {
 
   const downloadFileName = fileName.endsWith('.enc.releye') 
     ? fileName 
     : `${fileName}.enc.releye`
+
+  const handleUsernameDoubleClick = () => {
+    controller.dialogs.openSettingsDialog('user')
+  }
 
   return (
     <TooltipProvider>
@@ -106,9 +113,17 @@ export function WorkspaceToolbar({
           {currentUsername && (
             <>
               <Separator orientation="vertical" className="h-6 bg-border" />
-              <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md border border-primary/30">
-                <span className="text-sm font-medium text-foreground">{currentUsername}</span>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md border border-primary/30 cursor-pointer hover:bg-primary/20 transition-colors"
+                    onDoubleClick={handleUsernameDoubleClick}
+                  >
+                    <span className="text-sm font-medium text-foreground select-none">{currentUsername}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Double-click to open User settings</TooltipContent>
+              </Tooltip>
             </>
           )}
         </div>
@@ -510,6 +525,22 @@ export function WorkspaceToolbar({
             </TooltipTrigger>
             <TooltipContent>Keyboard Shortcuts (?)</TooltipContent>
           </Tooltip>
+
+          {onLogout && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={onLogout} 
+                  className="hover:bg-destructive/10 hover:border-destructive/50"
+                >
+                  <SignOut size={18} weight="duotone" className="text-destructive" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Log Out</TooltipContent>
+            </Tooltip>
+          )}
           </div>
         </div>
         </div>

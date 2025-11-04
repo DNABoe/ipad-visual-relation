@@ -4,7 +4,7 @@ import type { Person, Connection, Group } from '@/lib/types'
 export function useDialogState() {
   const [personDialog, setPersonDialog] = useState<{ open: boolean; editPerson?: Person }>({ open: false })
   const [groupDialog, setGroupDialog] = useState<{ open: boolean; editGroup?: Group }>({ open: false })
-  const [settingsDialog, setSettingsDialog] = useState(false)
+  const [settingsDialog, setSettingsDialog] = useState<{ open: boolean; initialTab?: string }>({ open: false })
   const [photoViewer, setPhotoViewer] = useState<{ open: boolean; photoUrl?: string; name?: string }>({ open: false })
   const [exportDialog, setExportDialog] = useState(false)
   const [unsavedDialog, setUnsavedDialog] = useState<{ open: boolean; action?: 'new' | 'load' }>({ open: false })
@@ -27,12 +27,12 @@ export function useDialogState() {
     setGroupDialog({ open: false })
   }, [])
 
-  const openSettingsDialog = useCallback(() => {
-    setSettingsDialog(true)
+  const openSettingsDialog = useCallback((initialTab?: string) => {
+    setSettingsDialog({ open: true, initialTab })
   }, [])
 
   const closeSettingsDialog = useCallback(() => {
-    setSettingsDialog(false)
+    setSettingsDialog({ open: false })
   }, [])
 
   const openPhotoViewer = useCallback((photoUrl: string, name: string) => {

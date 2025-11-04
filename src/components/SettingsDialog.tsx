@@ -26,9 +26,10 @@ interface SettingsDialogProps {
   workspace: Workspace
   setWorkspace: (update: Workspace | ((current: Workspace) => Workspace)) => void
   onLogout?: () => void
+  initialTab?: string
 }
 
-export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, onLogout }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, onLogout, initialTab }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [userCredentials, setUserCredentials] = useState<{
@@ -38,7 +39,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
 
-  const [activeTab, setActiveTab] = useState('system')
+  const [activeTab, setActiveTab] = useState(initialTab || 'system')
   const [username, setUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')

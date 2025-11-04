@@ -84,6 +84,9 @@ export interface WorkspaceUser {
   inviteToken?: string
   inviteExpiry?: number
   status: 'pending' | 'active' | 'suspended'
+  canInvestigate?: boolean
+  loginCount?: number
+  lastLoginAt?: number
 }
 
 export interface ActivityLog {

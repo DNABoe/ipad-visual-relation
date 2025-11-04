@@ -496,6 +496,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         hasUnsavedChanges={hasUnsavedChanges}
         onMarkAsSaved={handleMarkAsSaved}
         currentUsername={userCredentials?.username}
+        onLogout={onLogout}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -548,13 +549,14 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
       />
 
       <SettingsDialog
-        open={controller.dialogs.settingsDialog}
+        open={controller.dialogs.settingsDialog.open}
         onOpenChange={(open) => {
           if (!open) controller.dialogs.closeSettingsDialog()
         }}
         workspace={controller.workspace}
         setWorkspace={controller.handlers.setWorkspace}
         onLogout={onLogout}
+        initialTab={controller.dialogs.settingsDialog.initialTab}
       />
 
       {controller.dialogs.photoViewer.photoUrl && (
