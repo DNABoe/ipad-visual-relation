@@ -28,10 +28,23 @@ function App() {
   useEffect(() => {
     const loadCredentials = async () => {
       try {
+        console.log('[App] Waiting for storage to be ready...')
+        const storageReady = await storage.isReady()
+        
+        if (!storageReady) {
+          console.error('[App] Storage failed to become ready')
+          setUserCredentials(null)
+          setIsLoadingCredentials(false)
+          return
+        }
+        
+        console.log('[App] Storage ready, loading credentials...')
         const credentials = await storage.get<{
           username: string
           passwordHash: PasswordHash
         }>('user-credentials')
+        
+        console.log('[App] Credentials loaded:', credentials ? 'exists' : 'not found')
         setUserCredentials(credentials || null)
       } catch (error) {
         console.error('[App] Failed to load credentials:', error)
@@ -48,6 +61,12 @@ function App() {
       console.log('[App] Starting first time setup for username:', username)
       setIsSettingUpCredentials(true)
       
+      console.log('[App] Ensuring storage is ready...')
+      const storageReady = await storage.isReady()
+      if (!storageReady) {
+        throw new Error('Storage system is not available. Please refresh the page and try again.')
+      }
+      
       console.log('[App] Hashing password...')
       const passwordHash = await hashPassword(password)
       console.log('[App] Password hashed successfully')
@@ -61,7 +80,7 @@ function App() {
       console.log('[App] Verifying credentials were saved...')
       const savedCredentials = await storage.get('user-credentials')
       if (!savedCredentials) {
-        throw new Error('Failed to verify credentials were saved')
+        throw new Error('Failed to verify credentials were saved. Please try again.')
       }
       console.log('[App] Credentials verified in storage')
       
@@ -74,7 +93,7 @@ function App() {
       console.error('[App] Setup error:', error)
       setIsSettingUpCredentials(false)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
-      toast.error('Failed to save credentials: ' + errorMessage)
+      toast.error(errorMessage)
       throw error
     }
   }, [])
@@ -83,6 +102,12 @@ function App() {
     try {
       console.log('[App] Starting invite complete for username:', username)
       setIsSettingUpCredentials(true)
+      
+      console.log('[App] Ensuring storage is ready...')
+      const storageReady = await storage.isReady()
+      if (!storageReady) {
+        throw new Error('Storage system is not available. Please refresh the page and try again.')
+      }
       
       console.log('[App] Hashing password...')
       const passwordHash = await hashPassword(password)
@@ -191,7 +216,10 @@ function App() {
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground">Loading...</p>
+            <div className="space-y-2">
+              <p className="text-muted-foreground">Initializing storage system...</p>
+              <p className="text-xs text-muted-foreground">This may take a few seconds</p>
+            </div>
           </div>
         </div>
         <Toaster />
