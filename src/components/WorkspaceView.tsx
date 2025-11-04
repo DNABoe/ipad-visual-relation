@@ -29,6 +29,7 @@ import { searchPersons, findShortestPath, findLeafTerminatedBranches, type Searc
 import { generateId, getBounds, serializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import type { SearchBarRef } from './SearchBar'
+import { getStorage } from '@/lib/storage'
 
 interface WorkspaceViewProps {
   workspace: Workspace
@@ -73,7 +74,8 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
     
     const ensureCurrentUserInWorkspace = async () => {
       try {
-        const creds = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+        const storage = getStorage()
+        const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
         
         if (!creds || !mounted) {
           console.log('[WorkspaceView] No credentials available')

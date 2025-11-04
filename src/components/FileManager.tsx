@@ -15,6 +15,7 @@ import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { createFileIconDataUrl } from '@/lib/fileIcon'
 import type { PasswordHash } from '@/lib/auth'
+import { getStorage } from '@/lib/storage'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -72,12 +73,13 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
-      const userCredentials = await window.spark.kv.get<{
+      const storage = getStorage()
+      const userCredentials = await storage.get<{
         username: string
         passwordHash: PasswordHash
       }>('user-credentials')
       
-      console.log('[FileManager] Using credentials from KV:', userCredentials)
+      console.log('[FileManager] Using credentials from storage:', userCredentials)
       
       if (!userCredentials) {
         console.error('[FileManager] No credentials available')
