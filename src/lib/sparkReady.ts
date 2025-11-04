@@ -1,65 +1,63 @@
 export async function waitForSpark(maxWaitMs: number = 5000): Promise<boolean> {
   const startTime = Date.now()
   let lastError: any = null
+  let attemptCount = 0
   
   console.log('[sparkReady] Starting Spark initialization check...')
   console.log('[sparkReady] Current URL:', window.location.href)
   console.log('[sparkReady] window.spark exists:', !!window.spark)
   
   while (Date.now() - startTime < maxWaitMs) {
+    attemptCount++
     try {
       if (window.spark) {
-        console.log('[sparkReady] window.spark found')
-        console.log('[sparkReady] window.spark.kv exists:', !!window.spark.kv)
+        console.log(`[sparkReady] Attempt ${attemptCount}: window.spark found`)
         
         if (window.spark.kv) {
-          console.log('[sparkReady] window.spark.kv.set type:', typeof window.spark.kv.set)
-          console.log('[sparkReady] window.spark.kv.get type:', typeof window.spark.kv.get)
-          console.log('[sparkReady] window.spark.kv.keys type:', typeof window.spark.kv.keys)
-          console.log('[sparkReady] window.spark.kv.delete type:', typeof window.spark.kv.delete)
+          console.log(`[sparkReady] Attempt ${attemptCount}: window.spark.kv exists`)
           
           if (typeof window.spark.kv.set === 'function' && 
               typeof window.spark.kv.get === 'function' &&
               typeof window.spark.kv.keys === 'function' &&
               typeof window.spark.kv.delete === 'function') {
+            
             try {
-              console.log('[sparkReady] Testing KV.keys() access...')
-              const keys = await window.spark.kv.keys()
-              console.log('[sparkReady] KV.keys() successful! Found', keys.length, 'keys')
+              console.log(`[sparkReady] Attempt ${attemptCount}: Testing KV operations...`)
+              await Promise.race([
+                window.spark.kv.get('_spark_init_test'),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('KV operation timeout')), 3000))
+              ])
               
-              console.log('[sparkReady] Testing KV.get() access...')
-              await window.spark.kv.get('_spark_init_test')
-              console.log('[sparkReady] KV.get() successful!')
-              
-              console.log('[sparkReady] All KV operations successful!')
+              console.log('[sparkReady] ✓ KV operations successful!')
               return true
             } catch (error) {
               lastError = error
-              console.warn('[sparkReady] KV operation failed:', error)
+              console.warn(`[sparkReady] Attempt ${attemptCount}: KV operation failed:`, error)
             }
           } else {
-            console.warn('[sparkReady] KV methods not all functions')
+            console.warn(`[sparkReady] Attempt ${attemptCount}: KV methods not all functions`)
           }
         } else {
-          console.warn('[sparkReady] window.spark.kv not available')
+          console.warn(`[sparkReady] Attempt ${attemptCount}: window.spark.kv not available yet`)
         }
       } else {
-        console.warn('[sparkReady] window.spark not available')
+        console.warn(`[sparkReady] Attempt ${attemptCount}: window.spark not available yet`)
       }
     } catch (error) {
       lastError = error
-      console.warn('[sparkReady] Error during check:', error)
+      console.warn(`[sparkReady] Attempt ${attemptCount}: Error during check:`, error)
     }
     
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await new Promise(resolve => setTimeout(resolve, 250))
   }
   
-  console.error('[sparkReady] Timeout reached after', maxWaitMs, 'ms')
+  console.error('[sparkReady] ✗ Timeout reached after', maxWaitMs, 'ms and', attemptCount, 'attempts')
   console.error('[sparkReady] Last error:', lastError)
   console.error('[sparkReady] Final state:', {
     sparkExists: !!window.spark,
     kvExists: !!(window.spark && window.spark.kv),
-    sparkKeys: window.spark ? Object.keys(window.spark) : []
+    sparkType: typeof window.spark,
+    kvType: window.spark ? typeof window.spark.kv : 'N/A'
   })
   
   return false

@@ -9,12 +9,19 @@ import { hashPassword, type PasswordHash } from './lib/auth'
 import type { Workspace, AppSettings } from './lib/types'
 import { DEFAULT_APP_SETTINGS } from './lib/constants'
 import { waitForSpark } from './lib/sparkReady'
-import { WarningCircle } from '@phosphor-icons/react'
+import { 
+  setPendingCredentials, 
+  getPendingCredentials, 
+  attemptSavePendingCredentials,
+  startAutoRetry
+} from './lib/deferredCredentials'
+import { WarningCircle, CheckCircle, CloudArrowUp } from '@phosphor-icons/react'
 import { Button } from './components/ui/button'
 
 function App() {
   const [sparkReady, setSparkReady] = useState(false)
   const [sparkError, setSparkError] = useState(false)
+  const [credentialsSaveStatus, setCredentialsSaveStatus] = useState<'none' | 'pending' | 'saving' | 'saved' | 'failed'>('none')
   const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
@@ -34,34 +41,69 @@ function App() {
     let mounted = true
 
     const initializeSpark = async () => {
-      console.log('[App] Waiting for Spark runtime...')
+      console.log('[App] Starting initialization...')
       console.log('[App] Environment:', {
         userAgent: navigator.userAgent,
         location: window.location.href,
         sparkExists: !!window.spark
       })
       
-      const ready = await waitForSpark(30000)
+      const ready = await waitForSpark(45000)
       
       if (!mounted) return
       
       if (!ready) {
-        console.error('[App] Spark runtime failed to initialize after 30 seconds')
-        console.error('[App] Final state:', {
-          sparkExists: !!window.spark,
-          kvExists: !!(window.spark && window.spark.kv),
-          setExists: !!(window.spark && window.spark.kv && window.spark.kv.set),
-          getExists: !!(window.spark && window.spark.kv && window.spark.kv.get)
-        })
-        setSparkError(true)
+        console.warn('[App] Spark KV did not initialize within timeout')
+        console.log('[App] Checking for pending credentials...')
+        
+        const pending = getPendingCredentials()
+        if (pending) {
+          console.log('[App] Found pending credentials, starting background save')
+          setCredentialsSaveStatus('pending')
+          setUserCredentials({ username: pending.username, passwordHash: pending.passwordHash })
+          setCredentialsLoaded(true)
+          setSparkReady(false)
+          
+          startAutoRetry(() => {
+            console.log('[App] Background save successful!')
+            setCredentialsSaveStatus('saved')
+            setSparkReady(true)
+            toast.success('Credentials synchronized successfully')
+          })
+        } else {
+          console.error('[App] No Spark KV and no pending credentials')
+          setSparkError(true)
+        }
         return
       }
 
-      console.log('[App] Spark runtime ready')
+      console.log('[App] ✓ Spark runtime ready')
       setSparkReady(true)
 
+      const pending = getPendingCredentials()
+      if (pending) {
+        console.log('[App] Found pending credentials, attempting immediate save...')
+        setCredentialsSaveStatus('saving')
+        const saved = await attemptSavePendingCredentials()
+        if (saved) {
+          console.log('[App] ✓ Pending credentials saved')
+          setCredentialsSaveStatus('saved')
+          setUserCredentials({ username: pending.username, passwordHash: pending.passwordHash })
+          setCredentialsLoaded(true)
+          toast.success('Credentials saved successfully')
+          return
+        } else {
+          console.warn('[App] Failed to save pending credentials, will retry')
+          setCredentialsSaveStatus('pending')
+          startAutoRetry(() => {
+            setCredentialsSaveStatus('saved')
+            toast.success('Credentials synchronized')
+          })
+        }
+      }
+
       try {
-        console.log('[App] Loading user credentials...')
+        console.log('[App] Loading stored credentials from KV...')
         const storedCredentials = await window.spark.kv.get<{
           username: string
           passwordHash: PasswordHash
@@ -71,12 +113,14 @@ function App() {
           console.log('[App] Loaded credentials:', storedCredentials ? 'Found' : 'Not found')
           setUserCredentials(storedCredentials || null)
           setCredentialsLoaded(true)
+          setCredentialsSaveStatus(storedCredentials ? 'saved' : 'none')
         }
       } catch (error) {
         console.error('[App] Failed to load credentials:', error)
         if (mounted) {
           setUserCredentials(null)
           setCredentialsLoaded(true)
+          setCredentialsSaveStatus('none')
         }
       }
     }
@@ -96,24 +140,48 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      console.log('[App] Saving credentials to KV store...')
-      await window.spark.kv.set('user-credentials', credentials)
+      setPendingCredentials(username, passwordHash)
+      setUserCredentials(credentials)
       
-      console.log('[App] Verifying credentials were saved...')
-      const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
-      
-      if (!stored || stored.username !== username) {
-        throw new Error('Failed to save credentials to storage')
+      if (sparkReady && window.spark && window.spark.kv) {
+        console.log('[App] Spark ready, attempting immediate save...')
+        setCredentialsSaveStatus('saving')
+        
+        try {
+          await window.spark.kv.set('user-credentials', credentials)
+          
+          const stored = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+          
+          if (stored && stored.username === username) {
+            console.log('[App] ✓ Credentials saved and verified')
+            setCredentialsSaveStatus('saved')
+            toast.success('Administrator account created successfully!')
+          } else {
+            throw new Error('Verification failed')
+          }
+        } catch (saveError) {
+          console.warn('[App] Immediate save failed, will retry in background:', saveError)
+          setCredentialsSaveStatus('pending')
+          toast.info('Account created. Credentials will be synchronized in the background.')
+          startAutoRetry(() => {
+            setCredentialsSaveStatus('saved')
+            toast.success('Credentials synchronized successfully')
+          })
+        }
+      } else {
+        console.log('[App] Spark not ready, credentials set as pending')
+        setCredentialsSaveStatus('pending')
+        toast.info('Account created. Credentials will be saved when connection is ready.')
+        
+        startAutoRetry(() => {
+          setCredentialsSaveStatus('saved')
+          toast.success('Credentials synchronized successfully')
+        })
       }
       
-      console.log('[App] Credentials verified in KV store')
-      
-      setUserCredentials(credentials)
       setIsAuthenticated(true)
       setIsSettingUpCredentials(false)
-      
       console.log('[App] Setup complete!')
-      toast.success('Administrator account created successfully!')
     } catch (error) {
       console.error('[App] Setup error:', error)
       setIsSettingUpCredentials(false)
@@ -121,7 +189,7 @@ function App() {
       toast.error(errorMessage)
       throw error
     }
-  }, [])
+  }, [sparkReady])
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
@@ -131,19 +199,42 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      console.log('[App] Saving credentials to KV store...')
-      await window.spark.kv.set('user-credentials', credentials)
+      setPendingCredentials(username, passwordHash)
+      setUserCredentials(credentials)
       
-      console.log('[App] Verifying credentials were saved...')
-      const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
-      
-      if (!stored || stored.username !== username) {
-        throw new Error('Failed to save credentials to storage')
+      if (sparkReady && window.spark && window.spark.kv) {
+        console.log('[App] Spark ready, attempting immediate save...')
+        setCredentialsSaveStatus('saving')
+        
+        try {
+          await window.spark.kv.set('user-credentials', credentials)
+          
+          const stored = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+          
+          if (stored && stored.username === username) {
+            console.log('[App] ✓ Credentials saved and verified')
+            setCredentialsSaveStatus('saved')
+          } else {
+            throw new Error('Verification failed')
+          }
+        } catch (saveError) {
+          console.warn('[App] Immediate save failed, will retry in background:', saveError)
+          setCredentialsSaveStatus('pending')
+          toast.info('Account created. Credentials will be synchronized in the background.')
+          startAutoRetry(() => {
+            setCredentialsSaveStatus('saved')
+            toast.success('Credentials synchronized')
+          })
+        }
+      } else {
+        console.log('[App] Spark not ready, credentials set as pending')
+        setCredentialsSaveStatus('pending')
+        startAutoRetry(() => {
+          setCredentialsSaveStatus('saved')
+          toast.success('Credentials synchronized')
+        })
       }
       
-      console.log('[App] Credentials verified in KV store')
-      
-      setUserCredentials(credentials)
       setInviteToken(null)
       setInviteWorkspaceId(null)
       window.history.replaceState({}, '', window.location.pathname)
@@ -157,7 +248,7 @@ function App() {
       setIsSettingUpCredentials(false)
       toast.error('Failed to complete invite setup')
     }
-  }, [])
+  }, [sparkReady])
 
   const handleInviteCancel = useCallback(() => {
     setInviteToken(null)
@@ -276,13 +367,19 @@ function App() {
     )
   }
 
-  if (!sparkReady || !credentialsLoaded) {
+  if (!credentialsLoaded) {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground">Initializing application...</p>
+            {credentialsSaveStatus === 'pending' && (
+              <div className="flex items-center justify-center gap-2 text-sm text-warning">
+                <CloudArrowUp size={16} className="animate-pulse" />
+                <span>Connecting to storage...</span>
+              </div>
+            )}
           </div>
         </div>
         <Toaster />
@@ -347,6 +444,22 @@ function App() {
 
   return (
     <>
+      {credentialsSaveStatus === 'pending' && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-warning/10 border-b border-warning/20 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm text-warning">
+            <CloudArrowUp size={16} className="animate-pulse" />
+            <span>Credentials will be synchronized when connection is available</span>
+          </div>
+        </div>
+      )}
+      {credentialsSaveStatus === 'saving' && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-primary/10 border-b border-primary/20 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm text-primary">
+            <CloudArrowUp size={16} className="animate-bounce" />
+            <span>Synchronizing credentials...</span>
+          </div>
+        </div>
+      )}
       <WorkspaceView
         workspace={initialWorkspace}
         fileName={fileName}
