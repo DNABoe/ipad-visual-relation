@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import { WorkspaceToolbar } from './WorkspaceToolbar'
 import { WorkspaceCanvas } from './WorkspaceCanvas'
@@ -41,10 +40,10 @@ interface WorkspaceViewProps {
 }
 
 export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onLoadNetwork, onLogout }: WorkspaceViewProps) {
-  const [userCredentials] = useKV<{
+  const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
-  } | null>('user-credentials', null)
+  } | null>(null)
   
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
@@ -58,6 +57,14 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   const [isShortestPathActive, setIsShortestPathActive] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [savedWorkspaceStr, setSavedWorkspaceStr] = useState<string>('')
+
+  useEffect(() => {
+    const loadCredentials = async () => {
+      const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+      setUserCredentials(creds || null)
+    }
+    loadCredentials()
+  }, [])
 
   useEffect(() => {
     console.log('[WorkspaceView] Workspace prop changed')

@@ -1,19 +1,20 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
-import { useKV } from '@github/spark/hooks'
 import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
 import { hashPassword, type PasswordHash } from './lib/auth'
+import { storage } from './lib/storage'
 import type { Workspace } from './lib/types'
 
 function App() {
-  const [userCredentials, setUserCredentials, deleteUserCredentials] = useKV<{
+  const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
-  } | null>('user-credentials', null)
+  } | null>(null)
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
@@ -23,6 +24,24 @@ function App() {
   const [fileName, setFileName] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
+
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const credentials = await storage.get<{
+          username: string
+          passwordHash: PasswordHash
+        }>('user-credentials')
+        setUserCredentials(credentials || null)
+      } catch (error) {
+        console.error('[App] Failed to load credentials:', error)
+        setUserCredentials(null)
+      } finally {
+        setIsLoadingCredentials(false)
+      }
+    }
+    loadCredentials()
+  }, [])
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
@@ -34,17 +53,17 @@ function App() {
       console.log('[App] Password hashed successfully')
       
       const credentials = { username, passwordHash }
-      console.log('[App] Attempting to save credentials to KV store...')
+      console.log('[App] Attempting to save credentials to storage...')
       
-      await window.spark.kv.set('user-credentials', credentials)
-      console.log('[App] Credentials saved successfully to KV store')
+      await storage.set('user-credentials', credentials)
+      console.log('[App] Credentials saved successfully to storage')
       
       console.log('[App] Verifying credentials were saved...')
-      const savedCredentials = await window.spark.kv.get('user-credentials')
+      const savedCredentials = await storage.get('user-credentials')
       if (!savedCredentials) {
         throw new Error('Failed to verify credentials were saved')
       }
-      console.log('[App] Credentials verified in KV store')
+      console.log('[App] Credentials verified in storage')
       
       setUserCredentials(credentials)
       setIsAuthenticated(true)
@@ -58,7 +77,7 @@ function App() {
       toast.error('Failed to save credentials: ' + errorMessage)
       throw error
     }
-  }, [setUserCredentials])
+  }, [])
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
@@ -70,10 +89,10 @@ function App() {
       console.log('[App] Password hashed successfully')
       
       const credentials = { username, passwordHash }
-      console.log('[App] Attempting to save credentials to KV store...')
+      console.log('[App] Attempting to save credentials to storage...')
       
-      await window.spark.kv.set('user-credentials', credentials)
-      console.log('[App] Credentials saved successfully to KV store')
+      await storage.set('user-credentials', credentials)
+      console.log('[App] Credentials saved successfully to storage')
       
       setUserCredentials(credentials)
       
@@ -90,7 +109,7 @@ function App() {
       const errorMessage = error instanceof Error ? error.message : 'Failed to complete invite setup'
       toast.error(errorMessage)
     }
-  }, [setUserCredentials])
+  }, [])
 
   const handleInviteCancel = useCallback(() => {
     setInviteToken(null)
@@ -165,6 +184,20 @@ function App() {
     setPassword('')
     setShowFileManager(true)
   }, [])
+
+  if (isLoadingCredentials) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+        <Toaster />
+      </>
+    )
+  }
 
   if (isSettingUpCredentials) {
     return (
