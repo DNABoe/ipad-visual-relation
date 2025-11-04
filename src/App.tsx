@@ -19,6 +19,7 @@ function App() {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [inviteWorkspaceId, setInviteWorkspaceId] = useState<string | null>(null)
   const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
@@ -26,33 +27,46 @@ function App() {
   const [password, setPassword] = useState<string>('')
   const [showFileManager, setShowFileManager] = useState(true)
 
+  useEffect(() => {
+    console.log('[App] userCredentials state changed:', userCredentials ? `username: ${userCredentials.username}` : 'null')
+  }, [userCredentials])
+
+  useEffect(() => {
+    console.log('[App] isAuthenticated state changed:', isAuthenticated)
+  }, [isAuthenticated])
+
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
+      console.log('[App] Starting first time setup for username:', username)
+      setIsSettingUpCredentials(true)
+      
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
+      console.log('[App] Saving credentials to KV store...')
+      await window.spark.kv.set('user-credentials', credentials)
+      
+      console.log('[App] Verifying credentials were saved...')
+      const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
+      
+      if (!stored || stored.username !== username) {
+        throw new Error('Failed to save credentials to storage')
+      }
+      
+      console.log('[App] Credentials verified in KV store')
+      
       setUserCredentials(credentials)
       
-      await new Promise<void>((resolve) => {
-        const checkInterval = setInterval(async () => {
-          const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
-          if (stored && stored.username === username) {
-            clearInterval(checkInterval)
-            resolve()
-          }
-        }, 50)
-        
-        setTimeout(() => {
-          clearInterval(checkInterval)
-          resolve()
-        }, 3000)
-      })
+      await new Promise(resolve => setTimeout(resolve, 100))
       
       setIsAuthenticated(true)
+      setIsSettingUpCredentials(false)
       
+      console.log('[App] Setup complete!')
       toast.success('Administrator account created successfully!')
     } catch (error) {
       console.error('[App] Setup error:', error)
+      setIsSettingUpCredentials(false)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
       toast.error(errorMessage)
       throw error
@@ -61,34 +75,39 @@ function App() {
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
+      console.log('[App] Starting invite complete for username:', username)
+      setIsSettingUpCredentials(true)
+      
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
+      console.log('[App] Saving credentials to KV store...')
+      await window.spark.kv.set('user-credentials', credentials)
+      
+      console.log('[App] Verifying credentials were saved...')
+      const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
+      
+      if (!stored || stored.username !== username) {
+        throw new Error('Failed to save credentials to storage')
+      }
+      
+      console.log('[App] Credentials verified in KV store')
+      
       setUserCredentials(credentials)
       
-      await new Promise<void>((resolve) => {
-        const checkInterval = setInterval(async () => {
-          const stored = await window.spark.kv.get<{username: string; passwordHash: any}>('user-credentials')
-          if (stored && stored.username === username) {
-            clearInterval(checkInterval)
-            resolve()
-          }
-        }, 50)
-        
-        setTimeout(() => {
-          clearInterval(checkInterval)
-          resolve()
-        }, 3000)
-      })
-
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       setInviteToken(null)
       setInviteWorkspaceId(null)
       window.history.replaceState({}, '', window.location.pathname)
       setIsAuthenticated(true)
+      setIsSettingUpCredentials(false)
       
+      console.log('[App] Invite complete!')
       toast.success('Account created successfully!')
     } catch (error) {
       console.error('[App] Invite accept error:', error)
+      setIsSettingUpCredentials(false)
       toast.error('Failed to complete invite setup')
     }
   }, [setUserCredentials])
@@ -168,6 +187,20 @@ function App() {
     setPassword('')
     setShowFileManager(true)
   }, [])
+
+  if (isSettingUpCredentials) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Setting up your account...</p>
+          </div>
+        </div>
+        <Toaster />
+      </>
+    )
+  }
 
   if (inviteToken && inviteWorkspaceId) {
     return (

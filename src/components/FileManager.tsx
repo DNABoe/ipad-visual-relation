@@ -43,23 +43,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
   const [loadingFile, setLoadingFile] = useState<File | null>(null)
   const [loadPassword, setLoadPassword] = useState('')
   const [createdNetwork, setCreatedNetwork] = useState<CreatedNetwork | null>(null)
-  const [initializationFailed, setInitializationFailed] = useState(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!userCredentials) {
-        console.error('[FileManager] Failed to load credentials after 10 seconds')
-        setInitializationFailed(true)
-      }
-    }, 10000)
-
-    if (userCredentials) {
-      clearTimeout(timer)
-      setInitializationFailed(false)
-    }
-
-    return () => clearTimeout(timer)
-  }, [userCredentials])
 
   const handleResetNewDialog = useCallback(() => {
     setShowNewDialog(false)
@@ -307,29 +290,8 @@ export function FileManager({ onLoad }: FileManagerProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
-          {!initializationFailed ? (
-            <>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground">Initializing RelEye...</p>
-            </>
-          ) : (
-            <>
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-                <span className="text-destructive text-2xl">⚠</span>
-              </div>
-              <div className="space-y-2">
-                <p className="text-destructive font-medium">Failed to initialize storage system</p>
-                <p className="text-sm text-muted-foreground">Please refresh the page</p>
-              </div>
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline"
-                className="mt-4"
-              >
-                Refresh Page
-              </Button>
-            </>
-          )}
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading credentials...</p>
         </div>
       </div>
     )
