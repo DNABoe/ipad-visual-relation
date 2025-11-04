@@ -164,7 +164,7 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
 
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                <p className="text-sm font-medium text-destructive mb-1">Failed to set key:</p>
+                <p className="text-sm font-medium text-destructive mb-1">Setup Failed</p>
                 <p className="text-xs text-destructive/80">{error}</p>
               </div>
             )}

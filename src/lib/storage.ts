@@ -12,19 +12,48 @@ export interface StorageAdapter {
 
 class SparkKVAdapter implements StorageAdapter {
   async get<T>(key: string): Promise<T | undefined> {
-    return await window.spark.kv.get<T>(key)
+    try {
+      const value = await window.spark.kv.get<T>(key)
+      console.log(`[SparkKVAdapter] Get key: ${key}`, value ? 'found' : 'not found')
+      return value
+    } catch (error) {
+      console.error(`[SparkKVAdapter] Get error for key ${key}:`, error)
+      throw error
+    }
   }
 
   async set<T>(key: string, value: T): Promise<void> {
-    await window.spark.kv.set(key, value)
+    try {
+      await window.spark.kv.set(key, value)
+      console.log(`[SparkKVAdapter] Successfully saved key: ${key}`)
+    } catch (error) {
+      console.error(`[SparkKVAdapter] Set error for key ${key}:`, error)
+      if (error instanceof Error) {
+        throw new Error(`Failed to save to Spark KV: ${error.message}`)
+      }
+      throw new Error('Failed to save to Spark KV')
+    }
   }
 
   async delete(key: string): Promise<void> {
-    await window.spark.kv.delete(key)
+    try {
+      await window.spark.kv.delete(key)
+      console.log(`[SparkKVAdapter] Deleted key: ${key}`)
+    } catch (error) {
+      console.error(`[SparkKVAdapter] Delete error for key ${key}:`, error)
+      throw error
+    }
   }
 
   async keys(): Promise<string[]> {
-    return await window.spark.kv.keys()
+    try {
+      const keys = await window.spark.kv.keys()
+      console.log(`[SparkKVAdapter] Retrieved ${keys.length} keys`)
+      return keys
+    } catch (error) {
+      console.error('[SparkKVAdapter] Keys error:', error)
+      throw error
+    }
   }
 }
 
@@ -43,10 +72,15 @@ class LocalStorageAdapter implements StorageAdapter {
 
   async set<T>(key: string, value: T): Promise<void> {
     try {
-      localStorage.setItem(this.prefix + key, JSON.stringify(value))
+      const serialized = JSON.stringify(value)
+      localStorage.setItem(this.prefix + key, serialized)
+      console.log(`[LocalStorageAdapter] Successfully saved key: ${key} (${serialized.length} bytes)`)
     } catch (error) {
       console.error('[LocalStorageAdapter] Set error:', error)
-      throw error
+      if (error instanceof Error) {
+        throw new Error(`Failed to save to localStorage: ${error.message}`)
+      }
+      throw new Error('Failed to save to localStorage')
     }
   }
 

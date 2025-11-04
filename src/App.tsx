@@ -91,26 +91,21 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
+      const storage = getStorage()
+      await storage.set('user-credentials', credentials)
+      console.log('[App] ✓ Credentials saved to storage')
+      
       setUserCredentials(credentials)
-      
-      try {
-        const storage = getStorage()
-        await storage.set('user-credentials', credentials)
-        console.log('[App] ✓ Credentials saved')
-        toast.success('Administrator account created successfully!')
-      } catch (saveError) {
-        console.warn('[App] Save failed:', saveError)
-        toast.error('Failed to save credentials')
-      }
-      
       setIsAuthenticated(true)
       setIsSettingUpCredentials(false)
+      
+      toast.success('Administrator account created successfully!')
       console.log('[App] Setup complete!')
     } catch (error) {
       console.error('[App] Setup error:', error)
       setIsSettingUpCredentials(false)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
-      toast.error(errorMessage)
+      toast.error('Failed to save credentials: ' + errorMessage)
       throw error
     }
   }, [])
