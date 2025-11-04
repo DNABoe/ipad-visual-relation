@@ -8,20 +8,13 @@ import { InviteAcceptView } from './components/InviteAcceptView'
 import { hashPassword, type PasswordHash } from './lib/auth'
 import type { Workspace, AppSettings } from './lib/types'
 import { DEFAULT_APP_SETTINGS } from './lib/constants'
-import { waitForSpark } from './lib/sparkReady'
-import { 
-  setPendingCredentials, 
-  getPendingCredentials, 
-  attemptSavePendingCredentials,
-  startAutoRetry
-} from './lib/deferredCredentials'
+import { waitForStorage, getStorage, isStorageAvailable } from './lib/storage'
 import { WarningCircle, CheckCircle, CloudArrowUp } from '@phosphor-icons/react'
 import { Button } from './components/ui/button'
 
 function App() {
-  const [sparkReady, setSparkReady] = useState(false)
-  const [sparkError, setSparkError] = useState(false)
-  const [credentialsSaveStatus, setCredentialsSaveStatus] = useState<'none' | 'pending' | 'saving' | 'saved' | 'failed'>('none')
+  const [storageReady, setStorageReady] = useState(false)
+  const [storageError, setStorageError] = useState(false)
   const [userCredentials, setUserCredentials] = useState<{
     username: string
     passwordHash: PasswordHash
@@ -40,71 +33,31 @@ function App() {
   useEffect(() => {
     let mounted = true
 
-    const initializeSpark = async () => {
+    const initializeStorage = async () => {
       console.log('[App] Starting initialization...')
       console.log('[App] Environment:', {
         userAgent: navigator.userAgent,
         location: window.location.href,
-        sparkExists: !!window.spark
+        storageAvailable: isStorageAvailable()
       })
       
-      const ready = await waitForSpark(45000)
+      const ready = await waitForStorage(5000)
       
       if (!mounted) return
       
       if (!ready) {
-        console.warn('[App] Spark KV did not initialize within timeout')
-        console.log('[App] Checking for pending credentials...')
-        
-        const pending = getPendingCredentials()
-        if (pending) {
-          console.log('[App] Found pending credentials, starting background save')
-          setCredentialsSaveStatus('pending')
-          setUserCredentials({ username: pending.username, passwordHash: pending.passwordHash })
-          setCredentialsLoaded(true)
-          setSparkReady(false)
-          
-          startAutoRetry(() => {
-            console.log('[App] Background save successful!')
-            setCredentialsSaveStatus('saved')
-            setSparkReady(true)
-            toast.success('Credentials synchronized successfully')
-          })
-        } else {
-          console.error('[App] No Spark KV and no pending credentials')
-          setSparkError(true)
-        }
+        console.error('[App] No storage available')
+        setStorageError(true)
         return
       }
 
-      console.log('[App] ✓ Spark runtime ready')
-      setSparkReady(true)
-
-      const pending = getPendingCredentials()
-      if (pending) {
-        console.log('[App] Found pending credentials, attempting immediate save...')
-        setCredentialsSaveStatus('saving')
-        const saved = await attemptSavePendingCredentials()
-        if (saved) {
-          console.log('[App] ✓ Pending credentials saved')
-          setCredentialsSaveStatus('saved')
-          setUserCredentials({ username: pending.username, passwordHash: pending.passwordHash })
-          setCredentialsLoaded(true)
-          toast.success('Credentials saved successfully')
-          return
-        } else {
-          console.warn('[App] Failed to save pending credentials, will retry')
-          setCredentialsSaveStatus('pending')
-          startAutoRetry(() => {
-            setCredentialsSaveStatus('saved')
-            toast.success('Credentials synchronized')
-          })
-        }
-      }
+      console.log('[App] ✓ Storage ready')
+      setStorageReady(true)
 
       try {
-        console.log('[App] Loading stored credentials from KV...')
-        const storedCredentials = await window.spark.kv.get<{
+        console.log('[App] Loading stored credentials...')
+        const storage = getStorage()
+        const storedCredentials = await storage.get<{
           username: string
           passwordHash: PasswordHash
         }>('user-credentials')
@@ -113,19 +66,17 @@ function App() {
           console.log('[App] Loaded credentials:', storedCredentials ? 'Found' : 'Not found')
           setUserCredentials(storedCredentials || null)
           setCredentialsLoaded(true)
-          setCredentialsSaveStatus(storedCredentials ? 'saved' : 'none')
         }
       } catch (error) {
         console.error('[App] Failed to load credentials:', error)
         if (mounted) {
           setUserCredentials(null)
           setCredentialsLoaded(true)
-          setCredentialsSaveStatus('none')
         }
       }
     }
 
-    initializeSpark()
+    initializeStorage()
 
     return () => {
       mounted = false
@@ -140,43 +91,16 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      setPendingCredentials(username, passwordHash)
       setUserCredentials(credentials)
       
-      if (sparkReady && window.spark && window.spark.kv) {
-        console.log('[App] Spark ready, attempting immediate save...')
-        setCredentialsSaveStatus('saving')
-        
-        try {
-          await window.spark.kv.set('user-credentials', credentials)
-          
-          const stored = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-          
-          if (stored && stored.username === username) {
-            console.log('[App] ✓ Credentials saved and verified')
-            setCredentialsSaveStatus('saved')
-            toast.success('Administrator account created successfully!')
-          } else {
-            throw new Error('Verification failed')
-          }
-        } catch (saveError) {
-          console.warn('[App] Immediate save failed, will retry in background:', saveError)
-          setCredentialsSaveStatus('pending')
-          toast.info('Account created. Credentials will be synchronized in the background.')
-          startAutoRetry(() => {
-            setCredentialsSaveStatus('saved')
-            toast.success('Credentials synchronized successfully')
-          })
-        }
-      } else {
-        console.log('[App] Spark not ready, credentials set as pending')
-        setCredentialsSaveStatus('pending')
-        toast.info('Account created. Credentials will be saved when connection is ready.')
-        
-        startAutoRetry(() => {
-          setCredentialsSaveStatus('saved')
-          toast.success('Credentials synchronized successfully')
-        })
+      try {
+        const storage = getStorage()
+        await storage.set('user-credentials', credentials)
+        console.log('[App] ✓ Credentials saved')
+        toast.success('Administrator account created successfully!')
+      } catch (saveError) {
+        console.warn('[App] Save failed:', saveError)
+        toast.error('Failed to save credentials')
       }
       
       setIsAuthenticated(true)
@@ -189,7 +113,7 @@ function App() {
       toast.error(errorMessage)
       throw error
     }
-  }, [sparkReady])
+  }, [])
 
   const handleInviteComplete = useCallback(async (userId: string, username: string, password: string) => {
     try {
@@ -199,40 +123,14 @@ function App() {
       const passwordHash = await hashPassword(password)
       const credentials = { username, passwordHash }
       
-      setPendingCredentials(username, passwordHash)
       setUserCredentials(credentials)
       
-      if (sparkReady && window.spark && window.spark.kv) {
-        console.log('[App] Spark ready, attempting immediate save...')
-        setCredentialsSaveStatus('saving')
-        
-        try {
-          await window.spark.kv.set('user-credentials', credentials)
-          
-          const stored = await window.spark.kv.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-          
-          if (stored && stored.username === username) {
-            console.log('[App] ✓ Credentials saved and verified')
-            setCredentialsSaveStatus('saved')
-          } else {
-            throw new Error('Verification failed')
-          }
-        } catch (saveError) {
-          console.warn('[App] Immediate save failed, will retry in background:', saveError)
-          setCredentialsSaveStatus('pending')
-          toast.info('Account created. Credentials will be synchronized in the background.')
-          startAutoRetry(() => {
-            setCredentialsSaveStatus('saved')
-            toast.success('Credentials synchronized')
-          })
-        }
-      } else {
-        console.log('[App] Spark not ready, credentials set as pending')
-        setCredentialsSaveStatus('pending')
-        startAutoRetry(() => {
-          setCredentialsSaveStatus('saved')
-          toast.success('Credentials synchronized')
-        })
+      try {
+        const storage = getStorage()
+        await storage.set('user-credentials', credentials)
+        console.log('[App] ✓ Credentials saved')
+      } catch (saveError) {
+        console.warn('[App] Save failed:', saveError)
       }
       
       setInviteToken(null)
@@ -248,7 +146,7 @@ function App() {
       setIsSettingUpCredentials(false)
       toast.error('Failed to complete invite setup')
     }
-  }, [sparkReady])
+  }, [])
 
   const handleInviteCancel = useCallback(() => {
     setInviteToken(null)
@@ -324,7 +222,7 @@ function App() {
     setShowFileManager(true)
   }, [])
 
-  if (sparkError) {
+  if (storageError) {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center bg-background">
@@ -337,8 +235,8 @@ function App() {
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold text-foreground">Failed to initialize storage system</h1>
               <p className="text-muted-foreground">
-                The application could not connect to the storage system within 30 seconds. 
-                This may be due to a network issue, browser compatibility problem, or the Spark runtime not being available.
+                The application could not initialize a storage system. 
+                This may be due to a browser compatibility problem or storage being disabled.
               </p>
               <div className="mt-4 p-4 bg-muted/20 rounded-lg text-left">
                 <p className="text-sm text-muted-foreground font-mono">
@@ -347,8 +245,7 @@ function App() {
                 <ul className="text-xs text-muted-foreground font-mono mt-2 space-y-1">
                   <li>• Browser: {navigator.userAgent.split(' ').pop()}</li>
                   <li>• Location: {window.location.href}</li>
-                  <li>• Spark Available: {String(!!window.spark)}</li>
-                  <li>• KV Available: {String(!!(window.spark && window.spark.kv))}</li>
+                  <li>• localStorage Available: {String(typeof localStorage !== 'undefined')}</li>
                 </ul>
               </div>
             </div>
@@ -374,12 +271,6 @@ function App() {
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground">Initializing application...</p>
-            {credentialsSaveStatus === 'pending' && (
-              <div className="flex items-center justify-center gap-2 text-sm text-warning">
-                <CloudArrowUp size={16} className="animate-pulse" />
-                <span>Connecting to storage...</span>
-              </div>
-            )}
           </div>
         </div>
         <Toaster />
@@ -444,22 +335,6 @@ function App() {
 
   return (
     <>
-      {credentialsSaveStatus === 'pending' && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-warning/10 border-b border-warning/20 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm text-warning">
-            <CloudArrowUp size={16} className="animate-pulse" />
-            <span>Credentials will be synchronized when connection is available</span>
-          </div>
-        </div>
-      )}
-      {credentialsSaveStatus === 'saving' && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-primary/10 border-b border-primary/20 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm text-primary">
-            <CloudArrowUp size={16} className="animate-bounce" />
-            <span>Synchronizing credentials...</span>
-          </div>
-        </div>
-      )}
       <WorkspaceView
         workspace={initialWorkspace}
         fileName={fileName}

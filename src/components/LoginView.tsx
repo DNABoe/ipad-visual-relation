@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { verifyPassword, type PasswordHash, isPasswordHash } from '@/lib/auth'
+import { getStorage } from '@/lib/storage'
 import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
 
 interface LoginViewProps {
@@ -23,7 +24,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsLoading(true)
 
     try {
-      const userSettings = await window.spark.kv.get<{
+      const storage = getStorage()
+      const userSettings = await storage.get<{
         username: string
         passwordHash: PasswordHash
       }>('user-credentials')

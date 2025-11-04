@@ -48,11 +48,6 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
       return
     }
 
-    if (!window.spark || !window.spark.kv) {
-      setError('Storage system is not available. Please ensure the app is properly loaded and try refreshing the page.')
-      return
-    }
-
     setIsLoading(true)
     
     try {
