@@ -530,12 +530,6 @@ This is an automated invitation from RelEye. If you received this email in error
                                       Added {format(user.addedAt, 'MMM d, yyyy')}
                                     </span>
                                   </div>
-                                  
-                                  {user.status === 'pending' && user.inviteExpiry && (
-                                    <div className="mt-2 text-xs text-muted-foreground">
-                                      Invitation expires: {format(user.inviteExpiry, 'MMM d, yyyy h:mm a')}
-                                    </div>
-                                  )}
                                 </div>
 
                                 <div className="flex flex-col gap-2">
