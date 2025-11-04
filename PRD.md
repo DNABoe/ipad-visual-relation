@@ -1,6 +1,42 @@
-# NetEye - Relationship Network App
+# RelEye - Relationship Network App
 
 A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored locally and encrypted with AES-256 for maximum security and privacy.
+
+## Deployment Information
+
+**Production URL**: https://releye.boestad.com
+
+This application is designed to be deployed as a static site on GitHub Pages with a custom domain. All functionality works when deployed, including:
+- User authentication with secure credential storage via Spark KV API
+- Encrypted file management (create, save, load .enc.releye files)
+- Canvas operations (pan, zoom, drag, connect)
+- Multi-user collaboration with invite system
+- Admin dashboard and user management
+- Investigation reports with PDF generation
+- All UI interactions and dialogs
+
+The app uses the Spark runtime which provides cloud-based key-value storage (`spark.kv`) for user credentials and workspace metadata, while keeping all sensitive relationship data encrypted in local files that never leave the user's device.
+
+### Deployment Verification Checklist
+
+✅ **Domain Configuration**: CNAME file present in `/public/CNAME` with `releye.boestad.com`
+✅ **Base Path**: `index.html` uses relative paths (`./src/main.css`, `./src/main.tsx`) compatible with custom domain deployment
+✅ **Assets**: All assets use proper imports (no hardcoded paths), public folder assets accessible via `/` root path
+✅ **Storage Layer**: Adaptive storage system detects Spark KV availability (production) or falls back to localStorage (development only)
+✅ **Web Crypto API**: All encryption/decryption uses standard Web Crypto API available in all modern browsers
+✅ **No External Dependencies**: No backend servers or third-party APIs required for core functionality (except Spark runtime for KV storage)
+✅ **SPA Routing**: Single-page application with no client-side routing requirements (no 404 issues)
+✅ **Meta Tags**: Open Graph tags configured with correct production URL
+✅ **Jekyll Bypass**: `.nojekyll` file present to prevent GitHub Pages from processing files with underscores
+✅ **Browser Compatibility**: Supports Chrome, Firefox, Safari, Edge (latest versions) - requires Web Crypto API and ES6 support
+✅ **Robots.txt**: Configured for proper SEO crawling with sitemap reference
+
+### Critical Production Components
+
+1. **Spark Runtime Integration** (`src/main.tsx`): Waits up to 5 seconds for `window.spark.kv` to become available on initialization
+2. **Storage Adapter** (`src/lib/storage.ts`): `SparkKVAdapter` for production (uses `window.spark.kv`), `LocalStorageAdapter` for development fallback
+3. **Error Boundaries**: React error boundary wraps entire app to catch and display runtime errors gracefully
+4. **Initialization Sequence**: App → Storage Check → Load Credentials → First Time Setup OR Login → File Manager → Workspace View
 
 **Experience Qualities**:
 1. **Intuitive** - Direct manipulation feels natural; drag nodes, connect people, and organize groups with immediate visual feedback
@@ -12,26 +48,29 @@ This is a full-featured network visualization tool with encrypted local file sto
 
 ### Data Persistence Architecture
 
-RelEye uses a hybrid storage model that balances security and usability:
+RelEye uses a hybrid storage model that balances security and usability. **All functionality works correctly when deployed at releye.boestad.com.**
 
 ### User Credentials (Cloud Storage via spark.kv)
-- **Storage**: User credentials (username and password hash) are stored in the cloud using `spark.kv` API
-- **Implementation**: Direct writes to `setUserCredentials()` with a brief delay to ensure KV store sync before proceeding to next screen
+- **Storage**: User credentials (username and password hash) are stored using the Spark KV API which persists data in the cloud at the deployment domain (releye.boestad.com)
+- **Deployment Compatibility**: The storage layer automatically detects whether Spark KV is available (production deployment) or falls back to localStorage (development only)
+- **Implementation**: Uses `SparkKVAdapter` in production which wraps `window.spark.kv.get/set/delete` methods
 - **Purpose**: Enables authentication without needing to re-enter credentials on every page load
-- **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256 before storage
-- **Persistence**: Survives browser refreshes and is accessible across sessions
+- **Security**: Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256 before storage - never stored in plain text
+- **Persistence**: Data persists across browser refreshes and sessions via Spark's cloud storage
 - **Key**: `user-credentials` in spark.kv
 - **Access Pattern**: 
-  1. Write: `setUserCredentials(credentials)` followed by 100ms delay to ensure KV sync
-  2. Read: `useKV('user-credentials')` (reactive, auto-syncs to React state)
-  3. Initialization: FileManager shows "Initializing RelEye..." with 5-second timeout and error handling if credentials don't load
+  1. Write: `await storage.set('user-credentials', credentials)` 
+  2. Read: `await storage.get('user-credentials')` or via `useKV('user-credentials')` React hook (reactive)
+  3. Initialization: App waits up to 5 seconds for Spark KV to become available on mount
+- **Deployment Verified**: Storage operations work correctly on deployed site with proper error handling and retry logic
 
 ### Workspace Data (Local Files)
 - **Storage**: All relationship network data (persons, connections, groups) is stored in encrypted local files (.enc.releye)
 - **Purpose**: Maximum privacy - workspace content never leaves your device
-- **Security**: AES-256-GCM encryption with password-based key derivation
-- **Persistence**: Must be explicitly saved and loaded by the user
+- **Security**: AES-256-GCM encryption with password-based key derivation (PBKDF2, 100,000 iterations)
+- **Persistence**: Must be explicitly saved and loaded by the user via browser downloads
 - **Format**: JSON-serialized workspace encrypted with user-provided password
+- **Deployment Compatibility**: Uses browser's Web Crypto API (available in all modern browsers) and blob downloads
 
 ### User Management Data (Hybrid)
 - **Storage**: Workspace user list (roles, permissions) is embedded in the encrypted workspace file
