@@ -230,7 +230,11 @@ function App() {
     setInviteToken(null)
     setInviteWorkspaceId(null)
     window.history.replaceState({}, '', window.location.pathname)
-  }, [])
+    
+    if (!userCredentials && !hasCompletedSetup) {
+      setIsFirstTimeSetup(true)
+    }
+  }, [userCredentials, hasCompletedSetup])
 
   const handleLogin = useCallback(() => {
     setIsAuthenticated(true)

@@ -35,15 +35,24 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
   useEffect(() => {
     const loadInvite = async () => {
       try {
+        console.log('[InviteAcceptView] Loading invitation...')
+        console.log('[InviteAcceptView] workspaceId:', workspaceId)
+        console.log('[InviteAcceptView] inviteToken:', inviteToken)
+        console.log('[InviteAcceptView] allWorkspaces:', allWorkspaces)
+
         if (!allWorkspaces) {
-          setError('Workspace not found')
+          console.log('[InviteAcceptView] allWorkspaces is null/undefined')
+          setError('Workspace not found. You may need to load the workspace file first.')
           setIsLoading(false)
           return
         }
 
         const ws = allWorkspaces[workspaceId]
+        console.log('[InviteAcceptView] Found workspace:', ws)
+
         if (!ws) {
-          setError('Workspace not found')
+          console.log('[InviteAcceptView] Workspace not found in allWorkspaces')
+          setError('Workspace not found. Please ask the person who invited you to share the workspace file with you.')
           setIsLoading(false)
           return
         }
@@ -51,25 +60,30 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
         setWorkspace(ws)
 
         const user = ws.users?.find((u: WorkspaceUser) => u.inviteToken === inviteToken && u.status === 'pending')
+        console.log('[InviteAcceptView] Found user with matching token:', user)
         
         if (!user) {
-          setError('Invalid, expired, or revoked invitation')
+          console.log('[InviteAcceptView] No matching user found')
+          console.log('[InviteAcceptView] Looking for users with status=pending:', ws.users?.filter((u: WorkspaceUser) => u.status === 'pending'))
+          setError('Invalid or expired invitation. The invitation may have been revoked or already accepted.')
           setIsLoading(false)
           return
         }
 
         if (user.inviteExpiry && user.inviteExpiry < Date.now()) {
-          setError('This invitation has expired')
+          console.log('[InviteAcceptView] Invitation expired')
+          setError('This invitation has expired. Please contact the workspace administrator for a new invitation.')
           setIsLoading(false)
           return
         }
 
+        console.log('[InviteAcceptView] Invitation valid, setting invite user')
         setInviteUser(user)
         setEmail(user.email || '')
         setIsLoading(false)
       } catch (err) {
-        console.error('Error loading invite:', err)
-        setError('Failed to load invitation')
+        console.error('[InviteAcceptView] Error loading invite:', err)
+        setError('Failed to load invitation. Please try again or contact the workspace administrator.')
         setIsLoading(false)
       }
     }
@@ -185,13 +199,39 @@ export function InviteAcceptView({ inviteToken, workspaceId, onComplete, onCance
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <Logo size={64} showText={false} animated={false} />
-            <CardTitle className="text-2xl font-semibold mt-4">Invalid Invitation</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardTitle className="text-2xl font-semibold mt-4">Invitation Issue</CardTitle>
+            <CardDescription className="text-base mt-2">{error}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={onCancel} className="w-full">
-              Return to Login
-            </Button>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-primary/10 border border-primary/20 p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-primary">📋 How Invitations Work</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                RelEye uses local-only storage for maximum security. To join a workspace:
+              </p>
+              <ol className="text-xs text-muted-foreground space-y-2 pl-4">
+                <li><strong>1. Accept the invitation</strong> - Click the invitation link (you're here now!)</li>
+                <li><strong>2. Create your account</strong> - Set up your login credentials</li>
+                <li><strong>3. Get the workspace file</strong> - Ask the person who invited you to share the encrypted workspace file (.enc.releye)</li>
+                <li><strong>4. Load the file</strong> - Use "Load Network" to open the shared workspace</li>
+              </ol>
+            </div>
+
+            <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
+              <p className="text-xs font-medium text-warning mb-1">⚠️ Common Issues</p>
+              <ul className="text-xs text-muted-foreground space-y-1 pl-4">
+                <li>• The invitation link may have expired (7 days)</li>
+                <li>• The invitation may have been revoked</li>
+                <li>• You may need the workspace file first</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button onClick={onCancel} className="w-full">
+                {error.includes('expired') || error.includes('revoked') || error.includes('Invalid') 
+                  ? 'Back to Login' 
+                  : 'Return to Login'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
