@@ -23,13 +23,12 @@ interface PendingInvite {
 
 interface InviteAcceptViewProps {
   inviteToken: string
-  workspaceId: string
   inviteEmail: string | null
   onComplete: (userId: string, username: string, password: string, email: string | undefined) => void
   onCancel: () => void
 }
 
-export function InviteAcceptView({ inviteToken, workspaceId, inviteEmail, onComplete, onCancel }: InviteAcceptViewProps) {
+export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCancel }: InviteAcceptViewProps) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -44,7 +43,6 @@ export function InviteAcceptView({ inviteToken, workspaceId, inviteEmail, onComp
       try {
         console.log('[InviteAcceptView] ========== LOADING INVITATION ==========')
         console.log('[InviteAcceptView] inviteToken:', inviteToken)
-        console.log('[InviteAcceptView] workspaceId:', workspaceId)
         console.log('[InviteAcceptView] inviteEmail:', inviteEmail)
 
         console.log('[InviteAcceptView] Fetching pending invites from storage...')
@@ -118,7 +116,7 @@ export function InviteAcceptView({ inviteToken, workspaceId, inviteEmail, onComp
     }
 
     loadInvite()
-  }, [inviteToken, inviteEmail, workspaceId])
+  }, [inviteToken, inviteEmail])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

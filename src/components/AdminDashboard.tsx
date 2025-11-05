@@ -34,7 +34,6 @@ import {
 import { toast } from 'sonner'
 import type { WorkspaceUser, ActivityLog, UserRole } from '@/lib/types'
 import { 
-  createWorkspaceUser, 
   generateInviteLink,
   generateInviteToken, 
   getRoleDisplayName, 
@@ -209,7 +208,7 @@ export function AdminDashboard({
     
     setPendingInvites(updatedInvites)
 
-    const inviteLink = `${generateInviteLink('app', inviteToken)}&email=${encodeURIComponent(newUserEmail.trim())}`
+    const inviteLink = `${generateInviteLink(inviteToken)}&email=${encodeURIComponent(newUserEmail.trim())}`
     console.log('[AdminDashboard] Generated invite link:', inviteLink)
     console.log('[AdminDashboard] ========== INVITATION CREATED SUCCESSFULLY ==========')
     
@@ -320,7 +319,7 @@ export function AdminDashboard({
   }
 
   const handleCopyInviteLink = (invite: typeof pendingInvites[0]) => {
-    const inviteLink = generateInviteLink('app', invite.token)
+    const inviteLink = `${generateInviteLink(invite.token)}&email=${encodeURIComponent(invite.email)}`
     navigator.clipboard.writeText(inviteLink)
     toast.success('Invite link copied to clipboard')
   }

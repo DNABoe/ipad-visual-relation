@@ -16,13 +16,11 @@ function App() {
     passwordHash: PasswordHash
   } | null>(null)
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
-  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false)
   const [hasCompletedSetup, setHasCompletedSetup] = useState(false)
   
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
-  const [inviteWorkspaceId, setInviteWorkspaceId] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
   const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
   const [fileName, setFileName] = useState<string>('')
@@ -43,7 +41,7 @@ function App() {
         if (!storageReady) {
           console.error('[App] ❌ Storage failed to become ready')
           setUserCredentials(null)
-          setIsFirstTimeSetup(true)
+          setHasCompletedSetup(false)
           setIsLoadingCredentials(false)
           return
         }
@@ -73,17 +71,10 @@ function App() {
             hasIterations: !!credentials.passwordHash?.iterations
           })
           setUserCredentials(credentials)
-          setIsFirstTimeSetup(false)
           setHasCompletedSetup(true)
         } else {
           setUserCredentials(null)
-          if (setupCompleted) {
-            setIsFirstTimeSetup(false)
-            setHasCompletedSetup(true)
-          } else {
-            setIsFirstTimeSetup(true)
-            setHasCompletedSetup(false)
-          }
+          setHasCompletedSetup(!!setupCompleted)
         }
         
         console.log('[App] ========== INITIALIZATION COMPLETE ==========')
@@ -94,7 +85,6 @@ function App() {
           stack: error instanceof Error ? error.stack : undefined
         })
         setUserCredentials(null)
-        setIsFirstTimeSetup(true)
         setHasCompletedSetup(false)
       } finally {
         setIsLoadingCredentials(false)
@@ -105,13 +95,11 @@ function App() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    const workspaceId = urlParams.get('workspace')
     const token = urlParams.get('invite')
     const email = urlParams.get('email')
     
-    if (workspaceId && token) {
-      console.log('[App] Invite link detected:', { workspaceId, token, email })
-      setInviteWorkspaceId(workspaceId)
+    if (token) {
+      console.log('[App] Invite link detected:', { token, email })
       setInviteToken(token)
       setInviteEmail(email)
     }
@@ -177,7 +165,6 @@ function App() {
       setHasCompletedSetup(true)
       
       toast.success('Administrator account created successfully!')
-      setIsFirstTimeSetup(false)
     } catch (error) {
       console.error('[App] Setup error:', error)
       setIsSettingUpCredentials(false)
@@ -215,7 +202,7 @@ function App() {
       setHasCompletedSetup(true)
       
       setInviteToken(null)
-      setInviteWorkspaceId(null)
+      setInviteEmail(null)
       window.history.replaceState({}, '', window.location.pathname)
       setIsAuthenticated(true)
       setIsSettingUpCredentials(false)
@@ -231,7 +218,6 @@ function App() {
 
   const handleInviteCancel = useCallback(() => {
     setInviteToken(null)
-    setInviteWorkspaceId(null)
     setInviteEmail(null)
     window.history.replaceState({}, '', window.location.pathname)
   }, [])
@@ -335,12 +321,11 @@ function App() {
     )
   }
 
-  if (inviteToken && inviteWorkspaceId) {
+  if (inviteToken) {
     return (
       <>
         <InviteAcceptView
           inviteToken={inviteToken}
-          workspaceId={inviteWorkspaceId}
           inviteEmail={inviteEmail}
           onComplete={handleInviteComplete}
           onCancel={handleInviteCancel}
@@ -350,7 +335,7 @@ function App() {
     )
   }
 
-  if (!userCredentials && isFirstTimeSetup && !hasCompletedSetup) {
+  if (!hasCompletedSetup && !userCredentials) {
     return (
       <>
         <FirstTimeSetup onComplete={handleFirstTimeSetup} />

@@ -81,8 +81,6 @@ export interface WorkspaceUser {
   githubAvatar?: string
   addedAt: number
   addedBy: string
-  inviteToken?: string
-  inviteExpiry?: number
   status: 'pending' | 'active' | 'suspended'
   canInvestigate?: boolean
   loginCount?: number

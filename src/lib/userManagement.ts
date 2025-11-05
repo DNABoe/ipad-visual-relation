@@ -7,35 +7,9 @@ export function generateInviteToken(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-export function generateInviteLink(workspaceId: string, token: string): string {
+export function generateInviteLink(token: string): string {
   const baseUrl = window.location.origin + window.location.pathname
-  return `${baseUrl}?workspace=${workspaceId}&invite=${token}`
-}
-
-export function createWorkspaceUser(
-  username: string,
-  email: string | undefined,
-  role: UserRole,
-  addedByUserId: string,
-  githubLogin?: string,
-  githubAvatar?: string
-): WorkspaceUser {
-  const inviteToken = generateInviteToken()
-  const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000)
-  
-  return {
-    userId: `user-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-    username,
-    email,
-    role,
-    githubLogin,
-    githubAvatar,
-    addedAt: Date.now(),
-    addedBy: addedByUserId,
-    inviteToken,
-    inviteExpiry: expiry,
-    status: 'pending'
-  }
+  return `${baseUrl}?invite=${token}`
 }
 
 export function canPerformAction(userRole: UserRole, action: string): boolean {
@@ -84,25 +58,6 @@ export function getRoleDescription(role: UserRole): string {
     viewer: 'Can only view and export content'
   }
   return descriptions[role]
-}
-
-export async function validateInviteToken(
-  user: WorkspaceUser,
-  token: string
-): Promise<boolean> {
-  if (user.status !== 'pending') {
-    return false
-  }
-  
-  if (!user.inviteToken || !user.inviteExpiry) {
-    return false
-  }
-  
-  if (Date.now() > user.inviteExpiry) {
-    return false
-  }
-  
-  return user.inviteToken === token
 }
 
 export interface EncryptedUserCredentials {
