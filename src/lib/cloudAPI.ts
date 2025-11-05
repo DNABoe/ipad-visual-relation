@@ -68,10 +68,10 @@ export const cloudAPI = {
     return result.isFirstTime
   },
 
-  async login(email: string, password: string): Promise<RegisteredUser> {
+  async login(emailOrUsername: string, password: string): Promise<RegisteredUser> {
     return fetchAPI('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: emailOrUsername, password }),
     })
   },
 

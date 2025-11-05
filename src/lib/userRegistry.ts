@@ -110,12 +110,12 @@ export async function createUser(
   }
 }
 
-export async function authenticateUser(email: string, password: string): Promise<RegisteredUser | null> {
+export async function authenticateUser(emailOrUsername: string, password: string): Promise<RegisteredUser | null> {
   console.log('[UserRegistry] ========== AUTHENTICATING USER ==========')
-  console.log('[UserRegistry] Email:', email)
+  console.log('[UserRegistry] EmailOrUsername:', emailOrUsername)
   
   try {
-    const user = await cloudAPI.login(email, password)
+    const user = await cloudAPI.login(emailOrUsername, password)
     console.log('[UserRegistry] ✓ Authentication successful')
     
     localStorage.setItem(CURRENT_USER_KEY, user.userId)

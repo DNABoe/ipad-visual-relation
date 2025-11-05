@@ -7,11 +7,11 @@ import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
 import { Logo } from '@/components/Logo'
 
 interface LoginViewProps {
-  onLogin: (email: string, password: string) => Promise<boolean>
+  onLogin: (emailOrUsername: string, password: string) => Promise<boolean>
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -23,16 +23,16 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsLoading(true)
 
     try {
-      if (!email.trim() || !password) {
-        setError('Please enter your email and password')
+      if (!username.trim() || !password) {
+        setError('Please enter your username and password')
         setIsLoading(false)
         return
       }
 
-      const success = await onLogin(email.trim(), password)
+      const success = await onLogin(username.trim(), password)
       
       if (!success) {
-        setError('Invalid email or password')
+        setError('Invalid username or password')
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -55,14 +55,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck="false"
