@@ -2,13 +2,17 @@
 
 A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored locally and encrypted with AES-256 for maximum security and privacy.
 
+## ⚠️ DEPLOYMENT REQUIREMENT
+
+**The backend API MUST be deployed for this application to function.** See `URGENT_READ_ME.md` and `BACKEND_DEPLOYMENT_GUIDE.md` for complete deployment instructions.
+
 ## Deployment Information
 
 **Production URL**: https://releye.boestad.com
 
 This application consists of two components:
 1. **Frontend**: Static React app deployed via GitHub Pages
-2. **Backend API**: Node.js server for cloud authentication
+2. **Backend API**: Node.js server for cloud authentication (MUST BE DEPLOYED)
 
 ### Architecture Overview
 

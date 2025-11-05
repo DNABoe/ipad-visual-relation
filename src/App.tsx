@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { WorkspaceView } from './components/WorkspaceView'
 import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
-import { storage } from './lib/storage'
+import { isCloudAPIAvailable } from './lib/cloudAPI'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
 
@@ -26,18 +25,19 @@ function App() {
     const initializeAuth = async () => {
       try {
         console.log('[App] ========== INITIALIZATION START ==========')
-        console.log('[App] Checking storage availability...')
+        console.log('[App] Checking cloud API availability...')
         
-        const storageReady = await storage.isReady()
-        console.log('[App] Storage ready:', storageReady)
+        const apiAvailable = await isCloudAPIAvailable()
+        console.log('[App] Cloud API available:', apiAvailable)
         
-        if (!storageReady) {
-          console.error('[App] ❌ Storage failed to become ready')
+        if (!apiAvailable) {
+          console.error('[App] ❌ Cloud API is not available at', window.location.origin + '/api')
+          toast.error('Unable to connect to server. Please check your deployment.')
           setIsLoadingAuth(false)
           return
         }
         
-        console.log('[App] ✓ Storage is ready')
+        console.log('[App] ✓ Cloud API is ready')
         
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('invite')
@@ -66,6 +66,7 @@ function App() {
         console.log('[App] ========== INITIALIZATION COMPLETE ==========')
       } catch (error) {
         console.error('[App] ❌ Failed to initialize:', error)
+        toast.error('Failed to initialize application. Please refresh the page.')
       } finally {
         setIsLoadingAuth(false)
       }
@@ -79,17 +80,17 @@ function App() {
       console.log('[App] ========== FIRST TIME SETUP ==========')
       console.log('[App] Starting first time setup for:', username)
       
-      console.log('[App] Checking storage system...')
-      const storageReady = await storage.isReady()
-      console.log('[App] Storage ready:', storageReady)
+      console.log('[App] Checking cloud API...')
+      const apiAvailable = await isCloudAPIAvailable()
+      console.log('[App] API available:', apiAvailable)
       
-      if (!storageReady) {
-        const errorMsg = 'Storage system is not available. Please ensure your browser allows localStorage and try again.'
+      if (!apiAvailable) {
+        const errorMsg = 'Cloud API is not available. Please ensure the backend server is running.'
         console.error('[App] ❌', errorMsg)
         throw new Error(errorMsg)
       }
       
-      console.log('[App] ✓ Storage system ready, creating admin user...')
+      console.log('[App] ✓ Cloud API ready, creating admin user...')
       const user = await UserRegistry.createUser(username, 'Administrator', password, 'admin', true)
       console.log('[App] ✓ Admin user created:', {
         userId: user.userId,
@@ -106,7 +107,7 @@ function App() {
       if (!verifyUser) {
         throw new Error('Failed to verify user was saved correctly')
       }
-      console.log('[App] ✓ User verified in storage')
+      console.log('[App] ✓ User verified in registry')
       
       setCurrentUser(user)
       setIsFirstTime(false)

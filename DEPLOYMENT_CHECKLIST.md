@@ -1,191 +1,264 @@
 # RelEye Deployment Checklist
 
-## ✅ Files Ready for Deployment
+Use this checklist to ensure proper deployment of the RelEye application.
 
-All necessary files are configured and ready:
+## Prerequisites
 
-- [x] `.github/workflows/deploy.yml` - GitHub Actions workflow for auto-deployment
-- [x] `public/CNAME` - Custom domain configuration (releye.boestad.com)
-- [x] `public/.nojekyll` - Ensures GitHub Pages serves all files correctly
-- [x] `vite.config.ts` - Configured with correct base path and build settings
-- [x] `README.md` - Complete documentation with deployment instructions
-- [x] `DEPLOYMENT.md` - Detailed deployment guide
-- [x] `.gitignore` - Properly configured (dist folder ignored)
+- [ ] Server with root/sudo access (Ubuntu 20.04+ recommended)
+- [ ] Domain name pointing to server (releye.boestad.com)
+- [ ] SSH access to server
+- [ ] Basic familiarity with Linux command line
 
-## 📋 Pre-Deployment Checklist
+## Backend Deployment
 
-Before pushing to GitHub:
+### 1. Database Setup
 
-- [ ] All files committed to repository
-- [ ] Repository pushed to GitHub
-- [ ] Repository is public (or you have GitHub Pages enabled for private repos)
+- [ ] PostgreSQL installed on server
+- [ ] Database `releye` created
+- [ ] Database user `releye_user` created with password
+- [ ] Database schema loaded from `database-setup.sql`
+- [ ] Database connection tested
 
-## 🔧 GitHub Configuration Steps
-
-### 1. Enable GitHub Actions
-1. Go to repository **Settings** → **Actions** → **General**
-2. Under "Workflow permissions":
-   - ✅ Select "Read and write permissions"
-   - ✅ Check "Allow GitHub Actions to create and approve pull requests"
-3. Click **Save**
-
-### 2. Configure GitHub Pages
-1. Go to **Settings** → **Pages**
-2. Under "Build and deployment":
-   - **Source**: Deploy from a branch
-   - **Branch**: `gh-pages` → `/ (root)`
-   - Click **Save**
-3. Under "Custom domain":
-   - Enter: `releye.boestad.com`
-   - Wait for DNS check
-   - ✅ Enable "Enforce HTTPS" (after DNS verification)
-
-### 3. Configure DNS at Domain Registrar
-
-Go to your domain registrar (where you manage boestad.com) and add:
-
-**CNAME Record** (Recommended):
-```
-Type: CNAME
-Name: releye
-Value: [your-github-username].github.io
-TTL: 3600
-```
-
-**OR A Records** (Alternative):
-```
-Type: A
-Name: releye
-Value: 185.199.108.153
-
-Type: A
-Name: releye
-Value: 185.199.109.153
-
-Type: A
-Name: releye
-Value: 185.199.110.153
-
-Type: A
-Name: releye
-Value: 185.199.111.153
-```
-
-## 🚀 Deploy
-
-Once configured, deployment happens automatically:
-
-1. **Push to main branch**:
-   ```bash
-   git add .
-   git commit -m "Configure deployment"
-   git push origin main
-   ```
-
-2. **Monitor deployment**:
-   - Go to **Actions** tab in GitHub
-   - Watch "Deploy to GitHub Pages" workflow
-   - Should complete in 2-3 minutes
-
-3. **Verify**:
-   - Check **Settings** → **Pages** for live URL
-   - Visit https://releye.boestad.com
-   - Note: DNS may take 15 min - 48 hours to propagate
-
-## 🔍 Verification Steps
-
-### Check DNS Propagation
 ```bash
-dig releye.boestad.com
-nslookup releye.boestad.com
+sudo -u postgres psql -d releye -c "SELECT COUNT(*) FROM users;"
 ```
 
-Or use online tool: https://dnschecker.org
+### 2. Node.js API Server
 
-### Check Deployment Status
-1. **Actions Tab**: See workflow runs and status
-2. **Settings → Pages**: Verify domain and HTTPS
-3. **Browser**: Visit https://releye.boestad.com
+- [ ] Node.js v18+ installed
+- [ ] API files copied to `/var/www/releye-api/`
+- [ ] Files renamed (api-server-example.js → server.js, api-package.json → package.json)
+- [ ] Dependencies installed (`npm install`)
+- [ ] `.env` file created with correct values
+- [ ] API server starts without errors
 
-### Test Application
-- [ ] Login page loads
-- [ ] Can create new network
-- [ ] Can add persons
-- [ ] Can save and load networks
-- [ ] All features working
-- [ ] No console errors
+```bash
+cd /var/www/releye-api
+node server.js
+# Should see: "RelEye API server running on port 3000"
+```
 
-## 🐛 Common Issues & Solutions
+### 3. System Service
 
-### Workflow Fails
-**Solution**: Check Actions tab → Click workflow → View logs
-- Usually TypeScript or build errors
-- Fix locally and push again
+- [ ] Systemd service file created at `/etc/systemd/system/releye-api.service`
+- [ ] Service enabled and started
+- [ ] Service starts automatically on reboot
+- [ ] Service logs are accessible
 
-### 404 Page Not Found
-**Solution**: Check vite.config.ts has `base: "/"`
+```bash
+sudo systemctl status releye-api
+sudo journalctl -u releye-api -n 50
+```
 
-### Assets Not Loading
-**Solution**: 
-- Ensure `public/CNAME` exists
-- Verify `public/.nojekyll` exists
+### 4. Nginx Reverse Proxy
+
+- [ ] Nginx installed
+- [ ] Site configuration created at `/etc/nginx/sites-available/releye`
+- [ ] Site enabled (symlink in `/etc/nginx/sites-enabled/`)
+- [ ] Nginx configuration tested (`nginx -t`)
+- [ ] Nginx restarted
+
+### 5. SSL/HTTPS
+
+- [ ] Certbot installed
+- [ ] SSL certificate obtained for releye.boestad.com
+- [ ] HTTPS working
+- [ ] HTTP redirects to HTTPS
+- [ ] Auto-renewal configured
+
+```bash
+sudo certbot certificates
+```
+
+## Frontend Deployment
+
+### 6. Build and Deploy
+
+- [ ] Project built locally (`npm run build`)
+- [ ] Build directory created: `/var/www/releye/dist/`
+- [ ] Built files copied to server
+- [ ] File permissions set correctly
+- [ ] Static files served by Nginx
+
+```bash
+ls -la /var/www/releye/dist/
+# Should see index.html and assets/
+```
+
+## Testing
+
+### 7. API Tests
+
+- [ ] Health endpoint works: `curl https://releye.boestad.com/api/health`
+- [ ] First-time endpoint works: `curl https://releye.boestad.com/api/auth/first-time`
+- [ ] CORS headers present in responses
+- [ ] No errors in API logs
+
+Expected health response:
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok"
+  }
+}
+```
+
+### 8. Frontend Tests
+
+- [ ] Site loads at https://releye.boestad.com
+- [ ] No console errors in browser
+- [ ] "First Time Setup" screen appears
+- [ ] Can create admin account
+- [ ] Can log in with created account
+- [ ] Can log out
+- [ ] Can log in again
+
+### 9. Multi-Device Tests
+
+- [ ] Log in from different browser on same computer
+- [ ] Log in from different computer
+- [ ] User credentials work everywhere
+- [ ] Network files remain local (don't sync)
+
+### 10. Admin Functions
+
+- [ ] Admin tab visible in settings (admin users only)
+- [ ] Can create user invites
+- [ ] Invite links work
+- [ ] New user can accept invite
+- [ ] Can revoke invites
+- [ ] Can delete users
+- [ ] Can modify user permissions
+
+## Security Checklist
+
+- [ ] Database password is strong and unique
+- [ ] `.env` file has restricted permissions (600)
+- [ ] Database only accepts local connections
+- [ ] Firewall configured (allow 80, 443; restrict others)
+- [ ] SSL/HTTPS working correctly
+- [ ] No sensitive data in logs
+- [ ] API rate limiting enabled (if implemented)
+- [ ] Regular backups scheduled
+
+## Monitoring
+
+- [ ] API logs accessible via journalctl
+- [ ] Nginx logs accessible
+- [ ] Database backup script created
+- [ ] Disk space monitored
+- [ ] Service status monitoring set up (optional)
+
+## Documentation
+
+- [ ] `.env` file backed up securely (NOT in git)
+- [ ] Database credentials documented securely
+- [ ] Deployment notes saved
+- [ ] Maintenance procedures documented
+
+## Post-Deployment
+
+### First Admin Setup
+
+1. Visit https://releye.boestad.com
+2. Complete "First Time Setup"
+3. Create admin account
+4. Log in
+5. Test creating a network file
+6. Test saving and loading
+
+### Invite Additional Users
+
+1. Log in as admin
+2. Settings → Admin Dashboard
+3. Create invite for new user
+4. Copy invite link
+5. Send to new user
+6. Verify new user can complete signup
+
+## Troubleshooting Commands
+
+```bash
+# Check API status
+sudo systemctl status releye-api
+
+# View API logs
+sudo journalctl -u releye-api -f
+
+# View recent API errors
+sudo journalctl -u releye-api -p err -n 50
+
+# Check Nginx status
+sudo systemctl status nginx
+
+# View Nginx error log
+sudo tail -f /var/log/nginx/error.log
+
+# Test Nginx config
+sudo nginx -t
+
+# Check database
+sudo -u postgres psql -d releye
+
+# Restart services
+sudo systemctl restart releye-api
+sudo systemctl restart nginx
+
+# Check disk space
+df -h
+
+# Check API process
+ps aux | grep node
+```
+
+## Common Issues
+
+### "Unable to connect to server"
+- Check API is running: `systemctl status releye-api`
+- Check Nginx config has `/api/` proxy
+- Check CORS_ORIGIN in `.env`
+
+### "Setup failed to set key"
+- API is not reachable from frontend
+- Check `/api/health` endpoint
 - Check browser console for errors
 
-### Custom Domain Not Working
-**Solution**:
-1. Verify DNS records at registrar
-2. Wait for DNS propagation (up to 48h)
-3. Re-enter custom domain in GitHub Pages settings
-4. Check CNAME file contains only: `releye.boestad.com`
+### Database errors
+- Check DATABASE_URL in `.env`
+- Verify database exists: `sudo -u postgres psql -l`
+- Check credentials work: `sudo -u postgres psql releye`
 
-### HTTPS Certificate Issues
-**Solution**:
-- Wait 10-20 minutes after DNS verification
-- GitHub auto-provisions Let's Encrypt certificate
-- Check "Enforce HTTPS" in Settings → Pages
+## Rollback Plan
 
-## 📊 Post-Deployment
+If deployment fails:
 
-### Monitoring
-- Check **Actions** tab for deployment history
-- Review **Deployments** section for active deployments
-- Monitor **Settings → Pages** for domain status
+1. Keep old system running if possible
+2. Check logs for specific errors
+3. Fix issues one by one
+4. Test each component individually
+5. Don't update DNS until fully tested
 
-### Updates
-Simply push to main branch:
-```bash
-git add .
-git commit -m "Update feature"
-git push origin main
-```
+## Maintenance Schedule
 
-Auto-deployment happens within 2-3 minutes.
+- **Daily**: Check API logs for errors
+- **Weekly**: Verify backups are working
+- **Monthly**: Update dependencies and security patches
+- **Quarterly**: Review and optimize database
 
-### Rollback
-If needed:
-```bash
-git revert HEAD
-git push origin main
-```
+## Success Criteria
 
-## 📞 Support Resources
-
-- **GitHub Pages Docs**: https://docs.github.com/en/pages
-- **GitHub Actions Docs**: https://docs.github.com/en/actions
-- **GitHub Status**: https://www.githubstatus.com
-- **DNS Checker**: https://dnschecker.org
-
-## ✨ Success Criteria
-
-Your deployment is successful when:
-
-- ✅ GitHub Actions workflow completes without errors
-- ✅ Settings → Pages shows "Your site is live"
-- ✅ https://releye.boestad.com loads the application
-- ✅ HTTPS certificate is active (🔒 in browser)
-- ✅ All features work as expected
-- ✅ No console errors in browser
+✅ All boxes checked above
+✅ No errors in logs
+✅ Can log in from multiple devices
+✅ Admin can invite users
+✅ Network files save and load correctly
+✅ SSL certificate valid and auto-renewing
 
 ---
 
-**Need Help?** Review `DEPLOYMENT.md` for detailed troubleshooting.
+**Date Deployed**: _______________
+
+**Deployed By**: _______________
+
+**Notes**: _______________________________________________
