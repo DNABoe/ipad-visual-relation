@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: releye-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: releye
+      POSTGRES_USER: releye_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database-setup.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U releye_user -d releye"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - releye-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: releye-api-prod
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://releye_user:${DB_PASSWORD}@postgres:5432/releye
+      PORT: 3000
+      NODE_ENV: production
+      CORS_ORIGIN: https://releye.boestad.com
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - releye-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  releye-network:
+    driver: bridge
