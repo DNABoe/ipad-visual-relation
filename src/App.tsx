@@ -76,24 +76,45 @@ function App() {
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
+      console.log('[App] ========== FIRST TIME SETUP ==========')
       console.log('[App] Starting first time setup for:', username)
       
+      console.log('[App] Checking storage system...')
       const storageReady = await storage.isReady()
+      console.log('[App] Storage ready:', storageReady)
+      
       if (!storageReady) {
-        throw new Error('Storage system is not available. Please refresh the page and try again.')
+        const errorMsg = 'Storage system is not available. Please ensure your browser allows localStorage and try again.'
+        console.error('[App] ❌', errorMsg)
+        throw new Error(errorMsg)
       }
       
+      console.log('[App] ✓ Storage system ready, creating admin user...')
       const user = await UserRegistry.createUser(username, 'Administrator', password, 'admin', true)
-      console.log('[App] ✓ Admin user created')
+      console.log('[App] ✓ Admin user created:', {
+        userId: user.userId,
+        email: user.email,
+        role: user.role
+      })
       
+      console.log('[App] Setting current user session...')
       await UserRegistry.setCurrentUser(user.userId)
       console.log('[App] ✓ User session set')
+      
+      console.log('[App] Verifying user was saved...')
+      const verifyUser = await UserRegistry.getUserById(user.userId)
+      if (!verifyUser) {
+        throw new Error('Failed to verify user was saved correctly')
+      }
+      console.log('[App] ✓ User verified in storage')
       
       setCurrentUser(user)
       setIsFirstTime(false)
       
+      console.log('[App] ========== SETUP COMPLETE ==========')
       toast.success('Administrator account created successfully!')
     } catch (error) {
+      console.error('[App] ========== SETUP FAILED ==========')
       console.error('[App] Setup error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
       toast.error(errorMessage)

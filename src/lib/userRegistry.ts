@@ -41,13 +41,20 @@ async function checkCloudStorage(): Promise<boolean> {
   
   console.log('[UserRegistry] Checking cloud storage availability...')
   try {
-    const isAvailable = await cloudAuthService.healthCheck()
+    const isAvailable = await Promise.race([
+      cloudAuthService.healthCheck(),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3000))
+    ])
     useCloudStorage = isAvailable
     cloudStorageChecked = true
-    console.log('[UserRegistry] Cloud storage:', isAvailable ? 'AVAILABLE ✓' : 'UNAVAILABLE, using local storage')
+    if (isAvailable) {
+      console.log('[UserRegistry] ✓ Cloud storage AVAILABLE - will use backend API')
+    } else {
+      console.log('[UserRegistry] ✗ Cloud storage UNAVAILABLE - will use localStorage')
+    }
     return isAvailable
   } catch (error) {
-    console.log('[UserRegistry] Cloud storage check failed, using local storage:', error)
+    console.log('[UserRegistry] ✗ Cloud storage check failed - will use localStorage:', error)
     useCloudStorage = false
     cloudStorageChecked = true
     return false
@@ -454,10 +461,24 @@ export async function consumeInvite(token: string, password: string): Promise<Re
   const user = await createUser(invite.email, invite.name, password, invite.role)
   
   console.log('[UserRegistry] Removing consumed invite...')
-  const invites = await getAllInvites()
-  const filtered = invites.filter(inv => inv.token !== token)
-  await storage.set(INVITES_KEY, filtered)
-  console.log('[UserRegistry] ✓ Invite removed')
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      await cloudAuthService.deleteInvite(token)
+      console.log('[UserRegistry] ✓ Invite removed (cloud)')
+    } catch (error) {
+      console.error('[UserRegistry] Failed to remove invite from cloud, falling back to local:', error)
+      const invites = await storage.get<PendingInvite[]>(INVITES_KEY) || []
+      const filtered = invites.filter(inv => inv.token !== token)
+      await storage.set(INVITES_KEY, filtered)
+    }
+  } else {
+    const invites = await storage.get<PendingInvite[]>(INVITES_KEY) || []
+    const filtered = invites.filter(inv => inv.token !== token)
+    await storage.set(INVITES_KEY, filtered)
+    console.log('[UserRegistry] ✓ Invite removed (local)')
+  }
   
   console.log('[UserRegistry] ========== INVITE CONSUMED SUCCESSFULLY ==========')
   return user

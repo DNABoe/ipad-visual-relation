@@ -21,13 +21,21 @@ class LocalStorageAdapter implements StorageAdapter {
   async isReady(): Promise<boolean> {
     try {
       if (typeof window === 'undefined' || !window.localStorage) {
+        console.error('[LocalStorageAdapter] localStorage not available in this environment')
         return false
       }
       const testKey = this.prefix + '__test__'
       localStorage.setItem(testKey, 'test')
+      const retrieved = localStorage.getItem(testKey)
       localStorage.removeItem(testKey)
+      if (retrieved !== 'test') {
+        console.error('[LocalStorageAdapter] localStorage read/write test failed')
+        return false
+      }
+      console.log('[LocalStorageAdapter] ✓ localStorage is ready and working')
       return true
-    } catch {
+    } catch (error) {
+      console.error('[LocalStorageAdapter] localStorage test failed:', error)
       return false
     }
   }
@@ -35,8 +43,13 @@ class LocalStorageAdapter implements StorageAdapter {
   async get<T>(key: string): Promise<T | undefined> {
     try {
       const item = localStorage.getItem(this.prefix + key)
-      if (item === null) return undefined
-      return JSON.parse(item) as T
+      if (item === null) {
+        console.log(`[LocalStorageAdapter] Key "${key}" not found`)
+        return undefined
+      }
+      const parsed = JSON.parse(item) as T
+      console.log(`[LocalStorageAdapter] ✓ Retrieved "${key}"`)
+      return parsed
     } catch (error) {
       console.error(`[LocalStorageAdapter] Error getting ${key}:`, error)
       return undefined
@@ -45,9 +58,11 @@ class LocalStorageAdapter implements StorageAdapter {
 
   async set<T>(key: string, value: T): Promise<void> {
     try {
-      localStorage.setItem(this.prefix + key, JSON.stringify(value))
+      const serialized = JSON.stringify(value)
+      localStorage.setItem(this.prefix + key, serialized)
+      console.log(`[LocalStorageAdapter] ✓ Saved "${key}" (${serialized.length} bytes)`)
     } catch (error) {
-      console.error(`[LocalStorageAdapter] Error setting ${key}:`, error)
+      console.error(`[LocalStorageAdapter] ❌ Error setting ${key}:`, error)
       throw error
     }
   }
@@ -55,6 +70,7 @@ class LocalStorageAdapter implements StorageAdapter {
   async delete(key: string): Promise<void> {
     try {
       localStorage.removeItem(this.prefix + key)
+      console.log(`[LocalStorageAdapter] ✓ Deleted "${key}"`)
     } catch (error) {
       console.error(`[LocalStorageAdapter] Error deleting ${key}:`, error)
       throw error
@@ -70,6 +86,7 @@ class LocalStorageAdapter implements StorageAdapter {
           allKeys.push(key.substring(this.prefix.length))
         }
       }
+      console.log(`[LocalStorageAdapter] Found ${allKeys.length} keys`)
       return allKeys
     } catch (error) {
       console.error('[LocalStorageAdapter] Error getting keys:', error)
@@ -264,16 +281,18 @@ class SparkKVAdapter implements StorageAdapter {
 }
 
 async function selectAdapter(): Promise<StorageAdapter> {
-  const sparkAdapter = new SparkKVAdapter()
-  const isSparkReady = await sparkAdapter.isReady()
+  console.log('[Storage] Selecting storage adapter...')
   
-  if (isSparkReady) {
-    console.log('[Storage] Using Spark KV adapter')
-    return sparkAdapter
+  const localAdapter = new LocalStorageAdapter()
+  const isLocalReady = await localAdapter.isReady()
+  
+  if (!isLocalReady) {
+    console.error('[Storage] ❌ localStorage not available - this will cause serious problems')
+    return localAdapter
   }
   
-  console.log('[Storage] Spark KV not available, using localStorage adapter')
-  return new LocalStorageAdapter()
+  console.log('[Storage] ✓ Using localStorage adapter (deployed mode)')
+  return localAdapter
 }
 
 let storageInstance: StorageAdapter | null = null

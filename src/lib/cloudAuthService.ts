@@ -12,8 +12,12 @@ interface ApiResponse<T> {
 async function apiCall<T>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-  body?: unknown
+  body?: unknown,
+  timeout: number = 5000
 ): Promise<T> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
   try {
     const options: RequestInit = {
       method,
@@ -21,6 +25,7 @@ async function apiCall<T>(
         'Content-Type': 'application/json',
       },
       credentials: 'include',
+      signal: controller.signal,
     }
 
     if (body) {
@@ -28,6 +33,7 @@ async function apiCall<T>(
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options)
+    clearTimeout(timeoutId)
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Network error' }))
@@ -42,6 +48,11 @@ async function apiCall<T>(
 
     return result.data as T
   } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn(`[CloudAuthService] API call timeout (${method} ${endpoint})`)
+      throw new Error('Request timeout - backend may be unavailable')
+    }
     console.error(`[CloudAuthService] API call failed (${method} ${endpoint}):`, error)
     throw error
   }
@@ -129,9 +140,11 @@ export const cloudAuthService = {
 
   async healthCheck(): Promise<boolean> {
     try {
-      await apiCall<{ status: string }>('/health', 'GET')
+      await apiCall<{ status: string }>('/health', 'GET', undefined, 3000)
+      console.log('[CloudAuthService] ✓ Health check passed - backend is available')
       return true
-    } catch {
+    } catch (error) {
+      console.log('[CloudAuthService] ✗ Health check failed - backend not available, will use localStorage')
       return false
     }
   }
