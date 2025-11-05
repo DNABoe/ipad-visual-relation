@@ -97,66 +97,81 @@ This is an automated invitation from RelEye. If you received this email in error
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <EnvelopeSimple className="w-6 h-6 text-primary" weight="duotone" />
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col gap-0 p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
+              <EnvelopeSimple className="w-7 h-7 text-primary" weight="duotone" />
             </div>
-            <div>
-              <DialogTitle className="text-xl">Invitation Email</DialogTitle>
-              <DialogDescription>
-                Send this invitation to your colleague
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="text-2xl font-bold mb-1">Send Invitation</DialogTitle>
+              <DialogDescription className="text-base">
+                Share access to RelEye with <span className="font-semibold text-foreground">{userName}</span>
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          <div className="space-y-4 pr-4">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-              <div className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" />
-                Simple Invitation Process
+        <ScrollArea className="flex-1">
+          <div className="px-6 py-4 space-y-6">
+            <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" weight="fill" />
+                <h3 className="text-base font-bold text-primary">How It Works</h3>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                {userName} will get their own independent workspace:
-              </p>
-              <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
-                <li>Send them this invitation email (using the button below)</li>
-                <li>They click the link and create their account with a password</li>
-                <li>They can immediately start creating their own network files</li>
-                <li>Each user manages their own encrypted files independently</li>
+              <ol className="space-y-3 text-sm text-muted-foreground ml-1">
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">1</span>
+                  <span className="pt-0.5">Click "Open in Email App" or copy the invitation link below</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">2</span>
+                  <span className="pt-0.5">{userName} receives the email and clicks the link</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">3</span>
+                  <span className="pt-0.5">They create their account with a secure password</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">4</span>
+                  <span className="pt-0.5">They can immediately start using RelEye with their own workspace</span>
+                </li>
               </ol>
+              <div className="mt-4 pt-4 border-t border-primary/20">
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span className="text-warning">⏰</span>
+                  <span>This invitation expires in <strong className="text-foreground">7 days</strong></span>
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <EnvelopeSimple className="w-4 h-4" weight="duotone" />
-                Quick Send Options
-              </div>
+                Send Options
+              </h3>
               <Button 
                 onClick={handleOpenMailClient}
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full h-14 text-base font-semibold gap-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80"
                 size="lg"
               >
-                <EnvelopeSimple className="w-5 h-5" weight="duotone" />
-                Open in Default Email App
+                <EnvelopeSimple className="w-6 h-6" weight="duotone" />
+                Open in Email App
               </Button>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <Button 
                   variant="outline" 
                   onClick={handleCopyEmail}
-                  className="flex items-center justify-center gap-2"
+                  className="h-12 flex items-center justify-center gap-2 font-medium"
                 >
                   {copiedFull ? (
                     <>
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-5 h-5" weight="fill" />
                       Copied!
                     </>
                   ) : (
                     <>
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-5 h-5" />
                       Copy Full Email
                     </>
                   )}
@@ -164,16 +179,16 @@ This is an automated invitation from RelEye. If you received this email in error
                 <Button 
                   variant="outline" 
                   onClick={handleCopyLink}
-                  className="flex items-center justify-center gap-2"
+                  className="h-12 flex items-center justify-center gap-2 font-medium"
                 >
                   {copiedLink ? (
                     <>
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-5 h-5" weight="fill" />
                       Copied!
                     </>
                   ) : (
                     <>
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-5 h-5" />
                       Copy Link Only
                     </>
                   )}
@@ -181,39 +196,58 @@ This is an automated invitation from RelEye. If you received this email in error
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Logo size={32} showText={false} animated={false} />
-                <div>
-                  <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
-                  <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-br from-muted/50 to-muted/30 px-5 py-4 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <Logo size={40} showText={false} animated={false} />
+                  <div>
+                    <div className="text-base font-bold text-foreground">RelEye Invitation</div>
+                    <div className="text-xs text-muted-foreground">Secure Relationship Network Platform</div>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="flex gap-2 text-sm">
-                  <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
-                  <span className="text-foreground break-all">{userEmail}</span>
+              <div className="px-5 py-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="text-sm text-muted-foreground font-semibold min-w-[60px] pt-0.5">To:</span>
+                  <span className="text-sm text-foreground font-medium break-all">{userEmail}</span>
                 </div>
-                <div className="flex gap-2 text-sm">
-                  <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
-                  <span className="text-foreground">{emailSubject}</span>
+                <div className="flex items-start gap-3">
+                  <span className="text-sm text-muted-foreground font-semibold min-w-[60px] pt-0.5">Name:</span>
+                  <span className="text-sm text-foreground font-medium">{userName}</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-sm text-muted-foreground font-semibold min-w-[60px] pt-0.5">Role:</span>
+                  <span className="text-sm text-foreground font-medium">{roleDescription}</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-sm text-muted-foreground font-semibold min-w-[60px] pt-0.5">Subject:</span>
+                  <span className="text-sm text-foreground font-medium">{emailSubject}</span>
                 </div>
               </div>
             </div>
 
-            <div className="border border-border rounded-lg bg-muted/30 p-4">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
-                {emailBody}
-              </pre>
+            <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+              <div className="bg-muted/40 px-4 py-2 border-b border-border">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email Preview</span>
+              </div>
+              <div className="p-5">
+                <pre className="whitespace-pre-wrap font-sans text-sm text-foreground/90 leading-relaxed">
+                  {emailBody}
+                </pre>
+              </div>
             </div>
           </div>
         </ScrollArea>
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="px-6 py-4 border-t border-border bg-muted/20">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="w-full h-11 font-semibold"
+          >
             Close
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -7,7 +7,7 @@ A web-based network visualization tool that lets users build and explore visual 
 **Production URL**: https://releye.boestad.com
 
 This application is designed to be deployed as a static site on GitHub Pages with a custom domain. All functionality works when deployed, including:
-- User authentication with secure credential storage via IndexedDB (browser-based storage)
+- User authentication with secure credential storage via Spark KV (cloud-synced storage)
 - Encrypted file management (create, save, load .enc.releye files)
 - Canvas operations (pan, zoom, drag, connect)
 - Multi-user collaboration with invite system
@@ -15,16 +15,34 @@ This application is designed to be deployed as a static site on GitHub Pages wit
 - Investigation reports with PDF generation
 - All UI interactions and dialogs
 
-The app uses browser-native IndexedDB for storing user credentials locally (secure, persistent, works on all deployed sites), while keeping all sensitive relationship data encrypted in local files that never leave the user's device.
+The app uses **Spark KV cloud storage** for storing user credentials and invites (synced across all devices and browsers), while keeping all sensitive relationship data encrypted in local files that never leave the user's device.
+
+### Critical Architecture: Cloud-Synced Authentication
+
+**Why Spark KV Instead of IndexedDB:**
+- IndexedDB is browser-local only - data doesn't sync across browsers or devices
+- Creating an admin in Chrome means it won't exist in Firefox (major security flaw)
+- Invite links wouldn't work across different browsers/devices
+- Multi-user systems REQUIRE cloud-synced storage for credentials
+
+**What's Stored in Spark KV (Cloud):**
+- User registry (emails, password hashes, roles)
+- Pending invites (tokens, expiration)
+- Current user session
+
+**What Stays Local (Browser Files):**
+- Relationship network files (.enc.releye)
+- Encrypted relationship data
+- User's personal workspace files
 
 ### Deployment Verification Checklist
 
 ✅ **Domain Configuration**: CNAME file present in `/public/CNAME` with `releye.boestad.com`
 ✅ **Base Path**: `index.html` uses relative paths (`./src/main.css`, `./src/main.tsx`) compatible with custom domain deployment
 ✅ **Assets**: All assets use proper imports (no hardcoded paths), public folder assets accessible via `/` root path
-✅ **Storage Layer**: Browser-native IndexedDB for credential storage - works on all deployed sites without external dependencies
+✅ **Storage Layer**: Spark KV cloud storage for credentials - synced across all browsers and devices
 ✅ **Web Crypto API**: All encryption/decryption uses standard Web Crypto API available in all modern browsers
-✅ **No External Dependencies**: No backend servers or third-party APIs required for core functionality
+✅ **No External Dependencies**: No backend servers or third-party APIs required (Spark KV is built-in)
 ✅ **SPA Routing**: Single-page application with no client-side routing requirements (no 404 issues)
 ✅ **Meta Tags**: Open Graph tags configured with correct production URL
 ✅ **Jekyll Bypass**: `.nojekyll` file present to prevent GitHub Pages from processing files with underscores
@@ -33,7 +51,7 @@ The app uses browser-native IndexedDB for storing user credentials locally (secu
 
 ### Critical Production Components
 
-1. **IndexedDB Storage** (`src/lib/storage.ts`): Browser-native IndexedDB adapter for secure credential storage (works on all deployed sites)
+1. **Spark KV Storage** (`src/lib/storage.ts`): Cloud-synced Spark KV adapter for credential storage (works across all browsers and devices)
 2. **Storage Adapter Interface**: Unified `StorageAdapter` interface supporting get/set/delete/keys operations with health checks
 3. **Error Boundaries**: React error boundary wraps entire app to catch and display runtime errors gracefully
 4. **Initialization Sequence**: App → Storage Check → Load Credentials → First Time Setup OR Login → File Manager → Workspace View

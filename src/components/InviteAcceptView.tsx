@@ -9,6 +9,7 @@ import { Eye, EyeSlash, UserPlus, Crown, PencilSimple, Eye as EyeIcon } from '@p
 import type { UserRole } from '@/lib/types'
 import { getRoleDisplayName, getRoleDescription } from '@/lib/userManagement'
 import * as UserRegistry from '@/lib/userRegistry'
+import { storage } from '@/lib/storage'
 
 interface InviteAcceptViewProps {
   inviteToken: string
@@ -34,34 +35,53 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
         console.log('[InviteAcceptView] inviteToken:', inviteToken.substring(0, 8) + '...')
         console.log('[InviteAcceptView] inviteEmail:', inviteEmail)
 
+        console.log('[InviteAcceptView] Checking storage availability...')
+        const storageReady = await storage.isReady()
+        if (!storageReady) {
+          console.error('[InviteAcceptView] ❌ Storage not ready')
+          setError('System storage is not available. Please refresh the page and try again.')
+          setIsLoading(false)
+          return
+        }
+        console.log('[InviteAcceptView] ✓ Storage ready')
+
+        console.log('[InviteAcceptView] Cleaning up expired invites...')
         await UserRegistry.cleanupExpiredInvites()
         
+        console.log('[InviteAcceptView] Looking up invite by token...')
         const invite = await UserRegistry.getInviteByToken(inviteToken)
 
         if (!invite) {
           console.log('[InviteAcceptView] ❌ No matching invite found')
-          setError('Invalid or expired invitation. The invitation may have been revoked.')
+          setError('This invitation link is invalid or has been revoked. Please contact your administrator for a new invitation link.')
           setIsLoading(false)
           return
         }
 
-        console.log('[InviteAcceptView] ✓ Found matching invite')
+        console.log('[InviteAcceptView] ✓ Found matching invite:', {
+          email: invite.email,
+          name: invite.name,
+          role: invite.role,
+          expiresAt: new Date(invite.expiresAt).toISOString()
+        })
 
         const now = Date.now()
         if (invite.expiresAt < now) {
-          console.log('[InviteAcceptView] ❌ Invitation expired')
-          setError('This invitation has expired. Please contact the administrator for a new invitation.')
+          console.log('[InviteAcceptView] ❌ Invitation expired at:', new Date(invite.expiresAt).toISOString())
+          const expiredDate = new Date(invite.expiresAt).toLocaleDateString()
+          setError(`This invitation expired on ${expiredDate}. Please contact your administrator for a new invitation link.`)
           setIsLoading(false)
           return
         }
 
-        console.log('[InviteAcceptView] ✓ Invitation is valid and not expired')
+        const daysRemaining = Math.ceil((invite.expiresAt - now) / (1000 * 60 * 60 * 24))
+        console.log('[InviteAcceptView] ✓ Invitation is valid, expires in', daysRemaining, 'days')
         console.log('[InviteAcceptView] ========== INVITATION LOADED SUCCESSFULLY ==========')
         setInviteData(invite)
         setIsLoading(false)
       } catch (err) {
         console.error('[InviteAcceptView] ❌ Error loading invite:', err)
-        setError('Failed to load invitation. Please try again.')
+        setError('Failed to load invitation. This could be a connection issue. Please refresh the page and try again.')
         setIsLoading(false)
       }
     }
@@ -139,30 +159,59 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
   if (error && !inviteData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Logo size={64} showText={false} animated={false} />
-            <CardTitle className="text-2xl font-semibold mt-4">Invitation Issue</CardTitle>
-            <CardDescription className="text-base mt-2">{error}</CardDescription>
+        <Card className="w-full max-w-lg">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
+              <Logo size={48} showText={false} animated={false} />
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold mb-2">Invitation Issue</CardTitle>
+              <CardDescription className="text-base leading-relaxed">{error}</CardDescription>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
-              <p className="text-xs font-medium text-warning mb-1">⚠️ Common Issues</p>
-              <ul className="text-xs text-muted-foreground space-y-1 pl-4">
-                <li>• The invitation link may have expired (7 days)</li>
-                <li>• The invitation may have been revoked by the administrator</li>
-                <li>• The link may have already been used</li>
+            <div className="rounded-xl bg-warning/10 border border-warning/30 p-4">
+              <p className="text-sm font-semibold text-warning mb-3 flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                Common Issues & Solutions
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-2.5">
+                <li className="flex items-start gap-2">
+                  <span className="text-warning mt-0.5">•</span>
+                  <span><strong>Expired Link:</strong> Invitations expire after 7 days. Request a new invitation from your administrator.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-warning mt-0.5">•</span>
+                  <span><strong>Already Used:</strong> This link may have already been used to create an account. Try logging in instead.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-warning mt-0.5">•</span>
+                  <span><strong>Revoked:</strong> The administrator may have cancelled this invitation. Contact them for a new one.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-warning mt-0.5">•</span>
+                  <span><strong>Connection Issue:</strong> Try refreshing the page or check your internet connection.</span>
+                </li>
               </ul>
             </div>
 
             <div className="flex flex-col gap-2">
               <Button 
                 onClick={() => {
-                  onCancel()
+                  window.location.href = window.location.pathname
                 }}
-                className="w-full"
+                className="w-full h-12 font-semibold"
               >
-                Return to Login
+                Go to Login Page
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  window.location.reload()
+                }}
+                className="w-full h-12 font-semibold"
+              >
+                Refresh Page
               </Button>
             </div>
           </CardContent>
