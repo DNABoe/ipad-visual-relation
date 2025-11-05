@@ -1,5 +1,6 @@
 import { storage } from './storage'
 import { hashPassword, verifyPassword, type PasswordHash } from './auth'
+import { cloudAuthService } from './cloudAuthService'
 
 export interface RegisteredUser {
   userId: string
@@ -30,26 +31,85 @@ const USERS_KEY = 'app-users-registry'
 const INVITES_KEY = 'app-pending-invites'
 const CURRENT_USER_KEY = 'app-current-user-id'
 
+let useCloudStorage = false
+let cloudStorageChecked = false
+
+async function checkCloudStorage(): Promise<boolean> {
+  if (cloudStorageChecked) {
+    return useCloudStorage
+  }
+  
+  console.log('[UserRegistry] Checking cloud storage availability...')
+  try {
+    const isAvailable = await cloudAuthService.healthCheck()
+    useCloudStorage = isAvailable
+    cloudStorageChecked = true
+    console.log('[UserRegistry] Cloud storage:', isAvailable ? 'AVAILABLE ✓' : 'UNAVAILABLE, using local storage')
+    return isAvailable
+  } catch (error) {
+    console.log('[UserRegistry] Cloud storage check failed, using local storage:', error)
+    useCloudStorage = false
+    cloudStorageChecked = true
+    return false
+  }
+}
+
 export async function getAllUsers(): Promise<RegisteredUser[]> {
   console.log('[UserRegistry] Getting all users...')
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      const users = await cloudAuthService.getAllUsers()
+      console.log('[UserRegistry] Found', users.length, 'users (from cloud)')
+      return users
+    } catch (error) {
+      console.error('[UserRegistry] Failed to get users from cloud, falling back to local:', error)
+    }
+  }
+  
   const users = await storage.get<RegisteredUser[]>(USERS_KEY) || []
-  console.log('[UserRegistry] Found', users.length, 'users')
+  console.log('[UserRegistry] Found', users.length, 'users (from local)')
   return users
 }
 
 export async function getUserByEmail(email: string): Promise<RegisteredUser | undefined> {
   console.log('[UserRegistry] Looking up user by email:', email)
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      const user = await cloudAuthService.getUserByEmail(email)
+      console.log('[UserRegistry] User found (cloud):', !!user)
+      return user || undefined
+    } catch (error) {
+      console.error('[UserRegistry] Failed to get user from cloud, falling back to local:', error)
+    }
+  }
+  
   const users = await getAllUsers()
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
-  console.log('[UserRegistry] User found:', !!user)
+  console.log('[UserRegistry] User found (local):', !!user)
   return user
 }
 
 export async function getUserById(userId: string): Promise<RegisteredUser | undefined> {
   console.log('[UserRegistry] Looking up user by ID:', userId)
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      const user = await cloudAuthService.getUserById(userId)
+      console.log('[UserRegistry] User found (cloud):', !!user)
+      return user || undefined
+    } catch (error) {
+      console.error('[UserRegistry] Failed to get user from cloud, falling back to local:', error)
+    }
+  }
+  
   const users = await getAllUsers()
   const user = users.find(u => u.userId === userId)
-  console.log('[UserRegistry] User found:', !!user)
+  console.log('[UserRegistry] User found (local):', !!user)
   return user
 }
 
@@ -93,12 +153,25 @@ export async function createUser(
     role: user.role
   })
 
-  const users = await getAllUsers()
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      console.log('[UserRegistry] Saving user to cloud...')
+      const savedUser = await cloudAuthService.createUser(user)
+      console.log('[UserRegistry] ✓ User saved to cloud')
+      console.log('[UserRegistry] ========== USER CREATED SUCCESSFULLY ==========')
+      return savedUser
+    } catch (error) {
+      console.error('[UserRegistry] Failed to save user to cloud, falling back to local:', error)
+    }
+  }
+
+  const users = await storage.get<RegisteredUser[]>(USERS_KEY) || []
   users.push(user)
   
-  console.log('[UserRegistry] Saving user registry (total users:', users.length, ')...')
+  console.log('[UserRegistry] Saving user locally (total users:', users.length, ')...')
   await storage.set(USERS_KEY, users)
-  console.log('[UserRegistry] ✓ User saved to registry')
+  console.log('[UserRegistry] ✓ User saved locally')
   
   console.log('[UserRegistry] Verifying save...')
   const verify = await getUserById(user.userId)
@@ -115,6 +188,29 @@ export async function createUser(
 export async function authenticateUser(email: string, password: string): Promise<RegisteredUser | null> {
   console.log('[UserRegistry] ========== AUTHENTICATING USER ==========')
   console.log('[UserRegistry] Email:', email)
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      console.log('[UserRegistry] Attempting cloud authentication...')
+      const user = await cloudAuthService.authenticateUser(email, password)
+      
+      if (!user) {
+        console.log('[UserRegistry] ❌ Cloud authentication failed')
+        return null
+      }
+
+      console.log('[UserRegistry] ✓ Cloud authentication successful')
+      
+      await storage.set(CURRENT_USER_KEY, user.userId)
+      console.log('[UserRegistry] ✓ Current user set')
+      console.log('[UserRegistry] ========== AUTHENTICATION SUCCESSFUL ==========')
+      
+      return user
+    } catch (error) {
+      console.error('[UserRegistry] Cloud authentication error, falling back to local:', error)
+    }
+  }
   
   const user = await getUserByEmail(email)
   if (!user) {
@@ -135,7 +231,7 @@ export async function authenticateUser(email: string, password: string): Promise
   user.lastLogin = Date.now()
   user.loginCount = (user.loginCount || 0) + 1
   
-  const users = await getAllUsers()
+  const users = await storage.get<RegisteredUser[]>(USERS_KEY) || []
   const index = users.findIndex(u => u.userId === user.userId)
   if (index !== -1) {
     users[index] = user
@@ -170,7 +266,19 @@ export async function clearCurrentUser(): Promise<void> {
 
 export async function updateUser(userId: string, updates: Partial<Omit<RegisteredUser, 'userId' | 'email' | 'createdAt'>>): Promise<void> {
   console.log('[UserRegistry] Updating user:', userId)
-  const users = await getAllUsers()
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      await cloudAuthService.updateUser(userId, updates)
+      console.log('[UserRegistry] ✓ User updated (cloud)')
+      return
+    } catch (error) {
+      console.error('[UserRegistry] Failed to update user in cloud, falling back to local:', error)
+    }
+  }
+  
+  const users = await storage.get<RegisteredUser[]>(USERS_KEY) || []
   const index = users.findIndex(u => u.userId === userId)
   
   if (index === -1) {
@@ -179,15 +287,27 @@ export async function updateUser(userId: string, updates: Partial<Omit<Registere
   
   users[index] = { ...users[index], ...updates }
   await storage.set(USERS_KEY, users)
-  console.log('[UserRegistry] ✓ User updated')
+  console.log('[UserRegistry] ✓ User updated (local)')
 }
 
 export async function deleteUser(userId: string): Promise<void> {
   console.log('[UserRegistry] Deleting user:', userId)
-  const users = await getAllUsers()
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      await cloudAuthService.deleteUser(userId)
+      console.log('[UserRegistry] ✓ User deleted (cloud)')
+      return
+    } catch (error) {
+      console.error('[UserRegistry] Failed to delete user from cloud, falling back to local:', error)
+    }
+  }
+  
+  const users = await storage.get<RegisteredUser[]>(USERS_KEY) || []
   const filtered = users.filter(u => u.userId !== userId)
   await storage.set(USERS_KEY, filtered)
-  console.log('[UserRegistry] ✓ User deleted')
+  console.log('[UserRegistry] ✓ User deleted (local)')
 }
 
 export async function createInvite(
@@ -228,12 +348,25 @@ export async function createInvite(
     expiresAt: new Date(invite.expiresAt).toISOString()
   })
 
-  const invites = await getAllInvites()
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      console.log('[UserRegistry] Saving invite to cloud...')
+      const savedInvite = await cloudAuthService.createInvite(invite)
+      console.log('[UserRegistry] ✓ Invite saved to cloud')
+      console.log('[UserRegistry] ========== INVITE CREATED SUCCESSFULLY ==========')
+      return savedInvite
+    } catch (error) {
+      console.error('[UserRegistry] Failed to save invite to cloud, falling back to local:', error)
+    }
+  }
+
+  const invites = await storage.get<PendingInvite[]>(INVITES_KEY) || []
   invites.push(invite)
   
-  console.log('[UserRegistry] Saving invites (total:', invites.length, ')...')
+  console.log('[UserRegistry] Saving invites locally (total:', invites.length, ')...')
   await storage.set(INVITES_KEY, invites)
-  console.log('[UserRegistry] ✓ Invite saved')
+  console.log('[UserRegistry] ✓ Invite saved locally')
   
   console.log('[UserRegistry] Verifying save...')
   const verify = await getInviteByToken(invite.token)
@@ -249,16 +382,48 @@ export async function createInvite(
 
 export async function getAllInvites(): Promise<PendingInvite[]> {
   console.log('[UserRegistry] Getting all invites...')
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      const invites = await cloudAuthService.getAllInvites()
+      console.log('[UserRegistry] Found', invites.length, 'invites (from cloud)')
+      return invites
+    } catch (error) {
+      console.error('[UserRegistry] Failed to get invites from cloud, falling back to local:', error)
+    }
+  }
+  
   const invites = await storage.get<PendingInvite[]>(INVITES_KEY) || []
-  console.log('[UserRegistry] Found', invites.length, 'invites')
+  console.log('[UserRegistry] Found', invites.length, 'invites (from local)')
   return invites
 }
 
 export async function getInviteByToken(token: string): Promise<PendingInvite | undefined> {
   console.log('[UserRegistry] Looking up invite by token:', token.substring(0, 8) + '...')
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      const invite = await cloudAuthService.getInviteByToken(token)
+      console.log('[UserRegistry] Invite found (cloud):', !!invite)
+      if (invite) {
+        console.log('[UserRegistry] Invite details:', {
+          email: invite.email,
+          name: invite.name,
+          expiresAt: new Date(invite.expiresAt).toISOString(),
+          isExpired: invite.expiresAt < Date.now()
+        })
+      }
+      return invite || undefined
+    } catch (error) {
+      console.error('[UserRegistry] Failed to get invite from cloud, falling back to local:', error)
+    }
+  }
+  
   const invites = await getAllInvites()
   const invite = invites.find(inv => inv.token === token)
-  console.log('[UserRegistry] Invite found:', !!invite)
+  console.log('[UserRegistry] Invite found (local):', !!invite)
   if (invite) {
     console.log('[UserRegistry] Invite details:', {
       email: invite.email,
@@ -300,15 +465,39 @@ export async function consumeInvite(token: string, password: string): Promise<Re
 
 export async function revokeInvite(token: string): Promise<void> {
   console.log('[UserRegistry] Revoking invite:', token.substring(0, 8) + '...')
-  const invites = await getAllInvites()
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      await cloudAuthService.deleteInvite(token)
+      console.log('[UserRegistry] ✓ Invite revoked (cloud)')
+      return
+    } catch (error) {
+      console.error('[UserRegistry] Failed to revoke invite from cloud, falling back to local:', error)
+    }
+  }
+  
+  const invites = await storage.get<PendingInvite[]>(INVITES_KEY) || []
   const filtered = invites.filter(inv => inv.token !== token)
   await storage.set(INVITES_KEY, filtered)
-  console.log('[UserRegistry] ✓ Invite revoked')
+  console.log('[UserRegistry] ✓ Invite revoked (local)')
 }
 
 export async function cleanupExpiredInvites(): Promise<void> {
   console.log('[UserRegistry] Cleaning up expired invites...')
-  const invites = await getAllInvites()
+  
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      await cloudAuthService.cleanupExpiredInvites()
+      console.log('[UserRegistry] ✓ Expired invites cleaned up (cloud)')
+      return
+    } catch (error) {
+      console.error('[UserRegistry] Failed to cleanup invites from cloud, falling back to local:', error)
+    }
+  }
+  
+  const invites = await storage.get<PendingInvite[]>(INVITES_KEY) || []
   const now = Date.now()
   const valid = invites.filter(inv => inv.expiresAt > now)
   
@@ -321,9 +510,20 @@ export async function cleanupExpiredInvites(): Promise<void> {
 }
 
 export async function isFirstTimeSetup(): Promise<boolean> {
-  const users = await getAllUsers()
+  const isCloudAvailable = await checkCloudStorage()
+  if (isCloudAvailable) {
+    try {
+      const firstTime = await cloudAuthService.isFirstTimeSetup()
+      console.log('[UserRegistry] Is first time setup (cloud):', firstTime)
+      return firstTime
+    } catch (error) {
+      console.error('[UserRegistry] Failed to check first time setup from cloud, falling back to local:', error)
+    }
+  }
+  
+  const users = await storage.get<RegisteredUser[]>(USERS_KEY) || []
   const hasAdmin = users.some(u => u.role === 'admin')
-  console.log('[UserRegistry] Is first time setup:', !hasAdmin)
+  console.log('[UserRegistry] Is first time setup (local):', !hasAdmin)
   return !hasAdmin
 }
 

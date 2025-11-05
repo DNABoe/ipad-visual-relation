@@ -6,44 +6,81 @@ A web-based network visualization tool that lets users build and explore visual 
 
 **Production URL**: https://releye.boestad.com
 
-This application is designed to be deployed as a static site on GitHub Pages with a custom domain. All functionality works when deployed, including:
-- User authentication with secure credential storage via Spark KV (cloud-synced storage)
-- Encrypted file management (create, save, load .enc.releye files)
-- Canvas operations (pan, zoom, drag, connect)
-- Multi-user collaboration with invite system
-- Admin dashboard and user management
-- Investigation reports with PDF generation
-- All UI interactions and dialogs
+This application consists of two components:
+1. **Frontend**: Static React app deployed via GitHub Pages
+2. **Backend API**: Node.js server for cloud authentication
 
-The app uses **Spark KV cloud storage** for storing user credentials and invites (synced across all devices and browsers), while keeping all sensitive relationship data encrypted in local files that never leave the user's device.
+### Architecture Overview
 
-### Critical Architecture: Cloud-Synced Authentication
+**Cloud-Based User Authentication:**
+- User credentials stored in PostgreSQL database at releye.boestad.com/api
+- Enables access from any browser or device
+- Role-based access control (Admin, Editor, Viewer)
+- Invite system for multi-user collaboration
 
-**Why Spark KV Instead of IndexedDB:**
-- IndexedDB is browser-local only - data doesn't sync across browsers or devices
-- Creating an admin in Chrome means it won't exist in Firefox (major security flaw)
-- Invite links wouldn't work across different browsers/devices
-- Multi-user systems REQUIRE cloud-synced storage for credentials
+**Local Network Storage:**
+- Network files (.enc.releye) stored in browser localStorage
+- AES-256-GCM encryption for all relationship data
+- Files never leave the user's device
+- Privacy-first approach for sensitive data
 
-**What's Stored in Spark KV (Cloud):**
-- User registry (emails, password hashes, roles)
-- Pending invites (tokens, expiration)
-- Current user session
+### Critical Architecture: Hybrid Storage Model
 
-**What Stays Local (Browser Files):**
+**Why Cloud Authentication:**
+- Users can access from multiple browsers and devices
+- Credentials sync automatically across all platforms
+- Invite system works across different devices
+- Multi-user collaboration requires centralized auth
+
+**Why Local Network Files:**
+- Maximum privacy - relationship data never leaves device
+- No network latency for file operations
+- Works offline once authenticated
+- User maintains full control of sensitive data
+
+**What's Stored in Cloud Database:**
+- User accounts (email, name, role)
+- Password hashes (PBKDF2)
+- Pending invites
+- Login statistics
+
+**What Stays Local (Browser Storage):**
 - Relationship network files (.enc.releye)
 - Encrypted relationship data
-- User's personal workspace files
+- Person nodes and connections
+- Group information
+- Network layouts
+- Current user session token
+
+### Fallback Behavior
+
+If the cloud API is unavailable, the app automatically falls back to localStorage for authentication. This ensures the app continues working even if the backend is temporarily down.
+
+### Deployment Architecture
+
+**Frontend (GitHub Pages):**
+- Static React application
+- Deployed at https://releye.boestad.com
+- Communicates with backend API via HTTPS
+
+**Backend API (Cloud Server):**
+- Node.js/Express server
+- PostgreSQL database
+- Deployed at https://releye.boestad.com/api
+- Handles user authentication and management
 
 ### Deployment Verification Checklist
 
 ✅ **Domain Configuration**: CNAME file present in `/public/CNAME` with `releye.boestad.com`
 ✅ **Base Path**: `index.html` uses relative paths (`./src/main.css`, `./src/main.tsx`) compatible with custom domain deployment
 ✅ **Assets**: All assets use proper imports (no hardcoded paths), public folder assets accessible via `/` root path
-✅ **Storage Layer**: Spark KV cloud storage for credentials - synced across all browsers and devices
+✅ **Storage Layer**: Cloud API for user credentials with localStorage fallback
 ✅ **Web Crypto API**: All encryption/decryption uses standard Web Crypto API available in all modern browsers
-✅ **No External Dependencies**: No backend servers or third-party APIs required (Spark KV is built-in)
-✅ **SPA Routing**: Single-page application with no client-side routing requirements (no 404 issues)
+✅ **Backend API**: Node.js/Express server deployed at releye.boestad.com/api
+✅ **Database**: PostgreSQL for user data storage
+✅ **SSL/HTTPS**: All API communication over HTTPS
+✅ **CORS**: Configured to allow frontend domain
+✅ **SPA Routing**: Single-page application with no client-side routing requirements
 ✅ **Meta Tags**: Open Graph tags configured with correct production URL
 ✅ **Jekyll Bypass**: `.nojekyll` file present to prevent GitHub Pages from processing files with underscores
 ✅ **Browser Compatibility**: Supports Chrome, Firefox, Safari, Edge (latest versions) - requires Web Crypto API and ES6 support

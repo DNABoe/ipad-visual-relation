@@ -1,0 +1,12 @@
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/releye
+
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# CORS Configuration
+CORS_ORIGIN=https://releye.boestad.com
+
+# Optional: Rate Limiting (requests per minute)
+RATE_LIMIT=100
