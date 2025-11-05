@@ -14,8 +14,7 @@ import { APP_VERSION } from '@/lib/version'
 import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { createFileIconDataUrl } from '@/lib/fileIcon'
-import type { PasswordHash } from '@/lib/auth'
-import { storage } from '@/lib/storage'
+import * as UserRegistry from '@/lib/userRegistry'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -73,30 +72,29 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
-      const userCredentials = await storage.get<{
-        username: string
-        passwordHash: PasswordHash
-      }>('user-credentials')
+      const currentUser = await UserRegistry.getCurrentUser()
       
-      console.log('[FileManager] Using credentials from storage:', userCredentials)
+      console.log('[FileManager] Current user:', currentUser)
       
-      if (!userCredentials) {
-        console.error('[FileManager] No credentials available')
-        toast.error('User credentials not found. Please refresh the page.')
+      if (!currentUser) {
+        console.error('[FileManager] No current user found')
+        toast.error('User session not found. Please refresh the page.')
         return
       }
 
-      console.log('[FileManager] Creating new workspace for user:', userCredentials.username)
+      console.log('[FileManager] Creating new workspace for user:', currentUser.email)
       
-      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const workspaceId = `workspace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       const adminUser = {
-        userId: userId,
-        username: userCredentials.username,
-        role: 'admin' as const,
+        userId: currentUser.userId,
+        username: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
         addedAt: Date.now(),
         addedBy: 'system',
-        status: 'active' as const
+        status: 'active' as const,
+        loginCount: currentUser.loginCount,
+        canInvestigate: currentUser.canInvestigate
       }
       
       console.log('[FileManager] Creating admin user:', adminUser)
@@ -118,7 +116,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         id: workspaceId,
         name: trimmedFileName,
         users: [adminUser],
-        ownerId: userId,
+        ownerId: currentUser.userId,
         createdAt: Date.now(),
         modifiedAt: Date.now()
       }

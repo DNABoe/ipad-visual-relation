@@ -283,6 +283,15 @@ class SparkKVAdapter implements StorageAdapter {
 async function selectAdapter(): Promise<StorageAdapter> {
   console.log('[Storage] Selecting storage adapter...')
   
+  const sparkAdapter = new SparkKVAdapter()
+  const isSparkReady = await sparkAdapter.isReady()
+  
+  if (isSparkReady) {
+    console.log('[Storage] ✓ Using Spark KV adapter (persistent across browsers)')
+    return sparkAdapter
+  }
+  
+  console.log('[Storage] Spark KV not available, falling back to localStorage')
   const localAdapter = new LocalStorageAdapter()
   const isLocalReady = await localAdapter.isReady()
   
@@ -291,7 +300,7 @@ async function selectAdapter(): Promise<StorageAdapter> {
     return localAdapter
   }
   
-  console.log('[Storage] ✓ Using localStorage adapter (deployed mode)')
+  console.log('[Storage] ✓ Using localStorage adapter (browser-local only)')
   return localAdapter
 }
 
