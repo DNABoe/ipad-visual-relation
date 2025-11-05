@@ -7,9 +7,9 @@ export function generateInviteToken(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-export function generateInviteLink(token: string): string {
+export function generateInviteLink(token: string, email: string): string {
   const baseUrl = window.location.origin + window.location.pathname
-  return `${baseUrl}?invite=${token}`
+  return `${baseUrl}?invite=${token}&email=${encodeURIComponent(email)}`
 }
 
 export function canPerformAction(userRole: UserRole, action: string): boolean {

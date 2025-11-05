@@ -8,12 +8,12 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { hashPassword, type PasswordHash, verifyPassword } from '@/lib/auth'
+import { hashPassword, verifyPassword, encryptApiKey, decryptApiKey, type UserCredentials } from '@/lib/auth'
 import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo, Shield, Detective, Key } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Shield, Detective, Key, TrashSimple } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
@@ -32,10 +32,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, onLogout, initialTab }: SettingsDialogProps) {
   const [appSettings, setAppSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   
-  const [userCredentials, setUserCredentials] = useState<{
-    username: string
-    passwordHash: PasswordHash
-  } | null>(null)
+  const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
   
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
 
@@ -48,6 +45,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
+  const [apiKey, setApiKey] = useState('')
+  const [apiKeyPassword, setApiKeyPassword] = useState('')
+  const [showApiKeyPassword, setShowApiKeyPassword] = useState(false)
+  const [isLoadingApiKey, setIsLoadingApiKey] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [logoClicks, setLogoClicks] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -62,7 +63,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   useEffect(() => {
     const loadCredentials = async () => {
       try {
-        const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+        const creds = await storage.get<UserCredentials>('user-credentials')
         setUserCredentials(creds || null)
       } catch (error) {
         console.error('[SettingsDialog] Failed to load credentials:', error)
@@ -389,7 +390,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-xl bg-card p-3">
+              <div className="space-y-3 rounded-xl bg-card p-4 border border-border">
                 <div className="space-y-2">
                   <Label htmlFor="openai-api-key" className="text-sm font-medium flex items-center gap-2">
                     <Key size={16} />
@@ -399,15 +400,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     <Input
                       id="openai-api-key"
                       type={showApiKey ? "text" : "password"}
-                      value={appSettings?.openaiApiKey || ''}
-                      onChange={(e) => {
-                        setAppSettings((current) => ({
-                          ...DEFAULT_APP_SETTINGS,
-                          ...current,
-                          openaiApiKey: e.target.value
-                        }))
-                      }}
-                      placeholder="sk-..."
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={userCredentials?.encryptedApiKey ? '••••••••••••••••••••' : 'sk-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
@@ -425,21 +420,129 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       )}
                     </button>
                   </div>
+                  {userCredentials?.encryptedApiKey && (
+                    <p className="text-xs text-success flex items-center gap-1.5">
+                      <span>✓</span>
+                      API key is configured and encrypted
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    Your API key is stored locally in your browser and never sent to any server except OpenAI
+                    Your API key is encrypted with your password and stored securely. It never leaves your device except when making requests to OpenAI.
                   </p>
                 </div>
 
-                {appSettings?.openaiApiKey && (
-                  <div className="rounded-lg bg-success/10 border border-success/20 p-3">
-                    <p className="text-xs text-muted-foreground flex items-start gap-2">
-                      <span className="text-success text-sm mt-0.5">✓</span>
-                      <span>
-                        API key configured. You can now use the investigation feature in the person dialog.
-                      </span>
-                    </p>
+                <div className="space-y-2">
+                  <Label htmlFor="api-key-password" className="text-sm font-medium flex items-center gap-2">
+                    <Key size={16} />
+                    Your Password (required to encrypt/decrypt)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="api-key-password"
+                      type={showApiKeyPassword ? "text" : "password"}
+                      value={apiKeyPassword}
+                      onChange={(e) => setApiKeyPassword(e.target.value)}
+                      placeholder="Enter your account password"
+                      className="pr-10"
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKeyPassword(!showApiKeyPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showApiKeyPassword ? (
+                        <Eye size={20} weight="regular" />
+                      ) : (
+                        <EyeSlash size={20} weight="regular" />
+                      )}
+                    </button>
                   </div>
-                )}
+                  <p className="text-xs text-muted-foreground">
+                    We need your password to securely encrypt the API key before storing it.
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={async () => {
+                      if (!apiKey.trim()) {
+                        toast.error('Please enter an API key')
+                        return
+                      }
+                      if (!apiKeyPassword) {
+                        toast.error('Please enter your password to encrypt the API key')
+                        return
+                      }
+                      if (!userCredentials) {
+                        toast.error('User credentials not found')
+                        return
+                      }
+
+                      try {
+                        setIsLoadingApiKey(true)
+                        
+                        const isValid = await verifyPassword(apiKeyPassword, userCredentials.passwordHash)
+                        if (!isValid) {
+                          toast.error('Incorrect password')
+                          setIsLoadingApiKey(false)
+                          return
+                        }
+
+                        const { encrypted, salt } = await encryptApiKey(apiKey, apiKeyPassword)
+                        
+                        const updatedCredentials: UserCredentials = {
+                          ...userCredentials,
+                          encryptedApiKey: encrypted,
+                          apiKeySalt: salt
+                        }
+                        
+                        await storage.set('user-credentials', updatedCredentials)
+                        setUserCredentials(updatedCredentials)
+                        setApiKey('')
+                        setApiKeyPassword('')
+                        
+                        toast.success('API key saved and encrypted successfully!')
+                      } catch (error) {
+                        console.error('Error saving API key:', error)
+                        toast.error('Failed to save API key')
+                      } finally {
+                        setIsLoadingApiKey(false)
+                      }
+                    }}
+                    disabled={isLoadingApiKey || !apiKey.trim() || !apiKeyPassword}
+                    className="flex-1"
+                  >
+                    {isLoadingApiKey ? 'Saving...' : userCredentials?.encryptedApiKey ? 'Update API Key' : 'Save API Key'}
+                  </Button>
+                  
+                  {userCredentials?.encryptedApiKey && (
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        try {
+                          const updatedCredentials: UserCredentials = {
+                            ...userCredentials,
+                            encryptedApiKey: undefined,
+                            apiKeySalt: undefined
+                          }
+                          await storage.set('user-credentials', updatedCredentials)
+                          setUserCredentials(updatedCredentials)
+                          setApiKey('')
+                          setApiKeyPassword('')
+                          toast.success('API key removed')
+                        } catch (error) {
+                          console.error('Error removing API key:', error)
+                          toast.error('Failed to remove API key')
+                        }
+                      }}
+                      className="px-4"
+                    >
+                      <TrashSimple size={18} />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="rounded-xl bg-card p-4 space-y-3">
@@ -461,7 +564,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     Copy the key and paste it above
                   </li>
                   <li className="list-decimal">
-                    Save your changes
+                    Enter your RelEye password to encrypt and save it
                   </li>
                 </ol>
               </div>
@@ -494,16 +597,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <span>
                     <strong className="text-foreground">Cost Notice:</strong> Using the OpenAI API incurs costs based on your usage. 
                     The investigation feature uses the GPT-4o-mini model. Check your OpenAI account for pricing details.
-                  </span>
-                </p>
-              </div>
-
-              <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
-                <p className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-accent text-sm mt-0.5">🔒</span>
-                  <span>
-                    <strong className="text-foreground">Privacy:</strong> Your API key is stored securely in your browser's local storage 
-                    and is only used to communicate directly with OpenAI's API. No data is sent to any other server.
                   </span>
                 </p>
               </div>

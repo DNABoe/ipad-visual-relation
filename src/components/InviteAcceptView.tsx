@@ -213,7 +213,10 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
 
             <div className="flex flex-col gap-2">
               <Button 
-                onClick={onCancel}
+                onClick={() => {
+                  window.history.replaceState({}, '', window.location.pathname)
+                  window.location.reload()
+                }}
                 className="w-full"
               >
                 Return to Login

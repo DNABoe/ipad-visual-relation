@@ -6,15 +6,12 @@ import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
-import { hashPassword, type PasswordHash } from './lib/auth'
+import { hashPassword, type UserCredentials } from './lib/auth'
 import { storage } from './lib/storage'
 import type { Workspace } from './lib/types'
 
 function App() {
-  const [userCredentials, setUserCredentials] = useState<{
-    username: string
-    passwordHash: PasswordHash
-  } | null>(null)
+  const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
   const [hasCompletedSetup, setHasCompletedSetup] = useState(false)
   
@@ -55,10 +52,7 @@ function App() {
         const setupCompleted = await storage.get<boolean>('setup-completed')
         console.log('[App] Setup completed flag:', setupCompleted)
         
-        const credentials = await storage.get<{
-          username: string
-          passwordHash: PasswordHash
-        }>('user-credentials')
+        const credentials = await storage.get<UserCredentials>('user-credentials')
         
         console.log('[App] Credentials loaded:', credentials ? `exists (username: ${credentials.username})` : 'not found')
         
@@ -134,10 +128,7 @@ function App() {
       console.log('[App] Verifying credentials were saved...')
       await new Promise(resolve => setTimeout(resolve, 200))
       
-      const savedCredentials = await storage.get<{
-        username: string
-        passwordHash: PasswordHash
-      }>('user-credentials')
+      const savedCredentials = await storage.get<UserCredentials>('user-credentials')
       
       if (!savedCredentials) {
         console.error('[App] Verification failed: savedCredentials is null/undefined')

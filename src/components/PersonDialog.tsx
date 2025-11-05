@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -10,15 +9,17 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Slider } from '@/components/ui/slider'
-import type { Person, FrameColor, Attachment, ActivityLogEntry, AppSettings } from '@/lib/types'
+import type { Person, FrameColor, Attachment, ActivityLogEntry } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
-import { FRAME_COLOR_NAMES, FRAME_COLORS, DEFAULT_APP_SETTINGS } from '@/lib/constants'
+import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
 import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus, Detective } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { resampleImage } from '@/lib/imageProcessing'
 import { toast } from 'sonner'
 import { generateInvestigationPDF } from '@/lib/pdfGenerator'
 import { generateIntelligenceReport } from '@/lib/externalLLM'
+import { storage } from '@/lib/storage'
+import { decryptApiKey, type UserCredentials } from '@/lib/auth'
 
 interface PersonDialogProps {
   open: boolean
@@ -29,7 +30,7 @@ interface PersonDialogProps {
 }
 
 export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson }: PersonDialogProps) {
-  const [appSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
+  const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
   const [name, setName] = useState('')
   const [position, setPosition] = useState('')
   const [score, setScore] = useState(3)
@@ -48,6 +49,18 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [investigationReport, setInvestigationReport] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const creds = await storage.get<UserCredentials>('user-credentials')
+        setUserCredentials(creds || null)
+      } catch (error) {
+        console.error('[PersonDialog] Failed to load credentials:', error)
+      }
+    }
+    loadCredentials()
+  }, [])
   const photoPreviewRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -465,15 +478,28 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       return
     }
 
-    if (!appSettings?.openaiApiKey || appSettings.openaiApiKey.trim() === '') {
+    if (!userCredentials?.encryptedApiKey || !userCredentials?.apiKeySalt) {
       toast.error('OpenAI API key not configured. Please add your API key in Settings → Investigation.')
       return
     }
 
     setIsInvestigating(true)
+    
+    const passwordPrompt = window.prompt('Enter your password to decrypt the API key:')
+    if (!passwordPrompt) {
+      setIsInvestigating(false)
+      return
+    }
+
     toast.info('Investigating...')
 
     try {
+      const apiKey = await decryptApiKey(
+        userCredentials.encryptedApiKey,
+        userCredentials.apiKeySalt,
+        passwordPrompt
+      )
+      
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
       const positionText = positionLines.join(', ')
       const countryText = country || 'Not specified'
@@ -482,7 +508,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
         name: name.trim(),
         position: positionText || 'Not specified',
         country: countryText,
-        apiKey: appSettings.openaiApiKey
+        apiKey: apiKey
       })
       
       setInvestigationReport(report)
