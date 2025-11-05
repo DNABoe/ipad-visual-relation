@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -9,9 +10,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Slider } from '@/components/ui/slider'
-import type { Person, FrameColor, Attachment, ActivityLogEntry } from '@/lib/types'
+import type { Person, FrameColor, Attachment, ActivityLogEntry, AppSettings } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
-import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
+import { FRAME_COLOR_NAMES, FRAME_COLORS, DEFAULT_APP_SETTINGS } from '@/lib/constants'
 import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus, Detective } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { resampleImage } from '@/lib/imageProcessing'
@@ -28,6 +29,7 @@ interface PersonDialogProps {
 }
 
 export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson }: PersonDialogProps) {
+  const [appSettings] = useKV<AppSettings>('app-settings', DEFAULT_APP_SETTINGS)
   const [name, setName] = useState('')
   const [position, setPosition] = useState('')
   const [score, setScore] = useState(3)
@@ -463,6 +465,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       return
     }
 
+    if (!appSettings?.openaiApiKey || appSettings.openaiApiKey.trim() === '') {
+      toast.error('OpenAI API key not configured. Please add your API key in Settings → Investigation.')
+      return
+    }
+
     setIsInvestigating(true)
     toast.info('Investigating...')
 
@@ -474,7 +481,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       const report = await generateIntelligenceReport({
         name: name.trim(),
         position: positionText || 'Not specified',
-        country: countryText
+        country: countryText,
+        apiKey: appSettings.openaiApiKey
       })
       
       setInvestigationReport(report)
@@ -509,7 +517,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
 
     } catch (error) {
       console.error('Investigation error:', error)
-      toast.error('Failed to generate investigation report')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate investigation report'
+      toast.error(errorMessage)
     } finally {
       setIsInvestigating(false)
     }

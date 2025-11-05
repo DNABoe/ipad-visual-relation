@@ -2,8 +2,13 @@ export async function generateIntelligenceReport(params: {
   name: string
   position: string
   country: string
+  apiKey?: string
 }): Promise<string> {
-  const { name, position, country } = params
+  const { name, position, country, apiKey } = params
+
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error('OpenAI API key not configured. Please add your API key in Settings → Investigation to use this feature.')
+  }
 
   const prompt = `You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
 
@@ -25,7 +30,7 @@ Format your response as a professional intelligence brief with clear sections an
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`
+        'Authorization': `Bearer ${apiKey.trim()}`
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -47,6 +52,15 @@ Format your response as a professional intelligence brief with clear sections an
     if (!response.ok) {
       const error = await response.json().catch(() => ({}))
       console.error('OpenAI API error:', error)
+      
+      if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your OpenAI API key in Settings.')
+      }
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later or check your OpenAI account quota.')
+      }
+      
       throw new Error(`API request failed: ${response.status} ${response.statusText}`)
     }
 
@@ -60,8 +74,8 @@ Format your response as a professional intelligence brief with clear sections an
   } catch (error) {
     console.error('Error generating report:', error)
     
-    if (error instanceof Error && error.message.includes('API request failed')) {
-      throw new Error('Failed to connect to AI service. Please check your API key configuration.')
+    if (error instanceof Error) {
+      throw error
     }
     
     throw new Error('Failed to generate investigation report. Please try again.')

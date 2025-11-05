@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo, Shield } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Shield, Detective, Key } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
@@ -47,6 +47,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [logoClicks, setLogoClicks] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -209,8 +210,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           </DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'} flex-shrink-0`}>
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} flex-shrink-0`}>
             <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
+            <TabsTrigger value="investigation" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">
+              <Detective className="w-4 h-4 mr-1.5" />
+              Investigation
+            </TabsTrigger>
             <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="admin" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">
@@ -364,6 +369,143 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     }}
                   />
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="investigation" className="space-y-3 py-3 m-0">
+            <div className="space-y-4">
+              <div className="rounded-xl bg-card p-4 border-2 border-primary/20">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Detective className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">AI Investigation</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Generate professional intelligence reports using OpenAI's GPT-4 model
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-xl bg-card p-3">
+                <div className="space-y-2">
+                  <Label htmlFor="openai-api-key" className="text-sm font-medium flex items-center gap-2">
+                    <Key size={16} />
+                    OpenAI API Key
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="openai-api-key"
+                      type={showApiKey ? "text" : "password"}
+                      value={appSettings?.openaiApiKey || ''}
+                      onChange={(e) => {
+                        setAppSettings((current) => ({
+                          ...DEFAULT_APP_SETTINGS,
+                          ...current,
+                          openaiApiKey: e.target.value
+                        }))
+                      }}
+                      placeholder="sk-..."
+                      className="pr-10 font-mono text-sm"
+                      autoComplete="off"
+                      spellCheck="false"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showApiKey ? (
+                        <Eye size={20} weight="regular" />
+                      ) : (
+                        <EyeSlash size={20} weight="regular" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Your API key is stored locally in your browser and never sent to any server except OpenAI
+                  </p>
+                </div>
+
+                {appSettings?.openaiApiKey && (
+                  <div className="rounded-lg bg-success/10 border border-success/20 p-3">
+                    <p className="text-xs text-muted-foreground flex items-start gap-2">
+                      <span className="text-success text-sm mt-0.5">✓</span>
+                      <span>
+                        API key configured. You can now use the investigation feature in the person dialog.
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl bg-card p-4 space-y-3">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <span className="text-accent">ℹ️</span>
+                  How to Get Your API Key
+                </h4>
+                <ol className="space-y-2 text-xs text-muted-foreground pl-4">
+                  <li className="list-decimal">
+                    Visit <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">platform.openai.com/api-keys</a>
+                  </li>
+                  <li className="list-decimal">
+                    Sign in to your OpenAI account (create one if needed)
+                  </li>
+                  <li className="list-decimal">
+                    Click "Create new secret key"
+                  </li>
+                  <li className="list-decimal">
+                    Copy the key and paste it above
+                  </li>
+                  <li className="list-decimal">
+                    Save your changes
+                  </li>
+                </ol>
+              </div>
+
+              <div className="rounded-xl bg-card p-4 space-y-3">
+                <h4 className="font-semibold text-sm">Investigation Features</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Generate professional intelligence briefs</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Contextual analysis based on position and country</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Automatic PDF report generation</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-muted-foreground">Reports saved as attachments to person cards</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-warning text-sm mt-0.5">⚠️</span>
+                  <span>
+                    <strong className="text-foreground">Cost Notice:</strong> Using the OpenAI API incurs costs based on your usage. 
+                    The investigation feature uses the GPT-4o-mini model. Check your OpenAI account for pricing details.
+                  </span>
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-accent text-sm mt-0.5">🔒</span>
+                  <span>
+                    <strong className="text-foreground">Privacy:</strong> Your API key is stored securely in your browser's local storage 
+                    and is only used to communicate directly with OpenAI's API. No data is sent to any other server.
+                  </span>
+                </p>
               </div>
             </div>
           </TabsContent>

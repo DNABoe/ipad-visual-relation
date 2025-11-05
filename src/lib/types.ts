@@ -100,6 +100,7 @@ export interface ActivityLog {
 
 export interface AppSettings {
   showMinimap: boolean
+  openaiApiKey?: string
 }
 
 export interface WorkspaceSettings {

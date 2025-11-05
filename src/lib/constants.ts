@@ -32,6 +32,7 @@ export const ZOOM_STEP = 0.1
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   showMinimap: true,
+  openaiApiKey: undefined,
 }
 
 export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
