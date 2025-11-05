@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Copy, CheckCircle, EnvelopeSimple, Warning } from '@phosphor-icons/react'
+import { Copy, CheckCircle, EnvelopeSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { Logo } from '@/components/Logo'
 
@@ -25,7 +25,8 @@ export function InviteEmailDialog({
   roleDescription,
   inviteLink
 }: InviteEmailDialogProps) {
-  const [copied, setCopied] = useState(false)
+  const [copiedFull, setCopiedFull] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   const emailSubject = `You've been invited to join RelEye`
   
@@ -57,7 +58,7 @@ You'll be asked to choose a password to secure your account. Once your account i
 📋 What You Can Do
 • Map relationships between people and organizations
 • Visualize connections with advanced analytics
-• ${userRole === 'admin' ? 'Manage users and system settings' : userRole === 'editor' ? 'Create and edit network visualizations' : 'View and explore network visualizations'}
+• ${userRole === 'Administrator' ? 'Manage users and system settings' : userRole === 'Editor' ? 'Create and edit network visualizations' : 'View and explore network visualizations'}
 • Export and share insights
 
 This invitation expires in 7 days.
@@ -70,9 +71,9 @@ This is an automated invitation from RelEye. If you received this email in error
   const handleCopyEmail = async () => {
     try {
       await navigator.clipboard.writeText(emailBody)
-      setCopied(true)
+      setCopiedFull(true)
       toast.success('Email content copied to clipboard!')
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopiedFull(false), 2000)
     } catch (err) {
       toast.error('Failed to copy to clipboard')
     }
@@ -81,7 +82,9 @@ This is an automated invitation from RelEye. If you received this email in error
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(inviteLink)
+      setCopiedLink(true)
       toast.success('Invitation link copied to clipboard!')
+      setTimeout(() => setCopiedLink(false), 2000)
     } catch (err) {
       toast.error('Failed to copy link')
     }
@@ -94,8 +97,8 @@ This is an automated invitation from RelEye. If you received this email in error
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <EnvelopeSimple className="w-6 h-6 text-primary" weight="duotone" />
@@ -109,99 +112,105 @@ This is an automated invitation from RelEye. If you received this email in error
           </div>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 px-6">
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4 pb-4">
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <div className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Simple Invitation Process
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  {userName} will get their own independent workspace:
-                </p>
-                <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
-                  <li>Send them this invitation email (using the button below)</li>
-                  <li>They click the link and create their account with a password</li>
-                  <li>They can immediately start creating their own network files</li>
-                  <li>Each user manages their own encrypted files independently</li>
-                </ol>
+        <ScrollArea className="flex-1 -mx-6 px-6">
+          <div className="space-y-4 pr-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <div className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Simple Invitation Process
               </div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                {userName} will get their own independent workspace:
+              </p>
+              <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
+                <li>Send them this invitation email (using the button below)</li>
+                <li>They click the link and create their account with a password</li>
+                <li>They can immediately start creating their own network files</li>
+                <li>Each user manages their own encrypted files independently</li>
+              </ol>
+            </div>
 
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <div className="text-sm font-medium text-primary mb-3 flex items-center gap-2">
-                  <EnvelopeSimple className="w-4 h-4" weight="duotone" />
-                  Quick Send Options
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    onClick={handleOpenMailClient}
-                    className="w-full flex items-center justify-center gap-2 h-11"
-                  >
-                    <EnvelopeSimple className="w-5 h-5" weight="duotone" />
-                    Open in Default Email App
-                  </Button>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleCopyEmail}
-                      className="flex items-center justify-center gap-2 h-11"
-                    >
-                      {copied ? (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy Full Email
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleCopyLink}
-                      className="flex items-center justify-center gap-2 h-11"
-                    >
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <EnvelopeSimple className="w-4 h-4" weight="duotone" />
+                Quick Send Options
+              </div>
+              <Button 
+                onClick={handleOpenMailClient}
+                className="w-full flex items-center justify-center gap-2"
+                size="lg"
+              >
+                <EnvelopeSimple className="w-5 h-5" weight="duotone" />
+                Open in Default Email App
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleCopyEmail}
+                  className="flex items-center justify-center gap-2"
+                >
+                  {copiedFull ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy Full Email
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleCopyLink}
+                  className="flex items-center justify-center gap-2"
+                >
+                  {copiedLink ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
                       <Copy className="w-4 h-4" />
                       Copy Link Only
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card/50 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Logo size={32} showText={false} animated={false} />
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
-                    <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
-                  </div>
-                </div>
-                <div className="space-y-1 mt-3">
-                  <div className="flex gap-2 text-sm">
-                    <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
-                    <span className="text-foreground break-all">{userEmail}</span>
-                  </div>
-                  <div className="flex gap-2 text-sm">
-                    <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
-                    <span className="text-foreground">{emailSubject}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-border rounded-lg bg-muted/30 p-4">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
-                  {emailBody}
-                </pre>
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
-          </ScrollArea>
-        </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-border flex-shrink-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+            <div className="rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Logo size={32} showText={false} animated={false} />
+                <div>
+                  <div className="text-sm font-semibold text-foreground">RelEye Invitation</div>
+                  <div className="text-xs text-muted-foreground">Relationship Network Platform</div>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground font-medium min-w-[60px]">To:</span>
+                  <span className="text-foreground break-all">{userEmail}</span>
+                </div>
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground font-medium min-w-[60px]">Subject:</span>
+                  <span className="text-foreground">{emailSubject}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-border rounded-lg bg-muted/30 p-4">
+              <pre className="whitespace-pre-wrap font-sans text-sm text-foreground leading-relaxed">
+                {emailBody}
+              </pre>
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>

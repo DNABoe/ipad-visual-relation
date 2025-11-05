@@ -3,16 +3,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { verifyPassword, type PasswordHash, isPasswordHash } from '@/lib/auth'
-import { storage } from '@/lib/storage'
 import { UserCircle, Eye, EyeSlash } from '@phosphor-icons/react'
+import { Logo } from '@/components/Logo'
 
 interface LoginViewProps {
-  onLogin: () => void
+  onLogin: (email: string, password: string) => Promise<boolean>
 }
 
 export function LoginView({ onLogin }: LoginViewProps) {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -24,39 +23,20 @@ export function LoginView({ onLogin }: LoginViewProps) {
     setIsLoading(true)
 
     try {
-      const userSettings = await storage.get<{
-        username: string
-        passwordHash: PasswordHash
-      }>('user-credentials')
-
-      if (!userSettings || !userSettings.username || !userSettings.passwordHash) {
-        setError('System error: credentials not initialized. Please refresh the page.')
+      if (!email.trim() || !password) {
+        setError('Please enter your email and password')
         setIsLoading(false)
         return
       }
 
-      if (!isPasswordHash(userSettings.passwordHash)) {
-        setError('System error: invalid credentials format')
-        setIsLoading(false)
-        return
-      }
-
-      if (username.trim() !== userSettings.username) {
-        setError('Invalid username or password')
-        setIsLoading(false)
-        return
-      }
-
-      const isValid = await verifyPassword(password, userSettings.passwordHash)
+      const success = await onLogin(email.trim(), password)
       
-      if (isValid) {
-        onLogin()
-      } else {
-        setError('Invalid username or password')
+      if (!success) {
+        setError('Invalid email or password')
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError('An error occurred during login')
+      setError('Login failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -67,9 +47,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <UserCircle size={40} className="text-primary" weight="duotone" />
-            </div>
+            <Logo size={64} showText={false} animated={true} />
           </div>
           <CardTitle className="text-2xl font-semibold">RelEye</CardTitle>
           <CardDescription>Sign in to access your workspace</CardDescription>
@@ -77,14 +55,14 @@ export function LoginView({ onLogin }: LoginViewProps) {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Email / Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="Enter email or username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck="false"

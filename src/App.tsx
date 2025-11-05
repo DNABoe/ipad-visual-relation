@@ -6,17 +6,15 @@ import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
-import { hashPassword, type UserCredentials } from './lib/auth'
 import { storage } from './lib/storage'
 import type { Workspace } from './lib/types'
+import * as UserRegistry from './lib/userRegistry'
 
 function App() {
-  const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
-  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true)
-  const [hasCompletedSetup, setHasCompletedSetup] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true)
+  const [isFirstTime, setIsFirstTime] = useState(false)
   
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isSettingUpCredentials, setIsSettingUpCredentials] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
   const [initialWorkspace, setInitialWorkspace] = useState<Workspace | null>(null)
@@ -25,201 +23,138 @@ function App() {
   const [showFileManager, setShowFileManager] = useState(true)
 
   useEffect(() => {
-    const loadCredentials = async () => {
+    const initializeAuth = async () => {
       try {
         console.log('[App] ========== INITIALIZATION START ==========')
         console.log('[App] Checking storage availability...')
-        console.log('[App] window.spark exists:', !!window.spark)
-        console.log('[App] window.spark.kv exists:', !!window.spark?.kv)
         
         const storageReady = await storage.isReady()
         console.log('[App] Storage ready:', storageReady)
         
         if (!storageReady) {
           console.error('[App] ❌ Storage failed to become ready')
-          setUserCredentials(null)
-          setHasCompletedSetup(false)
-          setIsLoadingCredentials(false)
+          setIsLoadingAuth(false)
           return
         }
         
         console.log('[App] ✓ Storage is ready')
-        console.log('[App] Checking for existing credentials...')
         
-        const allKeys = await storage.keys()
-        console.log('[App] All storage keys:', allKeys)
+        const urlParams = new URLSearchParams(window.location.search)
+        const token = urlParams.get('invite')
+        const email = urlParams.get('email')
         
-        const setupCompleted = await storage.get<boolean>('setup-completed')
-        console.log('[App] Setup completed flag:', setupCompleted)
+        if (token) {
+          console.log('[App] Invite link detected:', { token: token.substring(0, 8) + '...', email })
+          setInviteToken(token)
+          setInviteEmail(email)
+          setIsLoadingAuth(false)
+          return
+        }
         
-        const credentials = await storage.get<UserCredentials>('user-credentials')
+        console.log('[App] Checking if first time setup...')
+        const firstTime = await UserRegistry.isFirstTimeSetup()
+        console.log('[App] Is first time:', firstTime)
+        setIsFirstTime(firstTime)
         
-        console.log('[App] Credentials loaded:', credentials ? `exists (username: ${credentials.username})` : 'not found')
-        
-        if (credentials) {
-          console.log('[App] Credentials structure check:', {
-            hasUsername: !!credentials.username,
-            hasPasswordHash: !!credentials.passwordHash,
-            hasHash: !!credentials.passwordHash?.hash,
-            hasSalt: !!credentials.passwordHash?.salt,
-            hasIterations: !!credentials.passwordHash?.iterations
-          })
-          setUserCredentials(credentials)
-          setHasCompletedSetup(true)
-        } else {
-          setUserCredentials(null)
-          setHasCompletedSetup(!!setupCompleted)
+        if (!firstTime) {
+          console.log('[App] Checking for current user session...')
+          const user = await UserRegistry.getCurrentUser()
+          console.log('[App] Current user:', user ? user.email : 'none')
+          setCurrentUser(user || null)
         }
         
         console.log('[App] ========== INITIALIZATION COMPLETE ==========')
       } catch (error) {
-        console.error('[App] ❌ Failed to load credentials:', error)
-        console.error('[App] Error details:', {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined
-        })
-        setUserCredentials(null)
-        setHasCompletedSetup(false)
+        console.error('[App] ❌ Failed to initialize:', error)
       } finally {
-        setIsLoadingCredentials(false)
+        setIsLoadingAuth(false)
       }
     }
-    loadCredentials()
-  }, [])
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const token = urlParams.get('invite')
-    const email = urlParams.get('email')
     
-    if (token) {
-      console.log('[App] Invite link detected:', { token, email })
-      setInviteToken(token)
-      setInviteEmail(email)
-    }
+    initializeAuth()
   }, [])
 
   const handleFirstTimeSetup = useCallback(async (username: string, password: string) => {
     try {
-      console.log('[App] Starting first time setup for username:', username)
-      setIsSettingUpCredentials(true)
+      console.log('[App] Starting first time setup for:', username)
       
-      console.log('[App] Ensuring storage is ready...')
       const storageReady = await storage.isReady()
       if (!storageReady) {
         throw new Error('Storage system is not available. Please refresh the page and try again.')
       }
       
-      console.log('[App] Hashing password...')
-      const passwordHash = await hashPassword(password)
-      console.log('[App] Password hashed successfully:', { 
-        hasHash: !!passwordHash.hash, 
-        hasSalt: !!passwordHash.salt,
-        iterations: passwordHash.iterations 
-      })
+      const user = await UserRegistry.createUser(username, 'Administrator', password, 'admin', true)
+      console.log('[App] ✓ Admin user created')
       
-      const credentials = { username, passwordHash }
-      console.log('[App] Attempting to save credentials to storage...')
-      console.log('[App] Credentials object:', JSON.stringify(credentials, null, 2))
+      await UserRegistry.setCurrentUser(user.userId)
+      console.log('[App] ✓ User session set')
       
-      await storage.set('user-credentials', credentials)
-      console.log('[App] Credentials saved successfully to storage')
-      
-      console.log('[App] Verifying credentials were saved...')
-      await new Promise(resolve => setTimeout(resolve, 200))
-      
-      const savedCredentials = await storage.get<UserCredentials>('user-credentials')
-      
-      if (!savedCredentials) {
-        console.error('[App] Verification failed: savedCredentials is null/undefined')
-        throw new Error('Failed to verify credentials were saved. Storage returned empty.')
-      }
-      
-      if (savedCredentials.username !== username) {
-        console.error('[App] Verification failed: username mismatch')
-        throw new Error('Failed to verify credentials were saved. Username mismatch.')
-      }
-      
-      if (!savedCredentials.passwordHash || !savedCredentials.passwordHash.hash) {
-        console.error('[App] Verification failed: passwordHash invalid')
-        throw new Error('Failed to verify credentials were saved. Password hash invalid.')
-      }
-      
-      console.log('[App] ✓ Credentials verified in storage')
-      
-      await storage.set('setup-completed', true)
-      console.log('[App] ✓ Setup completed flag set')
-      
-      setUserCredentials(credentials)
-      setIsAuthenticated(true)
-      setIsSettingUpCredentials(false)
-      setHasCompletedSetup(true)
+      setCurrentUser(user)
+      setIsFirstTime(false)
       
       toast.success('Administrator account created successfully!')
     } catch (error) {
       console.error('[App] Setup error:', error)
-      setIsSettingUpCredentials(false)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account'
       toast.error(errorMessage)
       throw error
     }
   }, [])
 
-  const handleInviteComplete = useCallback(async (userId: string, username: string, password: string, email: string | undefined) => {
+  const handleInviteComplete = useCallback(async (token: string, password: string) => {
     try {
-      console.log('[App] Starting invite complete for username:', username)
-      setIsSettingUpCredentials(true)
+      console.log('[App] Completing invite...')
       
-      console.log('[App] Ensuring storage is ready...')
-      const storageReady = await storage.isReady()
-      if (!storageReady) {
-        throw new Error('Storage system is not available. Please refresh the page and try again.')
-      }
+      const user = await UserRegistry.consumeInvite(token, password)
+      console.log('[App] ✓ Invite consumed, user created')
       
-      console.log('[App] Hashing password...')
-      const passwordHash = await hashPassword(password)
-      console.log('[App] Password hashed successfully')
+      await UserRegistry.setCurrentUser(user.userId)
+      console.log('[App] ✓ User session set')
       
-      const credentials = { username, passwordHash }
-      console.log('[App] Attempting to save credentials to storage...')
-      
-      await storage.set('user-credentials', credentials)
-      console.log('[App] Credentials saved successfully to storage')
-      
-      await storage.set('setup-completed', true)
-      console.log('[App] ✓ Setup completed flag set')
-      
-      setUserCredentials(credentials)
-      setHasCompletedSetup(true)
-      
+      setCurrentUser(user)
       setInviteToken(null)
       setInviteEmail(null)
       window.history.replaceState({}, '', window.location.pathname)
-      setIsAuthenticated(true)
-      setIsSettingUpCredentials(false)
       
       toast.success('Account created successfully!')
     } catch (error) {
       console.error('[App] Invite accept error:', error)
-      setIsSettingUpCredentials(false)
       const errorMessage = error instanceof Error ? error.message : 'Failed to complete invite setup'
       toast.error(errorMessage)
+      throw error
     }
   }, [])
 
   const handleInviteCancel = useCallback(() => {
+    console.log('[App] Invite cancelled by user')
     setInviteToken(null)
     setInviteEmail(null)
     window.history.replaceState({}, '', window.location.pathname)
   }, [])
 
-  const handleLogin = useCallback(() => {
-    setIsAuthenticated(true)
+  const handleLogin = useCallback(async (email: string, password: string) => {
+    try {
+      console.log('[App] Attempting login for:', email)
+      const user = await UserRegistry.authenticateUser(email, password)
+      
+      if (!user) {
+        toast.error('Invalid email or password')
+        return false
+      }
+      
+      setCurrentUser(user)
+      toast.success('Welcome back!')
+      return true
+    } catch (error) {
+      console.error('[App] Login error:', error)
+      toast.error('Login failed')
+      return false
+    }
   }, [])
 
   const handleLoad = useCallback(async (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
-    if (!userCredentials) {
-      toast.error('User credentials not found. Please refresh the page.')
+    if (!currentUser) {
+      toast.error('User session not found. Please refresh the page.')
       return
     }
 
@@ -233,23 +168,25 @@ function App() {
       updatedWorkspace.activityLog = []
     }
     
-    const currentUser = updatedWorkspace.users.find(u => u.username === userCredentials.username)
+    const currentWorkspaceUser = updatedWorkspace.users.find(u => u.email === currentUser.email)
     
-    if (!currentUser) {
-      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-      const adminUser = {
-        userId: userId,
-        username: userCredentials.username,
-        role: 'admin' as const,
+    if (!currentWorkspaceUser) {
+      const workspaceUser = {
+        userId: currentUser.userId,
+        username: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
         addedAt: Date.now(),
         addedBy: 'system',
-        status: 'active' as const
+        status: 'active' as const,
+        loginCount: currentUser.loginCount,
+        canInvestigate: currentUser.canInvestigate
       }
       
       updatedWorkspace = {
         ...updatedWorkspace,
-        users: [...updatedWorkspace.users, adminUser],
-        ownerId: updatedWorkspace.ownerId || userId
+        users: [...updatedWorkspace.users, workspaceUser],
+        ownerId: updatedWorkspace.ownerId || currentUser.userId
       }
     }
     
@@ -257,7 +194,7 @@ function App() {
     setFileName(loadedFileName)
     setPassword(loadedPassword)
     setShowFileManager(false)
-  }, [userCredentials])
+  }, [currentUser])
 
   const handleNewNetwork = useCallback(() => {
     setInitialWorkspace(null)
@@ -273,38 +210,25 @@ function App() {
     setShowFileManager(true)
   }, [])
 
-  const handleLogout = useCallback(() => {
-    setIsAuthenticated(false)
+  const handleLogout = useCallback(async () => {
+    await UserRegistry.clearCurrentUser()
+    setCurrentUser(null)
     setInitialWorkspace(null)
     setFileName('')
     setPassword('')
     setShowFileManager(true)
+    toast.success('Logged out successfully')
   }, [])
 
-  if (isLoadingCredentials) {
+  if (isLoadingAuth) {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <div className="space-y-2">
-              <p className="text-muted-foreground">Initializing storage system...</p>
-              <p className="text-xs text-muted-foreground">This may take a few seconds</p>
+              <p className="text-muted-foreground">Initializing...</p>
             </div>
-          </div>
-        </div>
-        <Toaster />
-      </>
-    )
-  }
-
-  if (isSettingUpCredentials) {
-    return (
-      <>
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground">Setting up your account...</p>
           </div>
         </div>
         <Toaster />
@@ -326,7 +250,7 @@ function App() {
     )
   }
 
-  if (!hasCompletedSetup && !userCredentials) {
+  if (isFirstTime) {
     return (
       <>
         <FirstTimeSetup onComplete={handleFirstTimeSetup} />
@@ -335,21 +259,7 @@ function App() {
     )
   }
 
-  if (!userCredentials) {
-    return (
-      <>
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-4">
-            <div className="text-muted-foreground">Unable to load credentials. Please refresh the page.</div>
-            <Button onClick={() => window.location.reload()}>Refresh</Button>
-          </div>
-        </div>
-        <Toaster />
-      </>
-    )
-  }
-
-  if (!isAuthenticated) {
+  if (!currentUser) {
     return (
       <>
         <LoginView onLogin={handleLogin} />
