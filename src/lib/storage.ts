@@ -15,6 +15,118 @@ export interface StorageHealthStatus {
   error?: string
 }
 
+class LocalStorageAdapter implements StorageAdapter {
+  private prefix = 'releye_'
+
+  async isReady(): Promise<boolean> {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) {
+        return false
+      }
+      const testKey = this.prefix + '__test__'
+      localStorage.setItem(testKey, 'test')
+      localStorage.removeItem(testKey)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async get<T>(key: string): Promise<T | undefined> {
+    try {
+      const item = localStorage.getItem(this.prefix + key)
+      if (item === null) return undefined
+      return JSON.parse(item) as T
+    } catch (error) {
+      console.error(`[LocalStorageAdapter] Error getting ${key}:`, error)
+      return undefined
+    }
+  }
+
+  async set<T>(key: string, value: T): Promise<void> {
+    try {
+      localStorage.setItem(this.prefix + key, JSON.stringify(value))
+    } catch (error) {
+      console.error(`[LocalStorageAdapter] Error setting ${key}:`, error)
+      throw error
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      localStorage.removeItem(this.prefix + key)
+    } catch (error) {
+      console.error(`[LocalStorageAdapter] Error deleting ${key}:`, error)
+      throw error
+    }
+  }
+
+  async keys(): Promise<string[]> {
+    try {
+      const allKeys: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith(this.prefix)) {
+          allKeys.push(key.substring(this.prefix.length))
+        }
+      }
+      return allKeys
+    } catch (error) {
+      console.error('[LocalStorageAdapter] Error getting keys:', error)
+      return []
+    }
+  }
+
+  async checkHealth(): Promise<StorageHealthStatus> {
+    const status: StorageHealthStatus = {
+      isReady: false,
+      canRead: false,
+      canWrite: false,
+      canDelete: false
+    }
+
+    try {
+      status.isReady = await this.isReady()
+      
+      if (!status.isReady) {
+        status.error = 'localStorage not available'
+        return status
+      }
+
+      const testKey = '_health_check_test_key'
+      const testValue = { test: true, timestamp: Date.now() }
+
+      try {
+        await this.set(testKey, testValue)
+        status.canWrite = true
+      } catch (error) {
+        status.error = `Write failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        return status
+      }
+
+      try {
+        const retrieved = await this.get(testKey)
+        status.canRead = !!retrieved
+      } catch (error) {
+        status.error = `Read failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        return status
+      }
+
+      try {
+        await this.delete(testKey)
+        status.canDelete = true
+      } catch (error) {
+        status.error = `Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }
+
+      return status
+    } catch (error) {
+      status.error = `Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      return status
+    }
+  }
+}
+
 class SparkKVAdapter implements StorageAdapter {
   private readyPromise: Promise<boolean> | null = null
 
@@ -151,4 +263,61 @@ class SparkKVAdapter implements StorageAdapter {
   }
 }
 
-export const storage: StorageAdapter = new SparkKVAdapter()
+async function selectAdapter(): Promise<StorageAdapter> {
+  const sparkAdapter = new SparkKVAdapter()
+  const isSparkReady = await sparkAdapter.isReady()
+  
+  if (isSparkReady) {
+    console.log('[Storage] Using Spark KV adapter')
+    return sparkAdapter
+  }
+  
+  console.log('[Storage] Spark KV not available, using localStorage adapter')
+  return new LocalStorageAdapter()
+}
+
+let storageInstance: StorageAdapter | null = null
+
+export const storage: StorageAdapter = {
+  async isReady(): Promise<boolean> {
+    if (!storageInstance) {
+      storageInstance = await selectAdapter()
+    }
+    return storageInstance.isReady()
+  },
+  
+  async get<T>(key: string): Promise<T | undefined> {
+    if (!storageInstance) {
+      storageInstance = await selectAdapter()
+    }
+    return storageInstance.get<T>(key)
+  },
+  
+  async set<T>(key: string, value: T): Promise<void> {
+    if (!storageInstance) {
+      storageInstance = await selectAdapter()
+    }
+    return storageInstance.set(key, value)
+  },
+  
+  async delete(key: string): Promise<void> {
+    if (!storageInstance) {
+      storageInstance = await selectAdapter()
+    }
+    return storageInstance.delete(key)
+  },
+  
+  async keys(): Promise<string[]> {
+    if (!storageInstance) {
+      storageInstance = await selectAdapter()
+    }
+    return storageInstance.keys()
+  },
+  
+  async checkHealth(): Promise<StorageHealthStatus> {
+    if (!storageInstance) {
+      storageInstance = await selectAdapter()
+    }
+    return storageInstance.checkHealth()
+  }
+}

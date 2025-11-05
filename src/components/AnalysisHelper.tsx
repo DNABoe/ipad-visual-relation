@@ -5,11 +5,25 @@ import { Card } from '@/components/ui/card'
 export function GridAnalysisHelper() {
   const [analysis, setAnalysis] = useState<string>('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isSparkAvailable, setIsSparkAvailable] = useState(false)
+
+  useEffect(() => {
+    setIsSparkAvailable(
+      typeof window !== 'undefined' && 
+      !!(window as any).spark && 
+      typeof (window as any).spark.llm === 'function'
+    )
+  }, [])
 
   const runAnalysis = async () => {
+    if (!isSparkAvailable) {
+      setAnalysis('This analysis tool is only available in the Spark development environment.')
+      return
+    }
+
     setIsAnalyzing(true)
     
-    const codeContext = (window.spark.llmPrompt as any)`
+    const codeContext = ((window as any).spark.llmPrompt as any)`
 # Grid Toggle and Canvas Settings Analysis
 
 ## Issue Description
@@ -174,7 +188,7 @@ Please provide a comprehensive analysis identifying:
 `
 
     try {
-      const result = await window.spark.llm(codeContext, 'gpt-4o')
+      const result = await (window as any).spark.llm(codeContext, 'gpt-4o')
       setAnalysis(result)
     } catch (error) {
       setAnalysis('Error running analysis: ' + String(error))
@@ -189,9 +203,14 @@ Please provide a comprehensive analysis identifying:
         <h1 className="text-2xl font-bold mb-4">Grid Toggle & Canvas Settings Analysis</h1>
         <p className="text-muted-foreground mb-4">
           This tool uses AI to analyze potential issues with grid toggle and canvas settings functionality.
+          {!isSparkAvailable && (
+            <span className="block mt-2 text-warning font-semibold">
+              ⚠️ This feature is only available in the Spark development environment.
+            </span>
+          )}
         </p>
         
-        <Button onClick={runAnalysis} disabled={isAnalyzing} className="mb-6">
+        <Button onClick={runAnalysis} disabled={isAnalyzing || !isSparkAvailable} className="mb-6">
           {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
         </Button>
 
