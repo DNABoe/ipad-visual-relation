@@ -37,7 +37,6 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
 
       - name: Copy CNAME to dist
         run: cp CNAME dist/CNAME
