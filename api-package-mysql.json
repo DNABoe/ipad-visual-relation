@@ -1,0 +1,26 @@
+{
+  "name": "releye-api",
+  "version": "1.0.0",
+  "description": "RelEye Backend API with MySQL",
+  "main": "api-server-mysql.js",
+  "scripts": {
+    "start": "node api-server-mysql.js",
+    "dev": "nodemon api-server-mysql.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": ["releye", "api", "mysql", "authentication"],
+  "author": "D Boestad",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+# MySQL Database Configuration
+DB_HOST=localhost
+DB_USER=releye_user
+DB_PASSWORD=your_secure_mysql_password_here
+DB_NAME=releye
+
+# API Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# CORS Configuration
+CORS_ORIGIN=https://releye.boestad.com
+
+# Optional: Session Configuration
+SESSION_SECRET=your_session_secret_here_change_this
+SESSION_DURATION=86400000
+
+# Optional: Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
