@@ -7,6 +7,7 @@ import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
 import { isCloudAPIAvailable } from './lib/cloudAPI'
 import type { Workspace } from './lib/types'
+import type { UserCredentials } from './lib/auth'
 import * as UserRegistry from './lib/userRegistry'
 import { generateSampleData } from './lib/sampleData'
 
@@ -39,6 +40,23 @@ function App() {
         }
         
         setCurrentUser(mockUser)
+        
+        console.log('[App] Loading existing user credentials from storage...')
+        const { storage } = await import('./lib/storage')
+        const existingCredentials = await storage.get<UserCredentials>('user-credentials')
+        
+        if (!existingCredentials) {
+          console.log('[App] No existing credentials found, creating temporary credentials...')
+          const tempCredentials: UserCredentials = {
+            username: 'Temporary User',
+            passwordHash: { hash: 'temp', salt: 'temp', iterations: 100000 }
+          }
+          await storage.set('user-credentials', tempCredentials)
+          console.log('[App] ✓ Temporary credentials created')
+        } else {
+          console.log('[App] ✓ Existing credentials found and preserved')
+          console.log('[App] Has API key:', !!existingCredentials.encryptedApiKey)
+        }
         
         const sampleWorkspace = generateSampleData()
         sampleWorkspace.ownerId = mockUser.userId
