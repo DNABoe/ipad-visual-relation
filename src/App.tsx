@@ -7,11 +7,6 @@
  * without a backend server. See the initializeAuth() function
  * below for the bypass implementation.
  * 
- * BYPASS CREDENTIALS:
- * - Username: admin
- * - Password: admin123
- * - Workspace Password: admin123
- * 
  * WHAT'S BYPASSED:
  * - User login/authentication
  * - Backend API calls for user management
@@ -23,10 +18,7 @@
  * - All core application functionality
  * 
  * TO RESTORE FULL AUTHENTICATION:
- * 1. Delete the entire bypass block in initializeAuth() 
- *    (marked with "TEMPORARY BYPASS" comments)
- * 2. Restore the original authentication flow
- * 3. Remove this comment block
+ * See the detailed comments in the initializeAuth() function
  * 
  * ============================================================
  */
