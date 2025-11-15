@@ -12,8 +12,8 @@ interface FirstTimeSetupProps {
 
 export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
   const [username, setUsername] = useState('admin')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [password, setPassword] = useState('admin')
+  const [confirmPassword, setConfirmPassword] = useState('admin')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
@@ -38,8 +38,8 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
       return
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+    if (password.length < 5) {
+      setError('Password must be at least 5 characters')
       return
     }
 
@@ -76,6 +76,13 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
           <CardDescription>Create your administrator account to get started</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 rounded-lg bg-accent/10 border border-accent/20 p-3">
+            <p className="text-xs text-muted-foreground">
+              <strong className="text-foreground">Default credentials:</strong> Username: admin, Password: admin
+              <br />
+              You can use these defaults or change them to something more secure.
+            </p>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Administrator Username</Label>
@@ -102,7 +109,7 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter password (min 8 characters)"
+                  placeholder="Enter password (min 5 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"
@@ -155,7 +162,7 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
             <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
               <p className="text-xs font-medium text-primary mb-2">🔒 Password Security Tips</p>
               <ul className="text-xs text-muted-foreground space-y-1 pl-4">
-                <li>• Use at least 8 characters (12+ recommended)</li>
+                <li>• Use at least 5 characters (8+ recommended)</li>
                 <li>• Include uppercase, lowercase, numbers, and symbols</li>
                 <li>• Avoid common words and personal information</li>
                 <li>• This password cannot be recovered if lost</li>
