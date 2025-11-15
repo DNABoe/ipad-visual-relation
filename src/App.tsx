@@ -92,7 +92,7 @@ function App() {
         
         setCurrentUser(mockUser)
         
-        // BYPASS: Set up credentials with admin/admin123
+        // BYPASS: Set up credentials with admin/admin123 and check for workspace data
         console.log('[App] Loading existing user credentials from storage...')
         const { storage } = await import('./lib/storage')
         const existingCredentials = await storage.get<UserCredentials>('user-credentials')
@@ -115,29 +115,54 @@ function App() {
           // DO NOT overwrite or modify existing credentials - they contain the user's API key
         }
         
-        // BYPASS: Load sample workspace data for testing
-        const sampleWorkspace = generateSampleData()
-        sampleWorkspace.ownerId = mockUser.userId
-        sampleWorkspace.users = [{
-          userId: mockUser.userId,
-          username: mockUser.name,
-          email: mockUser.email,
-          role: mockUser.role,
-          addedAt: Date.now(),
-          addedBy: 'system',
-          status: 'active' as const,
-          loginCount: 1,
-          canInvestigate: true
-        }]
+        // BYPASS: Check if there's existing workspace data, otherwise load sample data
+        const existingWorkspace = await storage.get<Workspace>('bypass-workspace')
+        const existingFileName = await storage.get<string>('bypass-filename')
         
-        setInitialWorkspace(sampleWorkspace)
-        setFileName('Sample Network')
+        let workspaceToLoad: Workspace
+        let fileNameToUse: string
+        
+        if (existingWorkspace && existingFileName) {
+          // Load existing workspace from previous session
+          console.log('[App] ✓ Loading existing workspace from storage...')
+          workspaceToLoad = existingWorkspace
+          fileNameToUse = existingFileName
+          toast.success('Workspace restored from previous session')
+        } else {
+          // First time - load sample data
+          console.log('[App] No existing workspace found, loading sample data...')
+          const sampleWorkspace = generateSampleData()
+          sampleWorkspace.ownerId = mockUser.userId
+          sampleWorkspace.users = [{
+            userId: mockUser.userId,
+            username: mockUser.name,
+            email: mockUser.email,
+            role: mockUser.role,
+            addedAt: Date.now(),
+            addedBy: 'system',
+            status: 'active' as const,
+            loginCount: 1,
+            canInvestigate: true
+          }]
+          
+          workspaceToLoad = sampleWorkspace
+          fileNameToUse = 'Sample Network'
+          
+          // Save the initial sample data
+          await storage.set('bypass-workspace', workspaceToLoad)
+          await storage.set('bypass-filename', fileNameToUse)
+          
+          console.log('[App] ✓ Sample data loaded and saved')
+          toast.success('Loaded with sample data - Login: admin/admin123')
+        }
+        
+        setInitialWorkspace(workspaceToLoad)
+        setFileName(fileNameToUse)
         setPassword('admin123') // BYPASS: Use admin123 as the workspace password
         setShowFileManager(false)
         
-        console.log('[App] ========== SAMPLE DATA LOADED ==========')
-        console.log('[App] 📁 Workspace password set to: admin123')
-        toast.success('Loaded with sample data - Login: admin/admin123')
+        console.log('[App] ========== WORKSPACE READY ==========')
+        console.log('[App] 📁 Workspace:', fileNameToUse)
         
         // ============================================================
         // END OF TEMPORARY BYPASS BLOCK

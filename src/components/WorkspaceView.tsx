@@ -100,6 +100,23 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
     syncWorkspaceToGlobalStore()
   }, [controller.workspace, setAllWorkspaces])
 
+  // BYPASS MODE: Auto-save workspace changes to storage to persist between reloads
+  useEffect(() => {
+    const saveWorkspaceToBypassStorage = async () => {
+      try {
+        await storage.set('bypass-workspace', controller.workspace)
+        await storage.set('bypass-filename', fileName)
+        console.log('[WorkspaceView] Auto-saved workspace to bypass storage')
+      } catch (error) {
+        console.error('[WorkspaceView] Failed to auto-save workspace:', error)
+      }
+    }
+
+    // Debounce saves to avoid excessive writes
+    const timeoutId = setTimeout(saveWorkspaceToBypassStorage, 1000)
+    return () => clearTimeout(timeoutId)
+  }, [controller.workspace, fileName])
+
   useEffect(() => {
     let mounted = true
     
