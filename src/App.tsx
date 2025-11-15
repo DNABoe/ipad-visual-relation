@@ -7,6 +7,11 @@
  * without a backend server. See the initializeAuth() function
  * below for the bypass implementation.
  * 
+ * BYPASS CREDENTIALS:
+ * - Username: admin
+ * - Password: admin123
+ * - Workspace Password: admin123
+ * 
  * WHAT'S BYPASSED:
  * - User login/authentication
  * - Backend API calls for user management
@@ -18,7 +23,10 @@
  * - All core application functionality
  * 
  * TO RESTORE FULL AUTHENTICATION:
- * See the detailed comments in the initializeAuth() function
+ * 1. Delete the entire bypass block in initializeAuth() 
+ *    (marked with "TEMPORARY BYPASS" comments)
+ * 2. Restore the original authentication flow
+ * 3. Remove this comment block
  * 
  * ============================================================
  */
@@ -59,20 +67,32 @@ function App() {
         // requiring proper authentication. It preserves any existing user
         // credentials (including API keys) that were set up previously.
         // 
+        // BYPASS CREDENTIALS:
+        // Username: admin
+        // Password: admin123
+        // 
         // TO RESTORE NORMAL AUTHENTICATION:
-        // 1. Delete this entire bypass block (lines starting with "TEMPORARY BYPASS")
-        // 2. Uncomment the original authentication flow below
+        // 1. Delete this entire bypass block (from "TEMPORARY BYPASS" to "END OF TEMPORARY BYPASS")
+        // 2. Uncomment the original authentication flow (if it exists below)
+        // 3. Remove the bypass warning comment at the top of this file
         // ============================================================
         
         console.log('[App] ========== BYPASSING LOGIN - LOADING SAMPLE DATA ==========')
+        console.log('[App] 🔓 BYPASS MODE: Using admin/admin123 credentials')
         
-        // Create a temporary mock user with admin privileges
+        // BYPASS: Import auth utilities to create proper password hash
+        const { hashPassword } = await import('./lib/auth')
+        
+        // BYPASS: Create admin password hash for "admin123"
+        const adminPasswordHash = await hashPassword('admin123')
+        
+        // BYPASS: Create a temporary mock user with admin privileges
         const mockUser: UserRegistry.RegisteredUser = {
           userId: 'temp-user-123',
-          email: 'temp@user.com',
-          name: 'Temporary User',
+          email: 'admin@temp.com',
+          name: 'Administrator',
           role: 'admin',
-          passwordHash: { hash: 'temp', salt: 'temp', iterations: 100000 },
+          passwordHash: adminPasswordHash,
           createdAt: Date.now(),
           loginCount: 1,
           canInvestigate: true
@@ -80,30 +100,30 @@ function App() {
         
         setCurrentUser(mockUser)
         
-        // IMPORTANT: Preserve existing credentials including API keys
+        // BYPASS: Set up credentials with admin/admin123
         console.log('[App] Loading existing user credentials from storage...')
         const { storage } = await import('./lib/storage')
         const existingCredentials = await storage.get<UserCredentials>('user-credentials')
         
         if (!existingCredentials) {
-          // Only create temporary credentials if none exist
-          console.log('[App] No existing credentials found, creating temporary credentials...')
-          const tempCredentials: UserCredentials = {
-            username: 'Temporary User',
-            passwordHash: { hash: 'temp', salt: 'temp', iterations: 100000 }
+          // BYPASS: Create credentials with admin username and admin123 password
+          console.log('[App] No existing credentials found, creating admin credentials...')
+          const adminCredentials: UserCredentials = {
+            username: 'admin',
+            passwordHash: adminPasswordHash
             // Note: No API key here - user must add it in Settings
           }
-          await storage.set('user-credentials', tempCredentials)
-          console.log('[App] ✓ Temporary credentials created')
+          await storage.set('user-credentials', adminCredentials)
+          console.log('[App] ✓ Admin credentials created (username: admin, password: admin123)')
         } else {
-          // Preserve existing credentials completely (including encrypted API key)
+          // BYPASS: Preserve existing credentials completely (including encrypted API key)
           console.log('[App] ✓ Existing credentials found and preserved')
           console.log('[App] Username:', existingCredentials.username)
           console.log('[App] Has API key:', !!existingCredentials.encryptedApiKey)
           // DO NOT overwrite or modify existing credentials - they contain the user's API key
         }
         
-        // Load sample workspace data for testing
+        // BYPASS: Load sample workspace data for testing
         const sampleWorkspace = generateSampleData()
         sampleWorkspace.ownerId = mockUser.userId
         sampleWorkspace.users = [{
@@ -120,11 +140,12 @@ function App() {
         
         setInitialWorkspace(sampleWorkspace)
         setFileName('Sample Network')
-        setPassword('temp-password')
+        setPassword('admin123') // BYPASS: Use admin123 as the workspace password
         setShowFileManager(false)
         
         console.log('[App] ========== SAMPLE DATA LOADED ==========')
-        toast.success('Loaded with sample data - temporary session')
+        console.log('[App] 📁 Workspace password set to: admin123')
+        toast.success('Loaded with sample data - Login: admin/admin123')
         
         // ============================================================
         // END OF TEMPORARY BYPASS BLOCK
