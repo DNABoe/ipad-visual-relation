@@ -8,6 +8,7 @@ import { InviteAcceptView } from './components/InviteAcceptView'
 import { isCloudAPIAvailable } from './lib/cloudAPI'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
+import { generateSampleData } from './lib/sampleData'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
@@ -24,46 +25,42 @@ function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('[App] ========== INITIALIZATION START ==========')
-        console.log('[App] Checking cloud API availability...')
+        console.log('[App] ========== BYPASSING LOGIN - LOADING SAMPLE DATA ==========')
         
-        const apiAvailable = await isCloudAPIAvailable()
-        console.log('[App] Cloud API available:', apiAvailable)
-        
-        if (!apiAvailable) {
-          console.error('[App] ❌ Cloud API is not available at', window.location.origin + '/api')
-          toast.error('Unable to connect to server. Please check your deployment.')
-          setIsLoadingAuth(false)
-          return
+        const mockUser: UserRegistry.RegisteredUser = {
+          userId: 'temp-user-123',
+          email: 'temp@user.com',
+          name: 'Temporary User',
+          role: 'admin',
+          passwordHash: { hash: 'temp', salt: 'temp', iterations: 100000 },
+          createdAt: Date.now(),
+          loginCount: 1,
+          canInvestigate: true
         }
         
-        console.log('[App] ✓ Cloud API is ready')
+        setCurrentUser(mockUser)
         
-        const urlParams = new URLSearchParams(window.location.search)
-        const token = urlParams.get('invite')
-        const email = urlParams.get('email')
+        const sampleWorkspace = generateSampleData()
+        sampleWorkspace.ownerId = mockUser.userId
+        sampleWorkspace.users = [{
+          userId: mockUser.userId,
+          username: mockUser.name,
+          email: mockUser.email,
+          role: mockUser.role,
+          addedAt: Date.now(),
+          addedBy: 'system',
+          status: 'active' as const,
+          loginCount: 1,
+          canInvestigate: true
+        }]
         
-        if (token) {
-          console.log('[App] Invite link detected:', { token: token.substring(0, 8) + '...', email })
-          setInviteToken(token)
-          setInviteEmail(email)
-          setIsLoadingAuth(false)
-          return
-        }
+        setInitialWorkspace(sampleWorkspace)
+        setFileName('Sample Network')
+        setPassword('temp-password')
+        setShowFileManager(false)
         
-        console.log('[App] Checking if first time setup...')
-        const firstTime = await UserRegistry.isFirstTimeSetup()
-        console.log('[App] Is first time:', firstTime)
-        setIsFirstTime(firstTime)
-        
-        if (!firstTime) {
-          console.log('[App] Checking for current user session...')
-          const user = await UserRegistry.getCurrentUser()
-          console.log('[App] Current user:', user ? user.email : 'none')
-          setCurrentUser(user || null)
-        }
-        
-        console.log('[App] ========== INITIALIZATION COMPLETE ==========')
+        console.log('[App] ========== SAMPLE DATA LOADED ==========')
+        toast.success('Loaded with sample data - temporary session')
       } catch (error) {
         console.error('[App] ❌ Failed to initialize:', error)
         toast.error('Failed to initialize application. Please refresh the page.')
