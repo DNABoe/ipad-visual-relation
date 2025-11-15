@@ -1,3 +1,28 @@
+/*
+ * ============================================================
+ * AUTHENTICATION BYPASS MODE - TEMPORARY FOR TESTING
+ * ============================================================
+ * 
+ * This file is currently running in BYPASS MODE to allow testing
+ * without a backend server. See the initializeAuth() function
+ * below for the bypass implementation.
+ * 
+ * WHAT'S BYPASSED:
+ * - User login/authentication
+ * - Backend API calls for user management
+ * - First-time setup flow
+ * 
+ * WHAT'S PRESERVED:
+ * - User credentials in storage (including API keys)
+ * - Settings and preferences
+ * - All core application functionality
+ * 
+ * TO RESTORE FULL AUTHENTICATION:
+ * See the detailed comments in the initializeAuth() function
+ * 
+ * ============================================================
+ */
+
 import { useState, useCallback, useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
 import { WorkspaceView } from './components/WorkspaceView'
@@ -26,8 +51,22 @@ function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // ============================================================
+        // TEMPORARY BYPASS FOR TESTING WITHOUT BACKEND
+        // ============================================================
+        // TODO: Remove this entire bypass block when backend is ready
+        // This section creates a mock user and loads sample data without
+        // requiring proper authentication. It preserves any existing user
+        // credentials (including API keys) that were set up previously.
+        // 
+        // TO RESTORE NORMAL AUTHENTICATION:
+        // 1. Delete this entire bypass block (lines starting with "TEMPORARY BYPASS")
+        // 2. Uncomment the original authentication flow below
+        // ============================================================
+        
         console.log('[App] ========== BYPASSING LOGIN - LOADING SAMPLE DATA ==========')
         
+        // Create a temporary mock user with admin privileges
         const mockUser: UserRegistry.RegisteredUser = {
           userId: 'temp-user-123',
           email: 'temp@user.com',
@@ -41,23 +80,30 @@ function App() {
         
         setCurrentUser(mockUser)
         
+        // IMPORTANT: Preserve existing credentials including API keys
         console.log('[App] Loading existing user credentials from storage...')
         const { storage } = await import('./lib/storage')
         const existingCredentials = await storage.get<UserCredentials>('user-credentials')
         
         if (!existingCredentials) {
+          // Only create temporary credentials if none exist
           console.log('[App] No existing credentials found, creating temporary credentials...')
           const tempCredentials: UserCredentials = {
             username: 'Temporary User',
             passwordHash: { hash: 'temp', salt: 'temp', iterations: 100000 }
+            // Note: No API key here - user must add it in Settings
           }
           await storage.set('user-credentials', tempCredentials)
           console.log('[App] ✓ Temporary credentials created')
         } else {
+          // Preserve existing credentials completely (including encrypted API key)
           console.log('[App] ✓ Existing credentials found and preserved')
+          console.log('[App] Username:', existingCredentials.username)
           console.log('[App] Has API key:', !!existingCredentials.encryptedApiKey)
+          // DO NOT overwrite or modify existing credentials - they contain the user's API key
         }
         
+        // Load sample workspace data for testing
         const sampleWorkspace = generateSampleData()
         sampleWorkspace.ownerId = mockUser.userId
         sampleWorkspace.users = [{
@@ -79,6 +125,11 @@ function App() {
         
         console.log('[App] ========== SAMPLE DATA LOADED ==========')
         toast.success('Loaded with sample data - temporary session')
+        
+        // ============================================================
+        // END OF TEMPORARY BYPASS BLOCK
+        // ============================================================
+        
       } catch (error) {
         console.error('[App] ❌ Failed to initialize:', error)
         toast.error('Failed to initialize application. Please refresh the page.')
