@@ -1,12 +1,36 @@
-# 🚀 Quick Start - Deploy RelEye in 30 Minutes
+# 🚀 Quick Start - Deploy RelEye
 
-## Overview
+## 📖 NEW: Not sure which guide to use?
+**👉 See: [DEPLOYMENT_INDEX.md](DEPLOYMENT_INDEX.md) - Complete guide to all deployment options**
+
+---
+
+## ⚡ Easiest Method: cPanel Only (Recommended!)
+
+**If you have Spaceship.com hosting with cPanel, use this method:**
+
+👉 **Follow: [CPANEL_QUICK_START.md](CPANEL_QUICK_START.md)**
+
+This deploys everything (frontend + backend) on Spaceship.com only:
+- ✅ No DigitalOcean needed
+- ✅ No command line required for deployment
+- ✅ Everything in one place
+- ✅ Saves $60/year
+- ✅ Takes ~20 minutes
+
+---
+
+## Alternative: DigitalOcean Backend Method
+
+If you prefer a separate backend server:
+
+### Overview
 - ✅ Authentication bypass REMOVED
 - ✅ MySQL backend configured for your database
-- ✅ Default admin: `admin` / `admin` (change immediately!)
+- ✅ Default admin: `admin` / `admin123` (change immediately!)
 - ✅ Ready for production deployment
 
-## Your Database Info
+### Your Database Info
 - **Host**: releye.boestad.com
 - **Database**: lpmjclyqtt_releye
 - **User**: lpmjclyqtt_releye_user
@@ -14,7 +38,7 @@
 
 ---
 
-## 🎯 Quick Deployment Steps
+## 🎯 Deployment Steps (DigitalOcean Method)
 
 ### 1️⃣ Database Setup (5 min)
 ```
@@ -77,7 +101,13 @@ Backend API:
 - `auto-deploy-backend.sh` - Automated setup script
 
 ### Documentation
-- `SPACESHIP_DEPLOYMENT.md` ⭐ **Start here for detailed guide**
+
+**🎯 RECOMMENDED FOR CPANEL USERS:**
+- `CPANEL_QUICK_START.md` ⭐ **EASIEST - Deploy everything via cPanel only**
+- `SPACESHIP_ONLY_DEPLOYMENT.md` ⭐ **Same as above with technical details**
+
+**For DigitalOcean backend:**
+- `SPACESHIP_DEPLOYMENT.md` - Detailed guide using DigitalOcean + Spaceship
 - `DEPLOYMENT_SUMMARY.md` - Complete overview
 - `API_URL_CONFIGURATION.md` - API endpoint setup
 - `RESTORE_AUTHENTICATION.md` - Architecture details

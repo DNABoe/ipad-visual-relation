@@ -100,18 +100,23 @@ This guide shows you how to deploy RelEye entirely on Spaceship.com hosting with
 
 ---
 
-### 3. Upload Frontend Files (5 minutes)
+### 3. Build & Upload Frontend Files (5 minutes)
 
-1. **Build the frontend**
+1. **Build the frontend ON YOUR LOCAL COMPUTER**
+   - Open terminal/command prompt on your computer (not on Spaceship!)
+   - Navigate to your RelEye project folder
+   - Run:
    ```bash
    npm run build
    ```
+   - This creates a `dist/` folder with all the built files
 
-2. **Upload dist files**
-   - Upload contents of `dist/` folder to `public_html/`
+2. **Upload the built files to Spaceship**
+   - Using File Manager or FTP, upload the **contents** of the `dist/` folder to `public_html/`
+   - Important: Upload the files **inside** dist/, not the dist folder itself
    - Files should include:
      - `index.html`
-     - `assets/` folder
+     - `assets/` folder (with all JS/CSS files)
      - `favicon.svg`
 
 3. **Verify file structure**
@@ -236,9 +241,21 @@ public_html/
 
 ## Next Steps
 
-1. Follow this guide instead of SPACESHIP_DEPLOYMENT.md
-2. Build the frontend: `npm run build`
-3. Upload PHP backend to `/api`
-4. Upload frontend files to root
-5. Test at https://releye.boestad.com
-6. Change admin password!
+1. **On your local computer:**
+   - Run `npm run build` to create the `dist/` folder
+   
+2. **On Spaceship cPanel:**
+   - Setup MySQL database (Step 1)
+   - Upload PHP backend files to `/api` (Step 2)
+   - Upload built frontend files from `dist/` to root (Step 3)
+   
+3. **Test & Secure:**
+   - Visit https://releye.boestad.com
+   - Login with admin/admin123
+   - **Immediately change the admin password!**
+
+## Important Notes
+
+- ⚠️ **You CANNOT run `npm run build` on Spaceship** - it must be done on your local computer
+- 💾 After uploading, keep your local project folder as backup
+- 🔄 To update: rebuild locally, then re-upload the `dist/` contents
