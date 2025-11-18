@@ -151,7 +151,7 @@ It will **NOT** work on GitHub Pages or other static hosting - you'll get 404 er
    - ❌ Don't test on: GitHub Pages or localhost - these won't work!
 
 2. **Test First-Time Setup**
-   - Visit: `https://releye.boestad.com/api/auth/check-first-time`
+   - Visit: `https://releye.boestad.com/api/auth/first-time`
    - Should return: `{"success":true,"data":{"isFirstTime":true}}`
 
 3. **Test Frontend**
