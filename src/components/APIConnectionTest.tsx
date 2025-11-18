@@ -3,16 +3,18 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { CheckCircle, XCircle, Warning, Play, Copy } from '@phosphor-icons/react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { CheckCircle, XCircle, Warning, Play, Copy, Info } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 interface TestResult {
   name: string
-  status: 'pending' | 'success' | 'error' | 'warning'
+  status: 'pending' | 'success' | 'error' | 'warning' | 'info'
   message: string
   details?: string
   timestamp?: number
   duration?: number
+  recommendation?: string
 }
 
 export function APIConnectionTest() {
@@ -29,6 +31,56 @@ export function APIConnectionTest() {
     setResults(prev => [...prev, { ...result, timestamp: Date.now() }])
   }
 
+  const testDNSConfiguration = async (): Promise<TestResult> => {
+    const startTime = Date.now()
+    const currentHost = window.location.host
+    const currentOrigin = window.location.origin
+    const apiUrl = getAPIBaseURL()
+    
+    const details = {
+      currentHost,
+      currentOrigin,
+      apiBaseURL: apiUrl,
+      expectedBehavior: 'API should be available at /api endpoint',
+      dnsNote: 'If DNS points to GitHub Pages, backend API will not be accessible',
+      recommendation: 'Backend API needs separate hosting (e.g., Railway, Render, Vercel, etc.)'
+    }
+
+    if (currentHost.includes('localhost')) {
+      return {
+        name: 'DNS Configuration',
+        status: 'info',
+        message: 'Running on localhost - API expected at localhost:3000',
+        details: JSON.stringify(details, null, 2),
+        duration: Date.now() - startTime,
+        recommendation: 'Ensure backend API server is running on port 3000'
+      }
+    }
+
+    if (currentHost.includes('github.io') || currentHost.includes('releye.boestad.com')) {
+      return {
+        name: 'DNS Configuration',
+        status: 'warning',
+        message: 'DNS points to static hosting (GitHub Pages)',
+        details: JSON.stringify({
+          ...details,
+          issue: 'GitHub Pages only serves static files, cannot host backend API',
+          solution: 'Backend API must be hosted separately and DNS updated'
+        }, null, 2),
+        duration: Date.now() - startTime,
+        recommendation: 'Deploy backend to a service like Railway, Render, or Vercel and update CNAME'
+      }
+    }
+
+    return {
+      name: 'DNS Configuration',
+      status: 'info',
+      message: `Running on ${currentHost}`,
+      details: JSON.stringify(details, null, 2),
+      duration: Date.now() - startTime
+    }
+  }
+
   const testBasicConnectivity = async (): Promise<TestResult> => {
     const startTime = Date.now()
     const apiUrl = getAPIBaseURL()
@@ -41,6 +93,19 @@ export function APIConnectionTest() {
       })
 
       const duration = Date.now() - startTime
+      const contentType = response.headers.get('content-type')
+      
+      if (!contentType?.includes('application/json')) {
+        return {
+          name: 'Basic Connectivity',
+          status: 'error',
+          message: `Server returned ${contentType} instead of JSON`,
+          details: `This suggests the API endpoint is not available. Expected JSON response but got ${contentType}.\n\nResponse status: ${response.status}`,
+          duration,
+          recommendation: 'Verify backend API is deployed and accessible at this URL'
+        }
+      }
+
       const data = await response.json()
 
       if (response.ok && data.success) {
@@ -57,17 +122,72 @@ export function APIConnectionTest() {
           status: 'error',
           message: `Server responded with ${response.status}: ${response.statusText}`,
           details: JSON.stringify(data, null, 2),
-          duration
+          duration,
+          recommendation: 'Check backend API logs for errors'
         }
       }
     } catch (error) {
       const duration = Date.now() - startTime
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      
+      let recommendation = 'Verify backend API is running and accessible'
+      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+        recommendation = 'API server is not responding. Check if backend is deployed and DNS is configured correctly.'
+      } else if (errorMsg.includes('CORS')) {
+        recommendation = 'CORS policy is blocking the request. Check backend CORS configuration.'
+      }
+      
       return {
         name: 'Basic Connectivity',
         status: 'error',
         message: 'Failed to connect to API server',
-        details: error instanceof Error ? error.message : String(error),
+        details: `Error: ${errorMsg}\n\nAttempted URL: ${apiUrl}/health\n\nThis usually means:\n1. Backend API is not running\n2. DNS is pointing to wrong server\n3. API endpoint path is incorrect`,
+        duration,
+        recommendation
+      }
+    }
+  }
+
+  const testEndpointAvailability = async (): Promise<TestResult> => {
+    const startTime = Date.now()
+    const apiUrl = getAPIBaseURL()
+    
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const duration = Date.now() - startTime
+      const contentType = response.headers.get('content-type') || 'none'
+
+      if (response.status === 404 && contentType.includes('text/html')) {
+        return {
+          name: 'API Endpoint Check',
+          status: 'error',
+          message: 'API endpoint returns HTML 404 page',
+          details: `The /api path returns an HTML page, not a JSON API response.\n\nThis confirms the backend API is not deployed at this location.\n\nContent-Type: ${contentType}\nStatus: ${response.status}`,
+          duration,
+          recommendation: 'Deploy backend API server or update DNS to point to the correct backend location'
+        }
+      }
+
+      return {
+        name: 'API Endpoint Check',
+        status: 'info',
+        message: `Endpoint returned ${response.status} (${contentType})`,
+        details: `Status: ${response.status}\nContent-Type: ${contentType}`,
         duration
+      }
+    } catch (error) {
+      const duration = Date.now() - startTime
+      return {
+        name: 'API Endpoint Check',
+        status: 'error',
+        message: 'Cannot reach API endpoint',
+        details: error instanceof Error ? error.message : String(error),
+        duration,
+        recommendation: 'Backend API is not accessible at this URL'
       }
     }
   }
@@ -259,12 +379,14 @@ export function APIConnectionTest() {
 
     addResult({
       name: 'Environment Info',
-      status: 'success',
+      status: 'info',
       message: `Testing API at: ${getAPIBaseURL()}`,
-      details: `Origin: ${window.location.origin}\nProtocol: ${window.location.protocol}\nHost: ${window.location.host}`
+      details: `Origin: ${window.location.origin}\nProtocol: ${window.location.protocol}\nHost: ${window.location.host}\nPathname: ${window.location.pathname}`
     })
 
     const tests = [
+      testDNSConfiguration,
+      testEndpointAvailability,
       testBasicConnectivity,
       testCORS,
       testFirstTimeSetup,
@@ -309,17 +431,20 @@ export function APIConnectionTest() {
         return <XCircle weight="fill" className="text-destructive" />
       case 'warning':
         return <Warning weight="fill" className="text-warning" />
+      case 'info':
+        return <Info weight="fill" className="text-primary" />
       default:
         return <Warning className="text-muted-foreground" />
     }
   }
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'destructive' | 'secondary'> = {
+    const variants: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
       success: 'default',
       error: 'destructive',
       warning: 'secondary',
-      pending: 'secondary'
+      pending: 'secondary',
+      info: 'outline'
     }
     return variants[status] || 'secondary'
   }
@@ -355,6 +480,23 @@ export function APIConnectionTest() {
           </div>
         </div>
 
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>DNS Configuration Issue</AlertTitle>
+          <AlertDescription>
+            Your domain <strong>releye.boestad.com</strong> is currently configured with a CNAME record pointing to <strong>dnaboe.github.io</strong> (GitHub Pages).
+            <br /><br />
+            <strong>Problem:</strong> GitHub Pages only serves static files and cannot host your backend API.
+            <br /><br />
+            <strong>Solution:</strong> You need to either:
+            <ul className="list-disc ml-6 mt-2 space-y-1">
+              <li>Deploy your backend API to a service (Railway, Render, Vercel, Heroku, etc.)</li>
+              <li>Update your DNS to point to that backend service</li>
+              <li>Or use a subdomain like <code>api.boestad.com</code> for the backend</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+
         <Card>
           <CardHeader>
             <CardTitle>Current Configuration</CardTitle>
@@ -374,6 +516,10 @@ export function APIConnectionTest() {
                 <span className="text-muted-foreground">Environment:</span>
                 <span>{window.location.origin.includes('localhost') ? 'Development' : 'Production'}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">DNS Target:</span>
+                <span className="text-warning">dnaboe.github.io (GitHub Pages)</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -385,7 +531,8 @@ export function APIConnectionTest() {
               <CardDescription>
                 {results.filter(r => r.status === 'success').length} passed, {' '}
                 {results.filter(r => r.status === 'error').length} failed, {' '}
-                {results.filter(r => r.status === 'warning').length} warnings
+                {results.filter(r => r.status === 'warning').length} warnings, {' '}
+                {results.filter(r => r.status === 'info').length} info
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -410,6 +557,15 @@ export function APIConnectionTest() {
                         {result.status}
                       </Badge>
                     </div>
+                    {result.recommendation && (
+                      <div className="ml-9">
+                        <Alert className="bg-muted/50">
+                          <AlertDescription className="text-sm">
+                            <strong>Recommendation:</strong> {result.recommendation}
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
                     {result.details && (
                       <div className="ml-9 mt-2">
                         <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto max-h-40">
@@ -431,6 +587,49 @@ export function APIConnectionTest() {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Next Steps</CardTitle>
+            <CardDescription>How to fix your backend API connection</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-semibold mb-2">Option 1: Deploy Backend to Separate Service</h4>
+                <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
+                  <li>Deploy your backend API to Railway, Render, Vercel, or similar</li>
+                  <li>Get the deployment URL (e.g., <code>your-api.railway.app</code>)</li>
+                  <li>Update your frontend code to point to that URL</li>
+                  <li>Keep <code>releye.boestad.com</code> pointing to GitHub Pages for frontend</li>
+                </ol>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h4 className="font-semibold mb-2">Option 2: Use Subdomain for API</h4>
+                <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
+                  <li>Create a new subdomain: <code>api.boestad.com</code></li>
+                  <li>Point that subdomain to your backend server</li>
+                  <li>Update CORS settings to allow requests from <code>releye.boestad.com</code></li>
+                  <li>Update frontend to use <code>https://api.boestad.com</code></li>
+                </ol>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h4 className="font-semibold mb-2">Option 3: Full Stack Hosting</h4>
+                <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
+                  <li>Deploy both frontend and backend to same service (e.g., Vercel, Render)</li>
+                  <li>Update DNS CNAME to point to that service instead of GitHub Pages</li>
+                  <li>Service will handle routing /api to backend and / to frontend</li>
+                </ol>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
