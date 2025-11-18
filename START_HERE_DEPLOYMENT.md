@@ -1,5 +1,15 @@
 # 🚀 START HERE: Deploy RelEye Backend to releye.boestad.com
 
+## ⚠️ GETTING 404 ERROR ON API?
+
+**Stop!** If you're testing the API and getting a GitHub Pages 404 error, read this first:
+
+👉 **[QUICK_FIX_404.md - Read This First!](QUICK_FIX_404.md)** 👈
+
+**TL;DR:** Don't test the API on GitHub Pages! Test it on `https://releye.boestad.com/api/health`
+
+---
+
 ## ⚠️ CRITICAL: Backend Deployment Required
 
 If you're seeing **"Setup failed to set key"** or **"Unable to connect to server"** errors, it's because the backend API is not yet deployed to your server.
@@ -80,12 +90,20 @@ scp -r dist/* user@releye.boestad.com:/var/www/releye/dist/
 
 ## 📚 Documentation Index
 
+### Troubleshooting Guides
+| Document | Purpose |
+|----------|---------|
+| **[QUICK_FIX_404.md](QUICK_FIX_404.md)** | Fix 404 errors when testing API |
+| **[WHERE_TO_TEST.md](WHERE_TO_TEST.md)** | Understand where backend lives |
+| **[BACKEND_API_TESTING.md](BACKEND_API_TESTING.md)** | Complete testing guide |
+
+### Deployment Guides
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
-| **[QUICK_DEPLOY.md](QUICK_DEPLOY.md)** | Fast deployment guide | Start here for quickest setup |
-| **[DEPLOYMENT_README.md](DEPLOYMENT_README.md)** | Complete reference | Detailed instructions & troubleshooting |
-| **[DEPLOY_TO_RELEYE.md](DEPLOY_TO_RELEYE.md)** | Manual deployment | Step-by-step manual installation |
-| **[BACKEND_DEPLOYMENT_GUIDE.md](BACKEND_DEPLOYMENT_GUIDE.md)** | Original guide | Alternative detailed guide |
+| **[SPACESHIP_ONLY_DEPLOYMENT.md](SPACESHIP_ONLY_DEPLOYMENT.md)** | Deploy to Spaceship.com (cPanel) | Using shared hosting |
+| **[QUICK_DEPLOY.md](QUICK_DEPLOY.md)** | Fast VPS deployment | Using DigitalOcean/VPS |
+| **[DEPLOYMENT_README.md](DEPLOYMENT_README.md)** | Complete reference | Detailed instructions |
+| **[DEPLOY_TO_RELEYE.md](DEPLOY_TO_RELEYE.md)** | Manual deployment | Step-by-step manual install |
 
 ---
 

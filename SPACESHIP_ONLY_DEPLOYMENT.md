@@ -140,14 +140,26 @@ This guide shows you how to deploy RelEye entirely on Spaceship.com hosting with
 
 ### 4. Test Your Deployment
 
-1. **Test Backend API**
-   - Visit: `https://releye.boestad.com/api/health.php`
-   - Should return: `{"success":true,"data":{"status":"ok"}}`
+⚠️ **IMPORTANT: Test on Spaceship.com, NOT GitHub Pages!**
 
-2. **Test Frontend**
+The backend API **ONLY** works on `https://releye.boestad.com` (your Spaceship server with PHP).
+It will **NOT** work on GitHub Pages or other static hosting - you'll get 404 errors!
+
+1. **Test Backend API**
+   - Visit: `https://releye.boestad.com/api/health`
+   - Should return: `{"success":true,"data":{"status":"ok","timestamp":...}}`
+   - ❌ Don't test on: GitHub Pages or localhost - these won't work!
+
+2. **Test First-Time Setup**
+   - Visit: `https://releye.boestad.com/api/auth/check-first-time`
+   - Should return: `{"success":true,"data":{"isFirstTime":true}}`
+
+3. **Test Frontend**
    - Visit: `https://releye.boestad.com`
    - Should see login screen
    - Try logging in with `admin` / `admin123`
+
+**Troubleshooting?** See [BACKEND_API_TESTING.md](BACKEND_API_TESTING.md) for detailed testing guide.
 
 ---
 
