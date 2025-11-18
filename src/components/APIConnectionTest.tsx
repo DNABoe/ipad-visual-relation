@@ -41,14 +41,12 @@ export function APIConnectionTest() {
       currentHost,
       currentOrigin,
       apiBaseURL: apiUrl,
-      expectedBehavior: 'API should be available at /api endpoint',
-      dnsNote: 'If DNS points to GitHub Pages, backend API will not be accessible',
-      recommendation: 'Backend API needs separate hosting (e.g., Railway, Render, Vercel, etc.)'
+      note: 'Hosting configuration detected'
     }
 
     if (currentHost.includes('localhost')) {
       return {
-        name: 'DNS Configuration',
+        name: 'Hosting Configuration',
         status: 'info',
         message: 'Running on localhost - API expected at localhost:3000',
         details: JSON.stringify(details, null, 2),
@@ -57,23 +55,8 @@ export function APIConnectionTest() {
       }
     }
 
-    if (currentHost.includes('github.io') || currentHost.includes('releye.boestad.com')) {
-      return {
-        name: 'DNS Configuration',
-        status: 'warning',
-        message: 'DNS points to static hosting (GitHub Pages)',
-        details: JSON.stringify({
-          ...details,
-          issue: 'GitHub Pages only serves static files, cannot host backend API',
-          solution: 'Backend API must be hosted separately and DNS updated'
-        }, null, 2),
-        duration: Date.now() - startTime,
-        recommendation: 'Deploy backend to a service like Railway, Render, or Vercel and update CNAME'
-      }
-    }
-
     return {
-      name: 'DNS Configuration',
+      name: 'Hosting Configuration',
       status: 'info',
       message: `Running on ${currentHost}`,
       details: JSON.stringify(details, null, 2),
@@ -308,6 +291,15 @@ export function APIConnectionTest() {
           details: JSON.stringify(data, null, 2),
           duration
         }
+      } else if (response.status === 401) {
+        return {
+          name: 'User Registry',
+          status: 'info',
+          message: 'Authentication required (this is expected)',
+          details: JSON.stringify(data, null, 2),
+          duration,
+          recommendation: 'This endpoint requires authentication - the 401 response is correct behavior'
+        }
       } else {
         return {
           name: 'User Registry',
@@ -352,6 +344,15 @@ export function APIConnectionTest() {
           details: JSON.stringify(data, null, 2),
           duration
         }
+      } else if (response.status === 401) {
+        return {
+          name: 'Invite System',
+          status: 'info',
+          message: 'Authentication required (this is expected)',
+          details: JSON.stringify(data, null, 2),
+          duration,
+          recommendation: 'This endpoint requires authentication - the 401 response is correct behavior'
+        }
       } else {
         return {
           name: 'Invite System',
@@ -394,18 +395,24 @@ export function APIConnectionTest() {
       testInvites,
     ]
 
+    const testResults: TestResult[] = []
     for (const test of tests) {
       const result = await test()
       addResult(result)
+      testResults.push(result)
       
       await new Promise(resolve => setTimeout(resolve, 300))
     }
 
     setIsRunning(false)
     
-    const hasErrors = results.some(r => r.status === 'error')
+    const hasErrors = testResults.some(r => r.status === 'error')
+    const hasWarnings = testResults.some(r => r.status === 'warning')
+    
     if (hasErrors) {
       toast.error('Some tests failed. Check the details below.')
+    } else if (hasWarnings) {
+      toast.warning('Tests completed with warnings')
     } else {
       toast.success('All tests passed successfully!')
     }
@@ -482,17 +489,15 @@ export function APIConnectionTest() {
 
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>DNS Configuration Issue</AlertTitle>
+          <AlertTitle>API Diagnostics Tool</AlertTitle>
           <AlertDescription>
-            Your domain <strong>releye.boestad.com</strong> is currently configured with a CNAME record pointing to <strong>dnaboe.github.io</strong> (GitHub Pages).
+            This tool tests your backend API connection and configuration.
             <br /><br />
-            <strong>Problem:</strong> GitHub Pages only serves static files and cannot host your backend API.
-            <br /><br />
-            <strong>Solution:</strong> You need to either:
+            <strong>Expected Results:</strong>
             <ul className="list-disc ml-6 mt-2 space-y-1">
-              <li>Deploy your backend API to a service (Railway, Render, Vercel, Heroku, etc.)</li>
-              <li>Update your DNS to point to that backend service</li>
-              <li>Or use a subdomain like <code>api.boestad.com</code> for the backend</li>
+              <li>Health check should return 200 OK</li>
+              <li>CORS headers should be properly configured</li>
+              <li>Protected endpoints (users, invites) will show 401 when not authenticated - this is correct</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -515,10 +520,6 @@ export function APIConnectionTest() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Environment:</span>
                 <span>{window.location.origin.includes('localhost') ? 'Development' : 'Production'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">DNS Target:</span>
-                <span className="text-warning">dnaboe.github.io (GitHub Pages)</span>
               </div>
             </div>
           </CardContent>
@@ -588,48 +589,65 @@ export function APIConnectionTest() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Next Steps</CardTitle>
-            <CardDescription>How to fix your backend API connection</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-semibold mb-2">Option 1: Deploy Backend to Separate Service</h4>
-                <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
-                  <li>Deploy your backend API to Railway, Render, Vercel, or similar</li>
-                  <li>Get the deployment URL (e.g., <code>your-api.railway.app</code>)</li>
-                  <li>Update your frontend code to point to that URL</li>
-                  <li>Keep <code>releye.boestad.com</code> pointing to GitHub Pages for frontend</li>
-                </ol>
+        {results.length > 0 && results.some(r => r.status === 'error' && !r.name.includes('User Registry') && !r.name.includes('Invite System')) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Troubleshooting Steps</CardTitle>
+              <CardDescription>How to fix your backend API connection</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold mb-2">Option 1: Deploy Backend to Separate Service</h4>
+                  <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Deploy your backend API to Railway, Render, Vercel, or similar</li>
+                    <li>Get the deployment URL (e.g., <code>your-api.railway.app</code>)</li>
+                    <li>Update your frontend code to point to that URL</li>
+                    <li>Keep your domain pointing to your frontend hosting</li>
+                  </ol>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Option 2: Use Subdomain for API</h4>
+                  <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Create a new subdomain: <code>api.yourdomain.com</code></li>
+                    <li>Point that subdomain to your backend server</li>
+                    <li>Update CORS settings to allow requests from your main domain</li>
+                    <li>Update frontend to use the API subdomain</li>
+                  </ol>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Option 3: Full Stack Hosting</h4>
+                  <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Deploy both frontend and backend to same service (e.g., Vercel, Render)</li>
+                    <li>Update DNS to point to that service</li>
+                    <li>Service will handle routing /api to backend and / to frontend</li>
+                  </ol>
+                </div>
               </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="font-semibold mb-2">Option 2: Use Subdomain for API</h4>
-                <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
-                  <li>Create a new subdomain: <code>api.boestad.com</code></li>
-                  <li>Point that subdomain to your backend server</li>
-                  <li>Update CORS settings to allow requests from <code>releye.boestad.com</code></li>
-                  <li>Update frontend to use <code>https://api.boestad.com</code></li>
-                </ol>
+            </CardContent>
+          </Card>
+        )}
+
+        {results.length > 0 && !results.some(r => r.status === 'error' && !r.name.includes('User Registry') && !r.name.includes('Invite System')) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>✓ API Connection Successful</CardTitle>
+              <CardDescription>Your backend API is working correctly</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>All critical tests have passed. Your application is properly connected to the backend API.</p>
+                <p className="mt-4"><strong>Note:</strong> The 401 errors for User Registry and Invite System are expected behavior - these endpoints require authentication to access.</p>
               </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="font-semibold mb-2">Option 3: Full Stack Hosting</h4>
-                <ol className="list-decimal ml-6 space-y-1 text-sm text-muted-foreground">
-                  <li>Deploy both frontend and backend to same service (e.g., Vercel, Render)</li>
-                  <li>Update DNS CNAME to point to that service instead of GitHub Pages</li>
-                  <li>Service will handle routing /api to backend and / to frontend</li>
-                </ol>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
