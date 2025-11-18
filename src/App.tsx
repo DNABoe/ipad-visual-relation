@@ -5,6 +5,7 @@ import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
+import { APIConnectionTest } from './components/APIConnectionTest'
 import { isCloudAPIAvailable } from './lib/cloudAPI'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
@@ -13,6 +14,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [isFirstTime, setIsFirstTime] = useState(false)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
   
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
@@ -29,6 +31,14 @@ function App() {
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('invite')
         const email = urlParams.get('email')
+        const diagnostics = urlParams.get('diagnostics')
+        
+        if (diagnostics === 'true') {
+          console.log('[App] Diagnostics mode enabled')
+          setShowDiagnostics(true)
+          setIsLoadingAuth(false)
+          return
+        }
         
         if (token && email) {
           console.log('[App] Invite link detected')
@@ -260,6 +270,15 @@ function App() {
             </div>
           </div>
         </div>
+        <Toaster />
+      </>
+    )
+  }
+
+  if (showDiagnostics) {
+    return (
+      <>
+        <APIConnectionTest />
         <Toaster />
       </>
     )

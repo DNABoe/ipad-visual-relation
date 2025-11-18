@@ -100,6 +100,15 @@ export function LoginView({ onLogin }: LoginViewProps) {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
+            
+            <div className="text-center pt-4">
+              <a 
+                href="?diagnostics=true" 
+                className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+              >
+                API Connection Diagnostics
+              </a>
+            </div>
           </form>
         </CardContent>
       </Card>

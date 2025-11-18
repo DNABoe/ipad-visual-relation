@@ -180,6 +180,15 @@ export function FirstTimeSetup({ onComplete }: FirstTimeSetupProps) {
               {isLoading ? 'Setting up...' : 'Create Administrator Account'}
             </Button>
 
+            <div className="text-center pt-2">
+              <a 
+                href="?diagnostics=true" 
+                className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+              >
+                Test API Connection
+              </a>
+            </div>
+
             <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
               <p className="text-xs text-muted-foreground">
                 <strong className="text-foreground">Important:</strong> This account will have full administrator privileges. 
