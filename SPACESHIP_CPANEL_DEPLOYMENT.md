@@ -2,7 +2,7 @@
 
 **Complete deployment instructions for hosting the RelEye PHP backend API on Spaceship cPanel**
 
----
+## 
 
 ## 📋 Table of Contents
 
@@ -14,7 +14,7 @@
 6. [Configuration](#configuration)
 7. [Testing & Verification](#testing--verification)
 8. [Frontend Configuration](#frontend-configuration)
-9. [Troubleshooting](#troubleshooting)
+- **Main Domain**: `boestad.com`
 10. [Security Best Practices](#security-best-practices)
 
 ---
@@ -22,21 +22,21 @@
 ## 🌐 Current Setup Overview
 
 ### Domain Structure
-- **Main Domain**: `boestad.com`
+```
 - **Subdomain**: `releye.boestad.com`
 - **Frontend**: Currently hosted on GitHub Pages via CNAME to `dnaboe.github.io`
 - **Backend API**: Will be hosted at `releye.boestad.com/api`
 
 ### Current DNS Records (from screenshot)
-```
+- ✓
 ftp.releye          A       203.161.45.23
 releye              A       203.161.45.23
 webdisk.releye      A       203.161.45.23
-www.releye          CNAME   releye.boestad.com
+
 releye              TXT     v=spf1 include:spf.shared.spaceship.host ~all
 ```
 
----
+
 
 ## ✅ Prerequisites
 
@@ -48,11 +48,11 @@ Before starting, ensure you have:
 - ✓ FTP or File Manager access
 - ✓ The following files from this project:
   - `php-backend/` folder (all files)
-  - `database-setup-mysql.sql`
+   Type: A
 
----
+   
 
-## 🔧 DNS Configuration
+3. **Update GitHub Page
 
 ### Step 1: Update DNS Records
 
@@ -60,15 +60,15 @@ Before starting, ensure you have:
 
 #### Current Issue
 The subdomain has a CNAME record pointing to GitHub Pages:
-```
+- Y
 releye  →  CNAME  →  dnaboe.github.io
-```
+---
 
 This won't work because you need the subdomain to point to your Spaceship server for the backend API while still serving the frontend.
 
-#### Solution: Use A Record Instead
+1. Log into **Spaceship cPanel**
 
-**In Spaceship cPanel → Zone Editor:**
+
 
 1. **Delete the existing CNAME** record for `releye` (if it exists separately from the A record shown in screenshot)
 2. **Keep/Verify the A record** exists:
@@ -88,116 +88,116 @@ This won't work because you need the subdomain to point to your Spaceship server
 
 4. **Wait for DNS propagation** (typically 5-30 minutes with 5 min TTL)
 
-#### Why This Works
+In phpMyAdmin, you 
 - The A record points `releye.boestad.com` to your Spaceship server (203.161.45.23)
 - GitHub Pages will respond to requests for `releye.boestad.com` 
 - Your Spaceship server will handle `/api/*` requests via .htaccess rules
 - Static files (frontend) can be served from the same domain
 
----
+3. 
 
-## 🗄️ Database Setup
+   - User ID: `admin-
 
-### Step 1: Access phpMyAdmin
 
-1. Log into **Spaceship cPanel**
-2. Scroll to **Databases** section
-3. Click **phpMyAdmin**
 
-### Step 2: Verify Database Exists
 
-Based on the PHP configuration, your database should be:
-- **Database Name**: `lpmjclyqtt_releye`
-- **Username**: `lpmjclyqtt_releye_user`
+2. Right-click → **Edit** (or use 
 
-#### If Database Doesn't Exist:
 
-1. Go back to cPanel
-2. Click **MySQL Databases**
-3. Create new database: 
-   - Name: `releye` (cPanel will prefix it: `lpmjclyqtt_releye`)
-4. Create new user:
-   - Username: `releye_user` (will become `lpmjclyqtt_releye_user`)
-   - Password: **Generate strong password** (save this!)
-5. Add user to database with **ALL PRIVILEGES**
+define('DB_HOST', 'localhost');   
 
-### Step 3: Import Database Schema
+define('DB_CHARSET', 'utf8mb4');
+// JWT Secret for token generation (CRIT
 
-1. In **phpMyAdmin**, select database `lpmjclyqtt_releye` from left sidebar
-2. Click **Import** tab at the top
-3. Click **Choose File**
-4. Select `database-setup-mysql.sql` from this project
-5. Ensure format is set to **SQL**
-6. Click **Go** at the bottom
-7. Wait for success message
 
-### Step 4: Verify Tables Created
+// API Version
 
-In phpMyAdmin, you should now see three tables:
-- ✓ `users` (stores user accounts)
-- ✓ `invitations` (stores pending invites)
-- ✓ `activity_log` (tracks user actions)
+error_reporting(E_AL
+ini_set('log_errors', 1);   
+// Timezone
+?>
 
-### Step 5: Verify Default Admin User
 
-1. Click on `users` table
-2. Click **Browse** tab
-3. You should see one user:
-   - Email: `admin@releye.local`
-   - Role: `admin`
-   - User ID: `admin-default`
 
-**⚠️ Default Admin Credentials:**
-- Email: `admin@releye.local`
-- Password: `admin`
-- **CHANGE THIS IMMEDIATELY AFTER FIRST LOGIN!**
+- At least 32 characters long (64+ recommended)
 
----
+**Generate a secure secret:**
 
-## 📤 Backend File Upload
+https://www.random.org/strings/?num=1&len=64&digits=on&upperalpha=on&lowera
 
-### Step 1: Access File Manager
+```bash
+```
+**Method 3 - PHP** (can run this o
+<?php
+?>
 
-1. In **Spaceship cPanel**, find **Files** section
-2. Click **File Manager**
-3. Navigate to your domain's root directory:
-   - Usually: `public_html/releye` or `public_html/`
-   - If `releye.boestad.com` is a subdomain with its own root: `public_html/releye/`
+```php
 
-### Step 2: Create API Directory
-
-1. Inside your web root (where your frontend files are/will be), create a new folder:
-   - **Name**: `api`
-   - Full path example: `public_html/releye/api/`
-
-### Step 3: Upload Backend Files
-
-Upload all files from the `php-backend/` folder to the `api/` directory:
+### Step 3: Update CORS Origin
+If you're using a different domain
+```php
+define('CORS_ORIGIN', 'https://releye.bo
 
 ```
-public_html/releye/
-├── api/
-│   ├── .htaccess          ← Upload this
-│   ├── config.php         ← Upload this (will edit next)
-│   ├── database.php       ← Upload this
-│   ├── helpers.php        ← Upload this
-│   └── index.php          ← Upload this
-└── [your frontend files]
+
+1. Click **Save Changes**
+
+
+
+
 ```
 
-**Upload Methods:**
-- **Option A**: Use File Manager's Upload button (zip recommended for multiple files)
-- **Option B**: Use FTP client (FileZilla, etc.) with credentials from cPanel
+**Expected Response:**
+{
+  "data": {
+    "timestamp": 1234567890,
 
-### Step 4: Set File Permissions
+}
 
-Right-click each file in File Manager and set permissions:
-- **PHP files** (`*.php`): 644 (rw-r--r--)
-- **.htaccess**: 644 (rw-r--r--)
 
----
 
-## ⚙️ Configuration
+
+
+
+```json
+  "success": true,
+    "isFirstTime": false
+}
+
+
+
+1. Database credentials in `config.php`
+3. Check PHP error l
+### Step 4: Test from Frontend
+
+3. Try logging in with default c
+
+
+
+
+
+
+
+// For production (subdomain API)
+
+const API_BASE_URL = '/api'
+
+
+2. 
+
+3. **Deploy to GitH
+   git add .
+   git push origin main
+
+
+
+
+
+1. **.htaccess file exists** in 
+
+
+
+If this works but `
 
 ### Step 1: Edit config.php
 
@@ -410,7 +410,7 @@ If this works but `/api/health` doesn't, .htaccess isn't working.
 2. Database user has privileges on the database
 3. Database name includes the cPanel prefix (`lpmjclyqtt_`)
 
-**Verify in phpMyAdmin:**
+- [ ] A record for `reley
 - Can you see the tables?
 - Can you run: `SELECT * FROM users;`
 
@@ -420,27 +420,27 @@ If this works but `/api/health` doesn't, .htaccess isn't working.
 
 ### Problem: CORS Errors in Browser Console
 
-**Symptoms:**
+- [ ] `.htacc
 ```
-Access to fetch at 'https://releye.boestad.com/api/health' from origin 
+- [ ] JWT_SECRET changed to random string
 'https://releye.boestad.com' has been blocked by CORS policy
-```
 
-**Fix:**
+
+- [ ] `/
 1. Verify `CORS_ORIGIN` in `config.php` matches your frontend URL exactly
-2. Check `helpers.php` `setCORSHeaders()` function is being called
+- [ ] Default admin password changed
 3. Make sure `Access-Control-Allow-Origin` header is being sent
 
 **Test with curl:**
 ```bash
 curl -H "Origin: https://releye.boestad.com" \
-     -H "Access-Control-Request-Method: GET" \
+- [ ] `config.php` permissions set to 600
      -H "Access-Control-Request-Headers: Content-Type" \
-     -X OPTIONS \
+- [ ] Error displ
      https://releye.boestad.com/api/health -v
 ```
 
-Should return headers including:
+- [ ] Backup schedule establishe
 ```
 Access-Control-Allow-Origin: https://releye.boestad.com
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
@@ -448,23 +448,23 @@ Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
 
 ### Problem: White Screen / No Response
 
-**Check:**
+   - Note 
 1. PHP version: Should be **7.4+** (8.0+ recommended)
    - cPanel → **MultiPHP Manager**
    - Select domain → Choose PHP 8.0 or higher
-2. PHP extensions enabled:
+   - Note the failed reque
    - PDO
-   - pdo_mysql
+   ```bash
    - json
-   - openssl
+   Copy the 
 
-**Enable if missing:**
+
 - cPanel → **MultiPHP INI Editor** → Check extension list
 
 ### Problem: Login Fails with Default Admin
 
 **Check:**
-1. User exists in database:
+- Description of the issue
    ```sql
    SELECT * FROM users WHERE email = 'admin@releye.local';
    ```
@@ -472,17 +472,17 @@ Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
 3. Try running database setup script again
 
 **Reset admin password manually:**
-```sql
+
 UPDATE users 
 SET password_hash = '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU8VpDQpqmui' 
 WHERE email = 'admin@releye.local';
-```
+- F
 This sets password to: `admin123`
 
 ### Problem: "Database does not exist" Error
 
 **Fix:**
-1. In phpMyAdmin, click **Databases** tab
+- Database and user names are automatical
 2. Check if `lpmjclyqtt_releye` exists
 3. If not, create it via **cPanel → MySQL Databases**
 4. Re-import the SQL schema
@@ -494,17 +494,17 @@ This sets password to: `admin123`
 2. No extra whitespace or BOM characters in PHP files
 3. Files are UTF-8 encoded without BOM
 
-**Re-upload if needed:**
+- Simpler, everything in
 - Download fresh copies from the project
 - Upload again, overwriting existing files
 
----
+- R
 
 ## 🔒 Security Best Practices
 
 ### Immediate Actions After Setup
 
-1. **Change Default Admin Password**
+✅ You can visit `https://releye.boes
    - Log in with `admin@releye.local` / `admin`
    - Go to Settings/Profile
    - Change password to something strong
@@ -516,11 +516,11 @@ This sets password to: `admin123`
    - Never commit `config.php` with real credentials
 
 3. **Set Proper Permissions**
-   ```
+- [ ] 
    config.php: 600 (rw-------)  ← Most restrictive
    Other .php: 644 (rw-r--r--)
    .htaccess:  644 (rw-r--r--)
-   api/:       755 (rwxr-xr-x)
+- [ ] Check disk space usage i
    ```
 
 4. **Enable HTTPS Only**
@@ -532,17 +532,17 @@ This sets password to: `admin123`
      ```
 
 5. **Limit Database User Privileges**
-   - The database user should only have access to `lpmjclyqtt_releye`
+
    - Remove privileges on other databases if present
 
 6. **Regular Backups**
    - cPanel → **Backup Wizard**
    - Download database backups regularly
-   - Keep offline copies
+
 
 7. **Monitor Error Logs**
    - cPanel → **Metrics** → **Errors**
-   - Check for suspicious activity
+
    - Failed login attempts
    - SQL injection attempts
 
@@ -550,13 +550,13 @@ This sets password to: `admin123`
    - Use latest stable PHP version (8.0+)
    - Check cPanel monthly for updates
 
-### Additional Security Headers
+
 
 Add to `.htaccess` in `/api/` directory:
 
-```apache
+
 # Security Headers
-Header set X-Content-Type-Options "nosniff"
+
 Header set X-Frame-Options "DENY"
 Header set X-XSS-Protection "1; mode=block"
 Header set Referrer-Policy "strict-origin-when-cross-origin"
@@ -580,21 +580,21 @@ Header set Referrer-Policy "strict-origin-when-cross-origin"
 
 ### Database Info
 - **Host**: `localhost`
-- **Name**: `lpmjclyqtt_releye`
+
 - **User**: `lpmjclyqtt_releye_user`
 - **Password**: (set during database creation)
 
-### Default Admin
+
 - **Email**: `admin@releye.local`
 - **Password**: `admin` (change immediately!)
 
-### File Locations
+
 ```
 public_html/releye/
 ├── api/
 │   ├── .htaccess
 │   ├── config.php     ← Contains DB credentials & JWT secret
-│   ├── database.php
+
 │   ├── helpers.php
 │   └── index.php
 ├── index.html         ← Frontend entry point
@@ -624,7 +624,7 @@ Use this checklist to ensure everything is configured correctly:
 ### Database
 - [ ] Database `lpmjclyqtt_releye` exists
 - [ ] User `lpmjclyqtt_releye_user` exists with password
-- [ ] User has ALL PRIVILEGES on database
+
 - [ ] SQL schema imported successfully
 - [ ] Three tables visible: users, invitations, activity_log
 - [ ] Default admin user exists in users table
@@ -634,7 +634,7 @@ Use this checklist to ensure everything is configured correctly:
 - [ ] `.htaccess` file uploaded and visible
 - [ ] File permissions set correctly (644 for all)
 - [ ] `config.php` edited with correct credentials
-- [ ] JWT_SECRET changed to random string
+
 - [ ] CORS_ORIGIN set to production domain
 - [ ] `display_errors` set to `0`
 
@@ -660,39 +660,39 @@ Use this checklist to ensure everything is configured correctly:
 
 ### Documentation
 - [ ] Database credentials saved securely (password manager)
-- [ ] JWT_SECRET backed up securely
+
 - [ ] Backup schedule established
 - [ ] This document saved for reference
 
----
+
 
 ## 🆘 Getting Help
 
-### Before Contacting Support
 
-1. **Check PHP Error Logs**:
+
+
    - cPanel → Metrics → Errors
-   - Look for the most recent errors
+
    - Note the exact error message
 
 2. **Check Browser Console**:
    - Press F12 in browser
    - Go to Console tab
-   - Look for red errors
+
    - Note the failed request URLs
 
 3. **Test with cURL**:
-   ```bash
+
    curl -v https://releye.boestad.com/api/health
-   ```
+
    Copy the entire output
 
 ### Spaceship Support
 
 If you need help with:
-- Server configuration
+
 - PHP version/extensions
-- mod_rewrite issues
+
 - SSL certificate problems
 
 **Contact Spaceship Support** with:
@@ -704,15 +704,15 @@ If you need help with:
 ### RelEye Application Issues
 
 For issues with the RelEye application itself:
-- Check the main README.md
+
 - Review other documentation files in this project
 - Check the GitHub repository issues
 
----
+
 
 ## 📝 Notes
 
-### About File Structure
+
 
 This deployment assumes:
 - Frontend and backend share the same domain
@@ -720,11 +720,11 @@ This deployment assumes:
 - Frontend is at root level
 - This is the recommended setup for simplicity
 
-### About Subdomains in cPanel
+
 
 Spaceship cPanel with the prefix `lpmjclyqtt_` indicates:
 - You're using a shared hosting account
-- Database and user names are automatically prefixed
+
 - You may have multiple domains/subdomains under one account
 - The subdomain `releye.boestad.com` is under the `boestad.com` account
 
@@ -760,7 +760,7 @@ Your deployment is successful when:
 ✅ You can visit `https://releye.boestad.com` and see the app
 ✅ You can log in with admin credentials  
 ✅ You can create new users
-✅ You can send invitations
+
 ✅ You can open/save workspaces
 ✅ All features work without console errors
 ✅ Sessions persist between page reloads
@@ -768,19 +768,19 @@ Your deployment is successful when:
 
 **Congratulations!** Your RelEye backend is now live on Spaceship cPanel! 🚀
 
----
+
 
 ## 📅 Maintenance
 
-### Regular Tasks
+
 
 **Weekly:**
 - [ ] Check error logs for issues
 - [ ] Verify backups are running
 
-**Monthly:**
+
 - [ ] Update PHP version if new stable release
-- [ ] Review user accounts for inactive users
+
 - [ ] Check disk space usage in cPanel
 
 **Quarterly:**
@@ -790,11 +790,11 @@ Your deployment is successful when:
 
 ### Updating the Backend
 
-When you need to update API code:
+
 
 1. **Backup current version**:
    - Download current `/api/` folder
-   - Export database from phpMyAdmin
+
 
 2. **Upload new files**:
    - Upload updated PHP files
@@ -802,9 +802,9 @@ When you need to update API code:
 
 3. **Update database** (if schema changed):
    - Import new SQL migration scripts
-   - Or manually run ALTER TABLE statements
 
-4. **Test**:
+
+
    - Check `/api/health` endpoint
    - Test authentication
    - Verify all features work
@@ -816,7 +816,7 @@ When you need to update API code:
 ---
 
 **Document Version**: 1.0  
-**Last Updated**: 2024  
+
 **For**: RelEye Application on Spaceship cPanel  
-**Domain**: releye.boestad.com
+
 

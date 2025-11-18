@@ -1,22 +1,32 @@
 # 🚀 Quick Start - Deploy RelEye
 
-## 📖 NEW: Not sure which guide to use?
-**👉 See: [DEPLOYMENT_INDEX.md](DEPLOYMENT_INDEX.md) - Complete guide to all deployment options**
+## 🎯 RECOMMENDED: Unified Deployment (NEW!)
+
+**Host everything at releye.boestad.com - Simplest & Best!**
+
+### Why This is Better:
+- ✅ No CORS issues (same origin)
+- ✅ Single SSL certificate
+- ✅ Simpler DNS (one A record)
+- ✅ Full control over everything
+- ✅ Faster performance (one server)
+- ✅ Easier debugging (one log system)
+
+### Quick Links:
+1. 👉 **[WHY_UNIFIED_DEPLOYMENT.md](WHY_UNIFIED_DEPLOYMENT.md)** - Read this first (5 min)
+2. 👉 **[QUICK_DEPLOY_UNIFIED.md](QUICK_DEPLOY_UNIFIED.md)** - 30-minute checklist
+3. 👉 **[UNIFIED_DEPLOYMENT_GUIDE.md](UNIFIED_DEPLOYMENT_GUIDE.md)** - Complete guide
 
 ---
 
-## ⚡ Easiest Method: cPanel Only (Recommended!)
+## 📖 Alternative Methods
 
-**If you have Spaceship.com hosting with cPanel, use this method:**
+**Not sure which guide to use?**
+👉 See: [DEPLOYMENT_INDEX.md](DEPLOYMENT_INDEX.md) - Complete guide to all deployment options
 
-👉 **Follow: [CPANEL_QUICK_START.md](CPANEL_QUICK_START.md)**
-
-This deploys everything (frontend + backend) on Spaceship.com only:
-- ✅ No DigitalOcean needed
-- ✅ No command line required for deployment
-- ✅ Everything in one place
-- ✅ Saves $60/year
-- ✅ Takes ~20 minutes
+### Other Options (Not Recommended):
+- **GitHub Pages + Spaceship**: [CPANEL_QUICK_START.md](CPANEL_QUICK_START.md) (more complex)
+- **DigitalOcean Backend**: [See below](#alternative-digitalocean-backend-method) (costs extra)
 
 ---
 
