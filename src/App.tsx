@@ -1,28 +1,3 @@
-/*
- * ============================================================
- * AUTHENTICATION BYPASS MODE - TEMPORARY FOR TESTING
- * ============================================================
- * 
- * This file is currently running in BYPASS MODE to allow testing
- * without a backend server. See the initializeAuth() function
- * below for the bypass implementation.
- * 
- * WHAT'S BYPASSED:
- * - User login/authentication
- * - Backend API calls for user management
- * - First-time setup flow
- * 
- * WHAT'S PRESERVED:
- * - User credentials in storage (including API keys)
- * - Settings and preferences
- * - All core application functionality
- * 
- * TO RESTORE FULL AUTHENTICATION:
- * See the detailed comments in the initializeAuth() function
- * 
- * ============================================================
- */
-
 import { useState, useCallback, useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
 import { WorkspaceView } from './components/WorkspaceView'
@@ -32,9 +7,7 @@ import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
 import { isCloudAPIAvailable } from './lib/cloudAPI'
 import type { Workspace } from './lib/types'
-import type { UserCredentials } from './lib/auth'
 import * as UserRegistry from './lib/userRegistry'
-import { generateSampleData } from './lib/sampleData'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
@@ -51,123 +24,53 @@ function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // ============================================================
-        // TEMPORARY BYPASS FOR TESTING WITHOUT BACKEND
-        // ============================================================
-        // TODO: Remove this entire bypass block when backend is ready
-        // This section creates a mock user and loads sample data without
-        // requiring proper authentication. It preserves any existing user
-        // credentials (including API keys) that were set up previously.
-        // 
-        // BYPASS CREDENTIALS:
-        // Username: admin
-        // Password: admin123
-        // 
-        // TO RESTORE NORMAL AUTHENTICATION:
-        // 1. Delete this entire bypass block (from "TEMPORARY BYPASS" to "END OF TEMPORARY BYPASS")
-        // 2. Uncomment the original authentication flow (if it exists below)
-        // 3. Remove the bypass warning comment at the top of this file
-        // ============================================================
+        console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
         
-        console.log('[App] ========== BYPASSING LOGIN - LOADING SAMPLE DATA ==========')
-        console.log('[App] 🔓 BYPASS MODE: Using admin/admin123 credentials')
+        const urlParams = new URLSearchParams(window.location.search)
+        const token = urlParams.get('invite')
+        const email = urlParams.get('email')
         
-        // BYPASS: Import auth utilities to create proper password hash
-        const { hashPassword } = await import('./lib/auth')
-        
-        // BYPASS: Create admin password hash for "admin123"
-        const adminPasswordHash = await hashPassword('admin123')
-        
-        // BYPASS: Create a temporary mock user with admin privileges
-        const mockUser: UserRegistry.RegisteredUser = {
-          userId: 'temp-user-123',
-          email: 'admin@temp.com',
-          name: 'Administrator',
-          role: 'admin',
-          passwordHash: adminPasswordHash,
-          createdAt: Date.now(),
-          loginCount: 1,
-          canInvestigate: true
+        if (token && email) {
+          console.log('[App] Invite link detected')
+          setInviteToken(token)
+          setInviteEmail(email)
+          setIsLoadingAuth(false)
+          return
         }
         
-        setCurrentUser(mockUser)
+        console.log('[App] Checking cloud API availability...')
+        const apiAvailable = await isCloudAPIAvailable()
+        console.log('[App] Cloud API available:', apiAvailable)
         
-        // BYPASS: Set up credentials with admin/admin123 and check for workspace data
-        console.log('[App] Loading existing user credentials from storage...')
-        const { storage } = await import('./lib/storage')
-        const existingCredentials = await storage.get<UserCredentials>('user-credentials')
+        if (!apiAvailable) {
+          console.error('[App] ❌ Cloud API is not available')
+          toast.error('Backend server is not available. Please ensure the API server is running at releye.boestad.com/api')
+          setIsLoadingAuth(false)
+          return
+        }
         
-        if (!existingCredentials) {
-          // BYPASS: Create credentials with admin username and admin123 password
-          console.log('[App] No existing credentials found, creating admin credentials...')
-          const adminCredentials: UserCredentials = {
-            username: 'admin',
-            passwordHash: adminPasswordHash
-            // Note: No API key here - user must add it in Settings
-          }
-          await storage.set('user-credentials', adminCredentials)
-          console.log('[App] ✓ Admin credentials created (username: admin, password: admin123)')
+        console.log('[App] Checking if first-time setup needed...')
+        const isFirstTimeSetup = await UserRegistry.isFirstTimeSetup()
+        console.log('[App] First time setup:', isFirstTimeSetup)
+        
+        if (isFirstTimeSetup) {
+          console.log('[App] No admin found - showing first time setup')
+          setIsFirstTime(true)
+          setIsLoadingAuth(false)
+          return
+        }
+        
+        console.log('[App] Checking for current user session...')
+        const existingUser = await UserRegistry.getCurrentUser()
+        
+        if (existingUser) {
+          console.log('[App] ✓ User session found:', existingUser.email)
+          setCurrentUser(existingUser)
         } else {
-          // BYPASS: Preserve existing credentials completely (including encrypted API key)
-          console.log('[App] ✓ Existing credentials found and preserved')
-          console.log('[App] Username:', existingCredentials.username)
-          console.log('[App] Has API key:', !!existingCredentials.encryptedApiKey)
-          // DO NOT overwrite or modify existing credentials - they contain the user's API key
+          console.log('[App] No active session - showing login')
         }
         
-        // BYPASS: Check if there's existing workspace data, otherwise load sample data
-        const existingWorkspace = await storage.get<Workspace>('bypass-workspace')
-        const existingFileName = await storage.get<string>('bypass-filename')
-        
-        let workspaceToLoad: Workspace
-        let fileNameToUse: string
-        
-        if (existingWorkspace && existingFileName) {
-          // Load existing workspace from previous session
-          console.log('[App] ✓ Loading existing workspace from storage...')
-          workspaceToLoad = existingWorkspace
-          fileNameToUse = existingFileName
-          toast.success('Workspace restored from previous session')
-        } else {
-          // First time - load sample data
-          console.log('[App] No existing workspace found, loading sample data...')
-          const sampleWorkspace = generateSampleData()
-          sampleWorkspace.ownerId = mockUser.userId
-          sampleWorkspace.users = [{
-            userId: mockUser.userId,
-            username: mockUser.name,
-            email: mockUser.email,
-            role: mockUser.role,
-            addedAt: Date.now(),
-            addedBy: 'system',
-            status: 'active' as const,
-            loginCount: 1,
-            canInvestigate: true
-          }]
-          
-          workspaceToLoad = sampleWorkspace
-          fileNameToUse = 'Sample Network'
-          
-          // Save the initial sample data
-          await storage.set('bypass-workspace', workspaceToLoad)
-          await storage.set('bypass-filename', fileNameToUse)
-          
-          console.log('[App] ✓ Sample data loaded and saved')
-          toast.success('Loaded with sample data - Login: admin/admin123')
-        }
-        
-        setInitialWorkspace(workspaceToLoad)
-        setFileName(fileNameToUse)
-        setPassword('admin123') // BYPASS: Use admin123 as the workspace password
-        setShowFileManager(false)
-        
-        console.log('[App] ========== WORKSPACE READY ==========')
-        console.log('[App] 📁 Workspace:', fileNameToUse)
-        
-        // ============================================================
-        // END OF TEMPORARY BYPASS BLOCK
-        // ============================================================
-        
+        console.log('[App] ========== INITIALIZATION COMPLETE ==========')
       } catch (error) {
         console.error('[App] ❌ Failed to initialize:', error)
         toast.error('Failed to initialize application. Please refresh the page.')

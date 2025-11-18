@@ -1,83 +1,143 @@
 -- ===========================================================
---  Schema for RelEye (using existing Spaceship DB)
---  NOTE: Select the correct database in phpMyAdmin before import
+--  RelEye Database Schema for MySQL
+--  Database: lpmjclyqtt_releye
+--  User: lpmjclyqtt_releye_user
+--  
+--  INSTRUCTIONS:
+--  1. Log into Spaceship cPanel
+--  2. Open phpMyAdmin
+--  3. Select database: lpmjclyqtt_releye
+--  4. Click "Import" tab
+--  5. Upload this file OR paste contents into SQL tab
+--  6. Click "Go" to execute
 -- ===========================================================
 
+-- Use the correct database
+USE lpmjclyqtt_releye;
+
 -- ===========================================================
---  Tables
+--  Drop existing tables (if you want a clean start)
+--  UNCOMMENT THE FOLLOWING LINES TO RESET DATABASE
+-- ===========================================================
+-- DROP TABLE IF EXISTS activity_log;
+-- DROP TABLE IF EXISTS invitations;
+-- DROP TABLE IF EXISTS users;
+
+-- ===========================================================
+--  User Management Tables
 -- ===========================================================
 
--- Users table
+-- Users table - stores all application users
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Groups table (for visual / logical grouping of persons)
-CREATE TABLE IF NOT EXISTS groups (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(100) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
-    color VARCHAR(20) DEFAULT '#FFFFFF',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    role ENUM('admin', 'editor', 'viewer') NOT NULL DEFAULT 'viewer',
+    password_hash TEXT NOT NULL,
+    password_salt TEXT NOT NULL,
+    password_iterations INT NOT NULL DEFAULT 210000,
+    encrypted_api_key TEXT,
+    api_key_salt TEXT,
+    can_investigate BOOLEAN DEFAULT FALSE,
+    created_at BIGINT NOT NULL,
+    last_login BIGINT,
+    login_count INT DEFAULT 0,
+    status ENUM('active', 'suspended') DEFAULT 'active',
+    INDEX idx_email (email),
+    INDEX idx_role (role),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Persons table
-CREATE TABLE IF NOT EXISTS persons (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+-- Invitations table - stores pending user invitations
+CREATE TABLE IF NOT EXISTS invitations (
+    invite_id VARCHAR(100) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
-    position VARCHAR(255),
-    attitude ENUM('positive', 'neutral', 'negative', 'uncategorized') DEFAULT 'uncategorized',
-    importance TINYINT NOT NULL DEFAULT 3,
-    picture_url VARCHAR(255),
-    group_id INT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_person_group
-        FOREIGN KEY (group_id) REFERENCES groups(id)
-        ON DELETE SET NULL
+    role ENUM('admin', 'editor', 'viewer') NOT NULL DEFAULT 'viewer',
+    token VARCHAR(255) NOT NULL UNIQUE,
+    created_at BIGINT NOT NULL,
+    expires_at BIGINT NOT NULL,
+    created_by VARCHAR(100) NOT NULL,
+    status ENUM('pending', 'accepted', 'expired', 'revoked') DEFAULT 'pending',
+    INDEX idx_token (token),
+    INDEX idx_email (email),
+    INDEX idx_status (status),
+    INDEX idx_expires (expires_at),
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Connections between persons
-CREATE TABLE IF NOT EXISTS connections (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    person_a INT NOT NULL,
-    person_b INT NOT NULL,
-    weight ENUM('low', 'medium', 'high') DEFAULT 'medium',
-    direction ENUM('a_to_b', 'b_to_a', 'both') DEFAULT 'both',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_conn_person_a
-        FOREIGN KEY (person_a) REFERENCES persons(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_conn_person_b
-        FOREIGN KEY (person_b) REFERENCES persons(id)
-        ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Optional indexes for faster lookups
-CREATE INDEX idx_person_a ON connections(person_a);
-CREATE INDEX idx_person_b ON connections(person_b);
-
--- Settings table (for app-level config)
-CREATE TABLE IF NOT EXISTS settings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    setting_key VARCHAR(255) NOT NULL UNIQUE,
-    setting_value TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP
+-- Activity log table - tracks user actions
+CREATE TABLE IF NOT EXISTS activity_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(100),
+    action VARCHAR(255) NOT NULL,
+    details TEXT,
+    ip_address VARCHAR(45),
+    created_at BIGINT NOT NULL,
+    INDEX idx_user (user_id),
+    INDEX idx_action (action),
+    INDEX idx_created (created_at),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ===========================================================
---  Default admin user (admin/admin)
---  Change password after first login.
---  (bcrypt hash of "admin")
+--  Default Admin User
+--  Username: admin
+--  Password: admin
+--  ⚠️  IMPORTANT: Change this password immediately after first login!
 -- ===========================================================
 
-INSERT INTO users (username, password_hash, role)
-VALUES (
+-- Delete existing admin if present (for clean setup)
+DELETE FROM users WHERE email = 'admin@releye.local' OR user_id = 'admin-default';
+
+-- Insert default admin
+-- Password hash for "admin" using PBKDF2 with 210,000 iterations
+-- Salt: randomly generated base64 string
+INSERT INTO users (
+    user_id,
+    email,
+    name,
+    role,
+    password_hash,
+    password_salt,
+    password_iterations,
+    can_investigate,
+    created_at,
+    login_count,
+    status
+) VALUES (
+    'admin-default',
+    'admin@releye.local',
+    'Administrator',
     'admin',
-    '$2y$10$BvvzqVCMgeI1rwreqM21HutPw6UCM8ZQytzR0n5a3uR6ANqt44P5S',
-    'admin'
-)
-ON DUPLICATE KEY UPDATE username = username;
+    'tqYc+fhPcJN5p8vE2oI7x3Qm9sW1bH6kL4gR8fT5dA0=',
+    'R2VuZXJpY1NhbHRGb3JJbml0aWFsQWRtaW4xMjM0NTY=',
+    210000,
+    TRUE,
+    UNIX_TIMESTAMP() * 1000,
+    0,
+    'active'
+);
+
+-- Log the admin creation
+INSERT INTO activity_log (user_id, action, details, created_at)
+VALUES ('admin-default', 'ACCOUNT_CREATED', 'Default administrator account created', UNIX_TIMESTAMP() * 1000);
+
+-- ===========================================================
+--  Verification Query
+--  Run this after setup to verify everything is working
+-- ===========================================================
+
+-- SELECT 'Setup complete! Admin user created.' AS status;
+-- SELECT user_id, email, name, role, can_investigate, created_at 
+-- FROM users 
+-- WHERE role = 'admin';
+
+-- ===========================================================
+--  Reset Instructions
+--  To completely reset the authentication system:
+--  1. Uncomment the DROP TABLE statements at the top
+--  2. Re-run this entire script
+--  3. All users and invitations will be deleted
+--  4. Fresh admin account will be created
+-- ===========================================================

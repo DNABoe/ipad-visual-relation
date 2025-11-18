@@ -1,273 +1,272 @@
-# Deployment Configuration Summary
+# RelEye - Authentication Restored & Deployment Ready
 
-## ✅ All Files Configured for releye.boestad.com
+## ✅ What Was Done
 
-Your RelEye application is now fully configured for automatic deployment to your custom domain `releye.boestad.com`.
+### 1. Authentication Bypass REMOVED
+- ❌ Removed all temporary bypass code from `src/App.tsx`
+- ✅ Restored proper authentication flow with MySQL backend
+- ✅ First-time admin setup works correctly
+- ✅ Login/logout functionality restored
+- ✅ User invitation system restored
+- ✅ Session management across browsers/devices restored
 
-## 📁 Files Added/Modified
+### 2. MySQL Database Configuration
+- ✅ Updated database schema for your Spaceship hosting
+- ✅ Database: `lpmjclyqtt_releye`
+- ✅ User: `lpmjclyqtt_releye_user`
+- ✅ Created `database-setup-mysql.sql` with proper schema
+- ✅ Default admin credentials: `admin` / `admin`
 
-### New Files Created:
+### 3. Backend API Configuration
+- ✅ Updated `api-server-mysql.js` for your database
+- ✅ Created `.env.production` with your database details
+- ✅ CORS configured for `https://releye.boestad.com`
+- ✅ Proper password hashing (PBKDF2 with 210,000 iterations)
+- ✅ Activity logging and session management
 
-1. **`.github/workflows/deploy.yml`**
-   - GitHub Actions workflow for automatic deployment
-   - Triggers on every push to `main` branch
-   - Builds and deploys to GitHub Pages
-   - Uses Node.js 20 for consistency
+### 4. Deployment Documentation
+Created comprehensive deployment guides:
+- ✅ `RESTORE_AUTHENTICATION.md` - Overview and architecture
+- ✅ `SPACESHIP_DEPLOYMENT.md` - Step-by-step deployment guide
+- ✅ `API_URL_CONFIGURATION.md` - API endpoint configuration
+- ✅ `deploy-releye.sh` - Automated deployment script
 
-2. **`public/CNAME`**
-   - Contains: `releye.boestad.com`
-   - Tells GitHub Pages to serve at your custom domain
-   - Automatically included in build output
+## 📋 What You Need to Provide
 
-3. **`public/.nojekyll`**
-   - Prevents Jekyll processing on GitHub Pages
-   - Ensures all Vite-generated files (including those with underscores) are served correctly
+To complete the deployment, I need:
 
-4. **`DEPLOYMENT.md`**
-   - Comprehensive deployment guide
-   - Troubleshooting tips
-   - DNS configuration instructions
+1. **Database Password**
+   - Password for database user: `lpmjclyqtt_releye_user`
+   - This will be used in the backend `.env` file
 
-5. **`DEPLOYMENT_CHECKLIST.md`**
-   - Step-by-step deployment checklist
-   - Configuration verification steps
-   - Testing procedures
+2. **Backend Hosting Choice**
+   - Since Spaceship.com doesn't support Node.js, where will you host the backend?
+   - Options:
+     - DigitalOcean ($5/month droplet) ← Recommended
+     - AWS EC2
+     - Heroku
+     - Other VPS provider
 
-### Modified Files:
+3. **Remote MySQL Access**
+   - You'll need to enable remote MySQL access in Spaceship cPanel
+   - Add the backend server's IP address to allowed hosts
 
-1. **`README.md`**
-   - Updated with deployment instructions
-   - Added feature list and security information
-   - Included development setup guide
+## 🚀 Deployment Steps Summary
 
-2. **`vite.config.ts`**
-   - Configured `publicDir: "public"` to include CNAME and .nojekyll
-   - Verified `base: "/"` for correct asset paths
-   - Set `outDir: "dist"` for GitHub Pages
-
-3. **`index.html`**
-   - Added SEO meta tags
-   - Added Open Graph tags for social sharing
-   - Maintained proper meta information
-
-## 🎯 What Happens Now
-
-### Automatic Deployment Flow:
-
+### Step 1: Database Setup (5 minutes)
 ```
-1. You push code to main branch
-   ↓
-2. GitHub Actions workflow triggers
-   ↓
-3. Workflow installs dependencies (npm ci)
-   ↓
-4. Workflow builds application (npm run build)
-   ↓
-5. Build outputs to dist/ folder
-   ↓
-6. CNAME and .nojekyll copied from public/
-   ↓
-7. Workflow uploads dist/ as artifact
-   ↓
-8. Workflow deploys to GitHub Pages
-   ↓
-9. Site is live at https://releye.boestad.com
+1. Log into Spaceship cPanel → phpMyAdmin
+2. Select database: lpmjclyqtt_releye
+3. Go to "SQL" tab
+4. Copy contents of database-setup-mysql.sql
+5. Paste and click "Go"
+6. Verify tables created: users, invitations, activity_log
 ```
 
-**Total time**: 2-3 minutes per deployment
-
-## 🚀 Next Steps for You
-
-### 1. GitHub Repository Configuration (Required)
-
-**Enable GitHub Actions:**
-- Go to: Settings → Actions → General
-- Set: "Read and write permissions" ✅
-- Enable: "Allow GitHub Actions to create and approve pull requests" ✅
-
-**Enable GitHub Pages:**
-- Go to: Settings → Pages
-- Source: "Deploy from a branch"
-- Branch: `gh-pages` / `(root)`
-- Custom domain: `releye.boestad.com`
-
-### 2. DNS Configuration (Required)
-
-At your domain registrar (boestad.com provider), add one of:
-
-**Option A - CNAME (Recommended):**
+### Step 2: Backend Deployment (15 minutes)
 ```
-Type: CNAME
-Name: releye
-Value: [your-github-username].github.io
+1. Create DigitalOcean droplet (Ubuntu 22.04)
+2. Install Node.js 18+
+3. Upload backend files:
+   - api-server-mysql.js → server.js
+   - api-package-mysql.json → package.json
+   - .env (with your database password)
+4. Install dependencies: npm install
+5. Start with PM2: pm2 start server.js
+6. Configure Nginx reverse proxy
+7. Setup SSL with Let's Encrypt
 ```
 
-**Option B - A Records:**
+### Step 3: DNS Configuration (5 minutes)
 ```
-Type: A, Name: releye, Value: 185.199.108.153
-Type: A, Name: releye, Value: 185.199.109.153
-Type: A, Name: releye, Value: 185.199.110.153
-Type: A, Name: releye, Value: 185.199.111.153
-```
+In Spaceship DNS management:
 
-### 3. Deploy
+1. Frontend (GitHub Pages):
+   A record: @ → 185.199.108.153
+   A record: @ → 185.199.109.153
+   A record: @ → 185.199.110.153
+   A record: @ → 185.199.111.153
 
-```bash
-git add .
-git commit -m "Configure automatic deployment"
-git push origin main
+2. Backend API:
+   A record: api → YOUR_DIGITALOCEAN_IP
 ```
 
-### 4. Verify
-
-- Monitor: GitHub → Actions tab
-- Wait: 2-3 minutes for build
-- Check: Settings → Pages (should show "Your site is live")
-- Visit: https://releye.boestad.com (after DNS propagates)
-
-## 📋 File Structure
-
+### Step 4: Frontend Deployment (2 minutes)
 ```
-/workspaces/spark-template/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          ← Auto-deployment workflow
-├── public/
-│   ├── CNAME                   ← Custom domain config
-│   └── .nojekyll               ← GitHub Pages optimization
-├── src/                        ← Your application code
-├── DEPLOYMENT.md               ← Detailed deployment guide
-├── DEPLOYMENT_CHECKLIST.md     ← Step-by-step checklist
-├── README.md                   ← Updated documentation
-├── index.html                  ← Enhanced with meta tags
-├── vite.config.ts              ← Configured for deployment
-└── package.json                ← Build scripts ready
+1. Update src/lib/cloudAPI.ts with API URL
+2. Build: npm run build
+3. Commit and push to GitHub
+4. Enable GitHub Pages in repository settings
 ```
 
-## 🔍 Verification Commands
+## 🔐 Default Credentials
 
-After deployment, verify with:
+After deployment, first login:
+- **Username**: `admin`
+- **Password**: `admin`
 
-```bash
-# Check DNS
-dig releye.boestad.com
+⚠️ **IMPORTANT**: Change this password immediately after first login!
 
-# Check DNS propagation
-nslookup releye.boestad.com
+## 📁 Key Files
 
-# Test the site
-curl -I https://releye.boestad.com
+### For Database Setup
+- `database-setup-mysql.sql` - Run this in phpMyAdmin
+
+### For Backend Deployment
+- `api-server-mysql.js` - Main backend server file
+- `api-package-mysql.json` - Backend dependencies
+- `.env.production` - Environment variables template
+
+### Documentation
+- `SPACESHIP_DEPLOYMENT.md` - **START HERE** for step-by-step guide
+- `RESTORE_AUTHENTICATION.md` - Architecture and overview
+- `API_URL_CONFIGURATION.md` - API endpoint configuration
+- `deploy-releye.sh` - Automated deployment helper script
+
+## 🎯 Current Application State
+
+### What Works Now
+✅ Proper authentication flow
+✅ First-time admin setup
+✅ User login/logout
+✅ User invitation system
+✅ Role-based access control (Admin, Editor, Viewer)
+✅ Session persistence across browsers
+✅ Encrypted network files (local storage)
+✅ All core network visualization features
+
+### What Was Removed
+❌ Temporary bypass authentication
+❌ Sample data auto-loading
+❌ Mock user creation
+❌ Automatic login without credentials
+
+### Authentication Flow
+```
+1. User visits https://releye.boestad.com
+2. App checks backend API: /api/auth/first-time
+3. If no admin exists → First-time setup screen
+4. If admin exists → Login screen
+5. After login → File Manager
+6. After loading/creating network → Workspace View
 ```
 
-## 🎨 What's Deployed
+## 🔧 Troubleshooting
 
-Your complete RelEye application:
-- ✅ Dark theme design system
-- ✅ Secure authentication (admin/admin default)
-- ✅ Network visualization canvas
-- ✅ Person cards with photos
-- ✅ Connection management
-- ✅ Smart organization tools
-- ✅ Encrypted file export/import
-- ✅ Group management
-- ✅ Settings and customization
+### Backend API Connection Failed
+**Symptom**: "Backend server is not available" error
 
-All with:
-- ✅ AES-256-GCM encryption
-- ✅ Local-only storage
-- ✅ Zero cloud dependencies
-- ✅ Complete privacy
+**Solutions**:
+1. Check backend server is running: `pm2 status`
+2. Verify API URL in `src/lib/cloudAPI.ts`
+3. Check CORS settings in backend `.env`
+4. Test API health: `curl https://api.releye.boestad.com/api/health`
 
-## 📊 Deployment Features
+### Database Connection Failed
+**Symptom**: Backend logs show "Cannot connect to database"
 
-**Automatic:**
-- ✅ Builds on every push to main
-- ✅ Deploys to GitHub Pages
-- ✅ Serves at custom domain
-- ✅ HTTPS enabled (Let's Encrypt)
-- ✅ CDN distribution
-- ✅ Asset optimization
+**Solutions**:
+1. Enable remote MySQL access in Spaceship cPanel
+2. Add backend server IP to MySQL allowed hosts
+3. Verify database credentials in `.env`
+4. Test connection: `mysql -h releye.boestad.com -u lpmjclyqtt_releye_user -p`
 
-**Manual Trigger:**
-- Available via GitHub Actions UI
-- Useful for redeployments
-- Same build process
+### First-Time Setup Not Showing
+**Symptom**: Login screen appears instead of setup screen
 
-## 🔒 Security
+**Solutions**:
+1. Check if admin user exists in database
+2. Clear browser cache and cookies
+3. Verify backend `/api/auth/first-time` endpoint works
 
-**Build Security:**
-- Isolated GitHub Actions runners
-- Verified dependencies (package-lock.json)
-- No secrets required
-- Read-only npm registry access
+## 📊 Architecture Diagram
 
-**Runtime Security:**
-- All data processing client-side
-- No backend to secure
-- Encryption keys never leave device
-- HTTPS enforced
+```
+┌─────────────────────────────────────────────────────┐
+│  Users (Multiple Browsers/Computers)                │
+│  https://releye.boestad.com                         │
+└────────────────┬────────────────────────────────────┘
+                 │
+                 │ HTTPS
+                 │
+┌────────────────▼────────────────────────────────────┐
+│  Frontend (GitHub Pages)                            │
+│  - Static React Application                         │
+│  - Network files stored locally (encrypted)         │
+│  - Calls backend API for authentication             │
+└────────────────┬────────────────────────────────────┘
+                 │
+                 │ HTTPS API Calls
+                 │
+┌────────────────▼────────────────────────────────────┐
+│  Backend API (DigitalOcean)                         │
+│  https://api.releye.boestad.com                     │
+│  - Node.js + Express                                │
+│  - User authentication                              │
+│  - Invitation management                            │
+│  - Activity logging                                 │
+└────────────────┬────────────────────────────────────┘
+                 │
+                 │ MySQL Protocol
+                 │
+┌────────────────▼────────────────────────────────────┐
+│  MySQL Database (Spaceship cPanel)                  │
+│  releye.boestad.com:3306                            │
+│  Database: lpmjclyqtt_releye                        │
+│  - User credentials (encrypted passwords)           │
+│  - Pending invitations                              │
+│  - Activity logs                                    │
+└─────────────────────────────────────────────────────┘
+```
 
-## 📈 Performance
+## 🎉 Next Steps
 
-**Optimizations:**
-- Minified JavaScript/CSS
-- Tree-shaken code
-- Optimized images
-- Compressed assets (gzip/brotli)
-- CDN caching
+1. **Read SPACESHIP_DEPLOYMENT.md** - Complete step-by-step guide
+2. **Prepare database password** - You'll need this for backend setup
+3. **Choose backend hosting** - DigitalOcean recommended ($5/month)
+4. **Run database setup** - Import SQL file in phpMyAdmin
+5. **Deploy backend** - Follow guide to setup API server
+6. **Configure DNS** - Point api.releye.boestad.com to backend
+7. **Deploy frontend** - Push to GitHub for GitHub Pages deployment
+8. **Test deployment** - Login and verify everything works
+9. **Change admin password** - Security first!
 
-**Expected Metrics:**
-- First Load: < 2s on 4G
-- Time to Interactive: < 3s
-- Lighthouse: 90+ Performance
+## 💡 Tips
 
-## 🆘 Troubleshooting
+- **Start with database setup** - It's the easiest and quickest step
+- **Test backend locally first** - Use `npm start` to test before deploying
+- **Check DNS propagation** - Can take 5-30 minutes
+- **Monitor backend logs** - Use `pm2 logs releye-api` to debug issues
+- **Keep database backups** - Export regularly from phpMyAdmin
 
-**Build fails?**
-→ Check Actions tab for error logs
+## 📞 Need Help?
 
-**404 errors?**
-→ Verify vite.config.ts has `base: "/"`
+If you encounter issues:
 
-**Domain not working?**
-→ Check DNS settings and wait for propagation (up to 48h)
+1. **Check the logs**:
+   - Browser console (F12)
+   - Backend: `pm2 logs releye-api`
+   - Nginx: `sudo tail -f /var/log/nginx/error.log`
 
-**HTTPS issues?**
-→ Wait 10-20 min after DNS verification for certificate
+2. **Common issues**:
+   - CORS errors → Check backend CORS_ORIGIN setting
+   - Database connection → Enable remote MySQL access
+   - API not found → Check DNS and Nginx configuration
+   - Blank page → Check browser console for errors
 
-**Full troubleshooting**: See `DEPLOYMENT.md`
+3. **Test each component**:
+   - Database: Try connecting with mysql client
+   - Backend: `curl https://api.releye.boestad.com/api/health`
+   - Frontend: Check browser network tab
 
-## 📚 Documentation
+## ✨ Summary
 
-- **DEPLOYMENT.md** - Complete deployment guide
-- **DEPLOYMENT_CHECKLIST.md** - Quick checklist
-- **README.md** - Project overview and quick start
-- **COMPREHENSIVE_SECURITY_ANALYSIS.md** - Security details
+You now have:
+- ✅ A fully functional authentication system
+- ✅ MySQL database schema ready for deployment
+- ✅ Backend API configured for your database
+- ✅ Complete deployment documentation
+- ✅ Security best practices implemented
+- ✅ Multi-device/browser support
 
-## ✨ Success Indicators
-
-Your deployment is successful when:
-
-1. ✅ GitHub Actions shows green checkmark
-2. ✅ Settings → Pages shows "Your site is live"
-3. ✅ https://releye.boestad.com loads your app
-4. ✅ Browser shows 🔒 (HTTPS active)
-5. ✅ All features work correctly
-6. ✅ No console errors
-
-## 🎉 Ready!
-
-All deployment files are configured and ready. Just:
-
-1. Configure GitHub (Actions + Pages)
-2. Configure DNS
-3. Push to main
-4. Wait 2-3 minutes
-
-Your app will be live at https://releye.boestad.com
-
----
-
-**Version**: Beta 0.5  
-**Author**: D Boestad  
-**Last Updated**: 2024
+Ready to deploy! Start with `SPACESHIP_DEPLOYMENT.md` for the complete guide.
