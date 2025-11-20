@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RelEye - Reset Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #88E5D7;
+            margin-bottom: 10px;
+        }
+
+        .warning-box {
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .warning-box h2 {
+            color: #ff4444;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .warning-box li {
+            padding: 8px 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .warning-box li:before {
+            content: "• ";
+            color: #ff4444;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .info-box {
+            background: rgba(136, 229, 215, 0.1);
+            border: 1px solid rgba(136, 229, 215, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .step h3 {
+            color: #88E5D7;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .step input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+
+        .step input:focus {
+            outline: none;
+            border-color: #88E5D7;
+        }
+
+        .step button {
+            width: 100%;
+            padding: 14px 20px;
+            background: #ff4444;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .step button:hover:not(:disabled) {
+            background: #ff6666;
+            transform: translateY(-2px);
+        }
+
+        .step button:disabled {
+            background: rgba(255, 68, 68, 0.3);
+            cursor: not-allowed;
+        }
+
+        .step.success {
+            border-color: #88E5D7;
+            background: rgba(136, 229, 215, 0.05);
+        }
+
+        .step.success button {
+            background: #88E5D7;
+            color: #1a1a2e;
+        }
+
+        .step.success button:hover {
+            background: #a0f0e0;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .status.error {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff6666;
+        }
+
+        .status.success {
+            background: rgba(136, 229, 215, 0.2);
+            color: #88E5D7;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>RelEye</h1>
+            <p style="color: rgba(255, 255, 255, 0.6);">Application Reset Utility</p>
+        </div>
+
+        <div class="warning-box">
+            <h2>⚠️ Warning: Destructive Action</h2>
+            <ul>
+                <li>All user accounts and credentials will be deleted</li>
+                <li>All login history and permissions will be deleted</li>
+                <li>All pending invitations will be deleted</li>
+                <li>You will need to create a new admin account</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <p><strong>ℹ️ Important:</strong> This action does NOT delete your workspace files. Your networks, people, connections, and all data will remain intact. Only user credentials and authentication data will be reset.</p>
+        </div>
+
+        <div id="step1" class="step">
+            <h3>Step 1: Read the Warning</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">
+                Make sure you understand what will be deleted before proceeding.
+            </p>
+            <button onclick="goToStep2()">I Understand, Continue</button>
+        </div>
+
+        <div id="step2" class="step hidden">
+            <h3>Step 2: Type Confirmation</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">
+                Type <strong>RESET EVERYTHING</strong> to confirm:
+            </p>
+            <input 
+                type="text" 
+                id="confirmText" 
+                placeholder="RESET EVERYTHING"
+                oninput="checkConfirmation()"
+            />
+            <button id="step2Button" onclick="goToStep3()" disabled>Continue</button>
+        </div>
+
+        <div id="step3" class="step hidden">
+            <h3>Step 3: Final Confirmation</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">
+                This is your last chance to cancel. Click the button below to reset the application now.
+            </p>
+            <button onclick="performReset()">🔴 Reset Application Now</button>
+        </div>
+
+        <div id="step4" class="step success hidden">
+            <h3>✅ Reset Complete</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">
+                The application has been reset. Click below to start fresh with a new admin setup.
+            </p>
+            <button onclick="window.location.href='/'">Go to First-Time Setup</button>
+        </div>
+
+        <div id="status" class="status hidden"></div>
+    </div>
+
+    <script>
+        function goToStep2() {
+            document.getElementById('step1').classList.add('hidden')
+            document.getElementById('step2').classList.remove('hidden')
+            document.getElementById('confirmText').focus()
+        }
+
+        function checkConfirmation() {
+            const text = document.getElementById('confirmText').value
+            const button = document.getElementById('step2Button')
+            button.disabled = text !== 'RESET EVERYTHING'
+        }
+
+        function goToStep3() {
+            const text = document.getElementById('confirmText').value
+            if (text !== 'RESET EVERYTHING') {
+                showStatus('Please type exactly: RESET EVERYTHING', 'error')
+                return
+            }
+            document.getElementById('step2').classList.add('hidden')
+            document.getElementById('step3').classList.remove('hidden')
+        }
+
+        async function performReset() {
+            const status = document.getElementById('status')
+            status.textContent = 'Resetting application...'
+            status.className = 'status'
+            status.classList.remove('hidden', 'error', 'success')
+
+            try {
+                const apiUrl = window.location.protocol + '//' + window.location.host + '/api/auth/reset-all'
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                })
+
+                const data = await response.json()
+
+                if (data.success) {
+                    localStorage.clear()
+                    
+                    document.getElementById('step3').classList.add('hidden')
+                    document.getElementById('step4').classList.remove('hidden')
+                    
+                    showStatus('✅ Reset successful! All user data has been deleted.', 'success')
+                } else {
+                    throw new Error(data.error || 'Reset failed')
+                }
+            } catch (error) {
+                console.error('Reset error:', error)
+                showStatus('❌ Error: ' + error.message + '. Please check backend connection.', 'error')
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status')
+            status.textContent = message
+            status.className = 'status ' + type
+            status.classList.remove('hidden')
+        }
+    </script>
+</body>
+</html>

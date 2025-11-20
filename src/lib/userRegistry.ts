@@ -283,3 +283,15 @@ export function generateInviteLink(token: string, email: string): string {
   const baseUrl = window.location.origin
   return `${baseUrl}?invite=${token}&email=${encodeURIComponent(email)}`
 }
+
+export async function resetAllData(): Promise<void> {
+  console.log('[UserRegistry] ⚠️⚠️⚠️ RESETTING ALL DATA ⚠️⚠️⚠️')
+  try {
+    await cloudAuthService.resetAll()
+    await clearCurrentUser()
+    console.log('[UserRegistry] ✓ All data has been reset - application will restart')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to reset data:', error)
+    throw error
+  }
+}

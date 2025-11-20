@@ -43,6 +43,7 @@ import {
 import { format } from 'date-fns'
 import { storage } from '@/lib/storage'
 import { InviteEmailDialog } from '@/components/InviteEmailDialog'
+import * as UserRegistry from '@/lib/userRegistry'
 
 interface AdminDashboardProps {
   open: boolean
@@ -380,7 +381,10 @@ export function AdminDashboard({
 
     if (resetConfirmStep === 2) {
       try {
-        await storage.delete('user-credentials')
+        console.log('[AdminDashboard] ⚠️⚠️⚠️ RESETTING ALL DATA ⚠️⚠️⚠️')
+        
+        await UserRegistry.resetAllData()
+        
         await storage.delete('app-settings')
         await storage.delete('setup-completed')
         
@@ -391,7 +395,7 @@ export function AdminDashboard({
         }, 1500)
       } catch (error) {
         console.error('Failed to reset application:', error)
-        toast.error('Failed to reset application')
+        toast.error('Failed to reset application. Please check your connection to the backend.')
       }
     }
   }

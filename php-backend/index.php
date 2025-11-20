@@ -24,6 +24,22 @@ switch ($path) {
         }
         break;
         
+    case 'auth/reset-all':
+        if ($method !== 'POST') {
+            sendError('Method not allowed', 405);
+        }
+        
+        try {
+            $db->execute("DELETE FROM users");
+            $db->execute("DELETE FROM invitations");
+            $db->execute("DELETE FROM activity_log");
+            
+            sendResponse(['success' => true, 'message' => 'All data has been reset']);
+        } catch (Exception $e) {
+            sendError($e->getMessage(), 500);
+        }
+        break;
+        
     case 'auth/login':
         if ($method !== 'POST') {
             sendError('Method not allowed', 405);

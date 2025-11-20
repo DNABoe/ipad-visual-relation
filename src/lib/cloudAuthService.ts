@@ -147,5 +147,11 @@ export const cloudAuthService = {
       console.log('[CloudAuthService] ✗ Health check failed - backend not available, will use localStorage')
       return false
     }
+  },
+
+  async resetAll(): Promise<void> {
+    console.log('[CloudAuthService] ⚠️ RESETTING ALL DATA')
+    await apiCall<{ success: boolean, message: string }>('/auth/reset-all', 'POST')
+    console.log('[CloudAuthService] ✓ All data has been reset')
   }
 }
