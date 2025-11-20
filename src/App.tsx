@@ -106,13 +106,6 @@ function App() {
       await UserRegistry.setCurrentUser(user.userId)
       console.log('[App] ✓ User session set')
       
-      console.log('[App] Verifying user was saved...')
-      const verifyUser = await UserRegistry.getUserById(user.userId)
-      if (!verifyUser) {
-        throw new Error('Failed to verify user was saved correctly')
-      }
-      console.log('[App] ✓ User verified in registry')
-      
       setCurrentUser(user)
       setIsFirstTime(false)
       
