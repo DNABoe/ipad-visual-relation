@@ -276,7 +276,8 @@ export async function setCurrentUser(userId: string): Promise<void> {
 
 export async function clearCurrentUser(): Promise<void> {
   localStorage.removeItem(CURRENT_USER_KEY)
-  console.log('[UserRegistry] ✓ Current user cleared')
+  cloudAuthService.logout()
+  console.log('[UserRegistry] ✓ Current user cleared and logged out')
 }
 
 export function generateInviteLink(token: string, email: string): string {

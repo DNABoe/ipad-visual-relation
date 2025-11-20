@@ -3,10 +3,39 @@ import type { RegisteredUser, PendingInvite } from './userRegistry'
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.DEV ? 'http://localhost:3000/api' : 'https://releye.boestad.com/api')
 
+const AUTH_TOKEN_KEY = 'releye-auth-token'
+
 interface ApiResponse<T> {
   success: boolean
   data?: T
   error?: string
+}
+
+function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY)
+  } catch (error) {
+    console.error('[CloudAuthService] Failed to get auth token:', error)
+    return null
+  }
+}
+
+function setAuthToken(token: string): void {
+  try {
+    localStorage.setItem(AUTH_TOKEN_KEY, token)
+    console.log('[CloudAuthService] ✓ Auth token stored')
+  } catch (error) {
+    console.error('[CloudAuthService] Failed to store auth token:', error)
+  }
+}
+
+function clearAuthToken(): void {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+    console.log('[CloudAuthService] ✓ Auth token cleared')
+  } catch (error) {
+    console.error('[CloudAuthService] Failed to clear auth token:', error)
+  }
 }
 
 async function apiCall<T>(
@@ -19,11 +48,18 @@ async function apiCall<T>(
   const timeoutId = setTimeout(() => controller.abort(), timeout)
 
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    const token = getAuthToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const options: RequestInit = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       credentials: 'include',
       signal: controller.signal,
     }
@@ -99,11 +135,25 @@ export const cloudAuthService = {
 
   async authenticateUser(email: string, password: string): Promise<RegisteredUser | null> {
     try {
-      return await apiCall<RegisteredUser>('/auth/login', 'POST', { email, password })
+      const result = await apiCall<RegisteredUser & { token?: string }>('/auth/login', 'POST', { email, password })
+      
+      if (result) {
+        console.log('[CloudAuthService] ✓ Login successful, storing auth token')
+        if (result.token) {
+          setAuthToken(result.token)
+        }
+      }
+      
+      return result
     } catch (error) {
       console.error('[CloudAuthService] Authentication failed:', error)
       return null
     }
+  },
+
+  logout(): void {
+    console.log('[CloudAuthService] Logging out, clearing auth token')
+    clearAuthToken()
   },
 
   async getAllInvites(): Promise<PendingInvite[]> {

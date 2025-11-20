@@ -77,10 +77,11 @@ switch ($path) {
                 'name' => $user['name'],
                 'role' => $user['role'],
                 'canInvestigate' => (bool)$user['can_investigate'],
-                'loginCount' => (int)$user['login_count'],
+                'loginCount' => (int)$user['login_count'] + 1,
                 'createdAt' => strtotime($user['created_at']) * 1000,
-                'lastLogin' => strtotime($user['last_login']) * 1000,
-                'passwordHash' => $user['password_hash']
+                'lastLogin' => time() * 1000,
+                'passwordHash' => $user['password_hash'],
+                'token' => $token
             ]);
         } catch (Exception $e) {
             sendError($e->getMessage(), 500);
