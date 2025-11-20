@@ -144,6 +144,9 @@
         <div class="header">
             <h1>RelEye Backend Test & Reset</h1>
             <p style="color: rgba(255, 255, 255, 0.6);">Diagnostic and reset utility for the backend API</p>
+            <p style="color: rgba(255, 255, 255, 0.4); margin-top: 10px; font-size: 14px;">
+                Not working? Try the <a href="/?diagnostics=true" style="color: #88E5D7; text-decoration: underline;">in-app diagnostics</a>
+            </p>
         </div>
 
         <div class="section">
@@ -285,9 +288,13 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    localStorage.clear()
+                    sessionStorage.clear()
+                    
                     showResult('reset-result', 
                         '✅ Database reset successful!\n\n' + 
                         'All user data has been deleted.\n' +
+                        'LocalStorage and SessionStorage cleared.\n' +
                         'You can now create a new admin account.\n\n' +
                         JSON.stringify(data, null, 2),
                         'success'

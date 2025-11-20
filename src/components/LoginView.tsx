@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +16,27 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [backendStatus, setBackendStatus] = useState<'unknown' | 'online' | 'offline'>('unknown')
+
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 
+          (import.meta.env.DEV ? 'http://localhost:3000/api' : 'https://releye.boestad.com/api')
+        const response = await fetch(`${apiUrl}/health`, { 
+          credentials: 'include',
+          signal: AbortSignal.timeout(5000)
+        })
+        const data = await response.json()
+        setBackendStatus(data.success ? 'online' : 'offline')
+      } catch (error) {
+        console.error('Backend health check failed:', error)
+        setBackendStatus('offline')
+      }
+    }
+    
+    checkBackend()
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,6 +74,24 @@ export function LoginView({ onLogin }: LoginViewProps) {
           <CardDescription>Sign in to access your workspace</CardDescription>
         </CardHeader>
         <CardContent>
+          {backendStatus === 'offline' && (
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive font-medium">⚠️ Backend API is not responding</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                The authentication server cannot be reached. 
+                <a href="/?diagnostics=true" className="text-primary hover:underline ml-1">
+                  Run diagnostics
+                </a>
+              </p>
+            </div>
+          )}
+          
+          {backendStatus === 'online' && (
+            <div className="mb-4 p-2 bg-success/10 border border-success/20 rounded-lg">
+              <p className="text-xs text-success">✓ Backend connected</p>
+            </div>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>

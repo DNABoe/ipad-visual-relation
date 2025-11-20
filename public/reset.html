@@ -201,6 +201,7 @@
 
         <div class="info-box">
             <p><strong>ℹ️ Important:</strong> This action does NOT delete your workspace files. Your networks, people, connections, and all data will remain intact. Only user credentials and authentication data will be reset.</p>
+            <p style="margin-top: 10px;"><strong>Troubleshooting:</strong> If the reset doesn't work, visit the <a href="/?diagnostics=true" style="color: #88E5D7; text-decoration: underline;">Diagnostics Page</a> to check the backend connection.</p>
         </div>
 
         <div id="step1" class="step">
@@ -238,7 +239,7 @@
             <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">
                 The application has been reset. Click below to start fresh with a new admin setup.
             </p>
-            <button onclick="window.location.href='/'">Go to First-Time Setup</button>
+            <button onclick="window.location.href='/?reset=true'">Go to First-Time Setup</button>
         </div>
 
         <div id="status" class="status hidden"></div>
@@ -288,6 +289,7 @@
 
                 if (data.success) {
                     localStorage.clear()
+                    sessionStorage.clear()
                     
                     document.getElementById('step3').classList.add('hidden')
                     document.getElementById('step4').classList.remove('hidden')

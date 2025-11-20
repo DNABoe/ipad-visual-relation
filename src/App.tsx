@@ -5,6 +5,7 @@ import { FileManager } from './components/FileManager'
 import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
+import { AuthDiagnostic } from './components/AuthDiagnostic'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
 
@@ -28,6 +29,7 @@ function App() {
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('invite')
         const email = urlParams.get('email')
+        const forceReset = urlParams.get('reset')
         
         if (token && email) {
           console.log('[App] Invite link detected')
@@ -37,13 +39,30 @@ function App() {
           return
         }
         
-        console.log('[App] Checking if first-time setup needed...')
-        const isFirstTimeSetup = await UserRegistry.isFirstTimeSetup()
-        console.log('[App] First time setup:', isFirstTimeSetup)
-        
-        if (isFirstTimeSetup) {
-          console.log('[App] No admin found - showing first time setup')
+        if (forceReset === 'true') {
+          console.log('[App] Force reset parameter detected - clearing session and showing first-time setup')
+          await UserRegistry.clearCurrentUser()
+          window.history.replaceState({}, '', window.location.pathname)
           setIsFirstTime(true)
+          setIsLoadingAuth(false)
+          return
+        }
+        
+        console.log('[App] Checking if first-time setup needed...')
+        try {
+          const isFirstTimeSetup = await UserRegistry.isFirstTimeSetup()
+          console.log('[App] First time setup:', isFirstTimeSetup)
+          
+          if (isFirstTimeSetup) {
+            console.log('[App] No admin found - showing first time setup')
+            await UserRegistry.clearCurrentUser()
+            setIsFirstTime(true)
+            setIsLoadingAuth(false)
+            return
+          }
+        } catch (error) {
+          console.error('[App] ❌ Failed to check first-time status:', error)
+          toast.error('Cannot connect to backend API. Please check your connection and try again.')
           setIsLoadingAuth(false)
           return
         }
@@ -61,7 +80,7 @@ function App() {
         console.log('[App] ========== INITIALIZATION COMPLETE ==========')
       } catch (error) {
         console.error('[App] ❌ Failed to initialize:', error)
-        toast.error('Failed to initialize application. Please refresh the page.')
+        toast.error('Failed to initialize application. Please check the diagnostics page.')
       } finally {
         setIsLoadingAuth(false)
       }
@@ -237,6 +256,20 @@ function App() {
               <p className="text-muted-foreground">Initializing...</p>
             </div>
           </div>
+        </div>
+        <Toaster />
+      </>
+    )
+  }
+
+  const urlParams = new URLSearchParams(window.location.search)
+  const showDiagnostics = urlParams.get('diagnostics') === 'true'
+
+  if (showDiagnostics) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <AuthDiagnostic />
         </div>
         <Toaster />
       </>

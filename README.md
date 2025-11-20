@@ -2,6 +2,13 @@
 
 A powerful visual relationship mapping and network analysis tool for understanding complex connections between people, teams, and organizations.
 
+## 🚨 Authentication Troubleshooting
+
+- **Can't see first-time setup after reset?** → [AUTH_QUICK_FIX.md](./AUTH_QUICK_FIX.md) ⚡
+- **Detailed authentication guide** → [AUTH_RESET_GUIDE.md](./AUTH_RESET_GUIDE.md)
+- **Run diagnostics now** → Visit `https://releye.boestad.com/?diagnostics=true`
+- **Reset authentication** → Visit `https://releye.boestad.com/test-backend.html`
+
 ## 🚀 Quick Start
 
 ### For First-Time Setup
