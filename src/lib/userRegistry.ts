@@ -1,4 +1,5 @@
 import { hashPassword, verifyPassword, type PasswordHash } from './auth'
+import { cloudAuthService } from './cloudAuthService'
 
 export interface RegisteredUser {
   userId: string
@@ -25,31 +26,42 @@ export interface PendingInvite {
   createdBy: string
 }
 
-const USERS_KEY = 'releye-users'
-const INVITES_KEY = 'releye-invites'
 const CURRENT_USER_KEY = 'releye-current-user-id'
 
 export async function getAllUsers(): Promise<RegisteredUser[]> {
-  console.log('[UserRegistry] Getting all users from KV storage...')
-  const users = await window.spark.kv.get<RegisteredUser[]>(USERS_KEY)
-  console.log('[UserRegistry] Found', users?.length || 0, 'users')
-  return users || []
+  console.log('[UserRegistry] Getting all users from cloud API...')
+  try {
+    const users = await cloudAuthService.getAllUsers()
+    console.log('[UserRegistry] Found', users?.length || 0, 'users')
+    return users || []
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get users:', error)
+    return []
+  }
 }
 
 export async function getUserByEmail(email: string): Promise<RegisteredUser | undefined> {
   console.log('[UserRegistry] Looking up user by email:', email)
-  const users = await getAllUsers()
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
-  console.log('[UserRegistry] User found:', !!user)
-  return user
+  try {
+    const user = await cloudAuthService.getUserByEmail(email)
+    console.log('[UserRegistry] User found:', !!user)
+    return user || undefined
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get user by email:', error)
+    return undefined
+  }
 }
 
 export async function getUserById(userId: string): Promise<RegisteredUser | undefined> {
   console.log('[UserRegistry] Looking up user by ID:', userId)
-  const users = await getAllUsers()
-  const user = users.find(u => u.userId === userId)
-  console.log('[UserRegistry] User found:', !!user)
-  return user
+  try {
+    const user = await cloudAuthService.getUserById(userId)
+    console.log('[UserRegistry] User found:', !!user)
+    return user || undefined
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get user by ID:', error)
+    return undefined
+  }
 }
 
 export async function createUser(
@@ -85,79 +97,92 @@ export async function createUser(
     canInvestigate
   }
 
-  console.log('[UserRegistry] Saving user to KV storage...')
-  const users = await getAllUsers()
-  await window.spark.kv.set(USERS_KEY, [...users, user])
-  console.log('[UserRegistry] ✓ User created')
-  console.log('[UserRegistry] ========== USER CREATED SUCCESSFULLY ==========')
-  
-  return user
+  console.log('[UserRegistry] Saving user to cloud API...')
+  try {
+    const createdUser = await cloudAuthService.createUser(user)
+    console.log('[UserRegistry] ✓ User created')
+    console.log('[UserRegistry] ========== USER CREATED SUCCESSFULLY ==========')
+    return createdUser
+  } catch (error) {
+    console.error('[UserRegistry] Failed to create user:', error)
+    throw error
+  }
 }
 
 export async function updateUser(user: RegisteredUser): Promise<void> {
   console.log('[UserRegistry] Updating user:', user.userId)
-  const users = await getAllUsers()
-  const index = users.findIndex(u => u.userId === user.userId)
-  if (index === -1) {
-    throw new Error('User not found')
+  try {
+    await cloudAuthService.updateUser(user.userId, user)
+    console.log('[UserRegistry] ✓ User updated')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to update user:', error)
+    throw error
   }
-  users[index] = user
-  await window.spark.kv.set(USERS_KEY, users)
-  console.log('[UserRegistry] ✓ User updated')
 }
 
 export async function deleteUser(userId: string): Promise<void> {
   console.log('[UserRegistry] Deleting user:', userId)
-  const users = await getAllUsers()
-  const filtered = users.filter(u => u.userId !== userId)
-  await window.spark.kv.set(USERS_KEY, filtered)
-  console.log('[UserRegistry] ✓ User deleted')
+  try {
+    await cloudAuthService.deleteUser(userId)
+    console.log('[UserRegistry] ✓ User deleted')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to delete user:', error)
+    throw error
+  }
 }
 
 export async function authenticateUser(emailOrUsername: string, password: string): Promise<RegisteredUser | null> {
   console.log('[UserRegistry] ========== AUTHENTICATING USER ==========')
   console.log('[UserRegistry] EmailOrUsername:', emailOrUsername)
   
-  const user = await getUserByEmail(emailOrUsername)
-  if (!user) {
-    console.log('[UserRegistry] ❌ User not found')
+  try {
+    const user = await cloudAuthService.authenticateUser(emailOrUsername, password)
+    
+    if (!user) {
+      console.log('[UserRegistry] ❌ Authentication failed')
+      return null
+    }
+
+    console.log('[UserRegistry] ✓ Authentication successful')
+    await setCurrentUser(user.userId)
+    console.log('[UserRegistry] ========== AUTHENTICATION SUCCESSFUL ==========')
+    
+    return user
+  } catch (error) {
+    console.error('[UserRegistry] Authentication error:', error)
     return null
   }
-
-  console.log('[UserRegistry] Verifying password...')
-  const isValid = await verifyPassword(password, user.passwordHash)
-  
-  if (!isValid) {
-    console.log('[UserRegistry] ❌ Invalid password')
-    return null
-  }
-
-  console.log('[UserRegistry] ✓ Authentication successful')
-  
-  user.lastLogin = Date.now()
-  user.loginCount++
-  await updateUser(user)
-  
-  await setCurrentUser(user.userId)
-  console.log('[UserRegistry] ========== AUTHENTICATION SUCCESSFUL ==========')
-  
-  return user
 }
 
 export async function isFirstTimeSetup(): Promise<boolean> {
-  const users = await getAllUsers()
-  const hasAdmin = users.some(u => u.role === 'admin')
-  return !hasAdmin
+  try {
+    const isFirstTime = await cloudAuthService.isFirstTimeSetup()
+    console.log('[UserRegistry] First time setup:', isFirstTime)
+    return isFirstTime
+  } catch (error) {
+    console.error('[UserRegistry] Failed to check first time setup:', error)
+    return true
+  }
 }
 
 export async function getAllInvites(): Promise<PendingInvite[]> {
-  const invites = await window.spark.kv.get<PendingInvite[]>(INVITES_KEY)
-  return invites || []
+  try {
+    const invites = await cloudAuthService.getAllInvites()
+    return invites || []
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get invites:', error)
+    return []
+  }
 }
 
 export async function getInviteByToken(token: string): Promise<PendingInvite | undefined> {
-  const invites = await getAllInvites()
-  return invites.find(i => i.token === token)
+  try {
+    const invite = await cloudAuthService.getInviteByToken(token)
+    return invite || undefined
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get invite:', error)
+    return undefined
+  }
 }
 
 export async function createInvite(
@@ -178,11 +203,14 @@ export async function createInvite(
     createdBy
   }
 
-  const invites = await getAllInvites()
-  await window.spark.kv.set(INVITES_KEY, [...invites, invite])
-  console.log('[UserRegistry] ✓ Invite created')
-  
-  return invite
+  try {
+    const createdInvite = await cloudAuthService.createInvite(invite)
+    console.log('[UserRegistry] ✓ Invite created')
+    return createdInvite
+  } catch (error) {
+    console.error('[UserRegistry] Failed to create invite:', error)
+    throw error
+  }
 }
 
 export async function consumeInvite(token: string, password: string): Promise<RegisteredUser> {
@@ -199,33 +227,39 @@ export async function consumeInvite(token: string, password: string): Promise<Re
 
   const user = await createUser(invite.email, invite.name, password, invite.role, false)
 
-  const invites = await getAllInvites()
-  const filtered = invites.filter(i => i.token !== token)
-  await window.spark.kv.set(INVITES_KEY, filtered)
-  console.log('[UserRegistry] ✓ Invite consumed')
+  try {
+    await cloudAuthService.deleteInvite(token)
+    console.log('[UserRegistry] ✓ Invite consumed')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to delete invite after consumption:', error)
+  }
 
   return user
 }
 
 export async function revokeInvite(token: string): Promise<void> {
   console.log('[UserRegistry] Revoking invite:', token.substring(0, 8) + '...')
-  const invites = await getAllInvites()
-  const filtered = invites.filter(i => i.token !== token)
-  await window.spark.kv.set(INVITES_KEY, filtered)
-  console.log('[UserRegistry] ✓ Invite revoked')
+  try {
+    await cloudAuthService.deleteInvite(token)
+    console.log('[UserRegistry] ✓ Invite revoked')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to revoke invite:', error)
+    throw error
+  }
 }
 
 export async function cleanupExpiredInvites(): Promise<void> {
   console.log('[UserRegistry] Cleaning up expired invites...')
-  const invites = await getAllInvites()
-  const now = Date.now()
-  const valid = invites.filter(i => i.expiresAt > now)
-  await window.spark.kv.set(INVITES_KEY, valid)
-  console.log('[UserRegistry] ✓ Expired invites cleaned up')
+  try {
+    await cloudAuthService.cleanupExpiredInvites()
+    console.log('[UserRegistry] ✓ Expired invites cleaned up')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to cleanup invites:', error)
+  }
 }
 
 export async function getCurrentUserId(): Promise<string | undefined> {
-  const userId = await window.spark.kv.get<string>(CURRENT_USER_KEY)
+  const userId = localStorage.getItem(CURRENT_USER_KEY)
   return userId || undefined
 }
 
@@ -236,12 +270,12 @@ export async function getCurrentUser(): Promise<RegisteredUser | undefined> {
 }
 
 export async function setCurrentUser(userId: string): Promise<void> {
-  await window.spark.kv.set(CURRENT_USER_KEY, userId)
+  localStorage.setItem(CURRENT_USER_KEY, userId)
   console.log('[UserRegistry] ✓ Current user set:', userId)
 }
 
 export async function clearCurrentUser(): Promise<void> {
-  await window.spark.kv.delete(CURRENT_USER_KEY)
+  localStorage.removeItem(CURRENT_USER_KEY)
   console.log('[UserRegistry] ✓ Current user cleared')
 }
 
