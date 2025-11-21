@@ -8,6 +8,7 @@ import { InviteAcceptView } from './components/InviteAcceptView'
 import { AuthDiagnostic } from './components/AuthDiagnostic'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
+import { waitForSpark } from './lib/sparkReady'
 import './lib/persistenceTest'
 
 function App() {
@@ -26,6 +27,24 @@ function App() {
     const initializeAuth = async () => {
       try {
         console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
+        
+        console.log('[App] Waiting for Spark runtime to be ready...')
+        const isReady = await waitForSpark(10000)
+        
+        if (!isReady) {
+          console.error('[App] ❌ Spark runtime failed to initialize!')
+          toast.error('Application runtime not ready. Please refresh the page.', {
+            duration: 10000,
+            action: {
+              label: 'Diagnostics',
+              onClick: () => window.location.href = '?diagnostics=true'
+            }
+          })
+          setIsLoadingAuth(false)
+          return
+        }
+        
+        console.log('[App] ✓ Spark runtime is ready')
         
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('invite')
@@ -247,7 +266,8 @@ function App() {
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <div className="space-y-2">
-              <p className="text-muted-foreground">Initializing...</p>
+              <p className="text-muted-foreground">Initializing Spark runtime...</p>
+              <p className="text-xs text-muted-foreground">Please wait while we connect to secure storage</p>
             </div>
           </div>
         </div>

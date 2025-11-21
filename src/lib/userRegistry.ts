@@ -31,20 +31,37 @@ const SESSION_KV_KEY = 'releye-active-sessions'
 
 export async function getAllUsers(): Promise<RegisteredUser[]> {
   console.log('[UserRegistry] Getting all users from Spark KV...')
+  
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    throw new Error('Storage system not available. Please refresh the page.')
+  }
+  
   try {
     const users = await window.spark.kv.get<RegisteredUser[]>(USERS_KV_KEY)
     console.log('[UserRegistry] Found', users?.length || 0, 'users')
     return users || []
   } catch (error) {
     console.error('[UserRegistry] Failed to get users:', error)
-    return []
+    throw new Error('Failed to load user data. Please check your connection.')
   }
 }
 
 async function saveAllUsers(users: RegisteredUser[]): Promise<void> {
   console.log('[UserRegistry] Saving', users.length, 'users to Spark KV...')
-  await window.spark.kv.set(USERS_KV_KEY, users)
-  console.log('[UserRegistry] ✓ Users saved to GitHub')
+  
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    throw new Error('Storage system not available. Please refresh the page and try again.')
+  }
+  
+  try {
+    await window.spark.kv.set(USERS_KV_KEY, users)
+    console.log('[UserRegistry] ✓ Users saved to GitHub')
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to save users:', error)
+    throw new Error('Failed to save user data. Please check your connection and try again.')
+  }
 }
 
 export async function getUserByEmail(email: string): Promise<RegisteredUser | undefined> {
@@ -171,6 +188,11 @@ export async function isFirstTimeSetup(): Promise<boolean> {
 }
 
 export async function getAllInvites(): Promise<PendingInvite[]> {
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    return []
+  }
+  
   try {
     const invites = await window.spark.kv.get<PendingInvite[]>(INVITES_KV_KEY)
     return invites || []
@@ -181,7 +203,17 @@ export async function getAllInvites(): Promise<PendingInvite[]> {
 }
 
 async function saveAllInvites(invites: PendingInvite[]): Promise<void> {
-  await window.spark.kv.set(INVITES_KV_KEY, invites)
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    throw new Error('Storage system not available. Please refresh the page.')
+  }
+  
+  try {
+    await window.spark.kv.set(INVITES_KV_KEY, invites)
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to save invites:', error)
+    throw new Error('Failed to save invite data. Please check your connection.')
+  }
 }
 
 export async function getInviteByToken(token: string): Promise<PendingInvite | undefined> {
@@ -265,6 +297,11 @@ export async function cleanupExpiredInvites(): Promise<void> {
 }
 
 export async function getCurrentUserId(): Promise<string | undefined> {
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    return undefined
+  }
+  
   try {
     const userId = await window.spark.kv.get<string>(CURRENT_USER_KEY)
     return userId
@@ -277,20 +314,37 @@ export async function getCurrentUserId(): Promise<string | undefined> {
 export async function getCurrentUser(): Promise<RegisteredUser | undefined> {
   const userId = await getCurrentUserId()
   if (!userId) return undefined
-  return await getUserById(userId)
+  
+  try {
+    return await getUserById(userId)
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get current user:', error)
+    return undefined
+  }
 }
 
 export async function setCurrentUser(userId: string): Promise<void> {
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    throw new Error('Storage system not available. Please refresh the page and try again.')
+  }
+  
   try {
     await window.spark.kv.set(CURRENT_USER_KEY, userId)
     console.log('[UserRegistry] ✓ Current user session saved to GitHub:', userId)
   } catch (error) {
     console.error('[UserRegistry] Failed to set current user:', error)
-    throw new Error('Failed to save user session')
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    throw new Error(`Failed to save user session: ${errorMsg}`)
   }
 }
 
 export async function clearCurrentUser(): Promise<void> {
+  if (!window.spark || !window.spark.kv) {
+    console.warn('[UserRegistry] ⚠️ Spark KV is not available - cannot clear session')
+    return
+  }
+  
   try {
     await window.spark.kv.delete(CURRENT_USER_KEY)
     console.log('[UserRegistry] ✓ Current user session cleared from GitHub')
@@ -306,6 +360,12 @@ export function generateInviteLink(token: string, email: string): string {
 
 export async function resetAllData(): Promise<void> {
   console.log('[UserRegistry] ⚠️⚠️⚠️ RESETTING ALL DATA ⚠️⚠️⚠️')
+  
+  if (!window.spark || !window.spark.kv) {
+    console.error('[UserRegistry] ❌ Spark KV is not available!')
+    throw new Error('Storage system not available. Please refresh the page.')
+  }
+  
   try {
     await window.spark.kv.delete(USERS_KV_KEY)
     await window.spark.kv.delete(INVITES_KV_KEY)

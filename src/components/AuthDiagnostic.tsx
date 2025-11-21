@@ -21,30 +21,72 @@ export function AuthDiagnostic() {
 
     try {
       diagnostics.push({
-        name: 'Backend API Health',
+        name: 'Spark KV Availability',
         status: 'pending',
         message: 'Checking...'
       })
       setResults([...diagnostics])
 
-      const apiUrl = import.meta.env.VITE_API_URL || 
-        (import.meta.env.DEV ? 'http://localhost:3000/api' : 'https://releye.boestad.com/api')
-      
       try {
-        const healthResponse = await fetch(`${apiUrl}/health`, { credentials: 'include' })
-        const healthData = await healthResponse.json()
+        const sparkAvailable = !!(window.spark && window.spark.kv)
+        const canRead = sparkAvailable && typeof window.spark.kv.get === 'function'
+        const canWrite = sparkAvailable && typeof window.spark.kv.set === 'function'
+        const canDelete = sparkAvailable && typeof window.spark.kv.delete === 'function'
+        const canList = sparkAvailable && typeof window.spark.kv.keys === 'function'
+        
+        const allFunctionsAvailable = canRead && canWrite && canDelete && canList
         
         diagnostics[0] = {
-          name: 'Backend API Health',
-          status: healthData.success ? 'success' : 'error',
-          message: healthData.success ? 'Backend API is responding' : 'Backend API error',
-          details: JSON.stringify(healthData, null, 2)
+          name: 'Spark KV Availability',
+          status: allFunctionsAvailable ? 'success' : 'error',
+          message: allFunctionsAvailable ? 'Spark KV is fully available' : 'Spark KV is not available or incomplete',
+          details: JSON.stringify({
+            sparkExists: !!window.spark,
+            kvExists: !!(window.spark && window.spark.kv),
+            canRead,
+            canWrite,
+            canDelete,
+            canList
+          }, null, 2)
         }
       } catch (error) {
         diagnostics[0] = {
-          name: 'Backend API Health',
+          name: 'Spark KV Availability',
           status: 'error',
-          message: 'Cannot connect to backend API',
+          message: 'Error checking Spark KV',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }
+      }
+      setResults([...diagnostics])
+
+      diagnostics.push({
+        name: 'Spark KV Test Write/Read',
+        status: 'pending',
+        message: 'Checking...'
+      })
+      setResults([...diagnostics])
+
+      try {
+        const testKey = '_diagnostic_test_key'
+        const testValue = { timestamp: Date.now(), test: 'diagnostic' }
+        
+        await window.spark.kv.set(testKey, testValue)
+        const retrieved = await window.spark.kv.get<typeof testValue>(testKey)
+        await window.spark.kv.delete(testKey)
+        
+        const success = retrieved && JSON.stringify(retrieved) === JSON.stringify(testValue)
+        
+        diagnostics[1] = {
+          name: 'Spark KV Test Write/Read',
+          status: success ? 'success' : 'error',
+          message: success ? 'KV operations working correctly' : 'KV operations failed',
+          details: success ? 'Successfully wrote, read, and deleted test data' : 'Data integrity check failed'
+        }
+      } catch (error) {
+        diagnostics[1] = {
+          name: 'Spark KV Test Write/Read',
+          status: 'error',
+          message: 'Failed to test KV operations',
           details: error instanceof Error ? error.message : 'Unknown error'
         }
       }
@@ -59,14 +101,14 @@ export function AuthDiagnostic() {
 
       try {
         const isFirstTime = await UserRegistry.isFirstTimeSetup()
-        diagnostics[1] = {
+        diagnostics[2] = {
           name: 'First-Time Setup Check',
           status: isFirstTime ? 'success' : 'warning',
           message: isFirstTime ? 'No admin exists - ready for first-time setup' : 'Admin already exists',
           details: `isFirstTime: ${isFirstTime}`
         }
       } catch (error) {
-        diagnostics[1] = {
+        diagnostics[2] = {
           name: 'First-Time Setup Check',
           status: 'error',
           message: 'Failed to check first-time status',
@@ -86,44 +128,17 @@ export function AuthDiagnostic() {
         const currentUserId = await UserRegistry.getCurrentUserId()
         const currentUser = currentUserId ? await UserRegistry.getUserById(currentUserId) : null
         
-        diagnostics[2] = {
+        diagnostics[3] = {
           name: 'Current User Session',
           status: currentUser ? 'success' : 'warning',
           message: currentUser ? `Logged in as ${currentUser.email}` : 'No active session',
           details: currentUser ? JSON.stringify({ userId: currentUser.userId, email: currentUser.email, role: currentUser.role }, null, 2) : 'No user session'
         }
       } catch (error) {
-        diagnostics[2] = {
+        diagnostics[3] = {
           name: 'Current User Session',
           status: 'error',
           message: 'Failed to check user session',
-          details: error instanceof Error ? error.message : 'Unknown error'
-        }
-      }
-      setResults([...diagnostics])
-
-      diagnostics.push({
-        name: 'LocalStorage Status',
-        status: 'pending',
-        message: 'Checking...'
-      })
-      setResults([...diagnostics])
-
-      try {
-        const storageKeys = Object.keys(localStorage)
-        const relevantKeys = storageKeys.filter(k => k.startsWith('releye-'))
-        
-        diagnostics[3] = {
-          name: 'LocalStorage Status',
-          status: 'success',
-          message: `Found ${relevantKeys.length} RelEye keys`,
-          details: JSON.stringify(relevantKeys, null, 2)
-        }
-      } catch (error) {
-        diagnostics[3] = {
-          name: 'LocalStorage Status',
-          status: 'error',
-          message: 'Failed to check localStorage',
           details: error instanceof Error ? error.message : 'Unknown error'
         }
       }
