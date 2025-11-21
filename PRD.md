@@ -1,26 +1,26 @@
 # RelEye - Relationship Network App
 
-A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored locally and encrypted with AES-256 for maximum security and privacy.
+A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored using GitHub-backed Spark KV storage and browser localStorage with AES-256 encryption for maximum security and privacy.
 
-## ⚠️ DEPLOYMENT REQUIREMENT
+## ✨ SIMPLIFIED ARCHITECTURE - SINGLE DEPLOYMENT
 
-**The backend API MUST be deployed for this application to function.** See `URGENT_READ_ME.md` and `BACKEND_DEPLOYMENT_GUIDE.md` for complete deployment instructions.
+**This application now uses a simplified architecture with NO backend server required!** Simply deploy to GitHub Pages and you're done.
 
 ## Deployment Information
 
 **Production URL**: https://releye.boestad.com
 
-This application consists of two components:
-1. **Frontend**: Static React app deployed via GitHub Pages
-2. **Backend API**: Node.js server for cloud authentication (MUST BE DEPLOYED)
+This application consists of a single component:
+- **Frontend**: Static React app deployed via GitHub Pages with Spark KV integration
 
 ### Architecture Overview
 
-**Cloud-Based User Authentication:**
-- User credentials stored in PostgreSQL database at releye.boestad.com/api
+**GitHub-Backed User Authentication:**
+- User credentials stored in Spark KV (GitHub-backed storage)
 - Enables access from any browser or device
 - Role-based access control (Admin, Editor, Viewer)
 - Invite system for multi-user collaboration
+- No separate backend server needed!
 
 **Local Network Storage:**
 - Network files (.enc.releye) stored in browser localStorage
@@ -30,11 +30,12 @@ This application consists of two components:
 
 ### Critical Architecture: Hybrid Storage Model
 
-**Why Cloud Authentication:**
+**Why Spark KV for User Data:**
+- Managed by GitHub (secure, reliable, no server to maintain)
 - Users can access from multiple browsers and devices
 - Credentials sync automatically across all platforms
 - Invite system works across different devices
-- Multi-user collaboration requires centralized auth
+- Multi-user collaboration without backend complexity
 
 **Why Local Network Files:**
 - Maximum privacy - relationship data never leaves device
@@ -42,7 +43,7 @@ This application consists of two components:
 - Works offline once authenticated
 - User maintains full control of sensitive data
 
-**What's Stored in Cloud Database:**
+**What's Stored in Spark KV (GitHub):**
 - User accounts (email, name, role)
 - Password hashes (PBKDF2)
 - Pending invites
@@ -56,28 +57,22 @@ This application consists of two components:
 - Network layouts
 - Current user session token
 
-### Fallback Behavior
-
-If the cloud API is unavailable, the app automatically falls back to localStorage for authentication. This ensures the app continues working even if the backend is temporarily down.
-
 ### Deployment Architecture
 
-**Frontend (GitHub Pages):**
-- Static React application
+**Single Deployment (GitHub Pages):**
+- Static React application with Spark runtime
 - Deployed at https://releye.boestad.com
-- Communicates with backend API via HTTPS
+- Spark KV automatically handles data persistence via GitHub
+- No backend server configuration needed
+- No database setup required
 
-**Backend API (Cloud Server):**
-- Node.js/Express server
-- PostgreSQL database
-- Deployed at https://releye.boestad.com/api
-- Handles user authentication and management
-
-### Deployment Verification Checklist
+### Deployment Checklist
 
 ✅ **Domain Configuration**: CNAME file present in `/public/CNAME` with `releye.boestad.com`
 ✅ **Base Path**: `index.html` uses relative paths (`./src/main.css`, `./src/main.tsx`) compatible with custom domain deployment
 ✅ **Assets**: All assets use proper imports (no hardcoded paths), public folder assets accessible via `/` root path
+✅ **GitHub Pages**: Enable GitHub Pages in repository settings, set source to root directory
+✅ **Spark Runtime**: Application automatically uses Spark KV for user data storage
 ✅ **Storage Layer**: Cloud API for user credentials with localStorage fallback
 ✅ **Web Crypto API**: All encryption/decryption uses standard Web Crypto API available in all modern browsers
 ✅ **Backend API**: Node.js/Express server deployed at releye.boestad.com/api

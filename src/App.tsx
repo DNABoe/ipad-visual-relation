@@ -62,7 +62,7 @@ function App() {
           }
         } catch (error) {
           console.error('[App] ❌ Failed to check first-time status:', error)
-          toast.error('Cannot connect to backend API. Please check your connection and try again.')
+          toast.error('Failed to initialize. Please refresh and try again.')
           setIsLoadingAuth(false)
           return
         }
