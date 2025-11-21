@@ -29,15 +29,15 @@ function App() {
         console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
         
         console.log('[App] Waiting for Spark runtime to be ready...')
-        const isReady = await waitForSpark(10000)
+        const isReady = await waitForSpark(20000)
         
         if (!isReady) {
           console.error('[App] ❌ Spark runtime failed to initialize!')
-          toast.error('Application runtime not ready. Please refresh the page.', {
-            duration: 10000,
+          toast.error('Storage system not ready. Please ensure you are logged into GitHub and refresh the page.', {
+            duration: 15000,
             action: {
-              label: 'Diagnostics',
-              onClick: () => window.location.href = '?diagnostics=true'
+              label: 'Refresh',
+              onClick: () => window.location.reload()
             }
           })
           setIsLoadingAuth(false)

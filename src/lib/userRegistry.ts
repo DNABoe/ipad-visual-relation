@@ -56,11 +56,24 @@ async function saveAllUsers(users: RegisteredUser[]): Promise<void> {
   }
   
   try {
-    await window.spark.kv.set(USERS_KV_KEY, users)
-    console.log('[UserRegistry] ✓ Users saved to GitHub')
+    await Promise.race([
+      window.spark.kv.set(USERS_KV_KEY, users),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Storage operation timed out after 10 seconds')), 10000)
+      )
+    ])
+    console.log('[UserRegistry] ✓ Users saved successfully')
+    
+    const verification = await window.spark.kv.get<RegisteredUser[]>(USERS_KV_KEY)
+    if (!verification || verification.length !== users.length) {
+      console.warn('[UserRegistry] ⚠️ Verification mismatch after save')
+    } else {
+      console.log('[UserRegistry] ✓ Save verified')
+    }
   } catch (error) {
     console.error('[UserRegistry] ❌ Failed to save users:', error)
-    throw new Error('Failed to save user data. Please check your connection and try again.')
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    throw new Error(`Failed to save user data: ${errorMsg}. Please check your connection and try again.`)
   }
 }
 
