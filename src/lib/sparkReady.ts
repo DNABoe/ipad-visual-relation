@@ -1,11 +1,15 @@
-export async function waitForSpark(maxWaitMs: number = 15000): Promise<boolean> {
+export async function waitForSpark(maxWaitMs: number = 30000): Promise<boolean> {
   const startTime = Date.now()
   let lastError: any = null
   let attemptCount = 0
   
-  console.log('[sparkReady] Starting Spark initialization check...')
+  console.log('[sparkReady] ========== Starting Spark initialization check ==========')
   console.log('[sparkReady] Current URL:', window.location.href)
+  console.log('[sparkReady] Hostname:', window.location.hostname)
+  console.log('[sparkReady] Protocol:', window.location.protocol)
   console.log('[sparkReady] window.spark exists:', !!window.spark)
+  console.log('[sparkReady] window.spark type:', typeof window.spark)
+  console.log('[sparkReady] Max wait time:', maxWaitMs, 'ms')
   
   while (Date.now() - startTime < maxWaitMs) {
     attemptCount++
@@ -61,14 +65,18 @@ export async function waitForSpark(maxWaitMs: number = 15000): Promise<boolean> 
     await new Promise(resolve => setTimeout(resolve, 500))
   }
   
-  console.error('[sparkReady] ✗ Timeout reached after', maxWaitMs, 'ms and', attemptCount, 'attempts')
+  console.error('[sparkReady] ========== TIMEOUT REACHED ==========')
+  console.error('[sparkReady] ✗ Failed after', maxWaitMs, 'ms and', attemptCount, 'attempts')
   console.error('[sparkReady] Last error:', lastError)
   console.error('[sparkReady] Final state:', {
     sparkExists: !!window.spark,
     kvExists: !!(window.spark && window.spark.kv),
     sparkType: typeof window.spark,
-    kvType: window.spark ? typeof window.spark.kv : 'N/A'
+    kvType: window.spark ? typeof window.spark.kv : 'N/A',
+    hostname: window.location.hostname,
+    protocol: window.location.protocol
   })
+  console.error('[sparkReady] ==========================================')
   
   return false
 }
