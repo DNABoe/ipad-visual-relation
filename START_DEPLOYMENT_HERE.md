@@ -42,7 +42,7 @@ PHP runs interpreted (like Python). Just:
 
 #### Frontend Setup
 - [ ] Configure GitHub Settings → Pages → Source: "GitHub Actions"
-- [ ] Configure DNS CNAME: `releye → yourusername.github.io`
+- [ ] Configure DNS A records: `releye → 185.199.108-111.153` (all 4 IPs)
 - [ ] Verify CNAME file exists in repo root
 - [ ] Verify `.nojekyll` file exists in repo root
 - [ ] Verify `.github/workflows/deploy.yml` exists

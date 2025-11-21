@@ -35,18 +35,8 @@
 
 ### At Your Domain Registrar (boestad.com)
 
-Choose ONE option:
+**For custom subdomain (releye.boestad.com), use A records:**
 
-#### Option A: CNAME Record (Recommended - Easier)
-1. [ ] Log into your domain registrar's DNS management
-2. [ ] Add/Edit CNAME record:
-   - **Type**: CNAME
-   - **Name**: `releye` (or `releye.boestad.com` depending on registrar)
-   - **Value**: `[your-github-username].github.io` (replace with actual username)
-   - **TTL**: 3600 (or leave as default)
-3. [ ] Save the DNS record
-
-#### Option B: A Records (Alternative)
 1. [ ] Log into your domain registrar's DNS management
 2. [ ] Add ALL FOUR A records:
    - Type: A, Name: `releye`, Value: `185.199.108.153`, TTL: 3600
@@ -55,14 +45,14 @@ Choose ONE option:
    - Type: A, Name: `releye`, Value: `185.199.111.153`, TTL: 3600
 3. [ ] Save all DNS records
 
+**Note:** GitHub Pages custom domains require A records pointing to GitHub's IP addresses. CNAME records only work for apex domains (boestad.com) or when using www subdomain.
+
 ### Verify DNS Configuration
 ```bash
 # Wait 5-10 minutes after DNS changes, then run:
 dig releye.boestad.com
 
-# You should see either:
-# - CNAME pointing to [username].github.io, OR
-# - A records showing the GitHub IPs above
+# You should see A records showing the GitHub IPs above
 ```
 
 ## Part 3: Repository Files Verification

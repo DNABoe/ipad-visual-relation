@@ -62,16 +62,22 @@ The frontend automatically builds and deploys via GitHub Actions when you push t
 Add the following DNS records at your domain registrar (Boestad.com):
 
 ```
-Type: CNAME
+Type: A Record (IPv4 Address)
 Host: releye
-Value: yourusername.github.io
+Value: Use ALL four GitHub Pages IPs:
+  185.199.108.153
+  185.199.109.153
+  185.199.110.153
+  185.199.111.153
 TTL: 3600 (or default)
 ```
+
+**Note:** GitHub Pages requires A records pointing to their IP addresses, not CNAME records for custom domains. Add all four IP addresses as separate A records.
 
 **Verification:**
 ```bash
 dig releye.boestad.com
-# Should show CNAME record pointing to GitHub Pages
+# Should show A records pointing to GitHub Pages IPs
 ```
 
 ### Step 3: Verify Required Files Exist
@@ -510,11 +516,11 @@ This resets the password to `admin`.
 **Cause:** DNS not configured or not propagated
 
 **Solution:**
-1. Verify CNAME record exists:
+1. Verify A records exist:
    ```bash
    dig releye.boestad.com
    ```
-2. Should show CNAME pointing to `yourusername.github.io`
+2. Should show A records pointing to GitHub Pages IPs (185.199.108-111.153)
 3. DNS propagation can take 24-48 hours
 4. Use https://dnschecker.org to check propagation globally
 
