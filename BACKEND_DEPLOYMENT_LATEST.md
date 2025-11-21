@@ -1,14 +1,49 @@
 # RelEye Backend Deployment Guide (Latest)
 
-**Last Updated**: Current deployment instructions as of latest iteration  
+**Last Updated**: January 2025  
 **Backend Type**: PHP + MySQL  
 **Hosting**: cPanel (Spaceship hosting at Boestad.com)
+
+> **Note:** This is the backend-only guide. For complete deployment including frontend, see `DEPLOYMENT_GUIDE.md`
 
 ## Overview
 
 The RelEye backend is a PHP REST API that handles user authentication and management. It uses MySQL for data persistence and is deployed on a cPanel-based hosting environment.
 
 **Current Production URL**: `https://releye.boestad.com/api/`
+
+**Quick Answer: Do I need to build the backend?**
+
+**No.** The backend is PHP, which runs interpreted (no build step). You simply:
+1. Upload the PHP files from `php-backend/` to cPanel
+2. Configure `config.php` with your database credentials
+3. Run the SQL schema to create database tables
+
+The **frontend** (React app) requires building, but that's handled automatically by GitHub Actions.
+
+---
+
+## What You Need to Deploy
+
+### Files to Upload (from `php-backend/` directory)
+```
+php-backend/
+├── index.php      - Main API router (no build needed)
+├── config.php     - Configuration (YOU MUST EDIT THIS)
+├── database.php   - MySQL connection class
+├── helpers.php    - Utility functions
+└── .htaccess      - URL rewriting rules
+```
+
+**Important:** These are plain PHP files. No build process, no compilation, no npm commands needed.
+
+### Database Schema
+- File: `database-setup-mysql.sql` (in project root)
+- Run this SQL in phpMyAdmin to create tables
+
+### Where to Upload
+- **Destination:** `/public_html/api/` on your cPanel server
+- **Method:** cPanel File Manager or FTP
 
 ---
 
@@ -45,6 +80,17 @@ Before deploying, ensure you have:
 ---
 
 ## Deployment Steps
+
+### TL;DR Quick Steps
+
+```bash
+# NO BUILD NEEDED FOR BACKEND!
+# Just do these 3 things:
+
+1. Run database-setup-mysql.sql in phpMyAdmin
+2. Upload all files from php-backend/ to /public_html/api/
+3. Edit /public_html/api/config.php with your credentials
+```
 
 ### Step 1: Database Setup
 
