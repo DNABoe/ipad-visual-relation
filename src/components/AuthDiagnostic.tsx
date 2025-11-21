@@ -212,6 +212,43 @@ export function AuthDiagnostic() {
     }
   }
 
+  const createTestUser = async () => {
+    if (!confirm('Create a test user with username "test" and password "test"?')) {
+      return
+    }
+
+    try {
+      setIsRunning(true)
+      console.log('[AuthDiagnostic] Creating test user...')
+      
+      const existingUser = await UserRegistry.getUserByEmail('test')
+      if (existingUser) {
+        alert('Test user already exists! Check the diagnostics results above.')
+        setIsRunning(false)
+        await runDiagnostics()
+        return
+      }
+
+      const testUser = await UserRegistry.createUser(
+        'test',
+        'Test User',
+        'test',
+        'editor',
+        true
+      )
+      
+      console.log('[AuthDiagnostic] ✓ Test user created:', testUser)
+      alert(`Test user created successfully!\n\nEmail: test\nPassword: test\nRole: ${testUser.role}\n\nCheck the database to verify.`)
+      
+      await runDiagnostics()
+    } catch (error) {
+      console.error('[AuthDiagnostic] Failed to create test user:', error)
+      alert('Failed to create test user: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -253,6 +290,20 @@ export function AuthDiagnostic() {
               variant="secondary"
             >
               Clear Session & Reload
+            </Button>
+          </div>
+
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              🧪 Test User Creation
+            </p>
+            <Button 
+              onClick={createTestUser}
+              disabled={isRunning}
+              variant="default"
+              className="w-full"
+            >
+              Create Test User (test/test)
             </Button>
           </div>
           
