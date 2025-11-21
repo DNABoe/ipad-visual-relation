@@ -129,6 +129,34 @@ export function AuthDiagnostic() {
       }
       setResults([...diagnostics])
 
+      diagnostics.push({
+        name: 'All Users in Database',
+        status: 'pending',
+        message: 'Checking...'
+      })
+      setResults([...diagnostics])
+
+      try {
+        const allUsers = await UserRegistry.getAllUsers()
+        
+        diagnostics[4] = {
+          name: 'All Users in Database',
+          status: allUsers.length > 0 ? 'success' : 'warning',
+          message: `Found ${allUsers.length} user(s) in database`,
+          details: allUsers.length > 0 
+            ? JSON.stringify(allUsers.map(u => ({ userId: u.userId, email: u.email, role: u.role })), null, 2)
+            : 'No users found in database'
+        }
+      } catch (error) {
+        diagnostics[4] = {
+          name: 'All Users in Database',
+          status: 'error',
+          message: 'Failed to fetch users',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }
+      }
+      setResults([...diagnostics])
+
     } catch (error) {
       console.error('Diagnostic error:', error)
     } finally {
@@ -162,6 +190,28 @@ export function AuthDiagnostic() {
     }
   }
 
+  const resetAllData = async () => {
+    const confirmation = prompt(
+      'WARNING: This will delete ALL users, invites, and reset the entire system.\n\n' +
+      'This action cannot be undone!\n\n' +
+      'Type "DELETE EVERYTHING" to confirm:'
+    )
+    
+    if (confirmation === 'DELETE EVERYTHING') {
+      try {
+        setIsRunning(true)
+        await UserRegistry.resetAllData()
+        alert('All data has been reset successfully. The page will reload to first-time setup.')
+        window.location.href = '/'
+      } catch (error) {
+        alert('Failed to reset data: ' + (error instanceof Error ? error.message : 'Unknown error'))
+        setIsRunning(false)
+      }
+    } else if (confirmation !== null) {
+      alert('Reset cancelled - you must type exactly "DELETE EVERYTHING" to confirm')
+    }
+  }
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -188,21 +238,37 @@ export function AuthDiagnostic() {
           </div>
         ))}
 
-        <div className="flex gap-3 pt-4">
-          <Button 
-            onClick={runDiagnostics} 
-            disabled={isRunning}
-            variant="outline"
-          >
-            <ArrowsClockwise className={isRunning ? 'animate-spin' : ''} />
-            {isRunning ? 'Running...' : 'Run Again'}
-          </Button>
-          <Button 
-            onClick={clearAndReload}
-            variant="destructive"
-          >
-            Clear Session & Reload
-          </Button>
+        <div className="flex flex-col gap-3 pt-4">
+          <div className="flex gap-3">
+            <Button 
+              onClick={runDiagnostics} 
+              disabled={isRunning}
+              variant="outline"
+            >
+              <ArrowsClockwise className={isRunning ? 'animate-spin' : ''} />
+              {isRunning ? 'Running...' : 'Run Again'}
+            </Button>
+            <Button 
+              onClick={clearAndReload}
+              variant="secondary"
+            >
+              Clear Session & Reload
+            </Button>
+          </div>
+          
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              ⚠️ Danger Zone: If you have a malformed user in the database (like "admin-default"), use this to completely reset:
+            </p>
+            <Button 
+              onClick={resetAllData}
+              disabled={isRunning}
+              variant="destructive"
+              className="w-full"
+            >
+              Reset All Data & Start Fresh
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
