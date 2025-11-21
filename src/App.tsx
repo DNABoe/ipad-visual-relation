@@ -8,6 +8,7 @@ import { InviteAcceptView } from './components/InviteAcceptView'
 import { AuthDiagnostic } from './components/AuthDiagnostic'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
+import './lib/persistenceTest'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)

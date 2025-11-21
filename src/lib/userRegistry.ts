@@ -1,3 +1,4 @@
+/// <reference types="../vite-end.d.ts" />
 import { hashPassword, verifyPassword, type PasswordHash } from './auth'
 
 export interface RegisteredUser {
@@ -26,11 +27,12 @@ export interface PendingInvite {
 const USERS_KV_KEY = 'releye-users'
 const INVITES_KV_KEY = 'releye-invites'
 const CURRENT_USER_KEY = 'releye-current-user-id'
+const SESSION_KV_KEY = 'releye-active-sessions'
 
 export async function getAllUsers(): Promise<RegisteredUser[]> {
   console.log('[UserRegistry] Getting all users from Spark KV...')
   try {
-    const users = await spark.kv.get<RegisteredUser[]>(USERS_KV_KEY)
+    const users = await window.spark.kv.get<RegisteredUser[]>(USERS_KV_KEY)
     console.log('[UserRegistry] Found', users?.length || 0, 'users')
     return users || []
   } catch (error) {
@@ -41,7 +43,7 @@ export async function getAllUsers(): Promise<RegisteredUser[]> {
 
 async function saveAllUsers(users: RegisteredUser[]): Promise<void> {
   console.log('[UserRegistry] Saving', users.length, 'users to Spark KV...')
-  await spark.kv.set(USERS_KV_KEY, users)
+  await window.spark.kv.set(USERS_KV_KEY, users)
   console.log('[UserRegistry] ✓ Users saved to GitHub')
 }
 
@@ -170,7 +172,7 @@ export async function isFirstTimeSetup(): Promise<boolean> {
 
 export async function getAllInvites(): Promise<PendingInvite[]> {
   try {
-    const invites = await spark.kv.get<PendingInvite[]>(INVITES_KV_KEY)
+    const invites = await window.spark.kv.get<PendingInvite[]>(INVITES_KV_KEY)
     return invites || []
   } catch (error) {
     console.error('[UserRegistry] Failed to get invites:', error)
@@ -179,7 +181,7 @@ export async function getAllInvites(): Promise<PendingInvite[]> {
 }
 
 async function saveAllInvites(invites: PendingInvite[]): Promise<void> {
-  await spark.kv.set(INVITES_KV_KEY, invites)
+  await window.spark.kv.set(INVITES_KV_KEY, invites)
 }
 
 export async function getInviteByToken(token: string): Promise<PendingInvite | undefined> {
@@ -263,8 +265,13 @@ export async function cleanupExpiredInvites(): Promise<void> {
 }
 
 export async function getCurrentUserId(): Promise<string | undefined> {
-  const userId = localStorage.getItem(CURRENT_USER_KEY)
-  return userId || undefined
+  try {
+    const userId = await window.spark.kv.get<string>(CURRENT_USER_KEY)
+    return userId
+  } catch (error) {
+    console.error('[UserRegistry] Failed to get current user ID:', error)
+    return undefined
+  }
 }
 
 export async function getCurrentUser(): Promise<RegisteredUser | undefined> {
@@ -274,13 +281,22 @@ export async function getCurrentUser(): Promise<RegisteredUser | undefined> {
 }
 
 export async function setCurrentUser(userId: string): Promise<void> {
-  localStorage.setItem(CURRENT_USER_KEY, userId)
-  console.log('[UserRegistry] ✓ Current user set:', userId)
+  try {
+    await window.spark.kv.set(CURRENT_USER_KEY, userId)
+    console.log('[UserRegistry] ✓ Current user session saved to GitHub:', userId)
+  } catch (error) {
+    console.error('[UserRegistry] Failed to set current user:', error)
+    throw new Error('Failed to save user session')
+  }
 }
 
 export async function clearCurrentUser(): Promise<void> {
-  localStorage.removeItem(CURRENT_USER_KEY)
-  console.log('[UserRegistry] ✓ Current user cleared')
+  try {
+    await window.spark.kv.delete(CURRENT_USER_KEY)
+    console.log('[UserRegistry] ✓ Current user session cleared from GitHub')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to clear current user:', error)
+  }
 }
 
 export function generateInviteLink(token: string, email: string): string {
@@ -290,8 +306,13 @@ export function generateInviteLink(token: string, email: string): string {
 
 export async function resetAllData(): Promise<void> {
   console.log('[UserRegistry] ⚠️⚠️⚠️ RESETTING ALL DATA ⚠️⚠️⚠️')
-  await spark.kv.delete(USERS_KV_KEY)
-  await spark.kv.delete(INVITES_KV_KEY)
-  await clearCurrentUser()
-  console.log('[UserRegistry] ✓ All data has been reset')
+  try {
+    await window.spark.kv.delete(USERS_KV_KEY)
+    await window.spark.kv.delete(INVITES_KV_KEY)
+    await clearCurrentUser()
+    console.log('[UserRegistry] ✓ All data has been reset from GitHub')
+  } catch (error) {
+    console.error('[UserRegistry] Failed to reset all data:', error)
+    throw new Error('Failed to reset data')
+  }
 }
