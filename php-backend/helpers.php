@@ -138,11 +138,16 @@ function getRequestBody() {
 
 function logActivity($db, $userId, $action, $details = '') {
     try {
-        $sql = "INSERT INTO activity_log (user_id, action, details, created_at) VALUES (?, ?, ?, NOW())";
-        $db->execute($sql, [$userId, $action, $details]);
+        $timestamp = round(microtime(true) * 1000);
+        $sql = "INSERT INTO activity_log (user_id, action, details, created_at) VALUES (?, ?, ?, ?)";
+        $db->execute($sql, [$userId, $action, $details, $timestamp]);
     } catch (Exception $e) {
         error_log("Failed to log activity: " . $e->getMessage());
     }
+}
+
+function getCurrentTimestamp() {
+    return round(microtime(true) * 1000);
 }
 
 setCORSHeaders();

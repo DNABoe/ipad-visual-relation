@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RelEye - First-Time Setup Diagnostic</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #0f0f1a;
+            color: #ffffff;
+        }
+        h1 {
+            color: #6dd5ed;
+            border-bottom: 2px solid #6dd5ed;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #6dd5ed;
+            margin-top: 30px;
+        }
+        .status-box {
+            background: #1a1a2e;
+            border: 1px solid #2e2e4a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success {
+            border-left: 4px solid #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+        .error {
+            border-left: 4px solid #f87171;
+            background: rgba(248, 113, 113, 0.1);
+        }
+        .warning {
+            border-left: 4px solid #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+        }
+        .info {
+            border-left: 4px solid #6dd5ed;
+            background: rgba(109, 213, 237, 0.1);
+        }
+        button {
+            background: #6dd5ed;
+            color: #0f0f1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #5ac5dd;
+        }
+        button.danger {
+            background: #f87171;
+            color: white;
+        }
+        button.danger:hover {
+            background: #dc2626;
+        }
+        pre {
+            background: #0a0a14;
+            border: 1px solid #2e2e4a;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            color: #e5e5e5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2e2e4a;
+        }
+        th {
+            background: #1a1a2e;
+            color: #6dd5ed;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: rgba(109, 213, 237, 0.05);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(109, 213, 237, 0.3);
+            border-radius: 50%;
+            border-top-color: #6dd5ed;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        code {
+            background: rgba(109, 213, 237, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 First-Time Setup Diagnostic</h1>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'https://releye.boestad.com/api';
+        
+        async function runDiagnostics() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status-box info"><div class="loading"></div> Running diagnostics...</div>';
+            
+            let html = '';
+            
+            // Test 1: Health Check
+            html += '<h2>1. API Health Check</h2>';
+            try {
+                const response = await fetch(`${API_BASE}?endpoint=health`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    html += `<div class="status-box success">
+                        <strong>✅ API is responding</strong>
+                        <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                    </div>`;
+                } else {
+                    html += `<div class="status-box error">
+                        <strong>❌ API health check failed</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                }
+            } catch (error) {
+                html += `<div class="status-box error">
+                    <strong>❌ Cannot connect to API</strong>
+                    <p>Error: ${error.message}</p>
+                    <p>Make sure the backend is deployed at <code>${API_BASE}</code></p>
+                </div>`;
+            }
+            
+            // Test 2: First-Time Check
+            html += '<h2>2. First-Time Setup Check</h2>';
+            try {
+                const response = await fetch(`${API_BASE}?endpoint=auth/first-time`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const isFirstTime = data.data.isFirstTime;
+                    if (isFirstTime) {
+                        html += `<div class="status-box success">
+                            <strong>✅ First-Time Setup Required</strong>
+                            <p>No admin users found in database. You will see the admin setup screen.</p>
+                            <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                        </div>`;
+                    } else {
+                        html += `<div class="status-box warning">
+                            <strong>⚠️ Admin User Already Exists</strong>
+                            <p>Database has admin users. You will see the normal login screen.</p>
+                            <p>To reset and start fresh, use the "Reset Database" button below.</p>
+                            <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                        </div>`;
+                    }
+                } else {
+                    html += `<div class="status-box error">
+                        <strong>❌ First-time check failed</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                }
+            } catch (error) {
+                html += `<div class="status-box error">
+                    <strong>❌ First-time check error</strong>
+                    <p>Error: ${error.message}</p>
+                </div>`;
+            }
+            
+            // Test 3: Database Status
+            html += '<h2>3. Database Status</h2>';
+            html += `<div class="status-box info">
+                <p>To check database directly:</p>
+                <ol>
+                    <li>Go to Spaceship cPanel</li>
+                    <li>Open phpMyAdmin</li>
+                    <li>Select database: <code>lpmjclyqtt_releye</code></li>
+                    <li>Click on <code>users</code> table</li>
+                    <li>Check if any users with role='admin' exist</li>
+                </ol>
+                <p>Or visit: <a href="https://releye.boestad.com/api/debug-first-time.php" target="_blank" style="color: #6dd5ed;">https://releye.boestad.com/api/debug-first-time.php</a></p>
+            </div>`;
+            
+            // Reset Option
+            html += '<h2>4. Reset Database (Emergency)</h2>';
+            html += `<div class="status-box warning">
+                <p><strong>⚠️ WARNING:</strong> This will delete ALL users and data!</p>
+                <p>This forces the app to show first-time admin setup.</p>
+                <button class="danger" onclick="resetDatabase()">🗑️ Delete All Users & Reset</button>
+            </div>`;
+            
+            // Next Steps
+            html += '<h2>5. Next Steps</h2>';
+            html += `<div class="status-box info">
+                <p><strong>If isFirstTime = false but you need to reset:</strong></p>
+                <ol>
+                    <li>Click the "Delete All Users & Reset" button above, OR</li>
+                    <li>Go to phpMyAdmin → database <code>lpmjclyqtt_releye</code> → SQL tab</li>
+                    <li>Run: <code>DELETE FROM users;</code></li>
+                    <li>Then visit <a href="https://releye.boestad.com" target="_blank" style="color: #6dd5ed;">https://releye.boestad.com</a></li>
+                </ol>
+                
+                <p><strong>If isFirstTime = true:</strong></p>
+                <p>Just visit <a href="https://releye.boestad.com" target="_blank" style="color: #6dd5ed;">https://releye.boestad.com</a> and you'll see the admin setup screen!</p>
+            </div>`;
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        async function resetDatabase() {
+            if (!confirm('⚠️ WARNING! This will DELETE ALL USERS and force first-time setup.\n\nAre you absolutely sure?')) {
+                return;
+            }
+            
+            if (!confirm('This action CANNOT be undone. All user accounts will be permanently deleted.\n\nContinue?')) {
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status-box warning"><div class="loading"></div> Resetting database...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}?endpoint=auth/reset-all`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `<div class="status-box success">
+                        <strong>✅ Database Reset Complete!</strong>
+                        <p>${data.data.message}</p>
+                        <p>Now visit <a href="https://releye.boestad.com" target="_blank" style="color: #6dd5ed;">https://releye.boestad.com</a> to set up your admin account.</p>
+                        <button onclick="runDiagnostics()">Run Diagnostics Again</button>
+                    </div>`;
+                } else {
+                    resultsDiv.innerHTML = `<div class="status-box error">
+                        <strong>❌ Reset Failed</strong>
+                        <p>${data.error}</p>
+                        <button onclick="runDiagnostics()">Run Diagnostics Again</button>
+                    </div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status-box error">
+                    <strong>❌ Reset Error</strong>
+                    <p>${error.message}</p>
+                    <button onclick="runDiagnostics()">Run Diagnostics Again</button>
+                </div>`;
+            }
+        }
+        
+        // Run diagnostics on page load
+        runDiagnostics();
+    </script>
+</body>
+</html>

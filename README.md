@@ -1,60 +1,23 @@
-# RelEye - Relationship Network Visualization
+# ✨ Welcome to Your Spark Template!
+You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
 
-A powerful visual relationship mapping and network analysis tool for understanding complex connections between people, teams, and organizations.
+This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
 
-## 🚨 Authentication Troubleshooting
+🚀 What's Inside?
+- A clean, minimal Spark environment
+- Pre-configured for local development
+- Ready to scale with your ideas
+  
+🧠 What Can You Do?
 
-- **Can't see first-time setup after reset?** → [AUTH_QUICK_FIX.md](./AUTH_QUICK_FIX.md) ⚡
-- **Detailed authentication guide** → [AUTH_RESET_GUIDE.md](./AUTH_RESET_GUIDE.md)
-- **Run diagnostics now** → Visit `https://releye.boestad.com/?diagnostics=true`
-- **Reset authentication** → Visit `https://releye.boestad.com/test-backend.html`
+Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
 
-## 🚀 Quick Start
+🧹 Just Exploring?
+No problem! If you were just checking things out and don’t need to keep this code:
 
-### For First-Time Setup
-1. Navigate to [https://releye.boestad.com](https://releye.boestad.com)
-2. You'll be prompted to create an admin account
-3. Set your admin username and password
-4. Start creating your relationship networks!
+- Simply delete your Spark.
+- Everything will be cleaned up — no traces left behind.
 
-### Resetting the Application
-
-If you need to reset all user credentials and start fresh:
-
-#### Option 1: Admin Dashboard (Recommended if you can login)
-1. Log in as admin
-2. Open Settings → Admin → Reset tab
-3. Follow the multi-step confirmation process
-
-#### Option 2: Reset Utility Page
-1. Visit [https://releye.boestad.com/reset.html](https://releye.boestad.com/reset.html)
-2. Follow the guided reset process
-
-#### Option 3: API Reset (For advanced users)
-```bash
-curl -X POST https://releye.boestad.com/api/auth/reset-all
-```
-
-See [RESET_INSTRUCTIONS.md](RESET_INSTRUCTIONS.md) for detailed instructions.
-
-## 🔑 Key Features
-
-- **Visual Network Mapping**: Create intuitive visual representations of relationships
-- **User Management**: Secure multi-user access with role-based permissions
-- **Investigation Tools**: AI-powered analysis capabilities
-- **Local File Storage**: Your network data stays with you
-- **Secure Authentication**: Backend-powered credential management
-
-## 📚 Documentation
-
-- [Reset Instructions](RESET_INSTRUCTIONS.md) - How to reset passwords and user data
-- [Deployment Guide](DEPLOYMENT_GUIDE.md) - How to deploy to your own domain
-- [API Documentation](BACKEND_DEPLOYMENT_GUIDE.md) - Backend API reference
-
-## 🔒 Security
-
-User credentials are stored securely in a MySQL database on the backend. Network files remain local to your browser for privacy.
-
-## 📄 License
+📄 License For Spark Template Resources 
 
 The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.

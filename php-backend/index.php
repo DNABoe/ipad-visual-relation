@@ -60,7 +60,8 @@ switch ($path) {
                 sendError('Invalid credentials', 401);
             }
             
-            $db->execute("UPDATE users SET last_login = NOW(), login_count = login_count + 1 WHERE user_id = ?", [$user['user_id']]);
+            $timestamp = getCurrentTimestamp();
+            $db->execute("UPDATE users SET last_login = ?, login_count = login_count + 1 WHERE user_id = ?", [$timestamp, $user['user_id']]);
             
             $token = JWT::encode([
                 'userId' => $user['user_id'],
@@ -71,6 +72,7 @@ switch ($path) {
             
             logActivity($db, $user['user_id'], 'login', "User logged in: {$user['email']}");
             
+            $currentTimestamp = getCurrentTimestamp();
             sendResponse([
                 'userId' => $user['user_id'],
                 'email' => $user['email'],
@@ -78,8 +80,8 @@ switch ($path) {
                 'role' => $user['role'],
                 'canInvestigate' => (bool)$user['can_investigate'],
                 'loginCount' => (int)$user['login_count'] + 1,
-                'createdAt' => strtotime($user['created_at']) * 1000,
-                'lastLogin' => time() * 1000,
+                'createdAt' => (int)$user['created_at'],
+                'lastLogin' => $currentTimestamp,
                 'passwordHash' => $user['password_hash'],
                 'token' => $token
             ]);
@@ -105,8 +107,8 @@ switch ($path) {
                 'role' => $user['role'],
                 'canInvestigate' => (bool)$user['can_investigate'],
                 'loginCount' => (int)$user['login_count'],
-                'createdAt' => strtotime($user['created_at']) * 1000,
-                'lastLogin' => strtotime($user['last_login']) * 1000,
+                'createdAt' => (int)$user['created_at'],
+                'lastLogin' => (int)$user['last_login'],
                 'passwordHash' => $user['password_hash']
             ]);
         } catch (Exception $e) {
@@ -128,8 +130,8 @@ switch ($path) {
                         'role' => $user['role'],
                         'canInvestigate' => (bool)$user['can_investigate'],
                         'loginCount' => (int)$user['login_count'],
-                        'createdAt' => strtotime($user['created_at']) * 1000,
-                        'lastLogin' => strtotime($user['last_login']) * 1000,
+                        'createdAt' => (int)$user['created_at'],
+                        'lastLogin' => (int)$user['last_login'],
                         'passwordHash' => $user['password_hash']
                     ];
                 }
@@ -156,9 +158,10 @@ switch ($path) {
                     sendError('User with this email already exists', 400);
                 }
                 
+                $timestamp = getCurrentTimestamp();
                 $sql = "INSERT INTO users (user_id, email, name, password_hash, role, can_investigate, created_at, last_login, login_count) 
-                        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)";
-                $db->execute($sql, [$userId, $email, $name, $passwordHash, $role, $canInvestigate]);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)";
+                $db->execute($sql, [$userId, $email, $name, $passwordHash, $role, $canInvestigate, $timestamp, $timestamp]);
                 
                 logActivity($db, $userId, 'user_created', "User created: $email");
                 
@@ -171,8 +174,8 @@ switch ($path) {
                     'role' => $user['role'],
                     'canInvestigate' => (bool)$user['can_investigate'],
                     'loginCount' => (int)$user['login_count'],
-                    'createdAt' => strtotime($user['created_at']) * 1000,
-                    'lastLogin' => strtotime($user['last_login']) * 1000,
+                    'createdAt' => (int)$user['created_at'],
+                    'lastLogin' => (int)$user['last_login'],
                     'passwordHash' => $user['password_hash']
                 ]);
             } catch (Exception $e) {
@@ -206,8 +209,8 @@ switch ($path) {
                     'role' => $user['role'],
                     'canInvestigate' => (bool)$user['can_investigate'],
                     'loginCount' => (int)$user['login_count'],
-                    'createdAt' => strtotime($user['created_at']) * 1000,
-                    'lastLogin' => strtotime($user['last_login']) * 1000,
+                    'createdAt' => (int)$user['created_at'],
+                    'lastLogin' => (int)$user['last_login'],
                     'passwordHash' => $user['password_hash']
                 ]);
             } catch (Exception $e) {
@@ -232,8 +235,8 @@ switch ($path) {
                         'role' => $user['role'],
                         'canInvestigate' => (bool)$user['can_investigate'],
                         'loginCount' => (int)$user['login_count'],
-                        'createdAt' => strtotime($user['created_at']) * 1000,
-                        'lastLogin' => strtotime($user['last_login']) * 1000,
+                        'createdAt' => (int)$user['created_at'],
+                        'lastLogin' => (int)$user['last_login'],
                         'passwordHash' => $user['password_hash']
                     ]);
                 } catch (Exception $e) {
@@ -302,8 +305,8 @@ switch ($path) {
                             'role' => 'viewer',
                             'createdBy' => $invite['created_by'],
                             'status' => $invite['status'],
-                            'createdAt' => strtotime($invite['created_at']) * 1000,
-                            'expiresAt' => strtotime($invite['expires_at']) * 1000
+                            'createdAt' => (int)$invite['created_at'],
+                            'expiresAt' => (int)$invite['expires_at']
                         ];
                     }
                     sendResponse($result);
@@ -332,10 +335,13 @@ switch ($path) {
                     }
                     
                     $token = generateToken();
+                    $inviteId = 'inv_' . bin2hex(random_bytes(16));
+                    $timestamp = getCurrentTimestamp();
+                    $expiresAt = $timestamp + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
                     
-                    $sql = "INSERT INTO invitations (token, email, name, created_by, status, created_at, expires_at) 
-                            VALUES (?, ?, ?, ?, 'pending', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))";
-                    $db->execute($sql, [$token, $email, $name, $auth['userId']]);
+                    $sql = "INSERT INTO invitations (invite_id, token, email, name, created_by, status, created_at, expires_at) 
+                            VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)";
+                    $db->execute($sql, [$inviteId, $token, $email, $name, $auth['userId'], $timestamp, $expiresAt]);
                     
                     logActivity($db, $auth['userId'], 'invitation_created', "Invited user: $email");
                     
@@ -348,8 +354,8 @@ switch ($path) {
                         'role' => $role,
                         'createdBy' => $invite['created_by'],
                         'status' => $invite['status'],
-                        'createdAt' => strtotime($invite['created_at']) * 1000,
-                        'expiresAt' => strtotime($invite['expires_at']) * 1000
+                        'createdAt' => (int)$invite['created_at'],
+                        'expiresAt' => (int)$invite['expires_at']
                     ]);
                 } catch (Exception $e) {
                     sendError($e->getMessage(), 500);
@@ -368,7 +374,8 @@ switch ($path) {
                 }
                 
                 try {
-                    $db->execute("UPDATE invitations SET status = 'expired' WHERE status = 'pending' AND expires_at < NOW()");
+                    $currentTimestamp = getCurrentTimestamp();
+                    $db->execute("UPDATE invitations SET status = 'expired' WHERE status = 'pending' AND expires_at < ?", [$currentTimestamp]);
                     logActivity($db, $auth['userId'], 'invites_cleaned', "Cleaned up expired invites");
                     sendResponse(['success' => true]);
                 } catch (Exception $e) {
@@ -389,8 +396,8 @@ switch ($path) {
                         'role' => 'viewer',
                         'createdBy' => $invite['created_by'],
                         'status' => $invite['status'],
-                        'createdAt' => strtotime($invite['created_at']) * 1000,
-                        'expiresAt' => strtotime($invite['expires_at']) * 1000
+                        'createdAt' => (int)$invite['created_at'],
+                        'expiresAt' => (int)$invite['expires_at']
                     ]);
                 } catch (Exception $e) {
                     sendError($e->getMessage(), 500);
