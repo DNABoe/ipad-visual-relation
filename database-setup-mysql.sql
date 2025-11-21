@@ -19,9 +19,9 @@ USE lpmjclyqtt_releye;
 --  Drop existing tables (if you want a clean start)
 --  UNCOMMENT THE FOLLOWING LINES TO RESET DATABASE
 -- ===========================================================
--- DROP TABLE IF EXISTS activity_log;
--- DROP TABLE IF EXISTS invitations;
--- DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS activity_log;
+DROP TABLE IF EXISTS invitations;
+DROP TABLE IF EXISTS users;
 
 -- ===========================================================
 --  User Management Tables
