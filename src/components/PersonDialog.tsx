@@ -478,26 +478,19 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       return
     }
 
-    if (!userCredentials?.encryptedApiKey || !userCredentials?.apiKeySalt) {
+    if (!userCredentials?.encryptedApiKey || !userCredentials?.apiKeySalt || !userCredentials?.apiKeyIv) {
       toast.error('OpenAI API key not configured. Please add your API key in Settings → Investigation.')
       return
     }
 
     setIsInvestigating(true)
-    
-    const passwordPrompt = window.prompt('Enter your password to decrypt the API key:')
-    if (!passwordPrompt) {
-      setIsInvestigating(false)
-      return
-    }
-
     toast.info('Investigating...')
 
     try {
       const apiKey = await decryptApiKey(
         userCredentials.encryptedApiKey,
         userCredentials.apiKeySalt,
-        passwordPrompt
+        userCredentials.apiKeyIv
       )
       
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)

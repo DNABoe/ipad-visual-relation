@@ -9,6 +9,7 @@ export interface UserCredentials {
   passwordHash: PasswordHash
   encryptedApiKey?: string
   apiKeySalt?: string
+  apiKeyIv?: string
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -127,39 +128,33 @@ export function isPasswordHash(value: unknown): value is PasswordHash {
   )
 }
 
-async function deriveKeyFromPassword(password: string, salt: ArrayBuffer): Promise<CryptoKey> {
-  const encoder = new TextEncoder()
-  const passwordBuffer = encoder.encode(password)
-  
-  const baseKey = await crypto.subtle.importKey(
-    'raw',
-    passwordBuffer,
-    'PBKDF2',
-    false,
-    ['deriveKey']
+async function generateEncryptionKey(): Promise<CryptoKey> {
+  return crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
   )
-  
-  return crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256'
-    },
-    baseKey,
+}
+
+async function deriveKeyFromMasterKey(masterKeyBase64: string): Promise<CryptoKey> {
+  const keyBuffer = base64ToArrayBuffer(masterKeyBase64)
+  return crypto.subtle.importKey(
+    'raw',
+    keyBuffer,
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt']
   )
 }
 
-export async function encryptApiKey(apiKey: string, password: string): Promise<{ encrypted: string; salt: string }> {
+export async function encryptApiKey(apiKey: string): Promise<{ encrypted: string; salt: string; iv: string }> {
   try {
     const encoder = new TextEncoder()
     const apiKeyBuffer = encoder.encode(apiKey)
     
-    const salt = crypto.getRandomValues(new Uint8Array(32))
-    const key = await deriveKeyFromPassword(password, salt.buffer)
+    const key = await generateEncryptionKey()
+    const exportedKey = await crypto.subtle.exportKey('raw', key)
+    const salt = arrayBufferToBase64(exportedKey)
     
     const iv = crypto.getRandomValues(new Uint8Array(12))
     
@@ -172,13 +167,10 @@ export async function encryptApiKey(apiKey: string, password: string): Promise<{
       apiKeyBuffer
     )
     
-    const combined = new Uint8Array(iv.length + new Uint8Array(encryptedBuffer).length)
-    combined.set(iv)
-    combined.set(new Uint8Array(encryptedBuffer), iv.length)
-    
     return {
-      encrypted: arrayBufferToBase64(combined.buffer),
-      salt: arrayBufferToBase64(salt.buffer)
+      encrypted: arrayBufferToBase64(encryptedBuffer),
+      salt: salt,
+      iv: arrayBufferToBase64(iv.buffer)
     }
   } catch (error) {
     console.error('API key encryption error:', error)
@@ -186,22 +178,19 @@ export async function encryptApiKey(apiKey: string, password: string): Promise<{
   }
 }
 
-export async function decryptApiKey(encryptedData: string, salt: string, password: string): Promise<string> {
+export async function decryptApiKey(encryptedData: string, salt: string, iv: string): Promise<string> {
   try {
-    const saltBuffer = base64ToArrayBuffer(salt)
-    const key = await deriveKeyFromPassword(password, saltBuffer)
-    
-    const combined = base64ToArrayBuffer(encryptedData)
-    const iv = combined.slice(0, 12)
-    const encryptedContent = combined.slice(12)
+    const key = await deriveKeyFromMasterKey(salt)
+    const ivBuffer = base64ToArrayBuffer(iv)
+    const encryptedBuffer = base64ToArrayBuffer(encryptedData)
     
     const decryptedBuffer = await crypto.subtle.decrypt(
       {
         name: 'AES-GCM',
-        iv: iv
+        iv: ivBuffer
       },
       key,
-      encryptedContent
+      encryptedBuffer
     )
     
     const decoder = new TextDecoder()

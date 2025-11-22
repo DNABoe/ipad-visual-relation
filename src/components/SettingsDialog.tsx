@@ -46,8 +46,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
   const [apiKey, setApiKey] = useState('')
-  const [apiKeyPassword, setApiKeyPassword] = useState('')
-  const [showApiKeyPassword, setShowApiKeyPassword] = useState(false)
   const [isLoadingApiKey, setIsLoadingApiKey] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [logoClicks, setLogoClicks] = useState(0)
@@ -427,40 +425,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Your API key is encrypted with your password and stored securely. It never leaves your device except when making requests to OpenAI.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="api-key-password" className="text-sm font-medium flex items-center gap-2">
-                    <Key size={16} />
-                    Your Password (required to encrypt/decrypt)
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="api-key-password"
-                      type={showApiKeyPassword ? "text" : "password"}
-                      value={apiKeyPassword}
-                      onChange={(e) => setApiKeyPassword(e.target.value)}
-                      placeholder="Enter your account password"
-                      className="pr-10"
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKeyPassword(!showApiKeyPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showApiKeyPassword ? (
-                        <Eye size={20} weight="regular" />
-                      ) : (
-                        <EyeSlash size={20} weight="regular" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    We need your password to securely encrypt the API key before storing it.
+                    Your API key is encrypted and stored securely on your device. It never leaves your device except when making requests to OpenAI.
                   </p>
                 </div>
 
@@ -471,10 +436,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         toast.error('Please enter an API key')
                         return
                       }
-                      if (!apiKeyPassword) {
-                        toast.error('Please enter your password to encrypt the API key')
-                        return
-                      }
                       if (!userCredentials) {
                         toast.error('User credentials not found')
                         return
@@ -483,25 +444,18 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       try {
                         setIsLoadingApiKey(true)
                         
-                        const isValid = await verifyPassword(apiKeyPassword, userCredentials.passwordHash)
-                        if (!isValid) {
-                          toast.error('Incorrect password')
-                          setIsLoadingApiKey(false)
-                          return
-                        }
-
-                        const { encrypted, salt } = await encryptApiKey(apiKey, apiKeyPassword)
+                        const { encrypted, salt, iv } = await encryptApiKey(apiKey)
                         
                         const updatedCredentials: UserCredentials = {
                           ...userCredentials,
                           encryptedApiKey: encrypted,
-                          apiKeySalt: salt
+                          apiKeySalt: salt,
+                          apiKeyIv: iv
                         }
                         
                         await storage.set('user-credentials', updatedCredentials)
                         setUserCredentials(updatedCredentials)
                         setApiKey('')
-                        setApiKeyPassword('')
                         
                         toast.success('API key saved and encrypted successfully!')
                       } catch (error) {
@@ -511,7 +465,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         setIsLoadingApiKey(false)
                       }
                     }}
-                    disabled={isLoadingApiKey || !apiKey.trim() || !apiKeyPassword}
+                    disabled={isLoadingApiKey || !apiKey.trim()}
                     className="flex-1"
                   >
                     {isLoadingApiKey ? 'Saving...' : userCredentials?.encryptedApiKey ? 'Update API Key' : 'Save API Key'}
@@ -525,12 +479,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                           const updatedCredentials: UserCredentials = {
                             ...userCredentials,
                             encryptedApiKey: undefined,
-                            apiKeySalt: undefined
+                            apiKeySalt: undefined,
+                            apiKeyIv: undefined
                           }
                           await storage.set('user-credentials', updatedCredentials)
                           setUserCredentials(updatedCredentials)
                           setApiKey('')
-                          setApiKeyPassword('')
                           toast.success('API key removed')
                         } catch (error) {
                           console.error('Error removing API key:', error)
@@ -561,10 +515,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     Click "Create new secret key"
                   </li>
                   <li className="list-decimal">
-                    Copy the key and paste it above
-                  </li>
-                  <li className="list-decimal">
-                    Enter your RelEye password to encrypt and save it
+                    Copy the key, paste it above, and click Save
                   </li>
                 </ol>
               </div>
