@@ -59,8 +59,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
         console.error('[PersonDialog] Failed to load credentials:', error)
       }
     }
-    loadCredentials()
-  }, [])
+    if (open) {
+      loadCredentials()
+    }
+  }, [open])
   const photoPreviewRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

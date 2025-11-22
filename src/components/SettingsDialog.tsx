@@ -60,6 +60,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   
   useEffect(() => {
     const loadCredentials = async () => {
+      setIsLoadingCredentials(true)
       try {
         const creds = await storage.get<UserCredentials>('user-credentials')
         setUserCredentials(creds || null)
@@ -69,8 +70,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
         setIsLoadingCredentials(false)
       }
     }
-    loadCredentials()
-  }, [])
+    if (open) {
+      loadCredentials()
+    }
+  }, [open])
 
   useEffect(() => {
     console.log('[SettingsDialog] ====== Admin Check ======')
