@@ -1,11 +1,15 @@
-export async function waitForSpark(maxWaitMs: number = 5000): Promise<boolean> {
+export async function waitForSpark(maxWaitMs: number = 30000): Promise<boolean> {
   const startTime = Date.now()
   let lastError: any = null
   let attemptCount = 0
   
-  console.log('[sparkReady] Starting Spark initialization check...')
+  console.log('[sparkReady] ========== Starting Spark initialization check ==========')
   console.log('[sparkReady] Current URL:', window.location.href)
+  console.log('[sparkReady] Hostname:', window.location.hostname)
+  console.log('[sparkReady] Protocol:', window.location.protocol)
   console.log('[sparkReady] window.spark exists:', !!window.spark)
+  console.log('[sparkReady] window.spark type:', typeof window.spark)
+  console.log('[sparkReady] Max wait time:', maxWaitMs, 'ms')
   
   while (Date.now() - startTime < maxWaitMs) {
     attemptCount++
@@ -22,10 +26,20 @@ export async function waitForSpark(maxWaitMs: number = 5000): Promise<boolean> {
               typeof window.spark.kv.delete === 'function') {
             
             try {
-              console.log(`[sparkReady] Attempt ${attemptCount}: Testing KV operations...`)
+              console.log(`[sparkReady] Attempt ${attemptCount}: Testing KV write operation...`)
+              const testKey = '_spark_init_test'
+              const testValue = { test: true, timestamp: Date.now() }
+              
               await Promise.race([
-                window.spark.kv.get('_spark_init_test'),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('KV operation timeout')), 3000))
+                (async () => {
+                  await window.spark.kv.set(testKey, testValue)
+                  const retrieved = await window.spark.kv.get(testKey)
+                  if (!retrieved) {
+                    throw new Error('Write test failed - data not persisted')
+                  }
+                  await window.spark.kv.delete(testKey)
+                })(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('KV operation timeout')), 5000))
               ])
               
               console.log('[sparkReady] ✓ KV operations successful!')
@@ -48,17 +62,21 @@ export async function waitForSpark(maxWaitMs: number = 5000): Promise<boolean> {
       console.warn(`[sparkReady] Attempt ${attemptCount}: Error during check:`, error)
     }
     
-    await new Promise(resolve => setTimeout(resolve, 250))
+    await new Promise(resolve => setTimeout(resolve, 500))
   }
   
-  console.error('[sparkReady] ✗ Timeout reached after', maxWaitMs, 'ms and', attemptCount, 'attempts')
+  console.error('[sparkReady] ========== TIMEOUT REACHED ==========')
+  console.error('[sparkReady] ✗ Failed after', maxWaitMs, 'ms and', attemptCount, 'attempts')
   console.error('[sparkReady] Last error:', lastError)
   console.error('[sparkReady] Final state:', {
     sparkExists: !!window.spark,
     kvExists: !!(window.spark && window.spark.kv),
     sparkType: typeof window.spark,
-    kvType: window.spark ? typeof window.spark.kv : 'N/A'
+    kvType: window.spark ? typeof window.spark.kv : 'N/A',
+    hostname: window.location.hostname,
+    protocol: window.location.protocol
   })
+  console.error('[sparkReady] ==========================================')
   
   return false
 }

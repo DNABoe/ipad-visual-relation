@@ -6,6 +6,7 @@ import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
 import { AuthDiagnostic } from './components/AuthDiagnostic'
+import { SparkNotAvailableError } from './components/SparkNotAvailableError'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
 import { waitForSpark } from './lib/sparkReady'
@@ -15,6 +16,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [isFirstTime, setIsFirstTime] = useState(false)
+  const [sparkNotAvailable, setSparkNotAvailable] = useState(false)
   
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
@@ -27,19 +29,21 @@ function App() {
     const initializeAuth = async () => {
       try {
         console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
+        console.log('[App] Environment check:')
+        console.log('[App]   - URL:', window.location.href)
+        console.log('[App]   - window.spark exists:', !!window.spark)
+        console.log('[App]   - User Agent:', navigator.userAgent)
         
         console.log('[App] Waiting for Spark runtime to be ready...')
-        const isReady = await waitForSpark(10000)
+        const isReady = await waitForSpark(30000)
         
         if (!isReady) {
           console.error('[App] ❌ Spark runtime failed to initialize!')
-          toast.error('Application runtime not ready. Please refresh the page.', {
-            duration: 10000,
-            action: {
-              label: 'Diagnostics',
-              onClick: () => window.location.href = '?diagnostics=true'
-            }
-          })
+          console.error('[App] Final diagnostic:')
+          console.error('[App]   - window.spark:', window.spark)
+          console.error('[App]   - window.spark?.kv:', window.spark?.kv)
+          
+          setSparkNotAvailable(true)
           setIsLoadingAuth(false)
           return
         }
@@ -262,12 +266,23 @@ function App() {
   if (isLoadingAuth) {
     return (
       <>
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-4">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="text-center space-y-6 max-w-md">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <div className="space-y-2">
-              <p className="text-muted-foreground">Initializing Spark runtime...</p>
-              <p className="text-xs text-muted-foreground">Please wait while we connect to secure storage</p>
+            <div className="space-y-3">
+              <p className="text-foreground font-medium">Initializing Spark runtime...</p>
+              <p className="text-sm text-muted-foreground">Please wait while we connect to secure storage</p>
+              <div className="mt-6 p-4 bg-card rounded-lg border border-border text-left">
+                <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
+                <div className="text-xs font-mono space-y-1 text-muted-foreground">
+                  <div>URL: {window.location.hostname}</div>
+                  <div>Spark: {window.spark ? '✓ Available' : '✗ Not found'}</div>
+                  <div>KV: {window.spark?.kv ? '✓ Available' : '✗ Not found'}</div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                If this takes more than 30 seconds, there may be an issue with the Spark runtime.
+              </p>
             </div>
           </div>
         </div>
@@ -278,6 +293,21 @@ function App() {
 
   const urlParams = new URLSearchParams(window.location.search)
   const showDiagnostics = urlParams.get('diagnostics') === 'true'
+
+  if (sparkNotAvailable) {
+    return (
+      <>
+        <SparkNotAvailableError 
+          diagnosticInfo={{
+            hostname: window.location.hostname,
+            sparkExists: !!window.spark,
+            kvExists: !!(window.spark?.kv)
+          }}
+        />
+        <Toaster />
+      </>
+    )
+  }
 
   if (showDiagnostics) {
     return (
