@@ -18,8 +18,6 @@ import { resampleImage } from '@/lib/imageProcessing'
 import { toast } from 'sonner'
 import { generateInvestigationPDF } from '@/lib/pdfGenerator'
 import { generateIntelligenceReport } from '@/lib/externalLLM'
-import { storage } from '@/lib/storage'
-import { decryptApiKey, type UserCredentials } from '@/lib/auth'
 
 interface PersonDialogProps {
   open: boolean
@@ -30,7 +28,6 @@ interface PersonDialogProps {
 }
 
 export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson }: PersonDialogProps) {
-  const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
   const [name, setName] = useState('')
   const [position, setPosition] = useState('')
   const [score, setScore] = useState(3)
@@ -49,27 +46,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
   const [investigationReport, setInvestigationReport] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    const loadCredentials = async () => {
-      try {
-        const creds = await storage.get<UserCredentials>('user-credentials')
-        console.log('[PersonDialog] Loaded credentials:', {
-          hasUsername: !!creds?.username,
-          hasPasswordHash: !!creds?.passwordHash,
-          hasEncryptedApiKey: !!creds?.encryptedApiKey,
-          hasApiKeySalt: !!creds?.apiKeySalt,
-          hasApiKeyIv: !!creds?.apiKeyIv
-        })
-        setUserCredentials(creds || null)
-      } catch (error) {
-        console.error('[PersonDialog] Failed to load credentials:', error)
-      }
-    }
-    if (open) {
-      loadCredentials()
-    }
-  }, [open])
   const photoPreviewRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -487,31 +463,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       return
     }
 
-    console.log('[PersonDialog] Investigate - checking credentials:', {
-      hasUserCredentials: !!userCredentials,
-      hasEncryptedApiKey: !!userCredentials?.encryptedApiKey,
-      hasApiKeySalt: !!userCredentials?.apiKeySalt,
-      hasApiKeyIv: !!userCredentials?.apiKeyIv
-    })
-
-    if (!userCredentials?.encryptedApiKey || !userCredentials?.apiKeySalt || !userCredentials?.apiKeyIv) {
-      console.error('[PersonDialog] Missing API key configuration')
-      toast.error('OpenAI API key not configured. Please add your API key in Settings → Investigation.')
-      return
-    }
+    console.log('[PersonDialog] Starting investigation...')
 
     setIsInvestigating(true)
     toast.info('Investigating...')
 
     try {
-      console.log('[PersonDialog] Decrypting API key...')
-      const apiKey = await decryptApiKey(
-        userCredentials.encryptedApiKey,
-        userCredentials.apiKeySalt,
-        userCredentials.apiKeyIv
-      )
-      console.log('[PersonDialog] API key decrypted successfully')
-      
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
       const positionText = positionLines.join(', ')
       const countryText = country || 'Not specified'
@@ -520,8 +477,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       const report = await generateIntelligenceReport({
         name: name.trim(),
         position: positionText || 'Not specified',
-        country: countryText,
-        apiKey: apiKey
+        country: countryText
       })
       console.log('[PersonDialog] Intelligence report generated successfully')
       
@@ -964,7 +920,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                     AI-Powered Investigation
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Generate a professional intelligence brief based on the person's name, position, and country. 
+                    Generate a professional intelligence brief based on the person's name, position, and country using AI. 
                     The report will be automatically saved to attachments.
                   </p>
                 </div>
