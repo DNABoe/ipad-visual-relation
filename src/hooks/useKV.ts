@@ -30,18 +30,23 @@ export function useKV<T>(
   const setStoredValue = useCallback(
     async (action: SetValueAction<T>) => {
       try {
-        const newValue = typeof action === 'function' 
-          ? (action as (current: T) => T)(value)
-          : action
+        setValue((currentValue) => {
+          const newValue = typeof action === 'function' 
+            ? (action as (current: T) => T)(currentValue)
+            : action
 
-        setValue(newValue)
-        await storage.set(key, newValue)
+          storage.set(key, newValue).catch(error => {
+            console.error(`[useKV] Error setting ${key}:`, error)
+          })
+
+          return newValue
+        })
       } catch (error) {
-        console.error(`[useKV] Error setting ${key}:`, error)
+        console.error(`[useKV] Error in setStoredValue ${key}:`, error)
         throw error
       }
     },
-    [key, value]
+    [key]
   )
 
   const deleteValue = useCallback(async () => {
