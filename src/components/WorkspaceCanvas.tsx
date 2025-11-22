@@ -274,10 +274,46 @@ export function WorkspaceCanvas({ controller, highlightedPersonIds, searchActive
   }, [controller, magneticSnap, gridSize, updatePersonPositions])
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    const { interaction, transform } = controller
+    const { interaction, transform, selection, workspace } = controller
 
     if (interaction.dragState.type === 'connection') {
       return
+    } else if (interaction.dragState.type === 'selection' && interaction.selectionRect) {
+      const rect = interaction.selectionRect
+      
+      const selectedPersonIds: string[] = []
+      workspace.persons.forEach(person => {
+        const personRight = person.x + NODE_WIDTH
+        const personBottom = person.y + NODE_HEIGHT
+        const rectRight = rect.x + rect.width
+        const rectBottom = rect.y + rect.height
+        
+        const isIntersecting = !(
+          person.x > rectRight ||
+          personRight < rect.x ||
+          person.y > rectBottom ||
+          personBottom < rect.y
+        )
+        
+        if (isIntersecting) {
+          selectedPersonIds.push(person.id)
+        }
+      })
+      
+      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey
+      if (selectedPersonIds.length > 0) {
+        if (isMultiSelect) {
+          selectedPersonIds.forEach(id => {
+            if (!selection.selectedPersons.includes(id)) {
+              selection.selectPerson(id, true)
+            }
+          })
+        } else {
+          selection.selectPersons(selectedPersonIds)
+        }
+      }
+      
+      interaction.endDrag()
     } else if (interaction.dragState.type === 'person' || interaction.dragState.type === 'group') {
       interaction.endDrag()
     } else if (transform.isPanning) {
