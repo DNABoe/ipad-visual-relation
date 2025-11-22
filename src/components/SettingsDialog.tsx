@@ -62,7 +62,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
     const loadCredentials = async () => {
       setIsLoadingCredentials(true)
       try {
+        console.log('[SettingsDialog] Loading credentials from storage...')
         const creds = await storage.get<UserCredentials>('user-credentials')
+        console.log('[SettingsDialog] Credentials loaded:', {
+          hasCredentials: !!creds,
+          hasUsername: !!creds?.username,
+          hasPasswordHash: !!creds?.passwordHash,
+          hasEncryptedApiKey: !!creds?.encryptedApiKey,
+          hasApiKeySalt: !!creds?.apiKeySalt,
+          hasApiKeyIv: !!creds?.apiKeyIv
+        })
         setUserCredentials(creds || null)
       } catch (error) {
         console.error('[SettingsDialog] Failed to load credentials:', error)
@@ -446,8 +455,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
                       try {
                         setIsLoadingApiKey(true)
+                        console.log('[SettingsDialog] Encrypting API key...')
                         
                         const { encrypted, salt, iv } = await encryptApiKey(apiKey)
+                        console.log('[SettingsDialog] API key encrypted successfully')
                         
                         const updatedCredentials: UserCredentials = {
                           ...userCredentials,
@@ -456,13 +467,17 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                           apiKeyIv: iv
                         }
                         
+                        console.log('[SettingsDialog] Saving encrypted API key to storage...')
                         await storage.set('user-credentials', updatedCredentials)
+                        console.log('[SettingsDialog] API key saved to storage successfully')
+                        
                         setUserCredentials(updatedCredentials)
                         setApiKey('')
                         
+                        console.log('[SettingsDialog] API key configuration complete')
                         toast.success('API key saved and encrypted successfully!')
                       } catch (error) {
-                        console.error('Error saving API key:', error)
+                        console.error('[SettingsDialog] Error saving API key:', error)
                         toast.error('Failed to save API key')
                       } finally {
                         setIsLoadingApiKey(false)
@@ -475,29 +490,70 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   </Button>
                   
                   {userCredentials?.encryptedApiKey && (
-                    <Button
-                      variant="destructive"
-                      onClick={async () => {
-                        try {
-                          const updatedCredentials: UserCredentials = {
-                            ...userCredentials,
-                            encryptedApiKey: undefined,
-                            apiKeySalt: undefined,
-                            apiKeyIv: undefined
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            setIsLoadingApiKey(true)
+                            console.log('[SettingsDialog] Testing API key...')
+                            
+                            const testKey = await decryptApiKey(
+                              userCredentials.encryptedApiKey!,
+                              userCredentials.apiKeySalt!,
+                              userCredentials.apiKeyIv!
+                            )
+                            
+                            const response = await fetch('https://api.openai.com/v1/models', {
+                              method: 'GET',
+                              headers: {
+                                'Authorization': `Bearer ${testKey.trim()}`
+                              }
+                            })
+                            
+                            if (response.ok) {
+                              toast.success('API key is valid and working!')
+                            } else if (response.status === 401) {
+                              toast.error('API key is invalid or expired')
+                            } else {
+                              toast.error(`API test failed: ${response.status}`)
+                            }
+                          } catch (error) {
+                            console.error('[SettingsDialog] Error testing API key:', error)
+                            toast.error('Failed to test API key. Check console for details.')
+                          } finally {
+                            setIsLoadingApiKey(false)
                           }
-                          await storage.set('user-credentials', updatedCredentials)
-                          setUserCredentials(updatedCredentials)
-                          setApiKey('')
-                          toast.success('API key removed')
-                        } catch (error) {
-                          console.error('Error removing API key:', error)
-                          toast.error('Failed to remove API key')
-                        }
-                      }}
-                      className="px-4"
-                    >
-                      <TrashSimple size={18} />
-                    </Button>
+                        }}
+                        disabled={isLoadingApiKey}
+                        className="px-4"
+                      >
+                        Test
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={async () => {
+                          try {
+                            const updatedCredentials: UserCredentials = {
+                              ...userCredentials,
+                              encryptedApiKey: undefined,
+                              apiKeySalt: undefined,
+                              apiKeyIv: undefined
+                            }
+                            await storage.set('user-credentials', updatedCredentials)
+                            setUserCredentials(updatedCredentials)
+                            setApiKey('')
+                            toast.success('API key removed')
+                          } catch (error) {
+                            console.error('Error removing API key:', error)
+                            toast.error('Failed to remove API key')
+                          }
+                        }}
+                        className="px-4"
+                      >
+                        <TrashSimple size={18} />
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

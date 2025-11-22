@@ -54,6 +54,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     const loadCredentials = async () => {
       try {
         const creds = await storage.get<UserCredentials>('user-credentials')
+        console.log('[PersonDialog] Loaded credentials:', {
+          hasUsername: !!creds?.username,
+          hasPasswordHash: !!creds?.passwordHash,
+          hasEncryptedApiKey: !!creds?.encryptedApiKey,
+          hasApiKeySalt: !!creds?.apiKeySalt,
+          hasApiKeyIv: !!creds?.apiKeyIv
+        })
         setUserCredentials(creds || null)
       } catch (error) {
         console.error('[PersonDialog] Failed to load credentials:', error)
@@ -480,7 +487,15 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       return
     }
 
+    console.log('[PersonDialog] Investigate - checking credentials:', {
+      hasUserCredentials: !!userCredentials,
+      hasEncryptedApiKey: !!userCredentials?.encryptedApiKey,
+      hasApiKeySalt: !!userCredentials?.apiKeySalt,
+      hasApiKeyIv: !!userCredentials?.apiKeyIv
+    })
+
     if (!userCredentials?.encryptedApiKey || !userCredentials?.apiKeySalt || !userCredentials?.apiKeyIv) {
+      console.error('[PersonDialog] Missing API key configuration')
       toast.error('OpenAI API key not configured. Please add your API key in Settings → Investigation.')
       return
     }
@@ -489,25 +504,30 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     toast.info('Investigating...')
 
     try {
+      console.log('[PersonDialog] Decrypting API key...')
       const apiKey = await decryptApiKey(
         userCredentials.encryptedApiKey,
         userCredentials.apiKeySalt,
         userCredentials.apiKeyIv
       )
+      console.log('[PersonDialog] API key decrypted successfully')
       
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
       const positionText = positionLines.join(', ')
       const countryText = country || 'Not specified'
       
+      console.log('[PersonDialog] Generating intelligence report...')
       const report = await generateIntelligenceReport({
         name: name.trim(),
         position: positionText || 'Not specified',
         country: countryText,
         apiKey: apiKey
       })
+      console.log('[PersonDialog] Intelligence report generated successfully')
       
       setInvestigationReport(report)
 
+      console.log('[PersonDialog] Generating PDF...')
       const pdfBlob = await generateInvestigationPDF({
         name: name.trim(),
         position: positionText || 'Not specified',
@@ -515,6 +535,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
         report,
         photo
       })
+      console.log('[PersonDialog] PDF generated successfully')
 
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -537,7 +558,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       reader.readAsDataURL(pdfBlob)
 
     } catch (error) {
-      console.error('Investigation error:', error)
+      console.error('[PersonDialog] Investigation error:', error)
+      if (error instanceof Error) {
+        console.error('[PersonDialog] Error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        })
+      }
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate investigation report'
       toast.error(errorMessage)
     } finally {

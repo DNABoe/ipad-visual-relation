@@ -6,7 +6,17 @@ export async function generateIntelligenceReport(params: {
 }): Promise<string> {
   const { name, position, country, apiKey } = params
 
+  console.log('[externalLLM] Starting intelligence report generation...')
+  console.log('[externalLLM] Parameters:', {
+    name,
+    position,
+    country,
+    hasApiKey: !!apiKey,
+    apiKeyLength: apiKey?.length
+  })
+
   if (!apiKey || apiKey.trim() === '') {
+    console.error('[externalLLM] No API key provided')
     throw new Error('OpenAI API key not configured. Please add your API key in Settings → Investigation to use this feature.')
   }
 
@@ -26,6 +36,7 @@ Please provide:
 Format your response as a professional intelligence brief with clear sections and detailed analysis. Be thorough but realistic based on the position and context provided.`
 
   try {
+    console.log('[externalLLM] Making API request to OpenAI...')
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -49,9 +60,11 @@ Format your response as a professional intelligence brief with clear sections an
       })
     })
 
+    console.log('[externalLLM] API response status:', response.status, response.statusText)
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}))
-      console.error('OpenAI API error:', error)
+      console.error('[externalLLM] OpenAI API error:', error)
       
       if (response.status === 401) {
         throw new Error('Invalid API key. Please check your OpenAI API key in Settings.')
@@ -65,14 +78,22 @@ Format your response as a professional intelligence brief with clear sections an
     }
 
     const data = await response.json()
+    console.log('[externalLLM] Response received, parsing...')
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('[externalLLM] Invalid response format:', data)
       throw new Error('Invalid response format from API')
     }
 
+    console.log('[externalLLM] Report generated successfully')
     return data.choices[0].message.content
   } catch (error) {
-    console.error('Error generating report:', error)
+    console.error('[externalLLM] Error generating report:', error)
+    
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('[externalLLM] Network error - fetch failed')
+      throw new Error('Network error: Unable to connect to OpenAI API. Please check your internet connection.')
+    }
     
     if (error instanceof Error) {
       throw error
