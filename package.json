@@ -7,7 +7,6 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
-        "build:standalone": "npm run build && echo '\n✅ Build complete! Run ./deploy-standalone.sh to create deployment package'",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"

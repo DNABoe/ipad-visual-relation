@@ -18,6 +18,7 @@ import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constant
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
 import { storage } from '@/lib/storage'
+import { isPasswordChangeAllowed } from '@/lib/singleUserAuth'
 
 interface SettingsDialogProps {
   open: boolean
@@ -51,6 +52,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [isAnimating, setIsAnimating] = useState(false)
   const [showFileIconDialog, setShowFileIconDialog] = useState(false)
 
+  const passwordChangeEnabled = isPasswordChangeAllowed()
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
   
   useEffect(() => {
@@ -656,9 +658,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     autoCapitalize="off"
                     autoCorrect="off"
                     spellCheck="false"
+                    disabled={!passwordChangeEnabled}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Used for authentication to access the application
+                    {!passwordChangeEnabled 
+                      ? 'Username is fixed in single-user mode'
+                      : 'Used for authentication to access the application'}
                   </p>
                 </div>
 
@@ -667,9 +672,15 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <h4 className="text-sm font-medium">Change Password</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Leave blank to keep your current password
-                    </p>
+                    {!passwordChangeEnabled ? (
+                      <p className="text-xs text-muted-foreground">
+                        Password changes are currently disabled in single-user mode
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Leave blank to keep your current password
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -683,12 +694,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         placeholder="Enter current password"
                         autoComplete="current-password"
                         className="pr-10"
+                        disabled={!passwordChangeEnabled}
                       />
                       <button
                         type="button"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         tabIndex={-1}
+                        disabled={!passwordChangeEnabled}
                       >
                         {showCurrentPassword ? (
                           <Eye size={20} weight="regular" />
@@ -710,12 +723,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         placeholder="Enter new password (min 8 characters)"
                         autoComplete="new-password"
                         className="pr-10"
+                        disabled={!passwordChangeEnabled}
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         tabIndex={-1}
+                        disabled={!passwordChangeEnabled}
                       >
                         {showNewPassword ? (
                           <Eye size={20} weight="regular" />
@@ -737,12 +752,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         placeholder="Confirm new password"
                         autoComplete="new-password"
                         className="pr-10"
+                        disabled={!passwordChangeEnabled}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         tabIndex={-1}
+                        disabled={!passwordChangeEnabled}
                       >
                         {showConfirmPassword ? (
                           <Eye size={20} weight="regular" />
@@ -753,27 +770,31 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 space-y-2">
-                    <p className="text-xs font-medium text-primary">🔒 Password Security Tips</p>
-                    <ul className="text-xs text-muted-foreground space-y-1 pl-4">
-                      <li>• Use at least 8 characters (12+ recommended)</li>
-                      <li>• Include uppercase, lowercase, numbers, and symbols</li>
-                      <li>• Avoid common words and personal information</li>
-                      <li>• Use a unique password for this application</li>
-                    </ul>
-                  </div>
+                  {passwordChangeEnabled && (
+                    <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 space-y-2">
+                      <p className="text-xs font-medium text-primary">🔒 Password Security Tips</p>
+                      <ul className="text-xs text-muted-foreground space-y-1 pl-4">
+                        <li>• Use at least 8 characters (12+ recommended)</li>
+                        <li>• Include uppercase, lowercase, numbers, and symbols</li>
+                        <li>• Avoid common words and personal information</li>
+                        <li>• Use a unique password for this application</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
-                <p className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-accent text-sm mt-0.5">⚠️</span>
-                  <span>
-                    <strong className="text-foreground">Important:</strong> Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256. 
-                    Make sure to remember your password as it cannot be recovered.
-                  </span>
-                </p>
-              </div>
+              {passwordChangeEnabled && (
+                <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
+                  <p className="text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="text-accent text-sm mt-0.5">⚠️</span>
+                    <span>
+                      <strong className="text-foreground">Important:</strong> Passwords are hashed using PBKDF2 with 210,000 iterations and SHA-256. 
+                      Make sure to remember your password as it cannot be recovered.
+                    </span>
+                  </p>
+                </div>
+              )}
 
               {onLogout && (
                 <>
@@ -942,7 +963,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             {activeTab === 'user' ? 'Cancel' : 'Close'}
           </Button>
-          {activeTab === 'user' && (
+          {activeTab === 'user' && passwordChangeEnabled && (
             <Button 
               onClick={handleSaveUserSettings} 
               className="bg-gradient-to-r from-primary to-accent shadow-lg"
