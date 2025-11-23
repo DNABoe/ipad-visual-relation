@@ -221,20 +221,41 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           </DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} flex-shrink-0`}>
-            <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">System</TabsTrigger>
-            <TabsTrigger value="investigation" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">
-              <Detective className="w-4 h-4 mr-1.5" />
-              Investigation
+          <TabsList className="w-full flex-shrink-0 h-auto p-1 gap-1 bg-muted/50">
+            <TabsTrigger 
+              value="system" 
+              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+            >
+              <span className="text-xs sm:text-sm font-medium">System</span>
             </TabsTrigger>
-            <TabsTrigger value="user" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">User</TabsTrigger>
+            <TabsTrigger 
+              value="investigation" 
+              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+            >
+              <Detective className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline text-xs sm:text-sm font-medium">Investigation</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="user" 
+              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+            >
+              <span className="text-xs sm:text-sm font-medium">User</span>
+            </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="admin" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">
-                <Shield className="w-4 h-4 mr-1.5" />
-                Admin
+              <TabsTrigger 
+                value="admin" 
+                className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+              >
+                <Shield className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline text-xs sm:text-sm font-medium">Admin</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="about" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">About</TabsTrigger>
+            <TabsTrigger 
+              value="about" 
+              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+            >
+              <span className="text-xs sm:text-sm font-medium">About</span>
+            </TabsTrigger>
           </TabsList>
           
           <ScrollArea className="flex-1 min-h-0">
