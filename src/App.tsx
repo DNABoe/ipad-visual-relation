@@ -31,7 +31,7 @@ function App() {
         console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
         console.log('[App] Environment check:')
         console.log('[App]   - URL:', window.location.href)
-        console.log('[App]   - Spark KV available:', !!(window as any).spark?.kv)
+        console.log('[App]   - Backend API: https://releye.boestad.com/api')
         console.log('[App]   - localStorage available:', !!window.localStorage)
         console.log('[App]   - User Agent:', navigator.userAgent)
         
@@ -65,8 +65,8 @@ function App() {
         if (!isReady) {
           console.error('[App] ❌ Storage failed to initialize!')
           console.error('[App] Final diagnostic:')
-          console.error('[App]   - window.spark.kv:', !!(window as any).spark?.kv)
           console.error('[App]   - window.localStorage:', !!window.localStorage)
+          console.error('[App]   - Backend API: https://releye.boestad.com/api')
           
           setSparkNotAvailable(true)
           setIsLoadingAuth(false)
@@ -261,7 +261,7 @@ function App() {
                 <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
                 <div className="text-xs font-mono space-y-1 text-muted-foreground">
                   <div>URL: {window.location.hostname}</div>
-                  <div>Spark KV: {(window as any).spark?.kv ? '✓ Available' : '✗ Not found'}</div>
+                  <div>Backend API: https://releye.boestad.com/api</div>
                   <div>Storage: {window.localStorage ? '✓ Available' : '✗ Not found'}</div>
                 </div>
               </div>
@@ -299,7 +299,7 @@ function App() {
                 <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
                 <div className="text-xs font-mono space-y-1 text-muted-foreground">
                   <div>URL: {window.location.hostname}</div>
-                  <div>Spark KV: {(window as any).spark?.kv ? '✓ Available' : '✗ Not available'}</div>
+                  <div>Backend API: https://releye.boestad.com/api</div>
                   <div>Storage: {window.localStorage ? '✓ Available' : '✗ Not available'}</div>
                 </div>
               </div>

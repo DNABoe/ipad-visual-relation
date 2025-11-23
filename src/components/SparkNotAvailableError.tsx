@@ -1,7 +1,6 @@
-import { Warning, ArrowClockwise, ArrowSquareOut } from '@phosphor-icons/react'
+import { Warning, ArrowClockwise } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Alert, AlertDescription } from './ui/alert'
 
 interface SparkNotAvailableErrorProps {
   diagnosticInfo?: {
@@ -12,10 +11,6 @@ interface SparkNotAvailableErrorProps {
 }
 
 export function SparkNotAvailableError({ diagnosticInfo }: SparkNotAvailableErrorProps) {
-  const isCustomDomain = diagnosticInfo?.hostname && 
-    !diagnosticInfo.hostname.includes('github') && 
-    !diagnosticInfo.hostname.includes('localhost')
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="max-w-2xl w-full">
@@ -25,24 +20,15 @@ export function SparkNotAvailableError({ diagnosticInfo }: SparkNotAvailableErro
               <Warning className="w-8 h-8 text-destructive" weight="fill" />
             </div>
             <div className="flex-1">
-              <CardTitle className="text-2xl mb-2">GitHub Spark Runtime Required</CardTitle>
+              <CardTitle className="text-2xl mb-2">Browser Storage Not Available</CardTitle>
               <CardDescription className="text-base">
-                This application requires the GitHub Spark runtime environment to function.
+                This application requires browser storage to function properly.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {isCustomDomain && (
-            <Alert className="border-warning bg-warning/10">
-              <AlertDescription className="text-sm">
-                <strong>Custom Domain Detected:</strong> You're accessing this app from {diagnosticInfo?.hostname}.
-                Custom domains do not have access to the GitHub Spark runtime.
-              </AlertDescription>
-            </Alert>
-          )}
-
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold mb-2 flex items-center gap-2">
@@ -50,9 +36,8 @@ export function SparkNotAvailableError({ diagnosticInfo }: SparkNotAvailableErro
                 Why isn't the app working?
               </h3>
               <p className="text-sm text-muted-foreground ml-8">
-                RelEye uses GitHub Spark's secure cloud storage (KV) to save your authentication credentials 
-                and workspace data. This storage system is only available when the app runs through GitHub Spark's 
-                runtime environment.
+                RelEye uses browser localStorage for session management. Your browser may have storage disabled 
+                or you may be in private/incognito mode.
               </p>
             </div>
 
@@ -61,25 +46,12 @@ export function SparkNotAvailableError({ diagnosticInfo }: SparkNotAvailableErro
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm">2</span>
                 How can I fix this?
               </h3>
-              <p className="text-sm text-muted-foreground ml-8 mb-3">
-                You need to access this application through its GitHub Spark URL instead of the custom domain.
-              </p>
-              <div className="ml-8 p-4 bg-muted rounded-lg">
-                <p className="text-xs font-mono text-muted-foreground mb-2">GitHub Spark URL format:</p>
-                <code className="text-xs font-mono">https://[your-username].github.io/[spark-app-name]/</code>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm">3</span>
-                Alternative: Deploy without Spark
-              </h3>
-              <p className="text-sm text-muted-foreground ml-8">
-                To use this app on a custom domain, the codebase needs to be modified to use a different 
-                storage backend (such as a MySQL database with API server) instead of GitHub Spark KV.
-                This requires significant code changes.
-              </p>
+              <ul className="text-sm text-muted-foreground ml-8 space-y-2">
+                <li>• Ensure cookies and site data are enabled in your browser</li>
+                <li>• Exit private/incognito mode</li>
+                <li>• Check that browser storage isn't disabled by extensions</li>
+                <li>• Try a different browser if the issue persists</li>
+              </ul>
             </div>
           </div>
 
@@ -90,14 +62,12 @@ export function SparkNotAvailableError({ diagnosticInfo }: SparkNotAvailableErro
                 <div className="text-muted-foreground">Hostname:</div>
                 <div>{diagnosticInfo.hostname}</div>
                 
-                <div className="text-muted-foreground">Spark Runtime:</div>
-                <div className={diagnosticInfo.sparkExists ? 'text-success' : 'text-destructive'}>
-                  {diagnosticInfo.sparkExists ? '✓ Available' : '✗ Not found'}
-                </div>
+                <div className="text-muted-foreground">Backend API:</div>
+                <div>https://releye.boestad.com/api</div>
                 
-                <div className="text-muted-foreground">KV Storage:</div>
-                <div className={diagnosticInfo.kvExists ? 'text-success' : 'text-destructive'}>
-                  {diagnosticInfo.kvExists ? '✓ Available' : '✗ Not found'}
+                <div className="text-muted-foreground">localStorage:</div>
+                <div className={typeof window !== 'undefined' && window.localStorage ? 'text-success' : 'text-destructive'}>
+                  {typeof window !== 'undefined' && window.localStorage ? '✓ Available' : '✗ Not available'}
                 </div>
               </div>
             </div>
@@ -106,18 +76,11 @@ export function SparkNotAvailableError({ diagnosticInfo }: SparkNotAvailableErro
           <div className="flex gap-3 pt-4">
             <Button 
               onClick={() => window.location.reload()} 
-              variant="outline"
-              className="flex-1"
+              variant="default"
+              className="w-full"
             >
               <ArrowClockwise className="w-4 h-4 mr-2" />
               Retry
-            </Button>
-            <Button 
-              onClick={() => window.open('https://github.com/features/spark', '_blank')}
-              className="flex-1"
-            >
-              <ArrowSquareOut className="w-4 h-4 mr-2" />
-              Learn About GitHub Spark
             </Button>
           </div>
         </CardContent>
