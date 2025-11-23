@@ -23,7 +23,7 @@ export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUse
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState<UserRole>('viewer')
+  const [role, setRole] = useState<UserRole>('normal')
   const [canInvestigate, setCanInvestigate] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -97,7 +97,7 @@ export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUse
       setName('')
       setPassword('')
       setConfirmPassword('')
-      setRole('viewer')
+      setRole('normal')
       setCanInvestigate(false)
       setError('')
       
@@ -117,7 +117,7 @@ export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUse
     setName('')
     setPassword('')
     setConfirmPassword('')
-    setRole('viewer')
+    setRole('normal')
     setCanInvestigate(false)
     setError('')
     onOpenChange(false)
@@ -237,16 +237,10 @@ export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUse
                     <span className="text-xs text-muted-foreground">- Full access</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="editor">
+                <SelectItem value="normal">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">Editor</span>
+                    <span className="font-semibold">Normal User</span>
                     <span className="text-xs text-muted-foreground">- Can create & edit</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="viewer">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Viewer</span>
-                    <span className="text-xs text-muted-foreground">- Read only</span>
                   </div>
                 </SelectItem>
               </SelectContent>

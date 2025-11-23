@@ -74,7 +74,7 @@ export function AdminDashboard({
   const [selectedUser, setSelectedUser] = useState<WorkspaceUser | null>(null)
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserName, setNewUserName] = useState('')
-  const [newUserRole, setNewUserRole] = useState<UserRole>('viewer')
+  const [newUserRole, setNewUserRole] = useState<UserRole>('normal')
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingInvites, setPendingInvites] = useState<Array<{
     name: string
@@ -199,8 +199,7 @@ export function AdminDashboard({
       active: allRegisteredUsers.filter(u => u.status === 'active').length,
       pending: pendingInvites.length,
       admins: allRegisteredUsers.filter(u => u.role === 'admin').length,
-      editors: allRegisteredUsers.filter(u => u.role === 'editor').length,
-      viewers: allRegisteredUsers.filter(u => u.role === 'viewer').length,
+      normalUsers: allRegisteredUsers.filter(u => u.role === 'normal').length,
       totalLogins,
       maxLogins
     }
@@ -266,7 +265,7 @@ export function AdminDashboard({
       
       setNewUserName('')
       setNewUserEmail('')
-      setNewUserRole('viewer')
+      setNewUserRole('normal')
       setShowAddUserDialog(false)
       setShowInviteEmailDialog(true)
       
@@ -493,9 +492,7 @@ export function AdminDashboard({
     switch (role) {
       case 'admin':
         return <Crown className="w-4 h-4" />
-      case 'editor':
-        return <PencilSimple className="w-4 h-4" />
-      case 'viewer':
+      case 'normal':
         return <Eye className="w-4 h-4" />
     }
   }
@@ -504,10 +501,8 @@ export function AdminDashboard({
     switch (role) {
       case 'admin':
         return 'default'
-      case 'editor':
+      case 'normal':
         return 'secondary'
-      case 'viewer':
-        return 'outline'
     }
   }
 
@@ -685,8 +680,7 @@ export function AdminDashboard({
                                         </SelectTrigger>
                                         <SelectContent>
                                           <SelectItem value="admin">Admin</SelectItem>
-                                          <SelectItem value="editor">Editor</SelectItem>
-                                          <SelectItem value="viewer">Viewer</SelectItem>
+                                          <SelectItem value="normal">Normal User</SelectItem>
                                         </SelectContent>
                                       </Select>
 
@@ -856,10 +850,10 @@ export function AdminDashboard({
 
                         <Card>
                           <CardHeader>
-                            <CardTitle className="text-sm font-medium">Editors</CardTitle>
+                            <CardTitle className="text-sm font-medium">Normal Users</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className="text-3xl font-bold">{stats.editors}</div>
+                            <div className="text-3xl font-bold">{stats.normalUsers}</div>
                           </CardContent>
                         </Card>
                       </div>
@@ -933,24 +927,13 @@ export function AdminDashboard({
                             </div>
                             <Separator />
                             <div className="flex items-center gap-3">
-                              <PencilSimple className="w-5 h-5 text-primary" />
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium">Editor</span>
-                                  <span className="text-sm text-muted-foreground">{stats.editors}</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground">{getRoleDescription('editor')}</p>
-                              </div>
-                            </div>
-                            <Separator />
-                            <div className="flex items-center gap-3">
                               <Eye className="w-5 h-5 text-primary" />
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium">Viewer</span>
-                                  <span className="text-sm text-muted-foreground">{stats.viewers}</span>
+                                  <span className="font-medium">Normal User</span>
+                                  <span className="text-sm text-muted-foreground">{stats.normalUsers}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground">{getRoleDescription('viewer')}</p>
+                                <p className="text-xs text-muted-foreground">{getRoleDescription('normal')}</p>
                               </div>
                             </div>
                           </div>
@@ -1067,16 +1050,10 @@ export function AdminDashboard({
                       <span className="text-xs text-muted-foreground">{getRoleDescription('admin')}</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="editor">
+                  <SelectItem value="normal">
                     <div className="flex flex-col items-start">
-                      <span className="font-medium text-sm">Editor</span>
-                      <span className="text-xs text-muted-foreground">{getRoleDescription('editor')}</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="viewer">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium text-sm">Viewer</span>
-                      <span className="text-xs text-muted-foreground">{getRoleDescription('viewer')}</span>
+                      <span className="font-medium text-sm">Normal User</span>
+                      <span className="text-xs text-muted-foreground">{getRoleDescription('normal')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>

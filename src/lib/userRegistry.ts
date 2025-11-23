@@ -5,7 +5,7 @@ export interface RegisteredUser {
   userId: string
   email: string
   name: string
-  role: 'admin' | 'editor' | 'viewer'
+  role: 'admin' | 'normal'
   passwordHash: PasswordHash
   createdAt: number
   lastLogin?: number
@@ -17,7 +17,7 @@ export interface PendingInvite {
   inviteId: string
   email: string
   name: string
-  role: 'admin' | 'editor' | 'viewer'
+  role: 'admin' | 'normal'
   token: string
   createdAt: number
   expiresAt: number
@@ -97,7 +97,7 @@ export async function createUser(
   email: string,
   name: string,
   password: string,
-  role: 'admin' | 'editor' | 'viewer',
+  role: 'admin' | 'normal',
   canInvestigate: boolean = false
 ): Promise<RegisteredUser> {
   console.log('[UserRegistry] ========== CREATING USER ==========')
@@ -293,7 +293,7 @@ export async function getInviteByToken(token: string): Promise<PendingInvite | u
 export async function createInvite(
   email: string,
   name: string,
-  role: 'admin' | 'editor' | 'viewer',
+  role: 'admin' | 'normal',
   createdBy: string
 ): Promise<PendingInvite> {
   const token = `invite-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`

@@ -70,7 +70,7 @@ export interface Group {
   createdAt: number
 }
 
-export type UserRole = 'admin' | 'editor' | 'viewer'
+export type UserRole = 'admin' | 'normal'
 
 export interface AppSettings {
   showMinimap: boolean

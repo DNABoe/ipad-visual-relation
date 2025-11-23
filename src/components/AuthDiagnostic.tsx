@@ -248,7 +248,7 @@ export function AuthDiagnostic() {
         'test',
         'Test User',
         'test',
-        'editor',
+        'normal',
         true
       )
       

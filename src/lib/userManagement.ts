@@ -41,8 +41,7 @@ export function generateInviteLink(token: string, email: string): string {
 export function canPerformAction(userRole: UserRole, action: string): boolean {
   const permissions = {
     admin: ['read', 'write', 'delete', 'manage-users', 'export', 'settings'],
-    editor: ['read', 'write', 'export'],
-    viewer: ['read', 'export']
+    normal: ['read', 'write', 'export']
   }
 
   return permissions[userRole]?.includes(action) || false
@@ -71,8 +70,7 @@ export function createActivityLog(
 export function getRoleDisplayName(role: UserRole): string {
   const roleNames: Record<UserRole, string> = {
     admin: 'Administrator',
-    editor: 'Editor',
-    viewer: 'Viewer'
+    normal: 'Normal User'
   }
   return roleNames[role]
 }
@@ -80,8 +78,7 @@ export function getRoleDisplayName(role: UserRole): string {
 export function getRoleDescription(role: UserRole): string {
   const descriptions: Record<UserRole, string> = {
     admin: 'Full access including user management',
-    editor: 'Can create, edit, and delete content',
-    viewer: 'Can only view and export content'
+    normal: 'Can create, edit, and view content'
   }
   return descriptions[role]
 }

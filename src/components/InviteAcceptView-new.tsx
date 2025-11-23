@@ -108,9 +108,7 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
     switch (role) {
       case 'admin':
         return <Crown className="w-4 h-4" />
-      case 'editor':
-        return <PencilSimple className="w-4 h-4" />
-      case 'viewer':
+      case 'normal':
         return <EyeIcon className="w-4 h-4" />
     }
   }
@@ -119,10 +117,8 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
     switch (role) {
       case 'admin':
         return 'default'
-      case 'editor':
+      case 'normal':
         return 'secondary'
-      case 'viewer':
-        return 'outline'
     }
   }
 
