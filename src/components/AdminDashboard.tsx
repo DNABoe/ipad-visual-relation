@@ -86,6 +86,7 @@ export function AdminDashboard({
   }>>([])
   const [allRegisteredUsers, setAllRegisteredUsers] = useState<WorkspaceUser[]>([])
   const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
   const isAdmin = currentUser?.role === 'admin'
 
   useEffect(() => {
@@ -155,6 +156,30 @@ export function AdminDashboard({
       loadAllRegisteredUsers()
     }
   }, [open])
+
+  const reloadUsersFromDatabase = async () => {
+    console.log('[AdminDashboard] Reloading all users from database...')
+    try {
+      const users = await UserRegistry.getAllUsers()
+      const workspaceUsers: WorkspaceUser[] = users.map(u => ({
+        userId: u.userId,
+        username: u.name,
+        email: u.email,
+        role: u.role,
+        addedAt: u.createdAt,
+        addedBy: 'system',
+        status: 'active' as const,
+        canInvestigate: u.canInvestigate,
+        loginCount: u.loginCount,
+        lastLoginAt: u.lastLogin
+      }))
+      setAllRegisteredUsers(workspaceUsers)
+      console.log('[AdminDashboard] ✓ Users reloaded from database')
+    } catch (reloadError) {
+      console.error('[AdminDashboard] ❌ Failed to reload users:', reloadError)
+      throw reloadError
+    }
+  }
 
   const filteredUsers = useMemo(() => {
     return allRegisteredUsers.filter(user => 
@@ -280,44 +305,49 @@ export function AdminDashboard({
       return
     }
 
-    console.log('[AdminDashboard] Changing role for user:', user.userId, 'to', newRole)
-    
-    setAllRegisteredUsers(prev => prev.map(u =>
-      u.userId === user.userId ? { ...u, role: newRole } : u
-    ))
+    if (updatingUserId === user.userId) {
+      console.log('[AdminDashboard] Update already in progress for this user')
+      return
+    }
 
+    console.log('[AdminDashboard] ========== CHANGING USER ROLE ==========')
+    console.log('[AdminDashboard] User ID:', user.userId)
+    console.log('[AdminDashboard] Current role in UI:', user.role)
+    console.log('[AdminDashboard] New role:', newRole)
+    
+    setUpdatingUserId(user.userId)
+    
     try {
       const registeredUser = await UserRegistry.getUserById(user.userId)
       if (!registeredUser) {
+        console.error('[AdminDashboard] ❌ User not found in registry')
         throw new Error('User not found')
       }
       
-      console.log('[AdminDashboard] Current user role:', registeredUser.role)
-      console.log('[AdminDashboard] New role:', newRole)
+      console.log('[AdminDashboard] Current role in DB:', registeredUser.role)
       
       const updatedRegisteredUser = { ...registeredUser, role: newRole }
+      console.log('[AdminDashboard] Updating user with new role...')
       await UserRegistry.updateUser(updatedRegisteredUser)
+      console.log('[AdminDashboard] ✓ User updated in database')
+      
+      console.log('[AdminDashboard] Reloading users to ensure UI sync...')
+      await reloadUsersFromDatabase()
       
       console.log('[AdminDashboard] ✓ Role updated successfully')
+      console.log('[AdminDashboard] ========== ROLE CHANGE COMPLETE ==========')
       toast.success(`${user.username}'s role updated to ${getRoleDisplayName(newRole)}`)
     } catch (error) {
-      console.error('[AdminDashboard] Failed to update user role:', error)
-      toast.error('Failed to update user role')
+      console.error('[AdminDashboard] ❌ Failed to update user role:', error)
+      toast.error('Failed to update user role. Please try again.')
       
-      const users = await UserRegistry.getAllUsers()
-      const workspaceUsers: WorkspaceUser[] = users.map(u => ({
-        userId: u.userId,
-        username: u.name,
-        email: u.email,
-        role: u.role,
-        addedAt: u.createdAt,
-        addedBy: 'system',
-        status: 'active' as const,
-        canInvestigate: u.canInvestigate,
-        loginCount: u.loginCount,
-        lastLoginAt: u.lastLogin
-      }))
-      setAllRegisteredUsers(workspaceUsers)
+      try {
+        await reloadUsersFromDatabase()
+      } catch (reloadError) {
+        console.error('[AdminDashboard] ❌ Failed to reload users after error:', reloadError)
+      }
+    } finally {
+      setUpdatingUserId(null)
     }
   }
 
@@ -374,21 +404,52 @@ export function AdminDashboard({
   }
 
   const handleToggleInvestigateAccess = async (user: WorkspaceUser, canInvestigate: boolean) => {
+    if (updatingUserId === user.userId) {
+      console.log('[AdminDashboard] Update already in progress for this user')
+      return
+    }
+    
+    console.log('[AdminDashboard] ========== UPDATING INVESTIGATE ACCESS ==========')
+    console.log('[AdminDashboard] User ID:', user.userId)
+    console.log('[AdminDashboard] New canInvestigate value:', canInvestigate)
+    
+    setUpdatingUserId(user.userId)
+    
     try {
+      console.log('[AdminDashboard] Fetching user from registry...')
       const registeredUser = await UserRegistry.getUserById(user.userId)
-      if (registeredUser) {
-        const updatedRegisteredUser = { ...registeredUser, canInvestigate }
-        await UserRegistry.updateUser(updatedRegisteredUser)
+      
+      if (!registeredUser) {
+        console.error('[AdminDashboard] ❌ User not found')
+        throw new Error('User not found')
       }
+      
+      console.log('[AdminDashboard] Current canInvestigate:', registeredUser.canInvestigate)
+      console.log('[AdminDashboard] Updating user...')
+      
+      const updatedRegisteredUser = { ...registeredUser, canInvestigate }
+      await UserRegistry.updateUser(updatedRegisteredUser)
+      
+      console.log('[AdminDashboard] ✓ User updated in database')
+      console.log('[AdminDashboard] Reloading users to ensure UI sync...')
 
-      setAllRegisteredUsers(prev => prev.map(u =>
-        u.userId === user.userId ? { ...u, canInvestigate } : u
-      ))
+      await reloadUsersFromDatabase()
 
+      console.log('[AdminDashboard] ✓ Investigate access updated')
+      console.log('[AdminDashboard] ========== UPDATE COMPLETE ==========')
       toast.success(`Investigate access ${canInvestigate ? 'granted' : 'revoked'} for ${user.username}`)
     } catch (error) {
-      console.error('[AdminDashboard] Failed to update investigate access:', error)
-      toast.error('Failed to update investigate access')
+      console.error('[AdminDashboard] ❌ Failed to update investigate access:', error)
+      console.error('[AdminDashboard] Error details:', error)
+      toast.error('Failed to update investigate access. Please try again.')
+      
+      try {
+        await reloadUsersFromDatabase()
+      } catch (reloadError) {
+        console.error('[AdminDashboard] ❌ Failed to reload users after error:', reloadError)
+      }
+    } finally {
+      setUpdatingUserId(null)
     }
   }
 
@@ -611,11 +672,16 @@ export function AdminDashboard({
                                   {user.userId !== currentUserId && (
                                     <>
                                       <Select
+                                        key={`role-${user.userId}-${user.role}`}
                                         value={user.role}
-                                        onValueChange={(value) => handleChangeRole(user, value as UserRole)}
+                                        onValueChange={(value) => {
+                                          console.log('[AdminDashboard UI] Role dropdown changed:', value)
+                                          handleChangeRole(user, value as UserRole)
+                                        }}
+                                        disabled={updatingUserId === user.userId}
                                       >
-                                        <SelectTrigger className="w-32">
-                                          <SelectValue />
+                                        <SelectTrigger className="w-32" disabled={updatingUserId === user.userId}>
+                                          <SelectValue placeholder={getRoleDisplayName(user.role)} />
                                         </SelectTrigger>
                                         <SelectContent>
                                           <SelectItem value="admin">Admin</SelectItem>
@@ -632,6 +698,7 @@ export function AdminDashboard({
                                           checked={user.canInvestigate ?? true}
                                           onCheckedChange={(checked) => handleToggleInvestigateAccess(user, checked)}
                                           className="scale-75"
+                                          disabled={updatingUserId === user.userId}
                                         />
                                       </div>
 

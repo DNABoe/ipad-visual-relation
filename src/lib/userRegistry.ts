@@ -137,17 +137,52 @@ export async function createUser(
 }
 
 export async function updateUser(user: RegisteredUser): Promise<void> {
-  console.log('[UserRegistry] Updating user:', user.userId)
+  console.log('[UserRegistry] ========== UPDATING USER ==========')
+  console.log('[UserRegistry] User ID:', user.userId)
+  console.log('[UserRegistry] User data:', {
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    canInvestigate: user.canInvestigate
+  })
+  
   const users = await getAllUsers()
+  console.log('[UserRegistry] Current users count:', users.length)
+  
   const index = users.findIndex(u => u.userId === user.userId)
   
   if (index === -1) {
+    console.error('[UserRegistry] ❌ User not found in registry')
     throw new Error('User not found')
   }
   
+  console.log('[UserRegistry] Found user at index:', index)
+  console.log('[UserRegistry] Old user data:', {
+    email: users[index].email,
+    role: users[index].role,
+    canInvestigate: users[index].canInvestigate
+  })
+  
   users[index] = user
+  console.log('[UserRegistry] Updated user in array')
+  console.log('[UserRegistry] New user data:', {
+    email: users[index].email,
+    role: users[index].role,
+    canInvestigate: users[index].canInvestigate
+  })
+  
+  console.log('[UserRegistry] Saving all users...')
   await saveAllUsers(users)
   console.log('[UserRegistry] ✓ User updated')
+  
+  const verification = await getUserById(user.userId)
+  if (verification) {
+    console.log('[UserRegistry] ✓ Verification check - user role:', verification.role, 'canInvestigate:', verification.canInvestigate)
+  } else {
+    console.error('[UserRegistry] ❌ Verification failed - user not found after update')
+  }
+  
+  console.log('[UserRegistry] ========== UPDATE COMPLETE ==========')
 }
 
 export async function deleteUser(userId: string): Promise<void> {
