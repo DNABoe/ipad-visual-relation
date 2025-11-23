@@ -1,13 +1,107 @@
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
+const PERPLEXITY_API_KEY = import.meta.env.VITE_PERPLEXITY_API_KEY
+
 export function isLLMAvailable(): boolean {
   try {
     if (typeof window === 'undefined') {
       return false
     }
     const w = window as any
-    return !!(w.spark && w.spark.llm && typeof w.spark.llm === 'function')
+    const hasSparkLLM = !!(w.spark && w.spark.llm && typeof w.spark.llm === 'function')
+    const hasAPIKeys = !!(OPENAI_API_KEY || PERPLEXITY_API_KEY)
+    
+    return hasSparkLLM || hasAPIKeys
   } catch {
     return false
   }
+}
+
+async function callOpenAI(prompt: string): Promise<string> {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key not configured')
+  }
+
+  console.log('[externalLLM] Calling OpenAI API...')
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional intelligence analyst creating detailed intelligence briefs.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
+    })
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('[externalLLM] OpenAI API error:', errorData)
+    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error('Invalid response from OpenAI API')
+  }
+
+  return data.choices[0].message.content
+}
+
+async function callPerplexity(prompt: string): Promise<string> {
+  if (!PERPLEXITY_API_KEY) {
+    throw new Error('Perplexity API key not configured')
+  }
+
+  console.log('[externalLLM] Calling Perplexity API...')
+
+  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${PERPLEXITY_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-sonar-small-128k-online',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional intelligence analyst creating detailed intelligence briefs based on current, up-to-date information.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    })
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('[externalLLM] Perplexity API error:', errorData)
+    throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error('Invalid response from Perplexity API')
+  }
+
+  return data.choices[0].message.content
 }
 
 export async function generateIntelligenceReport(params: {
@@ -15,28 +109,22 @@ export async function generateIntelligenceReport(params: {
   position: string
   country: string
   apiKey?: string
+  provider?: 'openai' | 'perplexity' | 'auto'
 }): Promise<string> {
-  const { name, position, country } = params
+  const { name, position, country, provider = 'auto' } = params
 
   console.log('[externalLLM] Starting intelligence report generation...')
   console.log('[externalLLM] Parameters:', {
     name,
     position,
-    country
+    country,
+    provider
   })
 
-  if (!isLLMAvailable()) {
-    console.log('[externalLLM] Spark runtime not available, generating static report')
-    return generateStaticReport({ name, position, country })
-  }
-
-  try {
-    console.log('[externalLLM] Using Spark LLM API...')
-    
-    const positionText = position || 'Not specified'
-    const countryText = country || 'Not specified'
-    
-    const prompt = (window.spark.llmPrompt as any)`You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
+  const positionText = position || 'Not specified'
+  const countryText = country || 'Not specified'
+  
+  const promptText = `You are a professional intelligence analyst. Create a comprehensive professional profile for the following person:
 
 Name: ${name}
 Position: ${positionText}
@@ -50,11 +138,33 @@ Please provide:
 5. Key Considerations for Engagement
 
 Format your response as a professional intelligence brief with clear sections and detailed analysis. Be thorough but realistic based on the position and context provided.`
+
+  const hasSparkLLM = typeof window !== 'undefined' && 
+    !!(window as any).spark && 
+    typeof (window as any).spark.llm === 'function'
+
+  try {
+    if (provider === 'perplexity' || (provider === 'auto' && PERPLEXITY_API_KEY && !hasSparkLLM)) {
+      console.log('[externalLLM] Using Perplexity API...')
+      return await callPerplexity(promptText)
+    }
     
-    const report = await window.spark.llm(prompt, 'gpt-4o-mini')
+    if (provider === 'openai' || (provider === 'auto' && OPENAI_API_KEY && !hasSparkLLM)) {
+      console.log('[externalLLM] Using OpenAI API...')
+      return await callOpenAI(promptText)
+    }
     
-    console.log('[externalLLM] Report generated successfully')
-    return report
+    if (hasSparkLLM) {
+      console.log('[externalLLM] Using Spark LLM API...')
+      const prompt = (window.spark.llmPrompt as any)`${promptText}`
+      const report = await window.spark.llm(prompt, 'gpt-4o-mini')
+      console.log('[externalLLM] Report generated successfully')
+      return report
+    }
+    
+    console.log('[externalLLM] No LLM provider available, generating static report')
+    return generateStaticReport({ name, position, country })
+    
   } catch (error) {
     console.error('[externalLLM] Error generating report:', error)
     
