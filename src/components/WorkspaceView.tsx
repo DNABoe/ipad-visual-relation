@@ -13,6 +13,7 @@ import { ExportDialog } from './ExportDialog'
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { CollapseBranchDialog } from './CollapseBranchDialog'
 import { ConnectionDialog } from './ConnectionDialog'
+import { AdminDashboard } from './AdminDashboard'
 import { 
   ContextMenu, 
   getCanvasMenuItems, 
@@ -30,6 +31,7 @@ import { generateId, getBounds, serializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import type { SearchBarRef } from './SearchBar'
 import { storage } from '@/lib/storage'
+import * as UserRegistry from '@/lib/userRegistry'
 
 interface WorkspaceViewProps {
   workspace: Workspace
@@ -46,6 +48,8 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
     username: string
     passwordHash: PasswordHash
   } | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false)
   
   const [showListPanel, setShowListPanel] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
@@ -64,6 +68,9 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
     const loadCredentials = async () => {
       const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
       setUserCredentials(creds || null)
+      
+      const user = await UserRegistry.getCurrentUser()
+      setCurrentUser(user || null)
     }
     loadCredentials()
   }, [])
@@ -482,6 +489,8 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         onMarkAsSaved={handleMarkAsSaved}
         currentUsername={userCredentials?.username}
         onLogout={onLogout}
+        isAdmin={currentUser?.role === 'admin'}
+        onShowAdminDashboard={() => setShowAdminDashboard(true)}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -698,6 +707,14 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
                 )
           }
           onClose={() => controller.setContextMenu(null)}
+        />
+      )}
+
+      {currentUser && (
+        <AdminDashboard
+          open={showAdminDashboard}
+          onOpenChange={setShowAdminDashboard}
+          currentUserId={currentUser.userId}
         />
       )}
 

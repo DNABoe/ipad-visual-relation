@@ -40,6 +40,7 @@ import {
   Question,
   Star,
   SignOut,
+  Shield,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -62,6 +63,8 @@ interface WorkspaceToolbarProps {
   onMarkAsSaved?: () => void
   currentUsername?: string
   onLogout?: () => void
+  isAdmin?: boolean
+  onShowAdminDashboard?: () => void
 }
 
 export function WorkspaceToolbar({
@@ -81,6 +84,8 @@ export function WorkspaceToolbar({
   onMarkAsSaved,
   currentUsername,
   onLogout,
+  isAdmin = false,
+  onShowAdminDashboard,
 }: WorkspaceToolbarProps) {
 
   const downloadFileName = fileName.endsWith('.enc.releye') 
@@ -516,6 +521,17 @@ export function WorkspaceToolbar({
             </TooltipTrigger>
             <TooltipContent>Settings</TooltipContent>
           </Tooltip>
+
+          {isAdmin && onShowAdminDashboard && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={onShowAdminDashboard} className="hover:bg-toolbar-hover hover:border-primary/50">
+                  <Shield size={18} weight="duotone" className="text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Admin Dashboard</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
