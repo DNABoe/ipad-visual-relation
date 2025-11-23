@@ -1,5 +1,5 @@
-import { hashPassword, verifyPassword, type PasswordHash } from './auth'
-import { storage } from './storage'
+import { type PasswordHash } from './auth'
+import { ApiClient } from './apiClient'
 
 export interface RegisteredUser {
   userId: string
@@ -24,43 +24,21 @@ export interface PendingInvite {
   createdBy: string
 }
 
-const USERS_KV_KEY = 'releye-users'
-const INVITES_KV_KEY = 'releye-invites'
 const CURRENT_USER_KEY = 'releye-current-user-id'
-const SESSION_KV_KEY = 'releye-active-sessions'
 
 export async function getAllUsers(): Promise<RegisteredUser[]> {
-  console.log('[UserRegistry] Getting all users from storage...')
+  console.log('[UserRegistry] Getting all users from backend API...')
   
   try {
-    const users = await storage.get<RegisteredUser[]>(USERS_KV_KEY)
-    const result = users || []
-    console.log('[UserRegistry] Found', result.length, 'users')
-    return result
+    const users = await ApiClient.getAllUsers()
+    console.log('[UserRegistry] Found', users.length, 'users')
+    return users.map(u => ({
+      ...u,
+      passwordHash: '' as unknown as PasswordHash
+    }))
   } catch (error) {
     console.error('[UserRegistry] Failed to get users:', error)
     throw new Error('Failed to load user data. Please refresh the page.')
-  }
-}
-
-async function saveAllUsers(users: RegisteredUser[]): Promise<void> {
-  console.log('[UserRegistry] Saving', users.length, 'users to storage...')
-  
-  try {
-    await storage.set(USERS_KV_KEY, users)
-    console.log('[UserRegistry] ✓ Users saved successfully')
-    
-    const verification = await storage.get<RegisteredUser[]>(USERS_KV_KEY)
-    const parsedVerification = verification || []
-    if (parsedVerification.length !== users.length) {
-      console.warn('[UserRegistry] ⚠️ Verification mismatch after save')
-    } else {
-      console.log('[UserRegistry] ✓ Save verified')
-    }
-  } catch (error) {
-    console.error('[UserRegistry] ❌ Failed to save users:', error)
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-    throw new Error(`Failed to save user data: ${errorMsg}. Please try again.`)
   }
 }
 
@@ -92,35 +70,38 @@ export async function createUser(
   console.log('[UserRegistry] Name:', name)
   console.log('[UserRegistry] Role:', role)
   
-  const existing = await getUserByEmail(email)
-  if (existing) {
-    console.error('[UserRegistry] ❌ User already exists with this email')
-    throw new Error('A user with this email already exists')
+  try {
+    let user: any
+    
+    if (role === 'admin') {
+      user = await ApiClient.register(email, name, password, role)
+    } else {
+      user = await ApiClient.createUser(email, name, password, role, canInvestigate)
+    }
+    
+    const result: RegisteredUser = {
+      userId: user.userId,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      passwordHash: '' as unknown as PasswordHash,
+      createdAt: user.createdAt || Date.now(),
+      loginCount: user.loginCount || 0,
+      canInvestigate: user.canInvestigate || false
+    }
+    
+    console.log('[UserRegistry] ✓ User created:', result.userId)
+    console.log('[UserRegistry] ========== USER CREATED SUCCESSFULLY ==========')
+    
+    if (user.token) {
+      ApiClient.setToken(user.token)
+    }
+    
+    return result
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to create user:', error)
+    throw error
   }
-
-  console.log('[UserRegistry] Hashing password...')
-  const passwordHash = await hashPassword(password)
-  console.log('[UserRegistry] ✓ Password hashed')
-
-  const user: RegisteredUser = {
-    userId: `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-    email: email.toLowerCase(),
-    name,
-    role,
-    passwordHash,
-    createdAt: Date.now(),
-    loginCount: 0,
-    canInvestigate
-  }
-
-  console.log('[UserRegistry] Saving user to Spark KV...')
-  const users = await getAllUsers()
-  users.push(user)
-  await saveAllUsers(users)
-  
-  console.log('[UserRegistry] ✓ User created')
-  console.log('[UserRegistry] ========== USER CREATED SUCCESSFULLY ==========')
-  return user
 }
 
 export async function updateUser(user: RegisteredUser): Promise<void> {
@@ -133,116 +114,95 @@ export async function updateUser(user: RegisteredUser): Promise<void> {
     canInvestigate: user.canInvestigate
   })
   
-  const users = await getAllUsers()
-  console.log('[UserRegistry] Current users count:', users.length)
-  
-  const index = users.findIndex(u => u.userId === user.userId)
-  
-  if (index === -1) {
-    console.error('[UserRegistry] ❌ User not found in registry')
-    throw new Error('User not found')
+  try {
+    await ApiClient.updateUser(user.userId, {
+      name: user.name,
+      role: user.role,
+      canInvestigate: user.canInvestigate
+    })
+    
+    console.log('[UserRegistry] ✓ User updated')
+    console.log('[UserRegistry] ========== UPDATE COMPLETE ==========')
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to update user:', error)
+    throw error
   }
-  
-  console.log('[UserRegistry] Found user at index:', index)
-  console.log('[UserRegistry] Old user data:', {
-    email: users[index].email,
-    role: users[index].role,
-    canInvestigate: users[index].canInvestigate
-  })
-  
-  users[index] = user
-  console.log('[UserRegistry] Updated user in array')
-  console.log('[UserRegistry] New user data:', {
-    email: users[index].email,
-    role: users[index].role,
-    canInvestigate: users[index].canInvestigate
-  })
-  
-  console.log('[UserRegistry] Saving all users...')
-  await saveAllUsers(users)
-  console.log('[UserRegistry] ✓ User updated')
-  
-  const verification = await getUserById(user.userId)
-  if (verification) {
-    console.log('[UserRegistry] ✓ Verification check - user role:', verification.role, 'canInvestigate:', verification.canInvestigate)
-  } else {
-    console.error('[UserRegistry] ❌ Verification failed - user not found after update')
-  }
-  
-  console.log('[UserRegistry] ========== UPDATE COMPLETE ==========')
 }
 
 export async function deleteUser(userId: string): Promise<void> {
   console.log('[UserRegistry] Deleting user:', userId)
-  const users = await getAllUsers()
-  const filtered = users.filter(u => u.userId !== userId)
   
-  if (filtered.length === users.length) {
-    throw new Error('User not found')
+  try {
+    await ApiClient.deleteUser(userId)
+    console.log('[UserRegistry] ✓ User deleted')
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to delete user:', error)
+    throw error
   }
-  
-  await saveAllUsers(filtered)
-  console.log('[UserRegistry] ✓ User deleted')
 }
 
 export async function authenticateUser(emailOrUsername: string, password: string): Promise<RegisteredUser | null> {
   console.log('[UserRegistry] ========== AUTHENTICATING USER ==========')
   console.log('[UserRegistry] EmailOrUsername:', emailOrUsername)
   
-  const user = await getUserByEmail(emailOrUsername)
-  
-  if (!user) {
-    console.log('[UserRegistry] ❌ User not found')
+  try {
+    const response = await ApiClient.login(emailOrUsername, password)
+    
+    ApiClient.setToken(response.token)
+    
+    const user: RegisteredUser = {
+      userId: response.userId,
+      email: response.email,
+      name: response.name,
+      role: response.role,
+      passwordHash: response.passwordHash as unknown as PasswordHash,
+      createdAt: response.createdAt,
+      lastLogin: response.lastLogin,
+      loginCount: response.loginCount,
+      canInvestigate: response.canInvestigate
+    }
+    
+    await setCurrentUser(user.userId)
+    
+    console.log('[UserRegistry] ✓ Authentication successful')
+    console.log('[UserRegistry] ========== AUTHENTICATION SUCCESSFUL ==========')
+    
+    return user
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Authentication failed:', error)
     return null
   }
-
-  console.log('[UserRegistry] Verifying password...')
-  const isValid = await verifyPassword(password, user.passwordHash)
-  
-  if (!isValid) {
-    console.log('[UserRegistry] ❌ Invalid password')
-    return null
-  }
-
-  console.log('[UserRegistry] ✓ Authentication successful')
-  
-  user.lastLogin = Date.now()
-  user.loginCount = (user.loginCount || 0) + 1
-  await updateUser(user)
-  await setCurrentUser(user.userId)
-  
-  console.log('[UserRegistry] ========== AUTHENTICATION SUCCESSFUL ==========')
-  return user
 }
 
 export async function isFirstTimeSetup(): Promise<boolean> {
-  const users = await getAllUsers()
-  const hasAdmin = users.some(u => u.role === 'admin')
-  console.log('[UserRegistry] First time setup:', !hasAdmin)
-  return !hasAdmin
+  console.log('[UserRegistry] Checking if first time setup...')
+  
+  try {
+    const isFirstTime = await ApiClient.isFirstTimeSetup()
+    console.log('[UserRegistry] First time setup:', isFirstTime)
+    return isFirstTime
+  } catch (error) {
+    console.error('[UserRegistry] Failed to check first time setup:', error)
+    return true
+  }
 }
 
 export async function getAllInvites(): Promise<PendingInvite[]> {
+  console.log('[UserRegistry] Getting all invites from backend API...')
+  
   try {
-    const invites = await storage.get<PendingInvite[]>(INVITES_KV_KEY)
-    return invites || []
+    const invites = await ApiClient.getAllInvites()
+    console.log('[UserRegistry] Found', invites.length, 'invites')
+    return invites
   } catch (error) {
     console.error('[UserRegistry] Failed to get invites:', error)
     return []
   }
 }
 
-async function saveAllInvites(invites: PendingInvite[]): Promise<void> {
-  try {
-    await storage.set(INVITES_KV_KEY, invites)
-  } catch (error) {
-    console.error('[UserRegistry] ❌ Failed to save invites:', error)
-    throw new Error('Failed to save invite data. Please try again.')
-  }
-}
-
 export async function getInviteByToken(token: string): Promise<PendingInvite | undefined> {
   console.log('[UserRegistry] Looking up invite by token:', token.substring(0, 8) + '...')
+  
   const invites = await getAllInvites()
   console.log('[UserRegistry] Total invites in storage:', invites.length)
   
@@ -273,24 +233,22 @@ export async function createInvite(
   role: 'admin' | 'normal',
   createdBy: string
 ): Promise<PendingInvite> {
-  const token = `invite-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-  const invite: PendingInvite = {
-    inviteId: `inv-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-    email: email.toLowerCase(),
-    name,
-    role,
-    token,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
-    createdBy
-  }
-
-  const invites = await getAllInvites()
-  invites.push(invite)
-  await saveAllInvites(invites)
+  console.log('[UserRegistry] Creating invite for:', email)
   
-  console.log('[UserRegistry] ✓ Invite created')
-  return invite
+  try {
+    const invite = await ApiClient.createInvite(email, name, role)
+    
+    const result: PendingInvite = {
+      ...invite,
+      createdBy
+    }
+    
+    console.log('[UserRegistry] ✓ Invite created')
+    return result
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to create invite:', error)
+    throw error
+  }
 }
 
 export async function consumeInvite(token: string, password: string): Promise<RegisteredUser> {
@@ -298,74 +256,52 @@ export async function consumeInvite(token: string, password: string): Promise<Re
   console.log('[UserRegistry] Token:', token.substring(0, 8) + '...')
   console.log('[UserRegistry] Password length:', password.length)
   
-  const invite = await getInviteByToken(token)
-  if (!invite) {
-    console.error('[UserRegistry] ❌ Invalid or missing invite token')
-    throw new Error('Invalid invite token. The invitation may have been revoked or already used.')
+  try {
+    const response = await ApiClient.consumeInvite(token, password)
+    
+    ApiClient.setToken(response.token)
+    
+    const user: RegisteredUser = {
+      userId: response.userId,
+      email: response.email,
+      name: response.name,
+      role: response.role,
+      passwordHash: '' as unknown as PasswordHash,
+      createdAt: Date.now(),
+      loginCount: 0,
+      canInvestigate: response.canInvestigate
+    }
+    
+    console.log('[UserRegistry] ✓ User created:', user.userId)
+    console.log('[UserRegistry] ========== INVITATION CONSUMPTION COMPLETE ==========')
+    
+    return user
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to consume invite:', error)
+    throw error
   }
-
-  console.log('[UserRegistry] Found invite for:', invite.email)
-  console.log('[UserRegistry] Invite created:', new Date(invite.createdAt).toISOString())
-  console.log('[UserRegistry] Invite expires:', new Date(invite.expiresAt).toISOString())
-
-  if (Date.now() > invite.expiresAt) {
-    console.error('[UserRegistry] ❌ Invite expired at:', new Date(invite.expiresAt).toISOString())
-    const expiredDate = new Date(invite.expiresAt).toLocaleDateString()
-    throw new Error(`This invitation expired on ${expiredDate}. Please contact your administrator for a new invitation.`)
-  }
-
-  console.log('[UserRegistry] Checking if user already exists...')
-  const existingUser = await getUserByEmail(invite.email)
-  if (existingUser) {
-    console.error('[UserRegistry] ❌ User already exists with this email')
-    throw new Error('A user with this email already exists. The invitation may have already been used.')
-  }
-
-  console.log('[UserRegistry] Creating user account...')
-  const user = await createUser(invite.email, invite.name, password, invite.role, false)
-  console.log('[UserRegistry] ✓ User created:', user.userId)
-
-  console.log('[UserRegistry] Removing consumed invite...')
-  const invites = await getAllInvites()
-  const filtered = invites.filter(i => i.token !== token && i.token !== decodeURIComponent(token))
-  await saveAllInvites(filtered)
-  console.log('[UserRegistry] ✓ Invite consumed and removed')
-  
-  console.log('[UserRegistry] ========== INVITATION CONSUMPTION COMPLETE ==========')
-  return user
 }
 
-export async function revokeInvite(token: string): Promise<void> {
-  console.log('[UserRegistry] Revoking invite:', token.substring(0, 8) + '...')
-  const invites = await getAllInvites()
-  const filtered = invites.filter(i => i.token !== token)
+export async function revokeInvite(inviteId: string): Promise<void> {
+  console.log('[UserRegistry] Revoking invite:', inviteId)
   
-  if (filtered.length === invites.length) {
-    throw new Error('Invite not found')
+  try {
+    await ApiClient.revokeInvite(inviteId)
+    console.log('[UserRegistry] ✓ Invite revoked')
+  } catch (error) {
+    console.error('[UserRegistry] ❌ Failed to revoke invite:', error)
+    throw error
   }
-  
-  await saveAllInvites(filtered)
-  console.log('[UserRegistry] ✓ Invite revoked')
 }
 
 export async function cleanupExpiredInvites(): Promise<void> {
-  console.log('[UserRegistry] Cleaning up expired invites...')
-  const invites = await getAllInvites()
-  const now = Date.now()
-  const active = invites.filter(i => i.expiresAt > now)
-  
-  if (active.length < invites.length) {
-    await saveAllInvites(active)
-    console.log('[UserRegistry] ✓ Removed', invites.length - active.length, 'expired invites')
-  } else {
-    console.log('[UserRegistry] No expired invites to clean up')
-  }
+  console.log('[UserRegistry] Cleanup expired invites handled by backend')
 }
 
 export async function getCurrentUserId(): Promise<string | undefined> {
   try {
-    const userId = await storage.get<string>(CURRENT_USER_KEY)
-    return userId
+    const userId = localStorage.getItem(CURRENT_USER_KEY)
+    return userId || undefined
   } catch (error) {
     console.error('[UserRegistry] Failed to get current user ID:', error)
     return undefined
@@ -373,20 +309,41 @@ export async function getCurrentUserId(): Promise<string | undefined> {
 }
 
 export async function getCurrentUser(): Promise<RegisteredUser | undefined> {
-  const userId = await getCurrentUserId()
-  if (!userId) return undefined
+  console.log('[UserRegistry] Getting current user...')
+  
+  const token = ApiClient.getToken()
+  if (!token) {
+    console.log('[UserRegistry] No auth token found')
+    return undefined
+  }
   
   try {
-    return await getUserById(userId)
+    const user = await ApiClient.verifyToken()
+    
+    const result: RegisteredUser = {
+      userId: user.userId,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      passwordHash: '' as unknown as PasswordHash,
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin,
+      loginCount: user.loginCount,
+      canInvestigate: user.canInvestigate
+    }
+    
+    console.log('[UserRegistry] ✓ Current user:', user.email)
+    return result
   } catch (error) {
-    console.error('[UserRegistry] Failed to get current user:', error)
+    console.error('[UserRegistry] Failed to verify token:', error)
+    ApiClient.setToken(null)
     return undefined
   }
 }
 
 export async function setCurrentUser(userId: string): Promise<void> {
   try {
-    await storage.set(CURRENT_USER_KEY, userId)
+    localStorage.setItem(CURRENT_USER_KEY, userId)
     console.log('[UserRegistry] ✓ Current user session saved:', userId)
   } catch (error) {
     console.error('[UserRegistry] Failed to set current user:', error)
@@ -397,7 +354,8 @@ export async function setCurrentUser(userId: string): Promise<void> {
 
 export async function clearCurrentUser(): Promise<void> {
   try {
-    await storage.delete(CURRENT_USER_KEY)
+    localStorage.removeItem(CURRENT_USER_KEY)
+    ApiClient.setToken(null)
     console.log('[UserRegistry] ✓ Current user session cleared')
   } catch (error) {
     console.error('[UserRegistry] Failed to clear current user:', error)
@@ -423,10 +381,11 @@ export async function resetAllData(): Promise<void> {
   console.log('[UserRegistry] ⚠️⚠️⚠️ RESETTING ALL DATA ⚠️⚠️⚠️')
   
   try {
-    await storage.delete(USERS_KV_KEY)
-    await storage.delete(INVITES_KV_KEY)
+    await ApiClient.resetAll()
     await clearCurrentUser()
-    console.log('[UserRegistry] ✓ All data has been reset')
+    
+    console.log('[UserRegistry] ✓ All data reset successfully')
+    console.log('[UserRegistry] ⚠️⚠️⚠️ RESET COMPLETE ⚠️⚠️⚠️')
   } catch (error) {
     console.error('[UserRegistry] ❌ Failed to reset data:', error)
     throw new Error('Failed to reset data. Please try again.')
