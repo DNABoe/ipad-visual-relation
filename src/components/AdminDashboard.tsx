@@ -594,7 +594,7 @@ export function AdminDashboard({
                                         <SelectTrigger className="w-32">
                                           <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent position="popper" sideOffset={5}>
                                           <SelectItem value="admin">Admin</SelectItem>
                                           <SelectItem value="editor">Editor</SelectItem>
                                           <SelectItem value="viewer">Viewer</SelectItem>
