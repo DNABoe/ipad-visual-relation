@@ -14,7 +14,7 @@ import * as UserRegistry from '@/lib/userRegistry'
 interface DirectUserDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onUserCreated: () => void
+  onUserCreated: (user: UserRegistry.RegisteredUser) => void
   currentUserId: string
 }
 
@@ -92,8 +92,6 @@ export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUse
 
       console.log('[DirectUserDialog] ✓ User created successfully:', user.userId)
       console.log('[DirectUserDialog] ========== USER CREATION COMPLETE ==========')
-
-      toast.success(`User ${name.trim()} created successfully!`)
       
       setEmail('')
       setName('')
@@ -103,7 +101,7 @@ export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUse
       setCanInvestigate(false)
       setError('')
       
-      onUserCreated()
+      onUserCreated(user)
       onOpenChange(false)
     } catch (err) {
       console.error('[DirectUserDialog] ❌ Failed to create user:', err)

@@ -352,11 +352,25 @@ export function AdminDashboard({
     }
   }
 
-  const handleDirectUserCreated = async () => {
-    console.log('[AdminDashboard] Direct user created, reloading user list...')
+  const handleDirectUserCreated = async (createdUser: UserRegistry.RegisteredUser) => {
+    console.log('[AdminDashboard] Direct user created, adding to workspace...')
+    console.log('[AdminDashboard] Created user:', createdUser)
     
-    const allRegisteredUsers = await UserRegistry.getAllUsers()
-    console.log('[AdminDashboard] Found', allRegisteredUsers.length, 'registered users')
+    const workspaceUser: WorkspaceUser = {
+      userId: createdUser.userId,
+      username: createdUser.name,
+      email: createdUser.email,
+      role: createdUser.role,
+      addedAt: createdUser.createdAt,
+      addedBy: currentUserId,
+      status: 'active',
+      canInvestigate: createdUser.canInvestigate,
+      loginCount: 0
+    }
+    
+    console.log('[AdminDashboard] Adding workspace user:', workspaceUser)
+    const updatedUsers = [...users, workspaceUser]
+    onUpdateUsers(updatedUsers)
     
     onLogActivity({
       id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -365,11 +379,11 @@ export function AdminDashboard({
       username: currentUser?.username || 'Unknown',
       action: 'created',
       entityType: 'user',
-      entityId: 'direct-user',
-      details: `Created user account directly (without invitation)`
+      entityId: createdUser.userId,
+      details: `Created user ${createdUser.name} (${createdUser.email}) directly as ${getRoleDisplayName(createdUser.role)}`
     })
     
-    toast.success('User account created successfully!')
+    toast.success(`User ${createdUser.name} created successfully!`)
   }
 
   const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
