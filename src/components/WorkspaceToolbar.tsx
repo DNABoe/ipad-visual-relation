@@ -146,7 +146,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openPersonDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Plus size={18} weight="bold" className="text-success" />
+                <Plus size={18} weight="bold" className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Add Person</TooltipContent>
@@ -176,7 +176,7 @@ export function WorkspaceToolbar({
                 }}
                 className={controller.interaction.isConnecting ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "hover:bg-toolbar-hover hover:border-primary/50"}
               >
-                {controller.interaction.isConnecting ? <X size={18} weight="bold" /> : <Link size={18} weight="duotone" className="text-accent" />}
+                {controller.interaction.isConnecting ? <X size={18} weight="bold" /> : <Link size={18} weight="duotone" className="text-primary" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>{controller.interaction.isConnecting ? 'Cancel Connect' : 'Connect Mode'}</TooltipContent>
@@ -189,7 +189,7 @@ export function WorkspaceToolbar({
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="hover:bg-toolbar-hover hover:border-primary/50">
-                    <ArrowsInCardinal size={18} weight="duotone" className="text-accent" />
+                    <ArrowsInCardinal size={18} weight="duotone" className="text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
@@ -204,21 +204,21 @@ export function WorkspaceToolbar({
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={controller.handlers.handleTightenNetwork} className="cursor-pointer gap-3 py-2.5">
-                <UsersThree size={18} weight="duotone" className="text-accent" />
+                <UsersThree size={18} weight="duotone" className="text-primary" />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">Group Columns</span>
                   <span className="text-xs text-muted-foreground">Arrange persons in vertical columns by group and importance</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={controller.handlers.handleOrganizeByImportance} className="cursor-pointer gap-3 py-2.5">
-                <Target size={18} weight="duotone" className="text-warning" />
+                <Target size={18} weight="duotone" className="text-primary" />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">Importance Rings</span>
                   <span className="text-xs text-muted-foreground">Arrange in concentric rings by importance score</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={controller.handlers.handleCompressLayout} className="cursor-pointer gap-3 py-2.5">
-                <ArrowsInCardinal size={18} weight="duotone" className="text-success" />
+                <ArrowsInCardinal size={18} weight="duotone" className="text-primary" />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">Compress</span>
                   <span className="text-xs text-muted-foreground">Minimize connection lengths while preserving relative positions</span>
@@ -239,7 +239,7 @@ export function WorkspaceToolbar({
                 }
                 disabled={!canFindPath && !isShortestPathActive}
               >
-                <Path size={18} weight={isShortestPathActive ? "fill" : "duotone"} className={canFindPath || isShortestPathActive ? (isShortestPathActive ? "" : "text-warning") : "text-muted-foreground"} />
+                <Path size={18} weight={isShortestPathActive ? "fill" : "duotone"} className={canFindPath || isShortestPathActive ? (isShortestPathActive ? "" : "text-primary") : "text-muted-foreground"} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -252,7 +252,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={controller.transform.zoomIn} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <MagnifyingGlassPlus size={18} weight="duotone" className="text-accent" />
+                <MagnifyingGlassPlus size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Zoom In</TooltipContent>
@@ -261,7 +261,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={controller.transform.zoomOut} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <MagnifyingGlassMinus size={18} weight="duotone" className="text-accent" />
+                <MagnifyingGlassMinus size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Zoom Out</TooltipContent>
@@ -270,7 +270,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={controller.handlers.handleZoomToFit} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <ArrowsOut size={18} weight="duotone" className="text-accent" />
+                <ArrowsOut size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Zoom to Fit</TooltipContent>
@@ -343,9 +343,9 @@ export function WorkspaceToolbar({
                             const isCollapsed = fromBranch || toBranch
                             
                             return isCollapsed ? (
-                              <Eye size={18} weight="duotone" className="text-success" />
+                              <Eye size={18} weight="duotone" className="text-primary" />
                             ) : (
-                              <GitBranch size={18} weight="duotone" className="text-accent" />
+                              <GitBranch size={18} weight="duotone" className="text-primary" />
                             )
                           }
                           return <GitBranch size={18} weight="duotone" className="text-muted-foreground" />
@@ -410,7 +410,7 @@ export function WorkspaceToolbar({
                 disabled={!controller.hasUndo}
                 className="hover:bg-toolbar-hover hover:border-primary/50 disabled:opacity-40"
               >
-                <ArrowCounterClockwise size={18} weight="duotone" className={controller.hasUndo ? "text-warning" : "text-muted-foreground"} />
+                <ArrowCounterClockwise size={18} weight="duotone" className={controller.hasUndo ? "text-primary" : "text-muted-foreground"} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
@@ -433,7 +433,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openExportDialog()} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <Export size={18} weight="duotone" className="text-warning" />
+                <Export size={18} weight="duotone" className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Export Canvas</TooltipContent>
@@ -444,7 +444,7 @@ export function WorkspaceToolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => controller.dialogs.openUnsavedDialog('new')} className="hover:bg-toolbar-hover hover:border-primary/50">
-                <FilePlus size={18} className="text-success" />
+                <FilePlus size={18} className="text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>New Network</TooltipContent>
@@ -491,7 +491,7 @@ export function WorkspaceToolbar({
                   asChild
                 >
                   <span>
-                    <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-accent" : "text-muted-foreground"} />
+                    <DownloadSimple size={18} weight="duotone" className={downloadUrl ? "text-primary" : "text-muted-foreground"} />
                   </span>
                 </Button>
               </a>
