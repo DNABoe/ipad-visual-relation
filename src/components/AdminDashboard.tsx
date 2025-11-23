@@ -100,17 +100,26 @@ export function AdminDashboard({
   useEffect(() => {
     const loadPendingInvites = async () => {
       try {
-        const invites = await storage.get<typeof pendingInvites>('pending-invites') || []
+        console.log('[AdminDashboard] Loading pending invites from UserRegistry...')
+        const invites = await UserRegistry.getAllInvites()
+        console.log('[AdminDashboard] Found', invites.length, 'invites')
+        
         const now = Date.now()
-        const validInvites = invites.filter(inv => inv.expiry > now)
+        const validInvites = invites
+          .filter(inv => inv.expiresAt > now)
+          .map(inv => ({
+            name: inv.name,
+            email: inv.email,
+            role: inv.role,
+            token: inv.token,
+            expiry: inv.expiresAt,
+            createdAt: inv.createdAt
+          }))
         
-        if (validInvites.length !== invites.length) {
-          await storage.set('pending-invites', validInvites)
-        }
-        
+        console.log('[AdminDashboard] Valid invites:', validInvites.length)
         setPendingInvites(validInvites)
       } catch (error) {
-        console.error('Failed to load pending invites:', error)
+        console.error('[AdminDashboard] Failed to load pending invites:', error)
       }
     }
 
@@ -166,79 +175,69 @@ export function AdminDashboard({
       return
     }
 
-    console.log('[AdminDashboard] ========== CREATING INVITATION ==========')
-    const inviteToken = generateInviteToken()
-    console.log('[AdminDashboard] Generated invite token:', inviteToken)
-    
-    const expiry = Date.now() + (7 * 24 * 60 * 60 * 1000)
-    console.log('[AdminDashboard] Invitation expiry:', new Date(expiry).toISOString())
-    
-    const pendingInvite = {
-      name: newUserName.trim(),
-      email: newUserEmail.trim(),
-      role: newUserRole,
-      token: inviteToken,
-      expiry,
-      createdAt: Date.now()
+    try {
+      console.log('[AdminDashboard] ========== CREATING INVITATION ==========')
+      console.log('[AdminDashboard] Email:', newUserEmail.trim())
+      console.log('[AdminDashboard] Name:', newUserName.trim())
+      console.log('[AdminDashboard] Role:', newUserRole)
+      console.log('[AdminDashboard] Created by:', currentUserId)
+      
+      const invite = await UserRegistry.createInvite(
+        newUserEmail.trim(),
+        newUserName.trim(),
+        newUserRole,
+        currentUserId
+      )
+      
+      console.log('[AdminDashboard] ✓ Invite created in UserRegistry')
+      console.log('[AdminDashboard] Invite token:', invite.token.substring(0, 8) + '...')
+      console.log('[AdminDashboard] Expires at:', new Date(invite.expiresAt).toISOString())
+      
+      const inviteLink = generateInviteLink(invite.token, newUserEmail.trim())
+      console.log('[AdminDashboard] Generated invite link:', inviteLink)
+      console.log('[AdminDashboard] ========== INVITATION CREATED SUCCESSFULLY ==========')
+      
+      const pendingInvite = {
+        name: newUserName.trim(),
+        email: newUserEmail.trim(),
+        role: newUserRole,
+        token: invite.token,
+        expiry: invite.expiresAt,
+        createdAt: invite.createdAt
+      }
+      
+      setPendingInvites(prev => [...prev, pendingInvite])
+      
+      onLogActivity({
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userId: currentUserId,
+        username: currentUser?.username || 'Unknown',
+        action: 'invited',
+        entityType: 'user',
+        entityId: invite.token,
+        details: `Invited ${newUserName.trim()} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
+      })
+
+      setInviteEmailData({
+        userName: newUserName.trim(),
+        userEmail: newUserEmail.trim(),
+        userRole: getRoleDisplayName(newUserRole),
+        roleDescription: getRoleDescription(newUserRole),
+        inviteLink
+      })
+      
+      setNewUserName('')
+      setNewUserEmail('')
+      setNewUserRole('viewer')
+      setShowAddUserDialog(false)
+      setShowInviteEmailDialog(true)
+      
+      toast.success('User invited successfully!')
+    } catch (error) {
+      console.error('[AdminDashboard] ❌ Failed to create invitation:', error)
+      toast.error('Failed to create invitation. Please try again.')
     }
-
-    console.log('[AdminDashboard] Pending invite object:', pendingInvite)
-    console.log('[AdminDashboard] Fetching existing invites from storage...')
-    
-    const invites = await storage.get<typeof pendingInvite[]>('pending-invites') || []
-    console.log('[AdminDashboard] Existing invites count:', invites.length)
-    
-    const updatedInvites = [...invites, pendingInvite]
-    console.log('[AdminDashboard] Saving updated invites (count:', updatedInvites.length, ')...')
-    
-    await storage.set('pending-invites', updatedInvites)
-    console.log('[AdminDashboard] ✓ Invites saved to storage')
-    
-    console.log('[AdminDashboard] Verifying save...')
-    const verifyInvites = await storage.get<typeof pendingInvite[]>('pending-invites')
-    console.log('[AdminDashboard] Verification: found', verifyInvites?.length || 0, 'invites')
-    
-    const foundInvite = verifyInvites?.find(inv => inv.token === inviteToken)
-    console.log('[AdminDashboard] Verification: new invite found:', !!foundInvite)
-    
-    if (!foundInvite) {
-      console.error('[AdminDashboard] ❌ Failed to verify invite was saved!')
-      toast.error('Failed to save invitation. Please try again.')
-      return
-    }
-    
-    setPendingInvites(updatedInvites)
-
-    const inviteLink = generateInviteLink(inviteToken, newUserEmail.trim())
-    console.log('[AdminDashboard] Generated invite link:', inviteLink)
-    console.log('[AdminDashboard] ========== INVITATION CREATED SUCCESSFULLY ==========')
-    
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: 'invited',
-      entityType: 'user',
-      entityId: inviteToken,
-      details: `Invited ${newUserName.trim()} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
-    })
-
-    setInviteEmailData({
-      userName: newUserName.trim(),
-      userEmail: newUserEmail.trim(),
-      userRole: getRoleDisplayName(newUserRole),
-      roleDescription: getRoleDescription(newUserRole),
-      inviteLink
-    })
-    
-    setNewUserName('')
-    setNewUserEmail('')
-    setNewUserRole('viewer')
-    setShowAddUserDialog(false)
-    setShowInviteEmailDialog(true)
-    
-    toast.success('User invited successfully!')
   }
 
   const handleDeleteUser = () => {
@@ -326,22 +325,29 @@ export function AdminDashboard({
   }
 
   const handleRevokeInvite = async (invite: typeof pendingInvites[0]) => {
-    const updatedInvites = pendingInvites.filter(inv => inv.token !== invite.token)
-    await storage.set('pending-invites', updatedInvites)
-    setPendingInvites(updatedInvites)
+    try {
+      console.log('[AdminDashboard] Revoking invite:', invite.token.substring(0, 8) + '...')
+      await UserRegistry.revokeInvite(invite.token)
+      console.log('[AdminDashboard] ✓ Invite revoked from UserRegistry')
+      
+      setPendingInvites(prev => prev.filter(inv => inv.token !== invite.token))
 
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: 'revoked',
-      entityType: 'user',
-      entityId: invite.token,
-      details: `Revoked invitation for ${invite.name} (${invite.email})`
-    })
+      onLogActivity({
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userId: currentUserId,
+        username: currentUser?.username || 'Unknown',
+        action: 'revoked',
+        entityType: 'user',
+        entityId: invite.token,
+        details: `Revoked invitation for ${invite.name} (${invite.email})`
+      })
 
-    toast.success(`Invitation revoked for ${invite.name}`)
+      toast.success(`Invitation revoked for ${invite.name}`)
+    } catch (error) {
+      console.error('[AdminDashboard] Failed to revoke invite:', error)
+      toast.error('Failed to revoke invitation. Please try again.')
+    }
   }
 
   const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
@@ -975,7 +981,7 @@ export function AdminDashboard({
       </Dialog>
 
       <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Invite New User</DialogTitle>
             <DialogDescription>
