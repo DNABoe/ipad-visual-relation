@@ -6,6 +6,7 @@ import { LoginView } from './components/LoginView'
 import { FirstTimeSetup } from './components/FirstTimeSetup'
 import { InviteAcceptView } from './components/InviteAcceptView'
 import { AuthDiagnostic } from './components/AuthDiagnostic'
+import { DatabaseDiagnostic } from './components/DatabaseDiagnostic'
 import { SparkNotAvailableError } from './components/SparkNotAvailableError'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
@@ -278,6 +279,7 @@ function App() {
 
   const urlParams = new URLSearchParams(window.location.search)
   const showDiagnostics = urlParams.get('diagnostics') === 'true'
+  const showDbDiagnostics = urlParams.get('db-diagnostics') === 'true'
 
   if (sparkNotAvailable) {
     return (
@@ -316,6 +318,17 @@ function App() {
       <>
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <AuthDiagnostic />
+        </div>
+        <Toaster />
+      </>
+    )
+  }
+
+  if (showDbDiagnostics) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <DatabaseDiagnostic />
         </div>
         <Toaster />
       </>
