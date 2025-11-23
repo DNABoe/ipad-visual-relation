@@ -31,6 +31,7 @@ function App() {
         console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
         console.log('[App] Environment check:')
         console.log('[App]   - URL:', window.location.href)
+        console.log('[App]   - Spark KV available:', !!(window as any).spark?.kv)
         console.log('[App]   - localStorage available:', !!window.localStorage)
         console.log('[App]   - User Agent:', navigator.userAgent)
         
@@ -62,16 +63,17 @@ function App() {
         const isReady = await waitForStorage(5000)
         
         if (!isReady) {
-          console.error('[App] ❌ localStorage failed to initialize!')
+          console.error('[App] ❌ Storage failed to initialize!')
           console.error('[App] Final diagnostic:')
-          console.error('[App]   - window.localStorage:', window.localStorage)
+          console.error('[App]   - window.spark.kv:', !!(window as any).spark?.kv)
+          console.error('[App]   - window.localStorage:', !!window.localStorage)
           
           setSparkNotAvailable(true)
           setIsLoadingAuth(false)
           return
         }
         
-        console.log('[App] ✓ localStorage is ready')
+        console.log('[App] ✓ Storage is ready')
         
         if (forceReset === 'true') {
           console.log('[App] Force reset parameter detected - clearing session and showing first-time setup')
@@ -259,6 +261,7 @@ function App() {
                 <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
                 <div className="text-xs font-mono space-y-1 text-muted-foreground">
                   <div>URL: {window.location.hostname}</div>
+                  <div>Spark KV: {(window as any).spark?.kv ? '✓ Available' : '✗ Not found'}</div>
                   <div>Storage: {window.localStorage ? '✓ Available' : '✗ Not found'}</div>
                 </div>
               </div>
@@ -285,7 +288,7 @@ function App() {
             <div className="space-y-3">
               <h1 className="text-2xl font-bold text-foreground">Storage Not Available</h1>
               <p className="text-muted-foreground">
-                This application requires browser localStorage to function. Please check your browser settings and ensure:
+                This application requires persistent storage to function. Please ensure your browser supports the necessary storage mechanisms.
               </p>
               <ul className="text-sm text-muted-foreground text-left space-y-2 mt-4">
                 <li>• Cookies and site data are enabled</li>
@@ -296,6 +299,7 @@ function App() {
                 <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
                 <div className="text-xs font-mono space-y-1 text-muted-foreground">
                   <div>URL: {window.location.hostname}</div>
+                  <div>Spark KV: {(window as any).spark?.kv ? '✓ Available' : '✗ Not available'}</div>
                   <div>Storage: {window.localStorage ? '✓ Available' : '✗ Not available'}</div>
                 </div>
               </div>

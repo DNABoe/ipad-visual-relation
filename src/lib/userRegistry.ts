@@ -1,5 +1,5 @@
-/// <reference types="../vite-end.d.ts" />
 import { hashPassword, verifyPassword, type PasswordHash } from './auth'
+import { storage } from './storage'
 
 export interface RegisteredUser {
   userId: string
@@ -33,10 +33,10 @@ export async function getAllUsers(): Promise<RegisteredUser[]> {
   console.log('[UserRegistry] Getting all users from storage...')
   
   try {
-    const stored = window.localStorage.getItem(USERS_KV_KEY)
-    const users = stored ? JSON.parse(stored) as RegisteredUser[] : []
-    console.log('[UserRegistry] Found', users.length, 'users')
-    return users
+    const users = await storage.get<RegisteredUser[]>(USERS_KV_KEY)
+    const result = users || []
+    console.log('[UserRegistry] Found', result.length, 'users')
+    return result
   } catch (error) {
     console.error('[UserRegistry] Failed to get users:', error)
     throw new Error('Failed to load user data. Please refresh the page.')
@@ -47,11 +47,11 @@ async function saveAllUsers(users: RegisteredUser[]): Promise<void> {
   console.log('[UserRegistry] Saving', users.length, 'users to storage...')
   
   try {
-    window.localStorage.setItem(USERS_KV_KEY, JSON.stringify(users))
+    await storage.set(USERS_KV_KEY, users)
     console.log('[UserRegistry] ✓ Users saved successfully')
     
-    const verification = window.localStorage.getItem(USERS_KV_KEY)
-    const parsedVerification = verification ? JSON.parse(verification) as RegisteredUser[] : []
+    const verification = await storage.get<RegisteredUser[]>(USERS_KV_KEY)
+    const parsedVerification = verification || []
     if (parsedVerification.length !== users.length) {
       console.warn('[UserRegistry] ⚠️ Verification mismatch after save')
     } else {
@@ -224,8 +224,8 @@ export async function isFirstTimeSetup(): Promise<boolean> {
 
 export async function getAllInvites(): Promise<PendingInvite[]> {
   try {
-    const stored = window.localStorage.getItem(INVITES_KV_KEY)
-    return stored ? JSON.parse(stored) as PendingInvite[] : []
+    const invites = await storage.get<PendingInvite[]>(INVITES_KV_KEY)
+    return invites || []
   } catch (error) {
     console.error('[UserRegistry] Failed to get invites:', error)
     return []
@@ -234,7 +234,7 @@ export async function getAllInvites(): Promise<PendingInvite[]> {
 
 async function saveAllInvites(invites: PendingInvite[]): Promise<void> {
   try {
-    window.localStorage.setItem(INVITES_KV_KEY, JSON.stringify(invites))
+    await storage.set(INVITES_KV_KEY, invites)
   } catch (error) {
     console.error('[UserRegistry] ❌ Failed to save invites:', error)
     throw new Error('Failed to save invite data. Please try again.')
@@ -364,8 +364,8 @@ export async function cleanupExpiredInvites(): Promise<void> {
 
 export async function getCurrentUserId(): Promise<string | undefined> {
   try {
-    const userId = window.localStorage.getItem(CURRENT_USER_KEY)
-    return userId || undefined
+    const userId = await storage.get<string>(CURRENT_USER_KEY)
+    return userId
   } catch (error) {
     console.error('[UserRegistry] Failed to get current user ID:', error)
     return undefined
@@ -386,7 +386,7 @@ export async function getCurrentUser(): Promise<RegisteredUser | undefined> {
 
 export async function setCurrentUser(userId: string): Promise<void> {
   try {
-    window.localStorage.setItem(CURRENT_USER_KEY, userId)
+    await storage.set(CURRENT_USER_KEY, userId)
     console.log('[UserRegistry] ✓ Current user session saved:', userId)
   } catch (error) {
     console.error('[UserRegistry] Failed to set current user:', error)
@@ -397,7 +397,7 @@ export async function setCurrentUser(userId: string): Promise<void> {
 
 export async function clearCurrentUser(): Promise<void> {
   try {
-    window.localStorage.removeItem(CURRENT_USER_KEY)
+    await storage.delete(CURRENT_USER_KEY)
     console.log('[UserRegistry] ✓ Current user session cleared')
   } catch (error) {
     console.error('[UserRegistry] Failed to clear current user:', error)
@@ -423,12 +423,12 @@ export async function resetAllData(): Promise<void> {
   console.log('[UserRegistry] ⚠️⚠️⚠️ RESETTING ALL DATA ⚠️⚠️⚠️')
   
   try {
-    window.localStorage.removeItem(USERS_KV_KEY)
-    window.localStorage.removeItem(INVITES_KV_KEY)
+    await storage.delete(USERS_KV_KEY)
+    await storage.delete(INVITES_KV_KEY)
     await clearCurrentUser()
     console.log('[UserRegistry] ✓ All data has been reset')
   } catch (error) {
     console.error('[UserRegistry] ❌ Failed to reset data:', error)
-    throw new Error('Failed to reset data. Please try clearing browser storage manually.')
+    throw new Error('Failed to reset data. Please try again.')
   }
 }
