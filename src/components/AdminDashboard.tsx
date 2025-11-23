@@ -980,65 +980,67 @@ export function AdminDashboard({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
-        <DialogContent className="max-w-md">
+      <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog} modal={true}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Invite New User</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg">Invite New User</DialogTitle>
+            <DialogDescription className="text-sm">
               Send an invitation to collaborate on this workspace
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email Address *</Label>
+          <div className="space-y-3.5">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
               <Input
                 id="email"
                 type="email"
                 value={newUserEmail}
                 onChange={(e) => setNewUserEmail(e.target.value)}
                 placeholder="user@example.com"
+                className="text-sm"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground">
                 This email will be used as their login username
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="name">Name *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
               <Input
                 id="name"
                 value={newUserName}
                 onChange={(e) => setNewUserName(e.target.value)}
                 placeholder="Enter full name"
+                className="text-sm"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground">
                 The person's full name (used in the invitation email)
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="role">Role</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="role" className="text-sm font-medium">Role</Label>
               <Select value={newUserRole} onValueChange={(value) => setNewUserRole(value as UserRole)}>
-                <SelectTrigger id="role">
+                <SelectTrigger id="role" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">
                     <div className="flex flex-col items-start">
-                      <span className="font-medium">Administrator</span>
+                      <span className="font-medium text-sm">Administrator</span>
                       <span className="text-xs text-muted-foreground">{getRoleDescription('admin')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="editor">
                     <div className="flex flex-col items-start">
-                      <span className="font-medium">Editor</span>
+                      <span className="font-medium text-sm">Editor</span>
                       <span className="text-xs text-muted-foreground">{getRoleDescription('editor')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="viewer">
                     <div className="flex flex-col items-start">
-                      <span className="font-medium">Viewer</span>
+                      <span className="font-medium text-sm">Viewer</span>
                       <span className="text-xs text-muted-foreground">{getRoleDescription('viewer')}</span>
                     </div>
                   </SelectItem>
@@ -1047,25 +1049,25 @@ export function AdminDashboard({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddUserDialog(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowAddUserDialog(false)} className="text-sm">
               Cancel
             </Button>
-            <Button onClick={handleAddUser}>
-              <UserPlus className="w-4 h-4 mr-2" />
+            <Button onClick={handleAddUser} className="text-sm gap-2">
+              <UserPlus className="w-4 h-4" />
               Invite User
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog} modal={true}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-lg">
               {selectedUser?.status === 'pending' ? 'Revoke Invitation' : 'Remove User'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm">
               {selectedUser?.status === 'pending' 
                 ? `Are you sure you want to revoke the invitation for ${selectedUser?.username}? The invitation link will no longer work.`
                 : `Are you sure you want to remove ${selectedUser?.username}? This action cannot be undone.`
@@ -1073,12 +1075,12 @@ export function AdminDashboard({
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="text-sm">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteUser}>
-              <Trash className="w-4 h-4 mr-2" />
+            <Button variant="destructive" onClick={handleDeleteUser} className="text-sm gap-2">
+              <Trash className="w-4 h-4" />
               {selectedUser?.status === 'pending' ? 'Revoke Invitation' : 'Remove User'}
             </Button>
           </DialogFooter>
