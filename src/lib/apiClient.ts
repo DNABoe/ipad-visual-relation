@@ -29,7 +29,7 @@ export class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE_URL}?endpoint=${encodeURIComponent(endpoint)}`
+    const url = `${API_BASE_URL}/${endpoint}`
     
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -41,12 +41,21 @@ export class ApiClient {
       headers['Authorization'] = `Bearer ${token}`
     }
 
+    console.log(`[ApiClient] Requesting: ${url}`)
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
         credentials: 'include',
       })
+
+      console.log(`[ApiClient] Response status: ${response.status}`)
+
+      const contentType = response.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`API returned ${contentType} instead of JSON. The backend API may not be available at this URL.`)
+      }
 
       const data: ApiResponse<T> = await response.json()
 
@@ -56,7 +65,12 @@ export class ApiClient {
 
       return data.data as T
     } catch (error) {
-      console.error(`API request failed (${endpoint}):`, error)
+      console.error(`[ApiClient] Request failed (${endpoint}):`, error)
+      
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Cannot connect to backend API. Please ensure the API server is running at https://releye.boestad.com/api')
+      }
+      
       throw error
     }
   }
