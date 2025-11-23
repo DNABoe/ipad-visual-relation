@@ -217,6 +217,13 @@ export function WorkspaceToolbar({
                   <span className="text-xs text-muted-foreground">Arrange in concentric rings by importance score</span>
                 </div>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={controller.handlers.handleCompressLayout} className="cursor-pointer gap-3 py-2.5">
+                <ArrowsInCardinal size={18} weight="duotone" className="text-success" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Compress</span>
+                  <span className="text-xs text-muted-foreground">Minimize connection lengths while preserving relative positions</span>
+                </div>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

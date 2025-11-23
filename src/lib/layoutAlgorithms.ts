@@ -1568,3 +1568,100 @@ export function compactNetworkLayout(
 
   return result
 }
+
+export function compressLayout(
+  persons: Person[],
+  connections: Connection[]
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  
+  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
+  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
+
+  result.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  const adjacency = buildAdjacencyMap(connections)
+  
+  const iterations = 120
+  const PULL_STRENGTH = 0.15
+  const REPULSION_DISTANCE = CARD_WIDTH + MIN_SPACING
+  const REPULSION_STRENGTH = 0.08
+
+  for (let iter = 0; iter < iterations; iter++) {
+    const forces = new Map<string, { fx: number; fy: number }>()
+    result.forEach(p => forces.set(p.id, { fx: 0, fy: 0 }))
+
+    connections.forEach(conn => {
+      const p1 = result.find(p => p.id === conn.fromPersonId)
+      const p2 = result.find(p => p.id === conn.toPersonId)
+
+      if (!p1 || !p2) return
+
+      const dx = p2.x - p1.x
+      const dy = p2.y - p1.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (dist < 1) return
+
+      const pullForce = PULL_STRENGTH
+      const fx = (dx / dist) * pullForce * dist * 0.5
+      const fy = (dy / dist) * pullForce * dist * 0.5
+
+      const f1 = forces.get(p1.id)!
+      const f2 = forces.get(p2.id)!
+      f1.fx += fx
+      f1.fy += fy
+      f2.fx -= fx
+      f2.fy -= fy
+    })
+
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        const p1 = result[i]
+        const p2 = result[j]
+        const dx = p2.x - p1.x
+        const dy = p2.y - p1.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
+        if (dist < REPULSION_DISTANCE && dist > 0) {
+          const repelForce = REPULSION_STRENGTH * (REPULSION_DISTANCE - dist) / REPULSION_DISTANCE
+          const fx = (dx / dist) * repelForce * REPULSION_DISTANCE
+          const fy = (dy / dist) * repelForce * REPULSION_DISTANCE
+
+          const f1 = forces.get(p1.id)!
+          const f2 = forces.get(p2.id)!
+          f1.fx -= fx
+          f1.fy -= fy
+          f2.fx += fx
+          f2.fy += fy
+        }
+      }
+    }
+
+    result.forEach(person => {
+      const force = forces.get(person.id)!
+      person.x += force.fx
+      person.y += force.fy
+    })
+  }
+
+  const finalResult = resolveOverlaps(result, 80)
+
+  const finalCenterX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const finalCenterY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+
+  finalResult.forEach(person => {
+    person.x -= finalCenterX
+    person.y -= finalCenterY
+  })
+
+  return finalResult
+}
