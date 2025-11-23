@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo, Shield, Detective, Key, TrashSimple } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Shield, Detective, Key, TrashSimple, Gear, User, Info } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
@@ -226,6 +226,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               value="system" 
               className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
+              <Gear className="w-4 h-4 mr-1.5" />
               <span className="text-sm font-medium">System</span>
             </TabsTrigger>
             <TabsTrigger 
@@ -239,6 +240,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               value="user" 
               className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
+              <User className="w-4 h-4 mr-1.5" />
               <span className="text-sm font-medium">User</span>
             </TabsTrigger>
             {isAdmin && (
@@ -254,6 +256,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               value="about" 
               className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
+              <Info className="w-4 h-4 mr-1.5" />
               <span className="text-sm font-medium">About</span>
             </TabsTrigger>
           </TabsList>
