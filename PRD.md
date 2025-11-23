@@ -19,8 +19,11 @@ This application consists of a single component:
 - User credentials stored in Spark KV (GitHub-backed storage)
 - Enables access from any browser or device
 - Role-based access control (Admin, Editor, Viewer)
-- Invite system for multi-user collaboration
+- Invite system for adding new users to the application
 - No separate backend server needed!
+- **Important: Users do NOT share workspaces - each user has their own private encrypted network files**
+- **Admin role**: Can manage user accounts, send invites, but CANNOT access other users' workspace data
+- **Editor/Viewer roles**: Currently function the same as admin for their own workspaces (legacy roles)
 
 **Local Network Storage:**
 - Network files (.enc.releye) stored in browser localStorage
@@ -30,18 +33,25 @@ This application consists of a single component:
 
 ### Critical Architecture: Hybrid Storage Model
 
+**User Isolation - No Collaborative Workspaces:**
+- Each user has their own separate workspace files
+- Users cannot share or collaborate on workspaces
+- Admin can manage user accounts but cannot access user workspaces
+- Each user's network data is completely isolated and private
+
 **Why Spark KV for User Data:**
 - Managed by GitHub (secure, reliable, no server to maintain)
 - Users can access from multiple browsers and devices
 - Credentials sync automatically across all platforms
-- Invite system works across different devices
-- Multi-user collaboration without backend complexity
+- User authentication works across different devices
+- Multi-user support without backend complexity
 
 **Why Local Network Files:**
 - Maximum privacy - relationship data never leaves device
 - No network latency for file operations
 - Works offline once authenticated
 - User maintains full control of sensitive data
+- Each user has their own encrypted files that only they can access
 
 **What's Stored in Spark KV (GitHub):**
 - User accounts (email, name, role)
@@ -51,10 +61,10 @@ This application consists of a single component:
 
 **What Stays Local (Browser Storage):**
 - Relationship network files (.enc.releye)
-- Encrypted relationship data
-- Person nodes and connections
-- Group information
-- Network layouts
+- Encrypted relationship data (unique per user)
+- Person nodes and connections (unique per user)
+- Group information (unique per user)
+- Network layouts (unique per user)
 - Current user session token
 
 ### Deployment Architecture

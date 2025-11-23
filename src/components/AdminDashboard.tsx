@@ -33,13 +33,12 @@ import {
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { UserRole } from '@/lib/types'
-import type { WorkspaceUser, ActivityLog } from '@/lib/userManagement'
+import type { WorkspaceUser } from '@/lib/userManagement'
 import { 
   generateInviteLink,
   generateInviteToken, 
   getRoleDisplayName, 
-  getRoleDescription,
-  filterActivityLog
+  getRoleDescription
 } from '@/lib/userManagement'
 import { format } from 'date-fns'
 import { storage } from '@/lib/storage'
@@ -76,7 +75,6 @@ export function AdminDashboard({
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserName, setNewUserName] = useState('')
   const [newUserRole, setNewUserRole] = useState<UserRole>('viewer')
-  const [activityFilter, setActivityFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingInvites, setPendingInvites] = useState<Array<{
     name: string
@@ -87,9 +85,18 @@ export function AdminDashboard({
     createdAt: number
   }>>([])
   const [allRegisteredUsers, setAllRegisteredUsers] = useState<WorkspaceUser[]>([])
-
-  const currentUser = users.find(u => u.userId === currentUserId)
+  const [currentUser, setCurrentUser] = useState<UserRegistry.RegisteredUser | null>(null)
   const isAdmin = currentUser?.role === 'admin'
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const user = await UserRegistry.getUserById(currentUserId)
+      setCurrentUser(user || null)
+    }
+    if (open) {
+      loadCurrentUser()
+    }
+  }, [open, currentUserId])
 
   useEffect(() => {
     const loadPendingInvites = async () => {
@@ -158,11 +165,6 @@ export function AdminDashboard({
     )
   }, [allRegisteredUsers, searchQuery])
 
-  const filteredActivity = useMemo(() => {
-    if (activityFilter === 'all') return activityLog
-    return filterActivityLog(activityLog, { entityType: activityFilter as any })
-  }, [activityLog, activityFilter])
-
   const stats = useMemo(() => {
     const totalLogins = allRegisteredUsers.reduce((sum, u) => sum + (u.loginCount || 0), 0)
     const maxLogins = Math.max(...allRegisteredUsers.map(u => u.loginCount || 0), 1)
@@ -229,17 +231,6 @@ export function AdminDashboard({
       
       setPendingInvites(prev => [...prev, pendingInvite])
       
-      onLogActivity({
-        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userId: currentUserId,
-        username: currentUser?.username || 'Unknown',
-        action: 'invited',
-        entityType: 'user',
-        entityId: invite.token,
-        details: `Invited ${newUserName.trim()} (${newUserEmail}) as ${getRoleDisplayName(newUserRole)}`
-      })
-
       setInviteEmailData({
         userName: newUserName.trim(),
         userEmail: newUserEmail.trim(),
@@ -272,21 +263,7 @@ export function AdminDashboard({
     try {
       await UserRegistry.deleteUser(selectedUser.userId)
 
-      const updatedUsers = users.filter(u => u.userId !== selectedUser.userId)
-      onUpdateUsers(updatedUsers)
-
       setAllRegisteredUsers(prev => prev.filter(u => u.userId !== selectedUser.userId))
-
-      onLogActivity({
-        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userId: currentUserId,
-        username: currentUser?.username || 'Unknown',
-        action: 'removed',
-        entityType: 'user',
-        entityId: selectedUser.userId,
-        details: `Removed user ${selectedUser.username}`
-      })
 
       toast.success(`User ${selectedUser.username} removed`)
       setSelectedUser(null)
@@ -310,25 +287,9 @@ export function AdminDashboard({
         await UserRegistry.updateUser(updatedRegisteredUser)
       }
 
-      const updatedUsers: WorkspaceUser[] = users.map(u => 
-        u.userId === user.userId ? { ...u, role: newRole } : u
-      )
-      onUpdateUsers(updatedUsers)
-
       setAllRegisteredUsers(prev => prev.map(u =>
         u.userId === user.userId ? { ...u, role: newRole } : u
       ))
-
-      onLogActivity({
-        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userId: currentUserId,
-        username: currentUser?.username || 'Unknown',
-        action: 'updated',
-        entityType: 'user',
-        entityId: user.userId,
-        details: `Changed ${user.username}'s role to ${getRoleDisplayName(newRole)}`
-      })
 
       toast.success(`${user.username}'s role updated to ${getRoleDisplayName(newRole)}`)
     } catch (error) {
@@ -343,24 +304,7 @@ export function AdminDashboard({
       return
     }
 
-    const newStatus: WorkspaceUser['status'] = user.status === 'suspended' ? 'active' : 'suspended'
-    const updatedUsers: WorkspaceUser[] = users.map(u => 
-      u.userId === user.userId ? { ...u, status: newStatus } : u
-    )
-    onUpdateUsers(updatedUsers)
-
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: newStatus === 'suspended' ? 'suspended' : 'reactivated',
-      entityType: 'user',
-      entityId: user.userId,
-      details: `${newStatus === 'suspended' ? 'Suspended' : 'Reactivated'} user ${user.username}`
-    })
-
-    toast.success(`User ${user.username} ${newStatus === 'suspended' ? 'suspended' : 'reactivated'}`)
+    toast.info('User suspension is not yet implemented in this version')
   }
 
   const handleCopyInviteLink = (invite: typeof pendingInvites[0]) => {
@@ -376,17 +320,6 @@ export function AdminDashboard({
       console.log('[AdminDashboard] ✓ Invite revoked from UserRegistry')
       
       setPendingInvites(prev => prev.filter(inv => inv.token !== invite.token))
-
-      onLogActivity({
-        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userId: currentUserId,
-        username: currentUser?.username || 'Unknown',
-        action: 'revoked',
-        entityType: 'user',
-        entityId: invite.token,
-        details: `Revoked invitation for ${invite.name} (${invite.email})`
-      })
 
       toast.success(`Invitation revoked for ${invite.name}`)
     } catch (error) {
@@ -414,21 +347,6 @@ export function AdminDashboard({
     console.log('[AdminDashboard] Adding to registered users list')
     setAllRegisteredUsers(prev => [...prev, workspaceUser])
     
-    console.log('[AdminDashboard] Adding workspace user:', workspaceUser)
-    const updatedUsers = [...users, workspaceUser]
-    onUpdateUsers(updatedUsers)
-    
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: 'created',
-      entityType: 'user',
-      entityId: createdUser.userId,
-      details: `Created user ${createdUser.name} (${createdUser.email}) directly as ${getRoleDisplayName(createdUser.role)}`
-    })
-    
     toast.success(`User ${createdUser.name} created successfully!`)
   }
 
@@ -440,25 +358,9 @@ export function AdminDashboard({
         await UserRegistry.updateUser(updatedRegisteredUser)
       }
 
-      const updatedUsers: WorkspaceUser[] = users.map(u => 
-        u.userId === user.userId ? { ...u, canInvestigate } : u
-      )
-      onUpdateUsers(updatedUsers)
-
       setAllRegisteredUsers(prev => prev.map(u =>
         u.userId === user.userId ? { ...u, canInvestigate } : u
       ))
-
-      onLogActivity({
-        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userId: currentUserId,
-        username: currentUser?.username || 'Unknown',
-        action: 'updated',
-        entityType: 'user',
-        entityId: user.userId,
-        details: `${canInvestigate ? 'Granted' : 'Revoked'} investigate access for ${user.username}`
-      })
 
       toast.success(`Investigate access ${canInvestigate ? 'granted' : 'revoked'} for ${user.username}`)
     } catch (error) {
@@ -567,7 +469,7 @@ export function AdminDashboard({
                 <div>
                   <DialogTitle className="text-xl">Admin Dashboard</DialogTitle>
                   <DialogDescription className="text-sm">
-                    Manage users, view activity, and control workspace access
+                    Manage user accounts and system settings
                   </DialogDescription>
                 </div>
               </div>
@@ -576,14 +478,10 @@ export function AdminDashboard({
             <div className="flex-1 overflow-hidden min-h-0">
               <Tabs defaultValue="users" className="h-full flex flex-col">
                 <div className="px-6 pt-4 flex-shrink-0">
-                  <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+                  <TabsList className="grid w-full grid-cols-3 max-w-2xl">
                     <TabsTrigger value="users" className="flex items-center gap-2">
                       <Users className="w-4 h-4" />
                       Users
-                    </TabsTrigger>
-                    <TabsTrigger value="activity" className="flex items-center gap-2">
-                      <Activity className="w-4 h-4" />
-                      Activity
                     </TabsTrigger>
                     <TabsTrigger value="stats" className="flex items-center gap-2">
                       <ChartBar className="w-4 h-4" />
@@ -811,60 +709,6 @@ export function AdminDashboard({
                               ))}
                             </div>
                           </>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="activity" className="flex-1 px-6 pb-6 overflow-hidden">
-                  <div className="flex flex-col gap-4 h-full">
-                    <Select value={activityFilter} onValueChange={setActivityFilter}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Filter by type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Activity</SelectItem>
-                        <SelectItem value="user">User Management</SelectItem>
-                        <SelectItem value="person">Person Changes</SelectItem>
-                        <SelectItem value="connection">Connections</SelectItem>
-                        <SelectItem value="group">Groups</SelectItem>
-                        <SelectItem value="workspace">Workspace</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <ScrollArea className="flex-1 border border-border rounded-lg">
-                      <div className="p-4 space-y-2">
-                        {filteredActivity.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>No activity to display</p>
-                          </div>
-                        ) : (
-                          filteredActivity.slice().reverse().map(log => (
-                            <div key={log.id} className="p-3 rounded-lg bg-card border border-border">
-                              <div className="flex items-start gap-3">
-                                <div className="p-2 rounded bg-primary/10 text-primary">
-                                  <Activity className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium">{log.username}</span>
-                                    <span className="text-sm text-muted-foreground">{log.action}</span>
-                                    {log.entityType && (
-                                      <Badge variant="outline" className="text-xs">{log.entityType}</Badge>
-                                    )}
-                                  </div>
-                                  {log.details && (
-                                    <p className="text-sm text-muted-foreground">{log.details}</p>
-                                  )}
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {format(log.timestamp, 'MMM d, yyyy h:mm a')}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))
                         )}
                       </div>
                     </ScrollArea>
