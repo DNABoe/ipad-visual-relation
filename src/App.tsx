@@ -41,14 +41,19 @@ function App() {
         
         console.log('[App] URL Parameters:')
         console.log('[App]   - invite token:', token ? token.substring(0, 8) + '...' : 'none')
+        console.log('[App]   - invite token (full length):', token ? token.length + ' chars' : 'none')
         console.log('[App]   - email:', email || 'none')
         console.log('[App]   - reset:', forceReset || 'none')
         
         if (token && email) {
           console.log('[App] ========== INVITE LINK DETECTED ==========')
           console.log('[App] Skipping normal auth flow, loading invite view directly')
-          setInviteToken(token)
-          setInviteEmail(email)
+          const decodedToken = decodeURIComponent(token)
+          const decodedEmail = decodeURIComponent(email)
+          console.log('[App] Decoded token length:', decodedToken.length, 'chars')
+          console.log('[App] Decoded email:', decodedEmail)
+          setInviteToken(decodedToken)
+          setInviteEmail(decodedEmail)
           setIsLoadingAuth(false)
           return
         }

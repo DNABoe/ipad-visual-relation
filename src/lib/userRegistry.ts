@@ -230,8 +230,29 @@ async function saveAllInvites(invites: PendingInvite[]): Promise<void> {
 }
 
 export async function getInviteByToken(token: string): Promise<PendingInvite | undefined> {
+  console.log('[UserRegistry] Looking up invite by token:', token.substring(0, 8) + '...')
   const invites = await getAllInvites()
-  return invites.find(i => i.token === token)
+  console.log('[UserRegistry] Total invites in storage:', invites.length)
+  
+  if (invites.length > 0) {
+    console.log('[UserRegistry] Available invite tokens:')
+    invites.forEach((inv, idx) => {
+      console.log(`  [${idx}] ${inv.token.substring(0, 8)}... (${inv.email})`)
+    })
+  }
+  
+  const decodedToken = decodeURIComponent(token)
+  console.log('[UserRegistry] Decoded token:', decodedToken.substring(0, 8) + '...')
+  
+  const invite = invites.find(i => i.token === token || i.token === decodedToken)
+  
+  if (invite) {
+    console.log('[UserRegistry] ✓ Found matching invite for:', invite.email)
+  } else {
+    console.log('[UserRegistry] ❌ No matching invite found')
+  }
+  
+  return invite
 }
 
 export async function createInvite(
@@ -261,24 +282,44 @@ export async function createInvite(
 }
 
 export async function consumeInvite(token: string, password: string): Promise<RegisteredUser> {
-  console.log('[UserRegistry] Consuming invite with token:', token)
+  console.log('[UserRegistry] ========== CONSUMING INVITATION ==========')
+  console.log('[UserRegistry] Token:', token.substring(0, 8) + '...')
+  console.log('[UserRegistry] Password length:', password.length)
   
   const invite = await getInviteByToken(token)
   if (!invite) {
-    throw new Error('Invalid invite token')
+    console.error('[UserRegistry] ❌ Invalid or missing invite token')
+    throw new Error('Invalid invite token. The invitation may have been revoked or already used.')
   }
+
+  console.log('[UserRegistry] Found invite for:', invite.email)
+  console.log('[UserRegistry] Invite created:', new Date(invite.createdAt).toISOString())
+  console.log('[UserRegistry] Invite expires:', new Date(invite.expiresAt).toISOString())
 
   if (Date.now() > invite.expiresAt) {
-    throw new Error('Invite has expired')
+    console.error('[UserRegistry] ❌ Invite expired at:', new Date(invite.expiresAt).toISOString())
+    const expiredDate = new Date(invite.expiresAt).toLocaleDateString()
+    throw new Error(`This invitation expired on ${expiredDate}. Please contact your administrator for a new invitation.`)
   }
 
-  const user = await createUser(invite.email, invite.name, password, invite.role, false)
+  console.log('[UserRegistry] Checking if user already exists...')
+  const existingUser = await getUserByEmail(invite.email)
+  if (existingUser) {
+    console.error('[UserRegistry] ❌ User already exists with this email')
+    throw new Error('A user with this email already exists. The invitation may have already been used.')
+  }
 
+  console.log('[UserRegistry] Creating user account...')
+  const user = await createUser(invite.email, invite.name, password, invite.role, false)
+  console.log('[UserRegistry] ✓ User created:', user.userId)
+
+  console.log('[UserRegistry] Removing consumed invite...')
   const invites = await getAllInvites()
-  const filtered = invites.filter(i => i.token !== token)
+  const filtered = invites.filter(i => i.token !== token && i.token !== decodeURIComponent(token))
   await saveAllInvites(filtered)
+  console.log('[UserRegistry] ✓ Invite consumed and removed')
   
-  console.log('[UserRegistry] ✓ Invite consumed')
+  console.log('[UserRegistry] ========== INVITATION CONSUMPTION COMPLETE ==========')
   return user
 }
 
@@ -367,8 +408,18 @@ export async function clearCurrentUser(): Promise<void> {
 }
 
 export function generateInviteLink(token: string, email: string): string {
-  const baseUrl = window.location.origin
-  return `${baseUrl}?invite=${token}&email=${encodeURIComponent(email)}`
+  const baseUrl = window.location.origin + window.location.pathname
+  const encodedEmail = encodeURIComponent(email)
+  const encodedToken = encodeURIComponent(token)
+  const link = `${baseUrl}?invite=${encodedToken}&email=${encodedEmail}`
+  
+  console.log('[UserRegistry] Generated invite link:')
+  console.log('  Base URL:', baseUrl)
+  console.log('  Token (first 8 chars):', token.substring(0, 8) + '...')
+  console.log('  Email:', email)
+  console.log('  Full link:', link)
+  
+  return link
 }
 
 export async function resetAllData(): Promise<void> {

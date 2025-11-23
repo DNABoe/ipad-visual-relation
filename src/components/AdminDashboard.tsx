@@ -43,6 +43,7 @@ import {
 import { format } from 'date-fns'
 import { storage } from '@/lib/storage'
 import { InviteEmailDialog } from '@/components/InviteEmailDialog'
+import { DirectUserDialog } from '@/components/DirectUserDialog'
 import * as UserRegistry from '@/lib/userRegistry'
 
 interface AdminDashboardProps {
@@ -67,6 +68,7 @@ export function AdminDashboard({
   onLogActivity
 }: AdminDashboardProps) {
   const [showAddUserDialog, setShowAddUserDialog] = useState(false)
+  const [showDirectUserDialog, setShowDirectUserDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [showInviteEmailDialog, setShowInviteEmailDialog] = useState(false)
@@ -350,6 +352,26 @@ export function AdminDashboard({
     }
   }
 
+  const handleDirectUserCreated = async () => {
+    console.log('[AdminDashboard] Direct user created, reloading user list...')
+    
+    const allRegisteredUsers = await UserRegistry.getAllUsers()
+    console.log('[AdminDashboard] Found', allRegisteredUsers.length, 'registered users')
+    
+    onLogActivity({
+      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      timestamp: Date.now(),
+      userId: currentUserId,
+      username: currentUser?.username || 'Unknown',
+      action: 'created',
+      entityType: 'user',
+      entityId: 'direct-user',
+      details: `Created user account directly (without invitation)`
+    })
+    
+    toast.success('User account created successfully!')
+  }
+
   const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
     const updatedUsers: WorkspaceUser[] = users.map(u => 
       u.userId === user.userId ? { ...u, canInvestigate } : u
@@ -523,9 +545,13 @@ export function AdminDashboard({
                           className="w-full"
                         />
                       </div>
-                      <Button onClick={() => setShowAddUserDialog(true)} className="flex items-center gap-2">
+                      <Button onClick={() => setShowDirectUserDialog(true)} variant="outline" className="flex items-center gap-2">
                         <UserPlus className="w-4 h-4" />
-                        Invite User
+                        Create User
+                      </Button>
+                      <Button onClick={() => setShowAddUserDialog(true)} className="flex items-center gap-2">
+                        <EnvelopeSimple className="w-4 h-4" />
+                        Send Invite
                       </Button>
                     </div>
 
@@ -1189,6 +1215,13 @@ export function AdminDashboard({
           inviteLink={inviteEmailData.inviteLink}
         />
       )}
+
+      <DirectUserDialog
+        open={showDirectUserDialog}
+        onOpenChange={setShowDirectUserDialog}
+        onUserCreated={handleDirectUserCreated}
+        currentUserId={currentUserId}
+      />
     </>
   )
 }

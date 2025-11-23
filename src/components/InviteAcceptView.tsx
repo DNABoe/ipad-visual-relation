@@ -33,6 +33,7 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
       try {
         console.log('[InviteAcceptView] ========== LOADING INVITATION ==========')
         console.log('[InviteAcceptView] inviteToken:', inviteToken.substring(0, 8) + '...')
+        console.log('[InviteAcceptView] inviteToken length:', inviteToken.length, 'chars')
         console.log('[InviteAcceptView] inviteEmail:', inviteEmail)
 
         console.log('[InviteAcceptView] Checking storage availability...')
@@ -53,6 +54,7 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
 
         if (!invite) {
           console.log('[InviteAcceptView] ❌ No matching invite found')
+          console.log('[InviteAcceptView] Token used for lookup:', inviteToken.substring(0, 8) + '...')
           setError('This invitation link is invalid or has been revoked. Please contact your administrator for a new invitation link.')
           setIsLoading(false)
           return
@@ -62,6 +64,7 @@ export function InviteAcceptView({ inviteToken, inviteEmail, onComplete, onCance
           email: invite.email,
           name: invite.name,
           role: invite.role,
+          createdAt: new Date(invite.createdAt).toISOString(),
           expiresAt: new Date(invite.expiresAt).toISOString()
         })
 
