@@ -212,36 +212,9 @@ function App() {
       return
     }
 
-    let updatedWorkspace = { ...loadedWorkspace }
-    
-    if (!updatedWorkspace.users) {
-      updatedWorkspace.users = []
-    }
-    
-    if (!updatedWorkspace.activityLog) {
-      updatedWorkspace.activityLog = []
-    }
-    
-    const currentWorkspaceUser = updatedWorkspace.users.find(u => u.email === currentUser.email)
-    
-    if (!currentWorkspaceUser) {
-      const workspaceUser = {
-        userId: currentUser.userId,
-        username: currentUser.name,
-        email: currentUser.email,
-        role: currentUser.role,
-        addedAt: Date.now(),
-        addedBy: 'system',
-        status: 'active' as const,
-        loginCount: currentUser.loginCount,
-        canInvestigate: currentUser.canInvestigate
-      }
-      
-      updatedWorkspace = {
-        ...updatedWorkspace,
-        users: [...updatedWorkspace.users, workspaceUser],
-        ownerId: updatedWorkspace.ownerId || currentUser.userId
-      }
+    const updatedWorkspace = {
+      ...loadedWorkspace,
+      ownerId: loadedWorkspace.ownerId || currentUser.userId
     }
     
     setInitialWorkspace(updatedWorkspace)

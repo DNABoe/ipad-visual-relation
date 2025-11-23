@@ -149,39 +149,28 @@ RelEye uses a hybrid storage model that balances security and usability. **All f
   - Wrong credentials show clear error message
   - Admin tab appears in Settings after authentication
 
-### Multi-User System (Simplified)
+### Multi-User System (Application-Level Access Control)
 - **Functionality**: Administrator-controlled user invitations with role-based application access
-- **Purpose**: Allow administrators to grant access to the application while keeping each user's network files completely independent
+- **Purpose**: Allow administrators to grant access to the APPLICATION while keeping each user's network files completely independent and private
 - **Trigger**: Admin opens Settings → Admin tab → Clicks "Invite User"
-- **Progression**: Enter name and email → Select role (Admin/Editor/Viewer) → Generate invitation → Send email with link → User clicks link → Creates password → Account active → User creates their own network files
+- **Progression**: Admin enters name and email → Selects role (Admin/Editor/Viewer) → Generates invitation link → Sends link to user → User clicks link → Creates password → Account active → User creates their own independent workspace files
 - **Success criteria**:
   - Admin can invite users via email with custom roles
-  - Each user gets their own independent workspace with local file storage
+  - Each user gets their own independent workspace files with local file storage
   - Users create and manage their own encrypted .enc.releye files
-  - No workspace or file sharing between users
+  - NO workspace or file sharing between users
   - Pending invitations are tracked and can be revoked
   - Invitations expire after 7 days
-  - Simple, clear invitation email that explains the process
-- **Trigger**: Admin clicks Settings → Admin tab → Open Admin Dashboard button
-- **Progression**: Admin Dashboard opens → Invite user (username, optional email, role) → System generates secure invite link → Admin shares link via email or other means → Invited user clicks link → User creates account (username + password) → User gains access based on assigned role → User can now load the shared workspace file
-- **Success criteria**: 
-  - First user to set up the application becomes admin automatically
-  - When workspace is created/loaded, current user is added to workspace.users as admin if not already present
-  - Admins can add/remove users, change roles, suspend accounts
-  - Editors can create/edit/delete content but not manage users (future feature)
-  - Viewers can only view and export (future feature)
-  - User list stored in workspace file (encrypted with workspace data)
-  - Activity log tracks all user actions with timestamps
-  - Invite links expire after 7 days
-  - Each user's permissions stored in workspace.users array
-  - Dashboard shows user stats, activity history, and role distribution
+  - All registered users are stored in Spark KV (GitHub-backed storage)
+  - Admin can view all application users but cannot access their workspace files
+  - Each user's workspace files remain completely separate and encrypted with their own passwords
 
 ### Admin Dashboard
-- **Functionality**: Comprehensive administration interface for workspace management
-- **Purpose**: Centralized control panel for user management, activity monitoring, and workspace settings
+- **Functionality**: Comprehensive administration interface for application user management
+- **Purpose**: Centralized control panel for managing who has access to the application
 - **Trigger**: Admin-only "Admin" tab in Settings dialog → "Open Admin Dashboard" button
-- **Progression**: Open Settings → Click Admin tab → Click "Open Admin Dashboard" → Full-screen dashboard → Three tabs (Users, Activity, Stats) → Manage users with role changes, suspensions, deletions → View activity log with filters → Monitor workspace statistics
-- **Success criteria**: Only visible to users with admin role in workspace.users array; displays user list with avatars (if available), roles, status badges; search/filter functionality; inline role changes; copy invite links for pending users; activity log with filtering by user/type/date; statistics cards showing user distribution and activity metrics
+- **Progression**: Open Settings → Click Admin tab → Click "Open Admin Dashboard" → Full-screen dashboard → Three tabs (Users, Invites, Stats) → Manage application users with role changes, deletions → View pending invitations → Monitor user statistics
+- **Success criteria**: Only visible to users with admin role; displays all registered application users; shows user list with avatars (if available), roles, and login counts; search/filter functionality; inline role changes; copy invite links for pending invites; statistics cards showing user distribution and activity metrics; NO access to individual user's workspace files or data
 
 
 

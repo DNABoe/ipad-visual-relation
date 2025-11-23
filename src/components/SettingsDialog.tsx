@@ -13,11 +13,10 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo, Shield, Detective, Key, TrashSimple, Gear, User, Info } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Detective, Key, TrashSimple, Gear, User, Info } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
-import { AdminDashboard } from '@/components/AdminDashboard'
 import { storage } from '@/lib/storage'
 
 interface SettingsDialogProps {
@@ -51,12 +50,8 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [logoClicks, setLogoClicks] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showFileIconDialog, setShowFileIconDialog] = useState(false)
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false)
 
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
-  
-  const currentUser = workspace.users?.find(u => u.username === userCredentials?.username)
-  const isAdmin = currentUser?.role === 'admin'
   
   useEffect(() => {
     const loadCredentials = async () => {
@@ -83,19 +78,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
       loadCredentials()
     }
   }, [open])
-
-  useEffect(() => {
-    console.log('[SettingsDialog] ====== Admin Check ======')
-    console.log('[SettingsDialog] userCredentials:', userCredentials)
-    console.log('[SettingsDialog] userCredentials.username:', userCredentials?.username)
-    console.log('[SettingsDialog] workspace.users:', workspace.users)
-    console.log('[SettingsDialog] workspace.users length:', workspace.users?.length)
-    console.log('[SettingsDialog] currentUser:', currentUser)
-    console.log('[SettingsDialog] currentUser?.role:', currentUser?.role)
-    console.log('[SettingsDialog] isAdmin:', isAdmin)
-    console.log('[SettingsDialog] Should show admin tab?', isAdmin ? 'YES' : 'NO')
-    console.log('[SettingsDialog] ========================')
-  }, [userCredentials, currentUser, isAdmin, workspace.users])
 
   useEffect(() => {
     if (userCredentials) {
@@ -215,7 +197,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
             {!isLoadingCredentials && (
               <span className="block text-xs mt-1">
                 User: {userCredentials?.username || 'Not logged in'}
-                {isAdmin && <span className="text-accent ml-2 font-semibold">👑 Admin</span>}
               </span>
             )}
           </DialogDescription>
@@ -243,15 +224,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               <User className="w-4 h-4 mr-1.5" />
               <span className="text-sm font-medium">User</span>
             </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger 
-                value="admin" 
-                className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-              >
-                <Shield className="w-4 h-4 mr-1.5" />
-                <span className="text-sm font-medium">Admin</span>
-              </TabsTrigger>
-            )}
             <TabsTrigger 
               value="about" 
               className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
@@ -637,80 +609,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
             </div>
           </TabsContent>
 
-          <TabsContent value="admin" className="space-y-3 py-3 m-0">
-            <div className="space-y-4">
-              <div className="rounded-xl bg-card p-4 border-2 border-primary/20">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Shield className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">Administrator Panel</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Manage users, control access permissions, and monitor workspace activity
-                    </p>
-                  </div>
-                </div>
-                
-                <Button 
-                  onClick={() => {
-                    setShowAdminDashboard(true)
-                  }}
-                  className="w-full gap-2 bg-gradient-to-r from-primary to-accent shadow-lg"
-                  size="lg"
-                >
-                  <Shield className="w-5 h-5" />
-                  Open Admin Dashboard
-                </Button>
-              </div>
-
-              <div className="rounded-xl bg-card p-4 space-y-3">
-                <h4 className="font-semibold text-sm">Admin Capabilities</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Invite and manage workspace users</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Assign roles and permissions (Admin, Editor, Viewer)</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Suspend or remove user access</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Monitor workspace activity and changes</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Generate secure invite links with email support</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-accent/10 border border-accent/20 p-3">
-                <p className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-accent text-sm mt-0.5">💡</span>
-                  <span>
-                    The admin dashboard provides comprehensive user management tools. All user data is encrypted and stored securely in the cloud, while workspace files remain local-only.
-                  </span>
-                </p>
-              </div>
-            </div>
-          </TabsContent>
-
           <TabsContent value="user" className="space-y-3 py-3 m-0">
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Workspace Role</h3>
+              <h3 className="font-semibold text-sm">Account Information</h3>
               
               <div className="rounded-xl bg-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Current User</p>
                     <p className="text-xs text-muted-foreground">
-                      Your role in this workspace
+                      Your application account
                     </p>
                   </div>
                   <div className="text-right">
@@ -718,34 +626,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       <div className="text-xs text-muted-foreground">
                         Loading...
                       </div>
-                    ) : currentUser ? (
-                      <div className="space-y-1">
-                        <div className="text-sm font-semibold text-foreground">
-                          {currentUser.username}
-                        </div>
-                        {currentUser.email && (
-                          <div className="text-xs text-muted-foreground">
-                            {currentUser.email}
-                          </div>
-                        )}
-                        <div className={`text-xs px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1 ${
-                          currentUser.role === 'admin' 
-                            ? 'bg-accent/20 text-accent' 
-                            : currentUser.role === 'editor'
-                            ? 'bg-primary/20 text-primary'
-                            : 'bg-secondary/20 text-secondary-foreground'
-                        }`}>
-                          {currentUser.role === 'admin' && '👑 '}
-                          {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
-                        </div>
-                      </div>
                     ) : userCredentials ? (
                       <div className="space-y-1">
                         <div className="text-sm font-semibold text-foreground">
                           {userCredentials.username}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Not in workspace
                         </div>
                       </div>
                     ) : (
@@ -762,18 +646,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
               <h3 className="font-semibold text-sm">Account Security</h3>
               
               <div className="space-y-3 rounded-xl bg-card p-3">
-                {currentUser?.email && (
-                  <div className="space-y-2 pb-3 border-b border-border">
-                    <Label className="text-sm font-medium">Email Address</Label>
-                    <div className="px-3 py-2 rounded-md bg-muted/50 border border-border">
-                      <p className="text-sm font-medium text-foreground">{currentUser.email}</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Email is associated with your account and cannot be changed
-                    </p>
-                  </div>
-                )}
-                
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                   <Input
@@ -1082,32 +954,6 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
         </DialogFooter>
       </DialogContent>
       <FileIconDialog open={showFileIconDialog} onOpenChange={setShowFileIconDialog} />
-      {isAdmin && currentUser && (
-        <AdminDashboard
-          open={showAdminDashboard}
-          onOpenChange={setShowAdminDashboard}
-          users={workspace.users || []}
-          activityLog={workspace.activityLog || []}
-          currentUserId={currentUser.userId}
-          workspaceId={workspace.id || 'default-workspace'}
-          onUpdateUsers={(updatedUsers) => {
-            setWorkspace((current) => ({
-              ...current,
-              users: updatedUsers,
-              modifiedAt: Date.now(),
-              modifiedBy: currentUser.username
-            }))
-          }}
-          onLogActivity={(log) => {
-            setWorkspace((current) => ({
-              ...current,
-              activityLog: [...(current.activityLog || []), log],
-              modifiedAt: Date.now(),
-              modifiedBy: currentUser.username
-            }))
-          }}
-        />
-      )}
     </Dialog>
   )
 }

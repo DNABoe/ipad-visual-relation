@@ -32,7 +32,8 @@ import {
   ChartBar
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import type { WorkspaceUser, ActivityLog, UserRole } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
+import type { WorkspaceUser, ActivityLog } from '@/lib/userManagement'
 import { 
   generateInviteLink,
   generateInviteToken, 
@@ -49,23 +50,13 @@ import * as UserRegistry from '@/lib/userRegistry'
 interface AdminDashboardProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  users: WorkspaceUser[]
-  activityLog: ActivityLog[]
   currentUserId: string
-  workspaceId: string
-  onUpdateUsers: (users: WorkspaceUser[]) => void
-  onLogActivity: (log: ActivityLog) => void
 }
 
 export function AdminDashboard({
   open,
   onOpenChange,
-  users,
-  activityLog,
-  currentUserId,
-  workspaceId,
-  onUpdateUsers,
-  onLogActivity
+  currentUserId
 }: AdminDashboardProps) {
   const [showAddUserDialog, setShowAddUserDialog] = useState(false)
   const [showDirectUserDialog, setShowDirectUserDialog] = useState(false)

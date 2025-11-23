@@ -70,8 +70,6 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
 
   useEffect(() => {
     console.log('[WorkspaceView] Workspace prop changed')
-    console.log('[WorkspaceView] workspace.users:', workspace.users)
-    console.log('[WorkspaceView] userCredentials:', userCredentials)
   }, [workspace, userCredentials])
 
   const controller = useWorkspaceController({
@@ -118,66 +116,12 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   }, [controller.workspace, fileName])
 
   useEffect(() => {
-    let mounted = true
-    
-    const ensureCurrentUserInWorkspace = async () => {
-      try {
-        const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
-        
-        if (!creds || !mounted) {
-          console.log('[WorkspaceView] No credentials available')
-          return
-        }
-
-        const currentUser = controller.workspace.users?.find(u => u.username === creds.username)
-        
-        console.log('[WorkspaceView] Checking admin user...')
-        console.log('[WorkspaceView] creds.username:', creds.username)
-        console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
-        console.log('[WorkspaceView] currentUser:', currentUser)
-        
-        if (!currentUser) {
-          console.log('[WorkspaceView] ⚠️  Current user not found in workspace, adding...')
-          const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-          const adminUser = {
-            userId: userId,
-            username: creds.username,
-            role: 'admin' as const,
-            addedAt: Date.now(),
-            addedBy: 'system',
-            status: 'active' as const
-          }
-          
-          console.log('[WorkspaceView] Adding admin user:', adminUser)
-          
-          controller.handlers.setWorkspace((current) => {
-            const updated = {
-              ...current,
-              users: [...(current.users || []), adminUser],
-              ownerId: current.ownerId || userId
-            }
-            console.log('[WorkspaceView] Updated workspace with admin user:', updated.users)
-            return updated
-          })
-        } else {
-          console.log('[WorkspaceView] ✅ Current user found:', currentUser.role)
-        }
-      } catch (error) {
-        console.error('[WorkspaceView] Error ensuring user in workspace:', error)
-      }
+    const loadCredentials = async () => {
+      const creds = await storage.get<{username: string; passwordHash: PasswordHash}>('user-credentials')
+      setUserCredentials(creds || null)
     }
-    
-    ensureCurrentUserInWorkspace()
-    
-    return () => {
-      mounted = false
-    }
-  }, [controller.workspace.users, controller.handlers])
-
-  useEffect(() => {
-    console.log('[WorkspaceView] Controller workspace changed')
-    console.log('[WorkspaceView] controller.workspace.users:', controller.workspace.users)
-  }, [controller.workspace.users])
+    loadCredentials()
+  }, [])
 
   const currentWorkspaceStr = useMemo(() => serializeWorkspace(controller.workspace), [controller.workspace])
 

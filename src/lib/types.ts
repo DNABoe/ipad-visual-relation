@@ -72,32 +72,6 @@ export interface Group {
 
 export type UserRole = 'admin' | 'editor' | 'viewer'
 
-export interface WorkspaceUser {
-  userId: string
-  username: string
-  email?: string
-  role: UserRole
-  githubLogin?: string
-  githubAvatar?: string
-  addedAt: number
-  addedBy: string
-  status: 'pending' | 'active' | 'suspended'
-  canInvestigate?: boolean
-  loginCount?: number
-  lastLoginAt?: number
-}
-
-export interface ActivityLog {
-  id: string
-  timestamp: number
-  userId: string
-  username: string
-  action: string
-  entityType?: 'person' | 'connection' | 'group' | 'user' | 'workspace'
-  entityId?: string
-  details?: string
-}
-
 export interface AppSettings {
   showMinimap: boolean
   openaiApiKey?: string
@@ -127,11 +101,8 @@ export interface Workspace {
   collapsedBranches?: CollapsedBranch[]
   settings?: WorkspaceSettings
   canvasTransform?: ViewTransform
-  users?: WorkspaceUser[]
-  activityLog?: ActivityLog[]
   createdAt?: number
   modifiedAt?: number
-  modifiedBy?: string
 }
 
 export interface ViewTransform {

@@ -85,19 +85,6 @@ export function FileManager({ onLoad }: FileManagerProps) {
       console.log('[FileManager] Creating new workspace for user:', currentUser.email)
       
       const workspaceId = `workspace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-      const adminUser = {
-        userId: currentUser.userId,
-        username: currentUser.name,
-        email: currentUser.email,
-        role: currentUser.role,
-        addedAt: Date.now(),
-        addedBy: 'system',
-        status: 'active' as const,
-        loginCount: currentUser.loginCount,
-        canInvestigate: currentUser.canInvestigate
-      }
-      
-      console.log('[FileManager] Creating admin user:', adminUser)
       
       const baseWorkspace: Workspace = includeSampleData
         ? generateSampleData()
@@ -106,22 +93,19 @@ export function FileManager({ onLoad }: FileManagerProps) {
             connections: [], 
             groups: [], 
             collapsedBranches: [],
-            settings: DEFAULT_WORKSPACE_SETTINGS,
-            users: [],
-            activityLog: []
+            settings: DEFAULT_WORKSPACE_SETTINGS
           }
       
       const newWorkspace: Workspace = {
         ...baseWorkspace,
         id: workspaceId,
         name: trimmedFileName,
-        users: [adminUser],
         ownerId: currentUser.userId,
         createdAt: Date.now(),
         modifiedAt: Date.now()
       }
       
-      console.log('[FileManager] New workspace created with users:', newWorkspace.users)
+      console.log('[FileManager] New workspace created for owner:', currentUser.email)
 
       console.log('[FileManager] Serializing workspace...')
       const workspaceJson = serializeWorkspace(newWorkspace)

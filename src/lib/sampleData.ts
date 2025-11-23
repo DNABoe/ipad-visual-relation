@@ -130,8 +130,6 @@ export function generateSampleData(): Workspace {
     connections, 
     groups: [group1, group2],
     collapsedBranches: [],
-    settings: DEFAULT_WORKSPACE_SETTINGS,
-    users: [],
-    activityLog: []
+    settings: DEFAULT_WORKSPACE_SETTINGS
   }
 }

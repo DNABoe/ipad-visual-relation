@@ -1,5 +1,31 @@
 import { hashPassword, type PasswordHash } from './auth'
-import type { UserRole, WorkspaceUser, ActivityLog } from './types'
+import type { UserRole } from './types'
+
+export interface ActivityLog {
+  id: string
+  timestamp: number
+  userId: string
+  username: string
+  action: string
+  entityType?: 'person' | 'connection' | 'group' | 'user' | 'workspace'
+  entityId?: string
+  details?: string
+}
+
+export interface WorkspaceUser {
+  userId: string
+  username: string
+  email?: string
+  role: UserRole
+  githubLogin?: string
+  githubAvatar?: string
+  addedAt: number
+  addedBy: string
+  status: 'pending' | 'active' | 'suspended'
+  canInvestigate?: boolean
+  loginCount?: number
+  lastLoginAt?: number
+}
 
 export function generateInviteToken(): string {
   const array = new Uint8Array(32)
