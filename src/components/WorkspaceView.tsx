@@ -13,6 +13,7 @@ import { ExportDialog } from './ExportDialog'
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { CollapseBranchDialog } from './CollapseBranchDialog'
 import { ConnectionDialog } from './ConnectionDialog'
+import { RuntimeStatusBanner } from './RuntimeStatusBanner'
 import { 
   ContextMenu, 
   getCanvasMenuItems, 
@@ -470,6 +471,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
 
   return (
     <div className="h-screen flex flex-col bg-background">
+      <RuntimeStatusBanner />
       <WorkspaceToolbar
         fileName={fileName}
         downloadUrl={downloadUrl}

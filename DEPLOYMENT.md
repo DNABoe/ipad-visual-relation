@@ -1,298 +1,226 @@
-# RelEye Deployment Guide
+# Deploying RelEye as a Standalone Application
 
-## Overview
+This guide explains how to deploy RelEye outside the Spark runtime environment.
 
-RelEye is configured to automatically deploy to `releye.boestad.com` using GitHub Pages and GitHub Actions.
+## Prerequisites
 
-## Files Required for Deployment
+- Node.js 18+ installed
+- npm or yarn package manager
+- A web server or hosting platform (optional for production)
 
-All necessary files are already in place:
+## Local Development
 
-### 1. GitHub Actions Workflow
-**Location**: `.github/workflows/deploy.yml`
-
-This workflow:
-- Triggers on every push to `main` branch
-- Can also be manually triggered
-- Builds the application using `npm run build`
-- Deploys to GitHub Pages
-- Uses Node.js 20 for consistency
-
-### 2. CNAME File
-**Location**: `CNAME` (root directory)
-
-Contains: `releye.boestad.com`
-
-This tells GitHub Pages to serve the site at your custom domain.
-
-### 3. Vite Configuration
-**Location**: `vite.config.ts`
-
-Key settings:
-- `base: "/"` - Ensures assets load correctly
-- `outDir: "dist"` - Standard output directory for GitHub Pages
-- `emptyOutDir: true` - Cleans before each build
-
-### 4. Package.json Scripts
-**Location**: `package.json`
-
-Build script: `"build": "tsc -b --noCheck && vite build"`
-
-## GitHub Repository Setup
-
-### Step 1: Enable GitHub Actions
-
-1. Go to your repository on GitHub
-2. Navigate to **Settings** → **Actions** → **General**
-3. Under "Workflow permissions", select:
-   - ✅ Read and write permissions
-   - ✅ Allow GitHub Actions to create and approve pull requests
-
-### Step 2: Configure GitHub Pages
-
-1. Go to **Settings** → **Pages**
-2. Under "Build and deployment":
-   - **Source**: **GitHub Actions** (NOT "Deploy from a branch")
-   
-   ⚠️ **CRITICAL**: Must select "GitHub Actions" as the source. This is the most common mistake that causes a black screen!
-
-3. Under "Custom domain":
-   - Enter: `releye.boestad.com`
-   - Click **Save**
-   - ✅ Enforce HTTPS (will be enabled after DNS verification)
-
-### Step 3: Configure DNS
-
-You need to configure DNS records at your domain registrar (where you manage boestad.com):
-
-#### Option A: CNAME Record (Recommended)
-```
-Type: CNAME
-Name: releye
-Value: [your-github-username].github.io
-TTL: 3600 (or auto)
-```
-
-#### Option B: A Records
-If you prefer A records or need apex domain support:
-```
-Type: A
-Name: releye
-Value: 185.199.108.153
-TTL: 3600
-
-Type: A
-Name: releye
-Value: 185.199.109.153
-TTL: 3600
-
-Type: A
-Name: releye
-Value: 185.199.110.153
-TTL: 3600
-
-Type: A
-Name: releye
-Value: 185.199.111.153
-TTL: 3600
-```
-
-### Step 4: Verify Deployment
-
-1. Push to the `main` branch:
+1. **Install dependencies**
    ```bash
-   git add .
-   git commit -m "Configure deployment"
-   git push origin main
+   npm install
    ```
 
-2. Check the **Actions** tab in your repository
-   - You should see the "Deploy to GitHub Pages" workflow running
-   - Wait for it to complete (usually 2-3 minutes)
-
-3. Once workflow completes:
-   - Go back to **Settings** → **Pages**
-   - You should see: "Your site is live at https://releye.boestad.com"
-
-4. DNS propagation may take 15 minutes to 48 hours
-   - Check with: `dig releye.boestad.com`
-   - Or use: https://dnschecker.org
-
-## Troubleshooting
-
-### Build Fails
-
-**Check the Actions log**:
-1. Go to Actions tab
-2. Click on the failed workflow
-3. Check the build step logs
-
-Common issues:
-- TypeScript errors: The build script uses `--noCheck` flag, but severe errors may still fail
-- Missing dependencies: Run `npm install` locally to verify
-- Memory issues: GitHub Actions has 7GB RAM limit
-
-### Assets Not Loading (404s)
-
-**Check vite.config.ts**:
-- Ensure `base: "/"` is set correctly
-- If using a subdirectory, change to `base: "/subdirectory/"`
-
-### Custom Domain Not Working
-
-1. **Verify DNS**:
+2. **Start development server**
    ```bash
-   dig releye.boestad.com
-   nslookup releye.boestad.com
+   npm run dev
    ```
 
-2. **Check CNAME file**:
-   - Must be in root directory
-   - Must contain only: `releye.boestad.com`
-   - No http://, no trailing slash
+3. **Open in browser**
+   Navigate to `http://localhost:5173` (or the port shown in terminal)
 
-3. **GitHub Pages Custom Domain**:
-   - Go to Settings → Pages
-   - Re-enter the custom domain if needed
-   - Wait for DNS check to pass
+## Production Build
 
-### HTTPS Not Working
-
-- HTTPS is automatically provisioned by GitHub
-- May take 10-20 minutes after DNS verification
-- Check "Enforce HTTPS" in Settings → Pages once available
-
-## Manual Deployment
-
-If you need to deploy manually without GitHub Actions:
-
-1. Build locally:
+1. **Build the application**
    ```bash
    npm run build
    ```
 
-2. Install gh-pages:
+   This creates an optimized production build in the `dist/` directory.
+
+2. **Preview the build locally**
    ```bash
-   npm install -g gh-pages
+   npm run preview
    ```
 
-3. Deploy:
-   ```bash
-   gh-pages -d dist
-   ```
+## Deployment Options
 
-## Environment-Specific Builds
+### Option 1: Static Hosting (Recommended)
 
-The application uses `spark.kv` for local storage, which works client-side. No environment variables or backend configuration needed.
+Deploy the `dist/` folder to any static hosting service:
 
-All encryption and data handling happens in the browser.
+#### Netlify
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
 
-## Continuous Deployment
+# Deploy
+netlify deploy --prod --dir=dist
+```
 
-Every commit to `main` triggers automatic deployment:
+#### Vercel
+```bash
+# Install Vercel CLI
+npm install -g vercel
 
-1. Developer pushes to `main`
-2. GitHub Actions workflow starts
-3. Installs dependencies (`npm ci`)
-4. Builds application (`npm run build`)
-5. Uploads build artifacts
-6. Deploys to GitHub Pages
-7. Site is live at `https://releye.boestad.com`
+# Deploy
+vercel --prod
+```
 
-Average deployment time: 2-3 minutes
+#### GitHub Pages
+```bash
+# Build the project
+npm run build
+
+# Deploy to gh-pages branch
+npx gh-pages -d dist
+```
+
+### Option 2: Traditional Web Server
+
+Copy the `dist/` folder to your web server:
+
+#### Nginx Configuration
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    root /path/to/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+#### Apache Configuration (.htaccess)
+```apache
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+```
+
+### Option 3: Docker
+
+Create a `Dockerfile`:
+```dockerfile
+FROM node:18-alpine as build
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+Build and run:
+```bash
+docker build -t releye .
+docker run -p 80:80 releye
+```
+
+## Important Considerations
+
+### Storage Limitations
+
+When running standalone, RelEye uses browser localStorage which has limitations:
+
+- **Storage Limit**: Typically 5-10MB per domain
+- **User-Specific**: Each user's data is stored locally in their browser
+- **No Sync**: Data doesn't sync across devices
+- **Clearable**: Users can clear browser data
+
+### Feature Differences
+
+| Feature | Spark Environment | Standalone |
+|---------|------------------|------------|
+| Network Visualization | ✅ | ✅ |
+| Person/Group Management | ✅ | ✅ |
+| File Attachments | ✅ | ✅ |
+| Activity Logging | ✅ | ✅ |
+| Export/Import | ✅ | ✅ |
+| Data Persistence | Spark KV | localStorage |
+| Investigation (AI) | ✅ GPT-4 | ⚠️ Template |
+| Multi-User | ✅ | ❌ |
+| Cross-Device Sync | ✅ | ❌ |
+
+### User Authentication
+
+The standalone version includes a single-user authentication system that:
+- Stores credentials in localStorage
+- Provides basic session management
+- Does NOT include multi-user support
+- Should NOT be used for sensitive production data
+
+**For production use with real user data, deploy in the Spark environment.**
+
+## Environment Variables
+
+The application automatically detects its runtime environment. No configuration needed.
+
+## Troubleshooting
+
+### Build Errors
+
+If you encounter errors about missing `@github/spark` dependencies:
+
+1. The build system is designed to handle missing Spark packages gracefully
+2. Ensure you're using Node 18+
+3. Clear node_modules and reinstall: `rm -rf node_modules package-lock.json && npm install`
+
+### Storage Errors
+
+If users report storage issues:
+
+1. Check browser console for localStorage errors
+2. Advise users to enable cookies/storage in browser settings
+3. Check that browser isn't in private/incognito mode
+4. Verify storage quota isn't exceeded
+
+### White Screen After Deployment
+
+1. Check browser console for errors
+2. Verify base path in `vite.config.ts` matches your deployment path
+3. Ensure all assets are loading correctly (check Network tab)
+4. Verify `.htaccess` or nginx config for SPA routing
+
+## Performance Optimization
+
+The production build is already optimized, but you can:
+
+1. **Enable Compression** on your web server (gzip/brotli)
+2. **Use CDN** for faster global delivery
+3. **Enable Caching** for static assets
+4. **Monitor Bundle Size** with `npm run build -- --stats`
 
 ## Security Considerations
 
-### HTTPS
-- Always enforced on GitHub Pages
-- Automatic certificate from Let's Encrypt
-- Renewed automatically
+When deploying standalone:
 
-### Content Security
-- All data processing happens client-side
-- No server to secure
-- Encryption keys never leave the user's device
-
-### Deployment Security
-- GitHub Actions uses secure, isolated runners
-- Dependencies verified via package-lock.json
-- No secrets needed for deployment
-
-## Updates and Maintenance
-
-### Updating Dependencies
-```bash
-npm update
-npm audit fix
-git add package*.json
-git commit -m "Update dependencies"
-git push
-```
-
-### Updating the Application
-Simply commit and push changes to `main`:
-```bash
-git add .
-git commit -m "Your changes"
-git push origin main
-```
-
-The site updates automatically within 2-3 minutes.
-
-### Rollback
-To rollback to a previous version:
-```bash
-git revert HEAD
-git push origin main
-```
-
-Or redeploy a specific commit:
-```bash
-git checkout <commit-hash>
-git push -f origin main
-```
-
-## Monitoring
-
-### Check Deployment Status
-- **Actions Tab**: See all deployments and their status
-- **Settings → Pages**: Verify live URL and domain status
-- **Deployments**: See deployment history
-
-### View Logs
-1. Go to Actions tab
-2. Click on any workflow run
-3. Expand build/deploy steps to see logs
-
-## Performance
-
-### Build Optimization
-The production build:
-- Minifies JavaScript and CSS
-- Tree-shakes unused code
-- Optimizes images
-- Generates source maps (optional, currently disabled)
-
-### Caching
-GitHub Pages automatically:
-- Caches static assets
-- Uses CDN for global distribution
-- Compresses content with gzip/brotli
-
-### Expected Performance
-- First Load: < 2s on 4G
-- Time to Interactive: < 3s
-- Lighthouse Score: 90+ (Performance)
+1. **Always use HTTPS** in production
+2. **Set security headers** (CSP, X-Frame-Options, etc.)
+3. **Don't store sensitive data** - localStorage is not encrypted
+4. **Use file encryption** feature for exported networks
+5. **Regular backups** - remind users to export their networks
 
 ## Support
 
-For deployment issues:
-- Check GitHub Actions logs
-- Review GitHub Pages status: https://www.githubstatus.com
-- Verify DNS configuration
-- Check browser console for errors
+For issues specific to standalone deployment, ensure:
+- You're using the latest build
+- Browser localStorage is enabled
+- JavaScript is enabled
+- Browser is up-to-date
 
----
-
-**Last Updated**: 2024
-**Maintained by**: D Boestad
+For enhanced features and production use with sensitive data, deploy in the Spark environment.

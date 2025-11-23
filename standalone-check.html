@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RelEye Standalone - Environment Check</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #0f0f0f;
+      color: #ffffff;
+    }
+    .check-item {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background: #1a1a1a;
+      border-left: 4px solid #666;
+    }
+    .check-item.pass {
+      border-left-color: #4ade80;
+    }
+    .check-item.fail {
+      border-left-color: #ef4444;
+    }
+    .check-item.warn {
+      border-left-color: #fbbf24;
+    }
+    .status {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .pass .status { color: #4ade80; }
+    .fail .status { color: #ef4444; }
+    .warn .status { color: #fbbf24; }
+    h1 {
+      color: #60a5fa;
+      border-bottom: 2px solid #60a5fa;
+      padding-bottom: 10px;
+    }
+    .summary {
+      margin-top: 30px;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      border: 2px solid #60a5fa;
+    }
+    code {
+      background: #000;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 RelEye Environment Check</h1>
+  <p>This page verifies that RelEye can run in standalone mode on this browser.</p>
+  
+  <div id="checks"></div>
+  <div id="summary"></div>
+
+  <script>
+    const checks = []
+    
+    function addCheck(name, status, message, details = '') {
+      checks.push({ name, status, message, details })
+    }
+
+    // Check 1: localStorage availability
+    try {
+      localStorage.setItem('__test__', 'test')
+      localStorage.removeItem('__test__')
+      addCheck(
+        'localStorage',
+        'pass',
+        'Browser localStorage is available',
+        'RelEye can store data locally'
+      )
+    } catch (error) {
+      addCheck(
+        'localStorage',
+        'fail',
+        'localStorage is not available',
+        'Enable cookies/storage in browser settings or exit private mode'
+      )
+    }
+
+    // Check 2: JavaScript features
+    const hasES2020 = typeof BigInt !== 'undefined' && typeof Promise.allSettled !== 'undefined'
+    if (hasES2020) {
+      addCheck(
+        'JavaScript',
+        'pass',
+        'Browser supports required JavaScript features',
+        'ES2020+ features detected'
+      )
+    } else {
+      addCheck(
+        'JavaScript',
+        'warn',
+        'Browser may not support all features',
+        'Update to latest browser version for best experience'
+      )
+    }
+
+    // Check 3: Canvas API
+    const hasCanvas = !!document.createElement('canvas').getContext
+    if (hasCanvas) {
+      addCheck(
+        'Canvas API',
+        'pass',
+        'Canvas rendering is supported',
+        'Network visualization will work correctly'
+      )
+    } else {
+      addCheck(
+        'Canvas API',
+        'fail',
+        'Canvas API not supported',
+        'Update your browser to use RelEye'
+      )
+    }
+
+    // Check 4: File API
+    const hasFileAPI = typeof File !== 'undefined' && typeof FileReader !== 'undefined'
+    if (hasFileAPI) {
+      addCheck(
+        'File API',
+        'pass',
+        'File operations are supported',
+        'Photo uploads and attachments will work'
+      )
+    } else {
+      addCheck(
+        'File API',
+        'warn',
+        'Limited file support',
+        'Some features may not work'
+      )
+    }
+
+    // Check 5: Spark runtime (should not be present in standalone)
+    const hasSparkKV = !!(window.spark && window.spark.kv)
+    const hasSparkLLM = !!(window.spark && window.spark.llm)
+    
+    if (!hasSparkKV && !hasSparkLLM) {
+      addCheck(
+        'Standalone Mode',
+        'pass',
+        'Running in standalone mode (as expected)',
+        'localStorage will be used for persistence'
+      )
+    } else {
+      addCheck(
+        'Spark Runtime',
+        'pass',
+        'Spark runtime detected',
+        'Enhanced features available (KV storage' + (hasSparkLLM ? ', AI-powered investigation' : '') + ')'
+      )
+    }
+
+    // Check 6: Storage quota
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(estimate => {
+        const quotaMB = (estimate.quota / 1024 / 1024).toFixed(2)
+        const usageMB = (estimate.usage / 1024 / 1024).toFixed(2)
+        const availableMB = ((estimate.quota - estimate.usage) / 1024 / 1024).toFixed(2)
+        
+        if (estimate.quota > 5 * 1024 * 1024) {
+          addCheck(
+            'Storage Quota',
+            'pass',
+            `${availableMB} MB available (${usageMB} MB used of ${quotaMB} MB total)`,
+            'Sufficient storage for typical usage'
+          )
+        } else {
+          addCheck(
+            'Storage Quota',
+            'warn',
+            `Only ${availableMB} MB available`,
+            'May be limited for large networks with many photos'
+          )
+        }
+        renderResults()
+      })
+    } else {
+      addCheck(
+        'Storage Quota',
+        'warn',
+        'Cannot determine storage quota',
+        'Estimate API not available'
+      )
+      renderResults()
+    }
+
+    function renderResults() {
+      const checksDiv = document.getElementById('checks')
+      const summaryDiv = document.getElementById('summary')
+      
+      checksDiv.innerHTML = checks.map(check => `
+        <div class="check-item ${check.status}">
+          <div><span class="status">${check.status === 'pass' ? '✅' : check.status === 'fail' ? '❌' : '⚠️'}</span><strong>${check.name}</strong></div>
+          <div style="margin-top: 5px;">${check.message}</div>
+          ${check.details ? `<div style="margin-top: 5px; font-size: 0.9em; color: #999;">${check.details}</div>` : ''}
+        </div>
+      `).join('')
+
+      const passCount = checks.filter(c => c.status === 'pass').length
+      const failCount = checks.filter(c => c.status === 'fail').length
+      const warnCount = checks.filter(c => c.status === 'warn').length
+
+      let verdict = ''
+      let verdictColor = ''
+
+      if (failCount > 0) {
+        verdict = '❌ Not Ready - Address failing checks above'
+        verdictColor = '#ef4444'
+      } else if (warnCount > 0) {
+        verdict = '⚠️ Ready with Warnings - Should work but may have limitations'
+        verdictColor = '#fbbf24'
+      } else {
+        verdict = '✅ Ready - All checks passed!'
+        verdictColor = '#4ade80'
+      }
+
+      summaryDiv.innerHTML = `
+        <div class="summary">
+          <h2 style="margin-top: 0; color: ${verdictColor};">${verdict}</h2>
+          <p>
+            <strong>Results:</strong> 
+            ${passCount} passed, 
+            ${warnCount} warnings, 
+            ${failCount} failed
+          </p>
+          ${failCount === 0 ? `
+            <p style="margin-top: 15px; padding: 10px; background: #000; border-radius: 4px;">
+              To run RelEye in standalone mode:<br>
+              <code>npm install && npm run dev</code>
+            </p>
+          ` : ''}
+        </div>
+      `
+    }
+
+    // Initial render (will be called again after async checks)
+    if (checks.length > 0) {
+      renderResults()
+    }
+  </script>
+</body>
+</html>

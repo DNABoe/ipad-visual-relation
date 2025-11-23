@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils'
 import { resampleImage } from '@/lib/imageProcessing'
 import { toast } from 'sonner'
 import { generateInvestigationPDF } from '@/lib/pdfGenerator'
-import { generateIntelligenceReport } from '@/lib/externalLLM'
+import { generateIntelligenceReport, isLLMAvailable } from '@/lib/externalLLM'
 
 interface PersonDialogProps {
   open: boolean
@@ -924,11 +924,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
                   <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Detective size={18} />
-                    AI-Powered Investigation
+                    {isLLMAvailable() ? 'AI-Powered Investigation' : 'Investigation Report'}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Generate a professional intelligence brief based on the person's name, position, and country using AI. 
-                    The report will be automatically saved to attachments.
+                    {isLLMAvailable() 
+                      ? 'Generate a professional intelligence brief based on the person\'s name, position, and country using AI. The report will be automatically saved to attachments.'
+                      : 'Generate a professional intelligence brief template. For AI-powered personalized analysis, deploy this application in the Spark environment.'
+                    }
                   </p>
                 </div>
 

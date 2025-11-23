@@ -17,7 +17,7 @@ export function GridAnalysisHelper() {
 
   const runAnalysis = async () => {
     if (!isSparkAvailable) {
-      setAnalysis('This analysis tool is only available in the Spark development environment.')
+      setAnalysis('This analysis tool is only available when running in the Spark development environment.\n\nThe Spark environment provides access to AI-powered code analysis using GPT-4.\n\nTo use this feature:\n1. Deploy the application in the Spark runtime\n2. Ensure the Spark SDK is properly configured\n3. Run this analysis again\n\nIn standalone mode, manual code review is recommended for debugging grid toggle and canvas settings issues.')
       return
     }
 
