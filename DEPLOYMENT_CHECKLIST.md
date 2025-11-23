@@ -1,264 +1,270 @@
-# RelEye Deployment Checklist
-
-Use this checklist to ensure proper deployment of the RelEye application.
-
-## Prerequisites
-
-- [ ] Server with root/sudo access (Ubuntu 20.04+ recommended)
-- [ ] Domain name pointing to server (releye.boestad.com)
-- [ ] SSH access to server
-- [ ] Basic familiarity with Linux command line
-
-## Backend Deployment
-
-### 1. Database Setup
-
-- [ ] PostgreSQL installed on server
-- [ ] Database `releye` created
-- [ ] Database user `releye_user` created with password
-- [ ] Database schema loaded from `database-setup.sql`
-- [ ] Database connection tested
-
-```bash
-sudo -u postgres psql -d releye -c "SELECT COUNT(*) FROM users;"
-```
-
-### 2. Node.js API Server
-
-- [ ] Node.js v18+ installed
-- [ ] API files copied to `/var/www/releye-api/`
-- [ ] Files renamed (api-server-example.js → server.js, api-package.json → package.json)
-- [ ] Dependencies installed (`npm install`)
-- [ ] `.env` file created with correct values
-- [ ] API server starts without errors
-
-```bash
-cd /var/www/releye-api
-node server.js
-# Should see: "RelEye API server running on port 3000"
-```
-
-### 3. System Service
-
-- [ ] Systemd service file created at `/etc/systemd/system/releye-api.service`
-- [ ] Service enabled and started
-- [ ] Service starts automatically on reboot
-- [ ] Service logs are accessible
-
-```bash
-sudo systemctl status releye-api
-sudo journalctl -u releye-api -n 50
-```
-
-### 4. Nginx Reverse Proxy
-
-- [ ] Nginx installed
-- [ ] Site configuration created at `/etc/nginx/sites-available/releye`
-- [ ] Site enabled (symlink in `/etc/nginx/sites-enabled/`)
-- [ ] Nginx configuration tested (`nginx -t`)
-- [ ] Nginx restarted
-
-### 5. SSL/HTTPS
-
-- [ ] Certbot installed
-- [ ] SSL certificate obtained for releye.boestad.com
-- [ ] HTTPS working
-- [ ] HTTP redirects to HTTPS
-- [ ] Auto-renewal configured
-
-```bash
-sudo certbot certificates
-```
-
-## Frontend Deployment
-
-### 6. Build and Deploy
-
-- [ ] Project built locally (`npm run build`)
-- [ ] Build directory created: `/var/www/releye/dist/`
-- [ ] Built files copied to server
-- [ ] File permissions set correctly
-- [ ] Static files served by Nginx
-
-```bash
-ls -la /var/www/releye/dist/
-# Should see index.html and assets/
-```
-
-## Testing
-
-### 7. API Tests
-
-- [ ] Health endpoint works: `curl https://releye.boestad.com/api/health`
-- [ ] First-time endpoint works: `curl https://releye.boestad.com/api/auth/first-time`
-- [ ] CORS headers present in responses
-- [ ] No errors in API logs
-
-Expected health response:
-```json
-{
-  "success": true,
-  "data": {
-    "status": "ok"
-  }
-}
-```
-
-### 8. Frontend Tests
-
-- [ ] Site loads at https://releye.boestad.com
-- [ ] No console errors in browser
-- [ ] "First Time Setup" screen appears
-- [ ] Can create admin account
-- [ ] Can log in with created account
-- [ ] Can log out
-- [ ] Can log in again
-
-### 9. Multi-Device Tests
-
-- [ ] Log in from different browser on same computer
-- [ ] Log in from different computer
-- [ ] User credentials work everywhere
-- [ ] Network files remain local (don't sync)
-
-### 10. Admin Functions
-
-- [ ] Admin tab visible in settings (admin users only)
-- [ ] Can create user invites
-- [ ] Invite links work
-- [ ] New user can accept invite
-- [ ] Can revoke invites
-- [ ] Can delete users
-- [ ] Can modify user permissions
-
-## Security Checklist
-
-- [ ] Database password is strong and unique
-- [ ] `.env` file has restricted permissions (600)
-- [ ] Database only accepts local connections
-- [ ] Firewall configured (allow 80, 443; restrict others)
-- [ ] SSL/HTTPS working correctly
-- [ ] No sensitive data in logs
-- [ ] API rate limiting enabled (if implemented)
-- [ ] Regular backups scheduled
-
-## Monitoring
-
-- [ ] API logs accessible via journalctl
-- [ ] Nginx logs accessible
-- [ ] Database backup script created
-- [ ] Disk space monitored
-- [ ] Service status monitoring set up (optional)
-
-## Documentation
-
-- [ ] `.env` file backed up securely (NOT in git)
-- [ ] Database credentials documented securely
-- [ ] Deployment notes saved
-- [ ] Maintenance procedures documented
-
-## Post-Deployment
-
-### First Admin Setup
-
-1. Visit https://releye.boestad.com
-2. Complete "First Time Setup"
-3. Create admin account
-4. Log in
-5. Test creating a network file
-6. Test saving and loading
-
-### Invite Additional Users
-
-1. Log in as admin
-2. Settings → Admin Dashboard
-3. Create invite for new user
-4. Copy invite link
-5. Send to new user
-6. Verify new user can complete signup
-
-## Troubleshooting Commands
-
-```bash
-# Check API status
-sudo systemctl status releye-api
-
-# View API logs
-sudo journalctl -u releye-api -f
-
-# View recent API errors
-sudo journalctl -u releye-api -p err -n 50
-
-# Check Nginx status
-sudo systemctl status nginx
-
-# View Nginx error log
-sudo tail -f /var/log/nginx/error.log
-
-# Test Nginx config
-sudo nginx -t
-
-# Check database
-sudo -u postgres psql -d releye
-
-# Restart services
-sudo systemctl restart releye-api
-sudo systemctl restart nginx
-
-# Check disk space
-df -h
-
-# Check API process
-ps aux | grep node
-```
-
-## Common Issues
-
-### "Unable to connect to server"
-- Check API is running: `systemctl status releye-api`
-- Check Nginx config has `/api/` proxy
-- Check CORS_ORIGIN in `.env`
-
-### "Setup failed to set key"
-- API is not reachable from frontend
-- Check `/api/health` endpoint
-- Check browser console for errors
-
-### Database errors
-- Check DATABASE_URL in `.env`
-- Verify database exists: `sudo -u postgres psql -l`
-- Check credentials work: `sudo -u postgres psql releye`
-
-## Rollback Plan
-
-If deployment fails:
-
-1. Keep old system running if possible
-2. Check logs for specific errors
-3. Fix issues one by one
-4. Test each component individually
-5. Don't update DNS until fully tested
-
-## Maintenance Schedule
-
-- **Daily**: Check API logs for errors
-- **Weekly**: Verify backups are working
-- **Monthly**: Update dependencies and security patches
-- **Quarterly**: Review and optimize database
-
-## Success Criteria
-
-✅ All boxes checked above
-✅ No errors in logs
-✅ Can log in from multiple devices
-✅ Admin can invite users
-✅ Network files save and load correctly
-✅ SSL certificate valid and auto-renewing
+# Quick Deployment Checklist for Spaceship.com
+
+## 🚀 Deploy RelEye to releye.boestad.com in 15 minutes
+
+### Prerequisites Check
+- [ ] MySQL database created: `lpmjclyqtt_releye`
+- [ ] MySQL user created: `lpmjclyqtt_releye_user`
+- [ ] Database password available
+- [ ] Spaceship cPanel access
 
 ---
 
-**Date Deployed**: _______________
+## Method 1: Automated (Fastest) ⚡
 
-**Deployed By**: _______________
+### Step 1: Run deployment script
+```bash
+chmod +x deploy-to-spaceship-mysql.sh
+./deploy-to-spaceship-mysql.sh
+```
 
-**Notes**: _______________________________________________
+### Step 2: Configure database
+Edit `deployment-package/api/config.php`:
+- [ ] Set `DB_PASS` to your MySQL password
+- [ ] Set `JWT_SECRET` to random string (run: `openssl rand -base64 32`)
+
+### Step 3: Setup database
+1. [ ] Login to Spaceship cPanel → phpMyAdmin
+2. [ ] Select database: `lpmjclyqtt_releye`
+3. [ ] Click "SQL" tab
+4. [ ] Copy/paste from `database-setup-mysql.sql`
+5. [ ] Click "Go"
+6. [ ] Verify tables created: `users`, `invitations`, `activity_log`
+
+### Step 4: Upload to server
+Choose ONE method:
+
+**Option A: cPanel File Manager**
+1. [ ] Login to cPanel → File Manager
+2. [ ] Navigate to `public_html/`
+3. [ ] Upload `deployment-package.zip`
+4. [ ] Right-click → Extract
+5. [ ] Move files from extracted folder to `public_html/`
+
+**Option B: FTP**
+1. [ ] Connect via FTP (FileZilla, Cyberduck, etc.)
+2. [ ] Upload `deployment-package/*` to `/public_html/`
+
+### Step 5: Test
+- [ ] Visit: https://releye.boestad.com/api/health
+  - Should return: `{"success":true,"data":{"status":"ok",...}}`
+- [ ] Visit: https://releye.boestad.com
+  - Should show login page
+- [ ] Login with: admin / admin
+- [ ] **IMMEDIATELY change admin password!**
+
+---
+
+## Method 2: Manual (Step-by-step) 📝
+
+### Step 1: Build frontend
+```bash
+npm install
+npm run build
+```
+
+### Step 2: Configure backend
+Edit `php-backend/config.php`:
+- [ ] Set `DB_PASS` = your MySQL password
+- [ ] Set `JWT_SECRET` = random string
+- [ ] Set `CORS_ORIGIN` = `'https://releye.boestad.com'`
+
+### Step 3: Configure frontend
+Edit `src/lib/cloudAPI.ts`:
+- [ ] Set `API_BASE_URL` = `'https://releye.boestad.com/api'`
+
+### Step 4: Setup database
+1. [ ] cPanel → phpMyAdmin
+2. [ ] Select: `lpmjclyqtt_releye`
+3. [ ] Run: `database-setup-mysql.sql`
+
+### Step 5: Upload files
+
+**Frontend files** (`dist/*` → `public_html/`):
+- [ ] `index.html`
+- [ ] `assets/` folder
+- [ ] `favicon.svg`
+- [ ] `.htaccess` (create - see guide)
+
+**Backend files** (`php-backend/*` → `public_html/api/`):
+- [ ] `index.php`
+- [ ] `config.php` (with YOUR passwords!)
+- [ ] `database.php`
+- [ ] `helpers.php`
+- [ ] `.htaccess` (create - see guide)
+
+### Step 6: Create .htaccess files
+
+**`public_html/.htaccess`:**
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^api/(.*)$ api/index.php?endpoint=$1 [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L]
+```
+
+**`public_html/api/.htaccess`:**
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php?endpoint=$1 [QSA,L]
+Header set Access-Control-Allow-Origin "*"
+```
+
+### Step 7: Test
+- [ ] https://releye.boestad.com/api/health
+- [ ] https://releye.boestad.com
+- [ ] Login and change password
+
+---
+
+## Troubleshooting 🔧
+
+### Error: "Database connection failed"
+✅ Check `api/config.php` has correct:
+- `DB_PASS`
+- `DB_NAME` = `lpmjclyqtt_releye`
+- `DB_USER` = `lpmjclyqtt_releye_user`
+
+### Error: "404 Not Found" on /api/
+✅ Verify `.htaccess` files exist
+✅ Check cPanel that mod_rewrite is enabled
+
+### Error: Blank/white page
+✅ Check PHP error logs in cPanel
+✅ Verify PHP version is 7.4+
+✅ Temporarily enable errors in `config.php`:
+```php
+ini_set('display_errors', 1);
+```
+
+### Error: "CORS policy" in console
+✅ Check `api/.htaccess` has CORS headers
+✅ Clear browser cache
+✅ Hard refresh (Ctrl+Shift+R)
+
+### Error: Can't login with admin/admin
+✅ Check database has admin user:
+```sql
+SELECT * FROM users WHERE role = 'admin';
+```
+✅ If empty, re-run `database-setup-mysql.sql`
+
+---
+
+## Post-Deployment ✅
+
+### Security
+- [ ] Change admin password (in app)
+- [ ] Verify `JWT_SECRET` is random
+- [ ] Set `display_errors` to `0` in `config.php`
+- [ ] Keep database password secure
+
+### Backups
+- [ ] Backup database (phpMyAdmin → Export)
+- [ ] Backup files (cPanel → File Manager → Compress)
+- [ ] Schedule weekly backups
+
+### Monitoring
+- [ ] Test from different browsers
+- [ ] Test from mobile devices
+- [ ] Create test network
+- [ ] Invite test user
+
+---
+
+## File Structure on Server
+
+```
+public_html/
+├── .htaccess              ← Frontend routing
+├── index.html             ← App entry point
+├── favicon.svg
+├── assets/
+│   ├── index-[hash].js    ← App code
+│   ├── index-[hash].css   ← App styles
+│   └── images/
+└── api/
+    ├── .htaccess          ← API routing
+    ├── index.php          ← API router
+    ├── config.php         ← DB credentials (KEEP SECURE!)
+    ├── database.php       ← Database class
+    └── helpers.php        ← Helper functions
+```
+
+---
+
+## URLs to Test
+
+| Test | URL | Expected Result |
+|------|-----|-----------------|
+| API Health | https://releye.boestad.com/api/health | `{"success":true,...}` |
+| First Time | https://releye.boestad.com/api/auth/first-time | `{"success":true,"data":{"isFirstTime":false}}` |
+| Frontend | https://releye.boestad.com | Login page appears |
+| Login | Use: admin / admin | Dashboard appears |
+
+---
+
+## Default Credentials
+
+**⚠️ CHANGE IMMEDIATELY AFTER FIRST LOGIN!**
+
+- Username: `admin`
+- Password: `admin`
+
+---
+
+## Support Files
+
+- 📖 **Complete Guide:** `DEPLOY_TO_SPACESHIP_MYSQL.md`
+- 🗄️ **Database Schema:** `database-setup-mysql.sql`
+- 🔧 **Backend Config:** `php-backend/config.php`
+- 📦 **Deployment Script:** `deploy-to-spaceship-mysql.sh`
+
+---
+
+## Quick Commands
+
+```bash
+# Generate secure JWT secret
+openssl rand -base64 32
+
+# Build frontend
+npm run build
+
+# Run deployment script
+./deploy-to-spaceship-mysql.sh
+
+# Test API locally (if you have PHP)
+cd php-backend && php -S localhost:8000
+```
+
+---
+
+## Deployment Time Estimate
+
+- Database setup: **3 minutes**
+- Configure files: **2 minutes**
+- Build frontend: **2 minutes**
+- Upload files: **5 minutes**
+- Testing: **3 minutes**
+
+**Total: ~15 minutes** ⚡
+
+---
+
+## Success Criteria ✅
+
+You're done when:
+- ✅ API health check returns success
+- ✅ Frontend loads at releye.boestad.com
+- ✅ You can login with admin credentials
+- ✅ You've changed the admin password
+- ✅ You can create and save a network
+- ✅ Network persists after browser refresh
+
+---
+
+**Need help?** See full troubleshooting in `DEPLOY_TO_SPACESHIP_MYSQL.md`
