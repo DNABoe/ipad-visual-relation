@@ -34,6 +34,25 @@ function App() {
         console.log('[App]   - window.spark exists:', !!window.spark)
         console.log('[App]   - User Agent:', navigator.userAgent)
         
+        const urlParams = new URLSearchParams(window.location.search)
+        const token = urlParams.get('invite')
+        const email = urlParams.get('email')
+        const forceReset = urlParams.get('reset')
+        
+        console.log('[App] URL Parameters:')
+        console.log('[App]   - invite token:', token ? token.substring(0, 8) + '...' : 'none')
+        console.log('[App]   - email:', email || 'none')
+        console.log('[App]   - reset:', forceReset || 'none')
+        
+        if (token && email) {
+          console.log('[App] ========== INVITE LINK DETECTED ==========')
+          console.log('[App] Skipping normal auth flow, loading invite view directly')
+          setInviteToken(token)
+          setInviteEmail(email)
+          setIsLoadingAuth(false)
+          return
+        }
+        
         console.log('[App] Waiting for Spark runtime to be ready...')
         const isReady = await waitForSpark(30000)
         
@@ -49,19 +68,6 @@ function App() {
         }
         
         console.log('[App] ✓ Spark runtime is ready')
-        
-        const urlParams = new URLSearchParams(window.location.search)
-        const token = urlParams.get('invite')
-        const email = urlParams.get('email')
-        const forceReset = urlParams.get('reset')
-        
-        if (token && email) {
-          console.log('[App] Invite link detected')
-          setInviteToken(token)
-          setInviteEmail(email)
-          setIsLoadingAuth(false)
-          return
-        }
         
         if (forceReset === 'true') {
           console.log('[App] Force reset parameter detected - clearing session and showing first-time setup')
