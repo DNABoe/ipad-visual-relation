@@ -207,7 +207,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg h-[680px] flex flex-col">
+      <DialogContent className="max-w-2xl h-[680px] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl">Settings</DialogTitle>
           <DialogDescription>
@@ -221,40 +221,40 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
           </DialogDescription>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <TabsList className="w-full flex-shrink-0 h-auto p-1 gap-1 bg-muted/50">
+          <TabsList className="w-full flex-shrink-0 h-auto p-1.5 gap-2 bg-muted/50">
             <TabsTrigger 
               value="system" 
-              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+              className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
-              <span className="text-xs sm:text-sm font-medium">System</span>
+              <span className="text-sm font-medium">System</span>
             </TabsTrigger>
             <TabsTrigger 
               value="investigation" 
-              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+              className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
-              <Detective className="w-4 h-4 sm:mr-1.5" />
-              <span className="hidden sm:inline text-xs sm:text-sm font-medium">Investigation</span>
+              <Detective className="w-4 h-4 mr-1.5" />
+              <span className="text-sm font-medium">Investigate</span>
             </TabsTrigger>
             <TabsTrigger 
               value="user" 
-              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+              className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
-              <span className="text-xs sm:text-sm font-medium">User</span>
+              <span className="text-sm font-medium">User</span>
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger 
                 value="admin" 
-                className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
               >
-                <Shield className="w-4 h-4 sm:mr-1.5" />
-                <span className="hidden sm:inline text-xs sm:text-sm font-medium">Admin</span>
+                <Shield className="w-4 h-4 mr-1.5" />
+                <span className="text-sm font-medium">Admin</span>
               </TabsTrigger>
             )}
             <TabsTrigger 
               value="about" 
-              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+              className="flex-1 min-w-0 px-3 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
             >
-              <span className="text-xs sm:text-sm font-medium">About</span>
+              <span className="text-sm font-medium">About</span>
             </TabsTrigger>
           </TabsList>
           
