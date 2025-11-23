@@ -1,34 +1,27 @@
 import { useEffect, useState } from 'react'
 import { Info, X } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
 
-
-  useEffect(() => {
-      const available = !!(
-        (window as any).spark &&
+export function RuntimeStatusBanner() {
+  const [isSparkAvailable, setIsSparkAvailable] = useState<boolean | null>(null)
+  const [isDismissed, setIsDismissed] = useState(false)
 
   useEffect(() => {
     const checkSparkAvailability = () => {
       const available = !!(
         typeof window !== 'undefined' &&
         (window as any).spark &&
-        typeof (window as any).spark.kv === 'function'
+        typeof (window as any).spark.kv === 'object'
       )
       setIsSparkAvailable(available)
-  if 
+    }
 
-  return (
-      <div className="max-w-7xl mx-a
-        
+    checkSparkAvailability()
+  }, [])
 
-          </p>
-        <Button
-          size="sm"
-        
-
-        </Button>
-    </div>
-}
-
+  const handleDismiss = () => {
+    setIsDismissed(true)
+  }
 
   if (isSparkAvailable === null || isSparkAvailable || isDismissed) {
     return null
