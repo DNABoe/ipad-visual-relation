@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Info, X } from '@phosphor-icons/react'
-import { Button } from './ui/button'
 
-export function RuntimeStatusBanner() {
-  const [isSparkAvailable, setIsSparkAvailable] = useState<boolean | null>(null)
-  const [isDismissed, setIsDismissed] = useState(false)
+
+  useEffect(() => {
+      const available = !!(
+        (window as any).spark &&
 
   useEffect(() => {
     const checkSparkAvailability = () => {
@@ -14,21 +14,21 @@ export function RuntimeStatusBanner() {
         typeof (window as any).spark.kv === 'function'
       )
       setIsSparkAvailable(available)
-    }
+  if 
 
-    const timer = setTimeout(checkSparkAvailability, 500)
-    return () => clearTimeout(timer)
-  }, [])
+  return (
+      <div className="max-w-7xl mx-a
+        
 
-  useEffect(() => {
-    const dismissed = sessionStorage.getItem('runtime-banner-dismissed')
-    setIsDismissed(dismissed === 'true')
-  }, [])
+          </p>
+        <Button
+          size="sm"
+        
 
-  const handleDismiss = () => {
-    setIsDismissed(true)
-    sessionStorage.setItem('runtime-banner-dismissed', 'true')
-  }
+        </Button>
+    </div>
+}
+
 
   if (isSparkAvailable === null || isSparkAvailable || isDismissed) {
     return null
