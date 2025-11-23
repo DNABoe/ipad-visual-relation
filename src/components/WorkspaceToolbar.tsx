@@ -196,46 +196,25 @@ export function WorkspaceToolbar({
               <TooltipContent>Layout Tools</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="start" className="w-64">
-              <DropdownMenuItem onClick={controller.handlers.handleSmartArrange} className="cursor-pointer gap-3 py-2.5">
-                <Crosshair size={18} weight="duotone" className="text-success" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">Force-Directed Layout</span>
-                  <span className="text-xs text-muted-foreground">Minimizes connection length</span>
-                </div>
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={controller.handlers.handleHierarchicalView} className="cursor-pointer gap-3 py-2.5">
                 <TreeStructure size={18} weight="duotone" className="text-primary" />
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">Hierarchical Tree Layout</span>
-                  <span className="text-xs text-muted-foreground">Top-down structure</span>
+                  <span className="font-medium">Influence Tree</span>
+                  <span className="text-xs text-muted-foreground">Arrange as influence tree from selected person</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={controller.handlers.handleTightenNetwork} className="cursor-pointer gap-3 py-2.5">
-                <CirclesThree size={18} weight="duotone" className="text-accent" />
+                <UsersThree size={18} weight="duotone" className="text-accent" />
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">Circular Cluster Layout</span>
-                  <span className="text-xs text-muted-foreground">Groups connected nodes</span>
+                  <span className="font-medium">Group Columns</span>
+                  <span className="text-xs text-muted-foreground">Arrange persons in vertical columns by group and importance</span>
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={controller.handlers.handleCompactLayout} className="cursor-pointer gap-3 py-2.5">
-                <ArrowsInCardinal size={18} weight="duotone" className="text-primary" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">Compact Network</span>
-                  <span className="text-xs text-muted-foreground">Tightens spacing, no overlaps</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={controller.handlers.handleImportanceAttitudeArrange} className="cursor-pointer gap-3 py-2.5">
+              <DropdownMenuItem onClick={controller.handlers.handleOrganizeByImportance} className="cursor-pointer gap-3 py-2.5">
                 <Target size={18} weight="duotone" className="text-warning" />
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">Importance & Attitude</span>
-                  <span className="text-xs text-muted-foreground">High importance center, sorted by status</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={controller.handlers.handleImportanceAdvocateArrange} className="cursor-pointer gap-3 py-2.5">
-                <Star size={18} weight="duotone" className="text-yellow-400" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">Importance & Advocate</span>
-                  <span className="text-xs text-muted-foreground">Advocates near center, sorted by importance</span>
+                  <span className="font-medium">Importance Rings</span>
+                  <span className="text-xs text-muted-foreground">Arrange in concentric rings by importance score</span>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>

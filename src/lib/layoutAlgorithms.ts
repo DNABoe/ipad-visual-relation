@@ -1072,10 +1072,411 @@ export function influenceHierarchyLayout(
   return finalResult
 }
 
-export const organizeByImportance = forceDirectedLayout
-export const hierarchicalFromSelected = hierarchicalTreeLayout
-export const tightenNetwork = circularClusterLayout
-export const smartArrange = forceDirectedLayout
+export function influenceTreeLayout(
+  persons: Person[],
+  connections: Connection[],
+  selectedPersonId?: string
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  
+  let rootPerson: Person
+  if (selectedPersonId) {
+    const selected = result.find(p => p.id === selectedPersonId)
+    rootPerson = selected || result[0]
+  } else {
+    const connectionCounts = new Map<string, number>()
+    result.forEach(p => {
+      const count = connections.filter(c => 
+        c.fromPersonId === p.id || c.toPersonId === p.id
+      ).length
+      connectionCounts.set(p.id, count)
+    })
+    
+    result.sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score
+      return (connectionCounts.get(b.id) || 0) - (connectionCounts.get(a.id) || 0)
+    })
+    
+    rootPerson = result[0]
+  }
+
+  const directedEdges = new Map<string, Set<string>>()
+  const reverseEdges = new Map<string, Set<string>>()
+  
+  connections.forEach(conn => {
+    const fromPerson = result.find(p => p.id === conn.fromPersonId)
+    const toPerson = result.find(p => p.id === conn.toPersonId)
+    
+    if (!fromPerson || !toPerson) return
+    
+    let parent: string, child: string
+    
+    if (conn.direction === 'forward') {
+      parent = conn.fromPersonId
+      child = conn.toPersonId
+    } else if (conn.direction === 'backward') {
+      parent = conn.toPersonId
+      child = conn.fromPersonId
+    } else {
+      if (fromPerson.score < toPerson.score) {
+        parent = fromPerson.id
+        child = toPerson.id
+      } else if (fromPerson.score > toPerson.score) {
+        parent = toPerson.id
+        child = fromPerson.id
+      } else {
+        parent = conn.fromPersonId
+        child = conn.toPersonId
+      }
+    }
+    
+    if (!directedEdges.has(parent)) directedEdges.set(parent, new Set())
+    if (!reverseEdges.has(child)) reverseEdges.set(child, new Set())
+    directedEdges.get(parent)!.add(child)
+    reverseEdges.get(child)!.add(parent)
+  })
+
+  const levels = new Map<string, number>()
+  const visited = new Set<string>()
+  const queue: Array<{ id: string; level: number }> = [{ id: rootPerson.id, level: 0 }]
+  
+  levels.set(rootPerson.id, 0)
+  visited.add(rootPerson.id)
+
+  while (queue.length > 0) {
+    const { id, level } = queue.shift()!
+    
+    const children = directedEdges.get(id) || new Set()
+    children.forEach(childId => {
+      if (!visited.has(childId)) {
+        visited.add(childId)
+        levels.set(childId, level + 1)
+        queue.push({ id: childId, level: level + 1 })
+      }
+    })
+  }
+
+  result.forEach(person => {
+    if (!levels.has(person.id)) {
+      levels.set(person.id, 999)
+    }
+  })
+
+  const levelGroups = new Map<number, Person[]>()
+  result.forEach(person => {
+    const level = levels.get(person.id)!
+    if (!levelGroups.has(level)) {
+      levelGroups.set(level, [])
+    }
+    levelGroups.get(level)!.push(person)
+  })
+
+  levelGroups.forEach(group => {
+    group.sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score
+      if (a.groupId !== b.groupId) {
+        if (!a.groupId) return 1
+        if (!b.groupId) return -1
+        return a.groupId.localeCompare(b.groupId)
+      }
+      return a.name.localeCompare(b.name)
+    })
+  })
+
+  const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b)
+  const VERTICAL_SPACING = 250
+  const BASE_HORIZONTAL_SPACING = 300
+  
+  rootPerson.x = 0
+  rootPerson.y = -((sortedLevels.length - 1) * VERTICAL_SPACING) / 2
+
+  sortedLevels.forEach((levelNum, levelIndex) => {
+    const levelPersons = levelGroups.get(levelNum)!
+    const y = rootPerson.y + (levelNum * VERTICAL_SPACING)
+
+    if (levelNum === 0) {
+      rootPerson.y = y
+      return
+    }
+
+    const parentPositions: number[] = []
+    levelPersons.forEach(person => {
+      const parents = reverseEdges.get(person.id)
+      if (parents && parents.size > 0) {
+        const parentXs = Array.from(parents)
+          .map(pId => result.find(p => p.id === pId))
+          .filter(p => p !== undefined)
+          .map(p => p!.x)
+        
+        if (parentXs.length > 0) {
+          const avgX = parentXs.reduce((sum, x) => sum + x, 0) / parentXs.length
+          parentPositions.push(avgX)
+        } else {
+          parentPositions.push(0)
+        }
+      } else {
+        parentPositions.push(0)
+      }
+    })
+
+    const sorted = levelPersons.map((person, idx) => ({ person, parentX: parentPositions[idx] }))
+    sorted.sort((a, b) => a.parentX - b.parentX)
+
+    if (sorted.length === 1) {
+      sorted[0].person.x = sorted[0].parentX
+      sorted[0].person.y = y
+    } else {
+      const minX = Math.min(...parentPositions)
+      const maxX = Math.max(...parentPositions)
+      const span = Math.max(maxX - minX, (sorted.length - 1) * BASE_HORIZONTAL_SPACING)
+      
+      sorted.forEach((item, index) => {
+        const centerX = (minX + maxX) / 2
+        const offset = span / (sorted.length - 1 || 1)
+        item.person.x = centerX - span / 2 + index * offset
+        item.person.y = y
+      })
+    }
+  })
+
+  for (let iter = 0; iter < 50; iter++) {
+    sortedLevels.forEach(levelNum => {
+      if (levelNum === 0) return
+      
+      const levelPersons = levelGroups.get(levelNum)!
+      levelPersons.forEach(person => {
+        const parents = reverseEdges.get(person.id)
+        if (!parents || parents.size === 0) return
+        
+        const parentXs = Array.from(parents)
+          .map(pId => result.find(p => p.id === pId))
+          .filter(p => p !== undefined)
+          .map(p => p!.x)
+        
+        if (parentXs.length > 0) {
+          const avgX = parentXs.reduce((sum, x) => sum + x, 0) / parentXs.length
+          person.x += (avgX - person.x) * 0.15
+        }
+      })
+    })
+  }
+
+  const finalResult = resolveOverlaps(result, 80)
+
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
+}
+
+export function groupColumnsLayout(
+  persons: Person[],
+  connections: Connection[],
+  groups: { id: string; name: string }[]
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  
+  const groupMap = new Map<string, Person[]>()
+  const ungrouped: Person[] = []
+  
+  result.forEach(person => {
+    if (person.groupId) {
+      if (!groupMap.has(person.groupId)) {
+        groupMap.set(person.groupId, [])
+      }
+      groupMap.get(person.groupId)!.push(person)
+    } else {
+      ungrouped.push(person)
+    }
+  })
+
+  const attitudeOrder = { green: 0, orange: 1, white: 2, red: 3 }
+  
+  groupMap.forEach(groupPersons => {
+    groupPersons.sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score
+      
+      const aAttitude = attitudeOrder[a.frameColor as keyof typeof attitudeOrder] ?? 4
+      const bAttitude = attitudeOrder[b.frameColor as keyof typeof attitudeOrder] ?? 4
+      if (aAttitude !== bAttitude) return aAttitude - bAttitude
+      
+      return a.name.localeCompare(b.name)
+    })
+  })
+  
+  ungrouped.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score
+    
+    const aAttitude = attitudeOrder[a.frameColor as keyof typeof attitudeOrder] ?? 4
+    const bAttitude = attitudeOrder[b.frameColor as keyof typeof attitudeOrder] ?? 4
+    if (aAttitude !== bAttitude) return aAttitude - bAttitude
+    
+    return a.name.localeCompare(b.name)
+  })
+
+  const sortedGroupIds = Array.from(groupMap.keys()).sort((a, b) => {
+    const groupA = groups.find(g => g.id === a)
+    const groupB = groups.find(g => g.id === b)
+    const nameA = groupA?.name || a
+    const nameB = groupB?.name || b
+    return nameA.localeCompare(nameB)
+  })
+  
+  if (ungrouped.length > 0) {
+    sortedGroupIds.push('__ungrouped__')
+    groupMap.set('__ungrouped__', ungrouped)
+  }
+
+  const COLUMN_SPACING = 450
+  const VERTICAL_SPACING = 180
+  const totalWidth = (sortedGroupIds.length - 1) * COLUMN_SPACING
+  const startX = -totalWidth / 2
+
+  sortedGroupIds.forEach((groupId, columnIndex) => {
+    const columnPersons = groupMap.get(groupId)!
+    const columnX = startX + columnIndex * COLUMN_SPACING
+    
+    const columnHeight = (columnPersons.length - 1) * VERTICAL_SPACING
+    const startY = -columnHeight / 2
+    
+    columnPersons.forEach((person, rowIndex) => {
+      person.x = columnX
+      person.y = startY + rowIndex * VERTICAL_SPACING
+    })
+  })
+
+  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
+  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
+
+  result.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return result
+}
+
+export function radialImportanceLayout(
+  persons: Person[],
+  connections: Connection[]
+): Person[] {
+  if (persons.length === 0) return []
+  if (persons.length === 1) {
+    return [{ ...persons[0], x: 0, y: 0 }]
+  }
+
+  const result = persons.map(p => ({ ...p }))
+  
+  const scoreGroups = new Map<number, Person[]>()
+  result.forEach(person => {
+    if (!scoreGroups.has(person.score)) {
+      scoreGroups.set(person.score, [])
+    }
+    scoreGroups.get(person.score)!.push(person)
+  })
+
+  scoreGroups.forEach(group => {
+    group.sort((a, b) => {
+      if (a.groupId !== b.groupId) {
+        if (!a.groupId) return 1
+        if (!b.groupId) return -1
+        return a.groupId.localeCompare(b.groupId)
+      }
+      return a.name.localeCompare(b.name)
+    })
+  })
+
+  const sortedScores = Array.from(scoreGroups.keys()).sort((a, b) => a - b)
+  const BASE_RADIUS = 350
+  const RING_SPACING = 280
+
+  sortedScores.forEach((score, ringIndex) => {
+    const ringPersons = scoreGroups.get(score)!
+    const radius = ringIndex === 0 ? 0 : BASE_RADIUS + (ringIndex - 1) * RING_SPACING
+    
+    if (ringPersons.length === 1) {
+      ringPersons[0].x = 0
+      ringPersons[0].y = ringIndex === 0 ? 0 : -radius
+    } else {
+      ringPersons.forEach((person, index) => {
+        const angle = (index / ringPersons.length) * 2 * Math.PI - Math.PI / 2
+        person.x = Math.cos(angle) * radius
+        person.y = Math.sin(angle) * radius
+      })
+    }
+  })
+
+  const adjacency = buildAdjacencyMap(connections)
+  
+  for (let iter = 0; iter < 60; iter++) {
+    sortedScores.forEach((score, ringIndex) => {
+      if (ringIndex === 0) return
+      
+      const ringPersons = scoreGroups.get(score)!
+      ringPersons.forEach(person => {
+        const neighbors = Array.from(adjacency.get(person.id) || [])
+          .map(id => result.find(p => p.id === id))
+          .filter(p => p !== undefined && p!.score !== score) as Person[]
+        
+        if (neighbors.length === 0) return
+        
+        const currentAngle = Math.atan2(person.y, person.x)
+        const targetAngles = neighbors.map(n => Math.atan2(n.y, n.x))
+        
+        let sumSin = 0
+        let sumCos = 0
+        targetAngles.forEach(angle => {
+          sumSin += Math.sin(angle)
+          sumCos += Math.cos(angle)
+        })
+        
+        const avgAngle = Math.atan2(sumSin, sumCos)
+        let angleDiff = avgAngle - currentAngle
+        
+        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI
+        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI
+        
+        const newAngle = currentAngle + angleDiff * 0.1
+        const radius = Math.sqrt(person.x * person.x + person.y * person.y)
+        
+        person.x = Math.cos(newAngle) * radius
+        person.y = Math.sin(newAngle) * radius
+      })
+    })
+  }
+
+  const finalResult = resolveOverlaps(result, 60)
+
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+
+  finalResult.forEach(person => {
+    person.x -= centerX
+    person.y -= centerY
+  })
+
+  return finalResult
+}
+
+export const organizeByImportance = radialImportanceLayout
+export const hierarchicalFromSelected = influenceTreeLayout
+export const tightenNetwork = groupColumnsLayout
+export const smartArrange = influenceTreeLayout
 
 export function compactNetworkLayout(
   persons: Person[],

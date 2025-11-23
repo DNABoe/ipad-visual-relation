@@ -400,7 +400,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       })
     })
     
-    toast.success('Force-directed layout applied - connections minimized')
+    toast.success('Importance rings layout applied')
   }, [workspaceState, handleZoomToFit])
 
   const handleHierarchicalView = useCallback(() => {
@@ -409,9 +409,14 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       return
     }
 
+    const selectedPersonId = selection.selectedPersons.length === 1 
+      ? selection.selectedPersons[0] 
+      : undefined
+
     const organized = hierarchicalFromSelected(
       workspaceState.workspace.persons,
-      workspaceState.workspace.connections
+      workspaceState.workspace.connections,
+      selectedPersonId
     )
     
     const updates = new Map<string, Partial<Person>>()
@@ -427,8 +432,8 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       })
     })
     
-    toast.success('Hierarchical tree layout applied')
-  }, [workspaceState, handleZoomToFit])
+    toast.success('Influence tree layout applied')
+  }, [workspaceState, selection.selectedPersons, handleZoomToFit])
 
   const handleTightenNetwork = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
@@ -438,7 +443,8 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
 
     const organized = tightenNetwork(
       workspaceState.workspace.persons,
-      workspaceState.workspace.connections
+      workspaceState.workspace.connections,
+      workspaceState.workspace.groups
     )
     
     const updates = new Map<string, Partial<Person>>()
@@ -454,7 +460,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       })
     })
     
-    toast.success('Circular cluster layout applied')
+    toast.success('Group columns layout applied')
   }, [workspaceState, handleZoomToFit])
 
   const handleSmartArrange = useCallback(() => {
@@ -463,9 +469,14 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       return
     }
 
+    const selectedPersonId = selection.selectedPersons.length === 1 
+      ? selection.selectedPersons[0] 
+      : undefined
+
     const organized = smartArrange(
       workspaceState.workspace.persons,
-      workspaceState.workspace.connections
+      workspaceState.workspace.connections,
+      selectedPersonId
     )
     
     const updates = new Map<string, Partial<Person>>()
@@ -481,8 +492,8 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       })
     })
     
-    toast.success('Force-directed layout applied - connections minimized')
-  }, [workspaceState, handleZoomToFit])
+    toast.success('Influence tree layout applied')
+  }, [workspaceState, selection.selectedPersons, handleZoomToFit])
 
   const handleImportanceAttitudeArrange = useCallback(() => {
     if (workspaceState.workspace.persons.length === 0) {
