@@ -1,35 +1,35 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Eye, EyeSlash, UserPlus } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+
 import type { UserRole } from '@/lib/types'
-import { getRoleDisplayName, getRoleDescription } from '@/lib/userManagement'
+  onOpenChange: (open: boolean) => void
 import * as UserRegistry from '@/lib/userRegistry'
 
 interface DirectUserDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onUserCreated: () => void
-  currentUserId: string
-}
-
-export function DirectUserDialog({
   open,
-  onOpenChange,
-  onUserCreated,
-  currentUserId
-}: DirectUserDialogProps) {
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState<UserRole>('viewer')
-  const [canInvestigate, setCanInvestigate] = useState(false)
+  onOpenChange: (open: boolean) => void
+  const [showPassword, setS
+  const [isSubmitting, 
+
+
+
+      s
+    }
+    const emailR
+      setError(
+    }
+    if (!name.trim()) {
+      return
+
+      setError('Password is required')
+    }
+    if (password.length < 8) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,7 +41,7 @@ export function DirectUserDialog({
 
     if (!email.trim()) {
       setError('Email is required')
-      return
+      consol
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -66,13 +66,13 @@ export function DirectUserDialog({
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      setEmail('')
       return
-    }
+     
 
     setIsSubmitting(true)
 
-    try {
+      onO
       console.log('[DirectUserDialog] ========== CREATING USER DIRECTLY ==========')
       console.log('[DirectUserDialog] Email:', email.trim())
       console.log('[DirectUserDialog] Name:', name.trim())
@@ -90,9 +90,9 @@ export function DirectUserDialog({
       const user = await UserRegistry.createUser(
         email.trim(),
         name.trim(),
-        password,
+            <div 
         role,
-        canInvestigate
+            <DialogTit
       )
 
       console.log('[DirectUserDialog] ✓ User created successfully:', user.userId)
@@ -102,9 +102,9 @@ export function DirectUserDialog({
       
       setEmail('')
       setName('')
-      setPassword('')
+              onChang
       setConfirmPassword('')
-      setRole('viewer')
+            />
       setCanInvestigate(false)
       setError('')
       
@@ -114,17 +114,17 @@ export function DirectUserDialog({
       console.error('[DirectUserDialog] ❌ Failed to create user:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to create user'
       setError(errorMessage)
-      toast.error(errorMessage)
+              autoComplete="off
     } finally {
       setIsSubmitting(false)
     }
-  }
+   
 
   const handleCancel = () => {
     setEmail('')
-    setName('')
+               
     setPassword('')
-    setConfirmPassword('')
+                className=
     setRole('viewer')
     setCanInvestigate(false)
     setError('')
@@ -134,7 +134,7 @@ export function DirectUserDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
+          </div>
           <div className="flex items-center gap-2 mb-2">
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
               <UserPlus className="w-5 h-5 text-primary" weight="duotone" />
@@ -148,17 +148,17 @@ export function DirectUserDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="direct-email">Email Address *</Label>
+                {showConfirmPassword ? (
             <Input
-              id="direct-email"
+                  <EyeSlash siz
               type="email"
-              placeholder="user@example.com"
+            </div>
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
-              autoComplete="off"
+              <SelectTrigger id=
             />
-            <p className="text-xs text-muted-foreground">
+              <SelectContent>
               This will be used as the login username
             </p>
           </div>
@@ -166,7 +166,7 @@ export function DirectUserDialog({
           <div className="space-y-2">
             <Label htmlFor="direct-name">Full Name *</Label>
             <Input
-              id="direct-name"
+                </SelectItem>
               type="text"
               placeholder="John Doe"
               value={name}
@@ -176,7 +176,7 @@ export function DirectUserDialog({
             />
           </div>
 
-          <div className="space-y-2">
+            <div className="space-y-0
             <Label htmlFor="direct-password">Password *</Label>
             <div className="relative">
               <Input
@@ -194,15 +194,15 @@ export function DirectUserDialog({
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
-              >
+              d
                 {showPassword ? (
                   <Eye size={20} weight="regular" />
                 ) : (
-                  <EyeSlash size={20} weight="regular" />
+            </Button>
                 )}
               </button>
             </div>
-          </div>
+}
 
           <div className="space-y-2">
             <Label htmlFor="direct-confirm-password">Confirm Password *</Label>
@@ -222,15 +222,15 @@ export function DirectUserDialog({
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
-              >
+
                 {showConfirmPassword ? (
-                  <Eye size={20} weight="regular" />
+
                 ) : (
-                  <EyeSlash size={20} weight="regular" />
+
                 )}
-              </button>
+
             </div>
-          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="direct-role">Access Level *</Label>
@@ -254,54 +254,54 @@ export function DirectUserDialog({
                 <SelectItem value="viewer">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">Viewer</span>
-                    <span className="text-xs text-muted-foreground">- Read-only access</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {getRoleDescription(role)}
-            </p>
-          </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/20">
-            <div className="space-y-0.5">
-              <Label htmlFor="direct-investigate" className="text-sm font-medium">
-                Investigation Access
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Allow user to access investigation features
-              </p>
-            </div>
-            <Switch
-              id="direct-investigate"
-              checked={canInvestigate}
-              onCheckedChange={setCanInvestigate}
-              disabled={isSubmitting}
-            />
-          </div>
 
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
 
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating User...' : 'Create User'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
