@@ -8,11 +8,7 @@ interface ErrorFallbackProps {
   resetErrorBoundary: () => void;
 }
 
-export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps) => {
-  // When encountering an error in the development mode, rethrow it and don't display the boundary.
-  // The parent UI will take care of showing a more helpful dialog.
-  if (import.meta.env.DEV) throw error;
-
+export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -29,6 +25,14 @@ export const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps)
           <pre className="text-xs text-destructive bg-muted/50 p-3 rounded border overflow-auto max-h-32">
             {error.message}
           </pre>
+          {import.meta.env.DEV && error.stack && (
+            <details className="mt-2">
+              <summary className="text-xs text-muted-foreground cursor-pointer">Stack Trace</summary>
+              <pre className="text-xs text-muted-foreground bg-muted/50 p-3 rounded border overflow-auto max-h-48 mt-2">
+                {error.stack}
+              </pre>
+            </details>
+          )}
         </div>
         
         <Button 
