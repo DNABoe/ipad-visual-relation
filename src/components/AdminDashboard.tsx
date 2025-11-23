@@ -454,16 +454,16 @@ export function AdminDashboard({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[90vw] w-[1400px] h-[90vh] p-0 flex flex-col">
+        <DialogContent className="max-w-[85vw] w-[1100px] h-[85vh] p-0 flex flex-col">
           <div className="flex flex-col h-full">
             <DialogHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <Shield className="w-6 h-6 text-primary" />
+                  <Shield className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <DialogTitle className="text-2xl">Admin Dashboard</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-xl">Admin Dashboard</DialogTitle>
+                  <DialogDescription className="text-sm">
                     Manage users, view activity, and control workspace access
                   </DialogDescription>
                 </div>
