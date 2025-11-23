@@ -9,7 +9,7 @@ import { AuthDiagnostic } from './components/AuthDiagnostic'
 import { SparkNotAvailableError } from './components/SparkNotAvailableError'
 import type { Workspace } from './lib/types'
 import * as UserRegistry from './lib/userRegistry'
-import { waitForSpark } from './lib/sparkReady'
+import { waitForStorage } from './lib/sparkReady'
 import './lib/persistenceTest'
 
 function App() {
@@ -31,7 +31,7 @@ function App() {
         console.log('[App] ========== INITIALIZING AUTHENTICATION ==========')
         console.log('[App] Environment check:')
         console.log('[App]   - URL:', window.location.href)
-        console.log('[App]   - window.spark exists:', !!window.spark)
+        console.log('[App]   - localStorage available:', !!window.localStorage)
         console.log('[App]   - User Agent:', navigator.userAgent)
         
         const urlParams = new URLSearchParams(window.location.search)
@@ -58,21 +58,20 @@ function App() {
           return
         }
         
-        console.log('[App] Waiting for Spark runtime to be ready...')
-        const isReady = await waitForSpark(30000)
+        console.log('[App] Checking storage availability...')
+        const isReady = await waitForStorage(5000)
         
         if (!isReady) {
-          console.error('[App] ❌ Spark runtime failed to initialize!')
+          console.error('[App] ❌ localStorage failed to initialize!')
           console.error('[App] Final diagnostic:')
-          console.error('[App]   - window.spark:', window.spark)
-          console.error('[App]   - window.spark?.kv:', window.spark?.kv)
+          console.error('[App]   - window.localStorage:', window.localStorage)
           
           setSparkNotAvailable(true)
           setIsLoadingAuth(false)
           return
         }
         
-        console.log('[App] ✓ Spark runtime is ready')
+        console.log('[App] ✓ localStorage is ready')
         
         if (forceReset === 'true') {
           console.log('[App] Force reset parameter detected - clearing session and showing first-time setup')
@@ -254,18 +253,17 @@ function App() {
           <div className="text-center space-y-6 max-w-md">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <div className="space-y-3">
-              <p className="text-foreground font-medium">Initializing Spark runtime...</p>
-              <p className="text-sm text-muted-foreground">Please wait while we connect to secure storage</p>
+              <p className="text-foreground font-medium">Initializing application...</p>
+              <p className="text-sm text-muted-foreground">Checking browser storage</p>
               <div className="mt-6 p-4 bg-card rounded-lg border border-border text-left">
                 <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
                 <div className="text-xs font-mono space-y-1 text-muted-foreground">
                   <div>URL: {window.location.hostname}</div>
-                  <div>Spark: {window.spark ? '✓ Available' : '✗ Not found'}</div>
-                  <div>KV: {window.spark?.kv ? '✓ Available' : '✗ Not found'}</div>
+                  <div>Storage: {window.localStorage ? '✓ Available' : '✗ Not found'}</div>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                If this takes more than 30 seconds, there may be an issue with the Spark runtime.
+                If this takes more than a few seconds, please check your browser settings.
               </p>
             </div>
           </div>
@@ -281,13 +279,29 @@ function App() {
   if (sparkNotAvailable) {
     return (
       <>
-        <SparkNotAvailableError 
-          diagnosticInfo={{
-            hostname: window.location.hostname,
-            sparkExists: !!window.spark,
-            kvExists: !!(window.spark?.kv)
-          }}
-        />
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="text-center space-y-6 max-w-md">
+            <div className="text-destructive text-6xl">⚠️</div>
+            <div className="space-y-3">
+              <h1 className="text-2xl font-bold text-foreground">Storage Not Available</h1>
+              <p className="text-muted-foreground">
+                This application requires browser localStorage to function. Please check your browser settings and ensure:
+              </p>
+              <ul className="text-sm text-muted-foreground text-left space-y-2 mt-4">
+                <li>• Cookies and site data are enabled</li>
+                <li>• You're not in private/incognito mode</li>
+                <li>• Browser storage isn't disabled</li>
+              </ul>
+              <div className="mt-6 p-4 bg-card rounded-lg border border-border text-left">
+                <p className="text-xs font-mono text-muted-foreground mb-2">Diagnostic Info:</p>
+                <div className="text-xs font-mono space-y-1 text-muted-foreground">
+                  <div>URL: {window.location.hostname}</div>
+                  <div>Storage: {window.localStorage ? '✓ Available' : '✗ Not available'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <Toaster />
       </>
     )

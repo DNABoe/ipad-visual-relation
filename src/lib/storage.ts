@@ -6,11 +6,14 @@ export interface StorageHealthStatus {
   error?: string
 }
 
-async function checkSparkKVReady(): Promise<boolean> {
+function checkLocalStorageAvailable(): boolean {
   try {
-    if (typeof window === 'undefined' || !window.spark || !window.spark.kv) {
+    if (typeof window === 'undefined' || !window.localStorage) {
       return false
     }
+    const testKey = '__storage_test__'
+    window.localStorage.setItem(testKey, 'test')
+    window.localStorage.removeItem(testKey)
     return true
   } catch {
     return false
@@ -19,35 +22,67 @@ async function checkSparkKVReady(): Promise<boolean> {
 
 export const storage = {
   async isReady(): Promise<boolean> {
-    return await checkSparkKVReady()
+    return checkLocalStorageAvailable()
   },
   
   async get<T>(key: string): Promise<T | undefined> {
-    if (!await checkSparkKVReady()) {
-      throw new Error('Spark KV storage not available')
+    if (!checkLocalStorageAvailable()) {
+      throw new Error('localStorage not available')
     }
-    return await window.spark.kv.get<T>(key)
+    try {
+      const item = window.localStorage.getItem(key)
+      if (item === null) {
+        return undefined
+      }
+      return JSON.parse(item) as T
+    } catch (error) {
+      console.error(`Error reading from localStorage (${key}):`, error)
+      return undefined
+    }
   },
   
   async set<T>(key: string, value: T): Promise<void> {
-    if (!await checkSparkKVReady()) {
-      throw new Error('Spark KV storage not available')
+    if (!checkLocalStorageAvailable()) {
+      throw new Error('localStorage not available')
     }
-    await window.spark.kv.set(key, value)
+    try {
+      const serialized = JSON.stringify(value)
+      window.localStorage.setItem(key, serialized)
+    } catch (error) {
+      console.error(`Error writing to localStorage (${key}):`, error)
+      throw new Error('Failed to save data. Your browser storage may be full.')
+    }
   },
   
   async delete(key: string): Promise<void> {
-    if (!await checkSparkKVReady()) {
-      throw new Error('Spark KV storage not available')
+    if (!checkLocalStorageAvailable()) {
+      throw new Error('localStorage not available')
     }
-    await window.spark.kv.delete(key)
+    try {
+      window.localStorage.removeItem(key)
+    } catch (error) {
+      console.error(`Error deleting from localStorage (${key}):`, error)
+      throw error
+    }
   },
   
   async keys(): Promise<string[]> {
-    if (!await checkSparkKVReady()) {
-      throw new Error('Spark KV storage not available')
+    if (!checkLocalStorageAvailable()) {
+      throw new Error('localStorage not available')
     }
-    return await window.spark.kv.keys()
+    try {
+      const keys: string[] = []
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i)
+        if (key) {
+          keys.push(key)
+        }
+      }
+      return keys
+    } catch (error) {
+      console.error('Error getting localStorage keys:', error)
+      return []
+    }
   },
   
   async checkHealth(): Promise<StorageHealthStatus> {
@@ -59,10 +94,10 @@ export const storage = {
     }
 
     try {
-      status.isReady = await checkSparkKVReady()
+      status.isReady = checkLocalStorageAvailable()
       
       if (!status.isReady) {
-        status.error = 'Spark KV storage not available - ensure you are logged into GitHub'
+        status.error = 'localStorage not available - check browser settings'
         return status
       }
 
@@ -70,7 +105,7 @@ export const storage = {
       const testValue = { test: true, timestamp: Date.now() }
 
       try {
-        await window.spark.kv.set(testKey, testValue)
+        window.localStorage.setItem(testKey, JSON.stringify(testValue))
         status.canWrite = true
       } catch (error) {
         status.error = `Write failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -78,7 +113,7 @@ export const storage = {
       }
 
       try {
-        const retrieved = await window.spark.kv.get(testKey)
+        const retrieved = window.localStorage.getItem(testKey)
         status.canRead = !!retrieved
       } catch (error) {
         status.error = `Read failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -86,7 +121,7 @@ export const storage = {
       }
 
       try {
-        await window.spark.kv.delete(testKey)
+        window.localStorage.removeItem(testKey)
         status.canDelete = true
       } catch (error) {
         status.error = `Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
