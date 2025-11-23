@@ -95,6 +95,7 @@ export function AdminDashboard({
     expiry: number
     createdAt: number
   }>>([])
+  const [allRegisteredUsers, setAllRegisteredUsers] = useState<WorkspaceUser[]>([])
 
   const currentUser = users.find(u => u.userId === currentUserId)
   const isAdmin = currentUser?.role === 'admin'
@@ -125,19 +126,46 @@ export function AdminDashboard({
       }
     }
 
+    const loadAllRegisteredUsers = async () => {
+      try {
+        console.log('[AdminDashboard] Loading all registered users from UserRegistry...')
+        const registeredUsers = await UserRegistry.getAllUsers()
+        console.log('[AdminDashboard] Found', registeredUsers.length, 'registered users')
+        
+        const workspaceUsers: WorkspaceUser[] = registeredUsers.map(user => ({
+          userId: user.userId,
+          username: user.name,
+          email: user.email,
+          role: user.role,
+          addedAt: user.createdAt,
+          addedBy: 'system',
+          status: 'active' as const,
+          canInvestigate: user.canInvestigate,
+          loginCount: user.loginCount,
+          lastLoginAt: user.lastLogin
+        }))
+        
+        console.log('[AdminDashboard] Converted to workspace users:', workspaceUsers.length)
+        setAllRegisteredUsers(workspaceUsers)
+      } catch (error) {
+        console.error('[AdminDashboard] Failed to load registered users:', error)
+      }
+    }
+
     if (open) {
       loadPendingInvites()
+      loadAllRegisteredUsers()
     }
   }, [open])
 
   const filteredUsers = useMemo(() => {
-    return users.filter(user => 
+    return allRegisteredUsers.filter(user => 
       user.status !== 'pending' &&
       (user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.githubLogin?.toLowerCase().includes(searchQuery.toLowerCase()))
     )
-  }, [users, searchQuery])
+  }, [allRegisteredUsers, searchQuery])
 
   const filteredActivity = useMemo(() => {
     if (activityFilter === 'all') return activityLog
@@ -145,20 +173,20 @@ export function AdminDashboard({
   }, [activityLog, activityFilter])
 
   const stats = useMemo(() => {
-    const totalLogins = users.reduce((sum, u) => sum + (u.loginCount || 0), 0)
-    const maxLogins = Math.max(...users.map(u => u.loginCount || 0), 1)
+    const totalLogins = allRegisteredUsers.reduce((sum, u) => sum + (u.loginCount || 0), 0)
+    const maxLogins = Math.max(...allRegisteredUsers.map(u => u.loginCount || 0), 1)
     
     return {
-      total: users.length,
-      active: users.filter(u => u.status === 'active').length,
+      total: allRegisteredUsers.length,
+      active: allRegisteredUsers.filter(u => u.status === 'active').length,
       pending: pendingInvites.length,
-      admins: users.filter(u => u.role === 'admin').length,
-      editors: users.filter(u => u.role === 'editor').length,
-      viewers: users.filter(u => u.role === 'viewer').length,
+      admins: allRegisteredUsers.filter(u => u.role === 'admin').length,
+      editors: allRegisteredUsers.filter(u => u.role === 'editor').length,
+      viewers: allRegisteredUsers.filter(u => u.role === 'viewer').length,
       totalLogins,
       maxLogins
     }
-  }, [users, pendingInvites])
+  }, [allRegisteredUsers, pendingInvites])
 
   const handleAddUser = async () => {
     if (!newUserEmail || !newUserEmail.trim()) {
@@ -242,7 +270,7 @@ export function AdminDashboard({
     }
   }
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!selectedUser) return
 
     if (selectedUser.userId === currentUserId) {
@@ -250,48 +278,72 @@ export function AdminDashboard({
       return
     }
 
-    const updatedUsers = users.filter(u => u.userId !== selectedUser.userId)
-    onUpdateUsers(updatedUsers)
+    try {
+      await UserRegistry.deleteUser(selectedUser.userId)
 
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: 'removed',
-      entityType: 'user',
-      entityId: selectedUser.userId,
-      details: `Removed user ${selectedUser.username}`
-    })
+      const updatedUsers = users.filter(u => u.userId !== selectedUser.userId)
+      onUpdateUsers(updatedUsers)
 
-    toast.success(`User ${selectedUser.username} removed`)
-    setSelectedUser(null)
-    setShowDeleteDialog(false)
+      setAllRegisteredUsers(prev => prev.filter(u => u.userId !== selectedUser.userId))
+
+      onLogActivity({
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userId: currentUserId,
+        username: currentUser?.username || 'Unknown',
+        action: 'removed',
+        entityType: 'user',
+        entityId: selectedUser.userId,
+        details: `Removed user ${selectedUser.username}`
+      })
+
+      toast.success(`User ${selectedUser.username} removed`)
+      setSelectedUser(null)
+      setShowDeleteDialog(false)
+    } catch (error) {
+      console.error('[AdminDashboard] Failed to delete user:', error)
+      toast.error('Failed to delete user')
+    }
   }
 
-  const handleChangeRole = (user: WorkspaceUser, newRole: UserRole) => {
+  const handleChangeRole = async (user: WorkspaceUser, newRole: UserRole) => {
     if (user.userId === currentUserId) {
       toast.error('You cannot change your own role')
       return
     }
 
-    const updatedUsers: WorkspaceUser[] = users.map(u => 
-      u.userId === user.userId ? { ...u, role: newRole } : u
-    )
-    onUpdateUsers(updatedUsers)
+    try {
+      const registeredUser = await UserRegistry.getUserById(user.userId)
+      if (registeredUser) {
+        const updatedRegisteredUser = { ...registeredUser, role: newRole }
+        await UserRegistry.updateUser(updatedRegisteredUser)
+      }
 
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: 'updated',
-      entityType: 'user',
-      entityId: user.userId,
-      details: `Changed ${user.username}'s role to ${getRoleDisplayName(newRole)}`
-    })
+      const updatedUsers: WorkspaceUser[] = users.map(u => 
+        u.userId === user.userId ? { ...u, role: newRole } : u
+      )
+      onUpdateUsers(updatedUsers)
 
-    toast.success(`${user.username}'s role updated to ${getRoleDisplayName(newRole)}`)
+      setAllRegisteredUsers(prev => prev.map(u =>
+        u.userId === user.userId ? { ...u, role: newRole } : u
+      ))
+
+      onLogActivity({
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userId: currentUserId,
+        username: currentUser?.username || 'Unknown',
+        action: 'updated',
+        entityType: 'user',
+        entityId: user.userId,
+        details: `Changed ${user.username}'s role to ${getRoleDisplayName(newRole)}`
+      })
+
+      toast.success(`${user.username}'s role updated to ${getRoleDisplayName(newRole)}`)
+    } catch (error) {
+      console.error('[AdminDashboard] Failed to update user role:', error)
+      toast.error('Failed to update user role')
+    }
   }
 
   const handleSuspendUser = (user: WorkspaceUser) => {
@@ -353,7 +405,7 @@ export function AdminDashboard({
   }
 
   const handleDirectUserCreated = async (createdUser: UserRegistry.RegisteredUser) => {
-    console.log('[AdminDashboard] Direct user created, adding to workspace...')
+    console.log('[AdminDashboard] Direct user created, reloading user list...')
     console.log('[AdminDashboard] Created user:', createdUser)
     
     const workspaceUser: WorkspaceUser = {
@@ -367,6 +419,9 @@ export function AdminDashboard({
       canInvestigate: createdUser.canInvestigate,
       loginCount: 0
     }
+    
+    console.log('[AdminDashboard] Adding to registered users list')
+    setAllRegisteredUsers(prev => [...prev, workspaceUser])
     
     console.log('[AdminDashboard] Adding workspace user:', workspaceUser)
     const updatedUsers = [...users, workspaceUser]
@@ -386,24 +441,39 @@ export function AdminDashboard({
     toast.success(`User ${createdUser.name} created successfully!`)
   }
 
-  const handleToggleInvestigateAccess = (user: WorkspaceUser, canInvestigate: boolean) => {
-    const updatedUsers: WorkspaceUser[] = users.map(u => 
-      u.userId === user.userId ? { ...u, canInvestigate } : u
-    )
-    onUpdateUsers(updatedUsers)
+  const handleToggleInvestigateAccess = async (user: WorkspaceUser, canInvestigate: boolean) => {
+    try {
+      const registeredUser = await UserRegistry.getUserById(user.userId)
+      if (registeredUser) {
+        const updatedRegisteredUser = { ...registeredUser, canInvestigate }
+        await UserRegistry.updateUser(updatedRegisteredUser)
+      }
 
-    onLogActivity({
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      timestamp: Date.now(),
-      userId: currentUserId,
-      username: currentUser?.username || 'Unknown',
-      action: 'updated',
-      entityType: 'user',
-      entityId: user.userId,
-      details: `${canInvestigate ? 'Granted' : 'Revoked'} investigate access for ${user.username}`
-    })
+      const updatedUsers: WorkspaceUser[] = users.map(u => 
+        u.userId === user.userId ? { ...u, canInvestigate } : u
+      )
+      onUpdateUsers(updatedUsers)
 
-    toast.success(`Investigate access ${canInvestigate ? 'granted' : 'revoked'} for ${user.username}`)
+      setAllRegisteredUsers(prev => prev.map(u =>
+        u.userId === user.userId ? { ...u, canInvestigate } : u
+      ))
+
+      onLogActivity({
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userId: currentUserId,
+        username: currentUser?.username || 'Unknown',
+        action: 'updated',
+        entityType: 'user',
+        entityId: user.userId,
+        details: `${canInvestigate ? 'Granted' : 'Revoked'} investigate access for ${user.username}`
+      })
+
+      toast.success(`Investigate access ${canInvestigate ? 'granted' : 'revoked'} for ${user.username}`)
+    } catch (error) {
+      console.error('[AdminDashboard] Failed to update investigate access:', error)
+      toast.error('Failed to update investigate access')
+    }
   }
 
   const handleResetApplication = async () => {
@@ -875,13 +945,13 @@ export function AdminDashboard({
                           <CardDescription>Number of times each user has logged in</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          {users.length === 0 ? (
+                          {allRegisteredUsers.length === 0 ? (
                             <div className="text-center py-8 text-muted-foreground">
                               <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
                               <p>No users to display</p>
                             </div>
                           ) : (
-                            users.map(user => {
+                            allRegisteredUsers.map(user => {
                               const loginCount = user.loginCount || 0
                               const percentage = stats.maxLogins > 0 ? (loginCount / stats.maxLogins) * 100 : 0
                               
