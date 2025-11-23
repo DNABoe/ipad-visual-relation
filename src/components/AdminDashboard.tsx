@@ -667,7 +667,6 @@ export function AdminDashboard({
                                   {user.userId !== currentUserId && (
                                     <>
                                       <Select
-                                        key={`role-${user.userId}-${user.role}`}
                                         value={user.role}
                                         onValueChange={(value) => {
                                           console.log('[AdminDashboard UI] Role dropdown changed:', value)
@@ -676,11 +675,11 @@ export function AdminDashboard({
                                         disabled={updatingUserId === user.userId}
                                       >
                                         <SelectTrigger className="w-32" disabled={updatingUserId === user.userId}>
-                                          <SelectValue placeholder={getRoleDisplayName(user.role)} />
+                                          <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                           <SelectItem value="admin">Admin</SelectItem>
-                                          <SelectItem value="normal">Normal User</SelectItem>
+                                          <SelectItem value="normal">Normal</SelectItem>
                                         </SelectContent>
                                       </Select>
 

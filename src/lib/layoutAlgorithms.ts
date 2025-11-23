@@ -58,10 +58,10 @@ function resolveOverlaps(persons: Person[], iterations = 300): Person[] {
           hasOverlap = true
           
           if (dist < 1) {
-            const angle = Math.random() * 2 * Math.PI
+            const deterministicAngle = (i * 7 + j * 13) % 360 * (Math.PI / 180)
             const pushDist = (minDistX + minDistY) / 2
-            const moveX = Math.cos(angle) * pushDist
-            const moveY = Math.sin(angle) * pushDist
+            const moveX = Math.cos(deterministicAngle) * pushDist
+            const moveY = Math.sin(deterministicAngle) * pushDist
             
             result[i].x -= moveX
             result[i].y -= moveY
@@ -77,11 +77,11 @@ function resolveOverlaps(persons: Person[], iterations = 300): Person[] {
               let pushY = 0
               
               if (overlapX > 0) {
-                pushX = ((overlapX / 2) + 15) * (dx > 0 ? 1 : -1)
+                pushX = ((overlapX / 2) + 20) * (dx > 0 ? 1 : -1)
               }
               
               if (overlapY > 0) {
-                pushY = ((overlapY / 2) + 15) * (dy > 0 ? 1 : -1)
+                pushY = ((overlapY / 2) + 20) * (dy > 0 ? 1 : -1)
               }
               
               result[i].x -= pushX
@@ -1360,15 +1360,17 @@ export function groupColumnsLayout(
     })
   })
 
-  const centerX = result.reduce((sum, p) => sum + p.x, 0) / result.length
-  const centerY = result.reduce((sum, p) => sum + p.y, 0) / result.length
+  const finalResult = resolveOverlaps(result, 100)
 
-  result.forEach(person => {
+  const centerX = finalResult.reduce((sum, p) => sum + p.x, 0) / finalResult.length
+  const centerY = finalResult.reduce((sum, p) => sum + p.y, 0) / finalResult.length
+
+  finalResult.forEach(person => {
     person.x -= centerX
     person.y -= centerY
   })
 
-  return result
+  return finalResult
 }
 
 export function radialImportanceLayout(
