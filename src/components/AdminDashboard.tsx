@@ -280,21 +280,44 @@ export function AdminDashboard({
       return
     }
 
+    console.log('[AdminDashboard] Changing role for user:', user.userId, 'to', newRole)
+    
+    setAllRegisteredUsers(prev => prev.map(u =>
+      u.userId === user.userId ? { ...u, role: newRole } : u
+    ))
+
     try {
       const registeredUser = await UserRegistry.getUserById(user.userId)
-      if (registeredUser) {
-        const updatedRegisteredUser = { ...registeredUser, role: newRole }
-        await UserRegistry.updateUser(updatedRegisteredUser)
+      if (!registeredUser) {
+        throw new Error('User not found')
       }
-
-      setAllRegisteredUsers(prev => prev.map(u =>
-        u.userId === user.userId ? { ...u, role: newRole } : u
-      ))
-
+      
+      console.log('[AdminDashboard] Current user role:', registeredUser.role)
+      console.log('[AdminDashboard] New role:', newRole)
+      
+      const updatedRegisteredUser = { ...registeredUser, role: newRole }
+      await UserRegistry.updateUser(updatedRegisteredUser)
+      
+      console.log('[AdminDashboard] ✓ Role updated successfully')
       toast.success(`${user.username}'s role updated to ${getRoleDisplayName(newRole)}`)
     } catch (error) {
       console.error('[AdminDashboard] Failed to update user role:', error)
       toast.error('Failed to update user role')
+      
+      const users = await UserRegistry.getAllUsers()
+      const workspaceUsers: WorkspaceUser[] = users.map(u => ({
+        userId: u.userId,
+        username: u.name,
+        email: u.email,
+        role: u.role,
+        addedAt: u.createdAt,
+        addedBy: 'system',
+        status: 'active' as const,
+        canInvestigate: u.canInvestigate,
+        loginCount: u.loginCount,
+        lastLoginAt: u.lastLogin
+      }))
+      setAllRegisteredUsers(workspaceUsers)
     }
   }
 
@@ -594,7 +617,7 @@ export function AdminDashboard({
                                         <SelectTrigger className="w-32">
                                           <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent position="popper" sideOffset={5}>
+                                        <SelectContent>
                                           <SelectItem value="admin">Admin</SelectItem>
                                           <SelectItem value="editor">Editor</SelectItem>
                                           <SelectItem value="viewer">Viewer</SelectItem>

@@ -466,7 +466,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
     console.log('[PersonDialog] Starting investigation...')
 
     setIsInvestigating(true)
-    toast.info('Investigating...')
+    
+    const loadingToast = toast.loading('Generating intelligence report... This may take 30-60 seconds.', {
+      duration: Infinity
+    })
 
     try {
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
@@ -474,6 +477,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       const countryText = country || 'Not specified'
       
       console.log('[PersonDialog] Generating intelligence report...')
+      toast.loading('Analyzing available information...', { id: loadingToast })
+      
       const report = await generateIntelligenceReport({
         name: name.trim(),
         position: positionText || 'Not specified',
@@ -484,6 +489,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       setInvestigationReport(report)
 
       console.log('[PersonDialog] Generating PDF...')
+      toast.loading('Creating PDF document...', { id: loadingToast })
+      
       const pdfBlob = await generateInvestigationPDF({
         name: name.trim(),
         position: positionText || 'Not specified',
@@ -509,7 +516,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
         }
         
         setAttachments(prev => [...prev, newAttachment])
-        toast.success('Investigation report generated and added to attachments')
+        toast.success('Investigation report generated and added to attachments', { id: loadingToast })
       }
       reader.readAsDataURL(pdfBlob)
 
@@ -523,7 +530,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
         })
       }
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate investigation report'
-      toast.error(errorMessage)
+      toast.error(errorMessage, { id: loadingToast })
     } finally {
       setIsInvestigating(false)
     }
