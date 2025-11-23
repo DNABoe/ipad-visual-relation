@@ -1,35 +1,30 @@
 import { useState } from 'react'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Eye, EyeSlash, UserPlus } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 
 import type { UserRole } from '@/lib/types'
-  onOpenChange: (open: boolean) => void
 import * as UserRegistry from '@/lib/userRegistry'
 
 interface DirectUserDialogProps {
-  open,
+  open: boolean
   onOpenChange: (open: boolean) => void
-  const [showPassword, setS
-  const [isSubmitting, 
+  onUserCreated: () => void
+  currentUserId: string
+}
 
-
-
-      s
-    }
-    const emailR
-      setError(
-    }
-    if (!name.trim()) {
-      return
-
-      setError('Password is required')
-    }
-    if (password.length < 8) {
+export function DirectUserDialog({ open, onOpenChange, onUserCreated, currentUserId }: DirectUserDialogProps) {
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [role, setRole] = useState<UserRole>('viewer')
+  const [canInvestigate, setCanInvestigate] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,7 +36,7 @@ interface DirectUserDialogProps {
 
     if (!email.trim()) {
       setError('Email is required')
-      consol
+      return
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -66,13 +61,13 @@ interface DirectUserDialogProps {
     }
 
     if (password !== confirmPassword) {
-      setEmail('')
+      setError('Passwords do not match')
       return
-     
+    }
 
     setIsSubmitting(true)
 
-      onO
+    try {
       console.log('[DirectUserDialog] ========== CREATING USER DIRECTLY ==========')
       console.log('[DirectUserDialog] Email:', email.trim())
       console.log('[DirectUserDialog] Name:', name.trim())
@@ -90,9 +85,9 @@ interface DirectUserDialogProps {
       const user = await UserRegistry.createUser(
         email.trim(),
         name.trim(),
-            <div 
+        password,
         role,
-            <DialogTit
+        canInvestigate
       )
 
       console.log('[DirectUserDialog] ✓ User created successfully:', user.userId)
@@ -102,9 +97,9 @@ interface DirectUserDialogProps {
       
       setEmail('')
       setName('')
-              onChang
+      setPassword('')
       setConfirmPassword('')
-            />
+      setRole('viewer')
       setCanInvestigate(false)
       setError('')
       
@@ -114,17 +109,16 @@ interface DirectUserDialogProps {
       console.error('[DirectUserDialog] ❌ Failed to create user:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to create user'
       setError(errorMessage)
-              autoComplete="off
     } finally {
       setIsSubmitting(false)
     }
-   
+  }
 
   const handleCancel = () => {
     setEmail('')
-               
+    setName('')
     setPassword('')
-                className=
+    setConfirmPassword('')
     setRole('viewer')
     setCanInvestigate(false)
     setError('')
@@ -134,7 +128,7 @@ interface DirectUserDialogProps {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-          </div>
+        <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
               <UserPlus className="w-5 h-5 text-primary" weight="duotone" />
@@ -148,17 +142,17 @@ interface DirectUserDialogProps {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-                {showConfirmPassword ? (
+            <Label htmlFor="direct-email">Email Address *</Label>
             <Input
-                  <EyeSlash siz
+              id="direct-email"
               type="email"
-            </div>
+              placeholder="user@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
-              <SelectTrigger id=
+              autoComplete="off"
             />
-              <SelectContent>
+            <p className="text-xs text-muted-foreground">
               This will be used as the login username
             </p>
           </div>
@@ -166,7 +160,7 @@ interface DirectUserDialogProps {
           <div className="space-y-2">
             <Label htmlFor="direct-name">Full Name *</Label>
             <Input
-                </SelectItem>
+              id="direct-name"
               type="text"
               placeholder="John Doe"
               value={name}
@@ -176,7 +170,7 @@ interface DirectUserDialogProps {
             />
           </div>
 
-            <div className="space-y-0
+          <div className="space-y-2">
             <Label htmlFor="direct-password">Password *</Label>
             <div className="relative">
               <Input
@@ -194,15 +188,15 @@ interface DirectUserDialogProps {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
-              d
+              >
                 {showPassword ? (
                   <Eye size={20} weight="regular" />
                 ) : (
-            </Button>
+                  <EyeSlash size={20} weight="regular" />
                 )}
               </button>
             </div>
-}
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="direct-confirm-password">Confirm Password *</Label>
@@ -222,15 +216,15 @@ interface DirectUserDialogProps {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
-
+              >
                 {showConfirmPassword ? (
-
+                  <Eye size={20} weight="regular" />
                 ) : (
-
+                  <EyeSlash size={20} weight="regular" />
                 )}
-
+              </button>
             </div>
-
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="direct-role">Access Level *</Label>
@@ -254,54 +248,65 @@ interface DirectUserDialogProps {
                 <SelectItem value="viewer">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">Viewer</span>
+                    <span className="text-xs text-muted-foreground">- Read only</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
+          <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
+            <div className="flex-1">
+              <Label htmlFor="direct-investigate" className="font-medium cursor-pointer">
+                Investigation Access
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Allow this user to access investigation features
+              </p>
+            </div>
+            <Switch
+              id="direct-investigate"
+              checked={canInvestigate}
+              onCheckedChange={setCanInvestigate}
+              disabled={isSubmitting}
+            />
+          </div>
 
+          {error && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+              {error}
+            </div>
+          )}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="min-w-[120px]"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2" size={18} weight="bold" />
+                  Create User
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
