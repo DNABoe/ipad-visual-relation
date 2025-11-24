@@ -14,7 +14,7 @@ import { APP_VERSION } from '@/lib/version'
 import { serializeWorkspace, deserializeWorkspace } from '@/lib/helpers'
 import { DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { createFileIconDataUrl } from '@/lib/fileIcon'
-import * as UserRegistry from '@/lib/userRegistry'
+import * as SingleUserAuth from '@/lib/singleUserAuth'
 
 interface FileManagerProps {
   onLoad: (workspace: Workspace, fileName: string, password: string) => void
@@ -72,7 +72,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     }
 
     try {
-      const currentUser = await UserRegistry.getCurrentUser()
+      const currentUser = await SingleUserAuth.getCurrentSession()
       
       console.log('[FileManager] Current user:', currentUser)
       
@@ -82,7 +82,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         return
       }
 
-      console.log('[FileManager] Creating new workspace for user:', currentUser.email)
+      console.log('[FileManager] Creating new workspace for user:', currentUser.username)
       
       const workspaceId = `workspace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       
@@ -105,7 +105,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
         modifiedAt: Date.now()
       }
       
-      console.log('[FileManager] New workspace created for owner:', currentUser.email)
+      console.log('[FileManager] New workspace created for owner:', currentUser.username)
 
       console.log('[FileManager] Serializing workspace...')
       const workspaceJson = serializeWorkspace(newWorkspace)
