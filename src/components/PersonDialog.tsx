@@ -25,9 +25,10 @@ interface PersonDialogProps {
   onSave: (person: Person) => void
   onDelete?: (personId: string) => void
   editPerson?: Person
+  workspace?: { apiKey?: string }
 }
 
-export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson }: PersonDialogProps) {
+export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson, workspace }: PersonDialogProps) {
   const [name, setName] = useState('')
   const [position, setPosition] = useState('')
   const [score, setScore] = useState(3)
@@ -463,6 +464,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       return
     }
 
+    if (!workspace?.apiKey && !isLLMAvailable()) {
+      toast.error('Please configure an API key in Settings > Investigation tab')
+      return
+    }
+
     console.log('[PersonDialog] Starting investigation...')
 
     setIsInvestigating(true)
@@ -482,7 +488,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson 
       const report = await generateIntelligenceReport({
         name: name.trim(),
         position: positionText || 'Not specified',
-        country: countryText
+        country: countryText,
+        apiKey: workspace?.apiKey
       })
       console.log('[PersonDialog] Intelligence report generated successfully')
       

@@ -530,6 +530,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         onSave={controller.handlers.handleSavePerson}
         onDelete={controller.handlers.handleDeletePerson}
         editPerson={controller.dialogs.personDialog.editPerson}
+        workspace={controller.workspace}
       />
 
       <GroupDialog

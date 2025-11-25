@@ -56,6 +56,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
   
   useEffect(() => {
+    if (open && workspace.apiKey) {
+      setApiKey('')
+    }
+  }, [open, workspace.apiKey])
+  
+  useEffect(() => {
     const loadCredentials = async () => {
       setIsLoadingCredentials(true)
       try {
@@ -392,7 +398,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg mb-1">AI Investigation</h3>
                     <p className="text-sm text-muted-foreground">
-                      Generate professional intelligence reports using OpenAI's GPT-4 model
+                      Configure your OpenAI API key for this network. The key is stored in the encrypted network file.
                     </p>
                   </div>
                 </div>
@@ -410,7 +416,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       type={showApiKey ? "text" : "password"}
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={userCredentials?.encryptedApiKey ? '••••••••••••••••••••' : 'sk-...'}
+                      placeholder={workspace.apiKey ? '••••••••••••••••••••' : 'sk-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
@@ -428,14 +434,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       )}
                     </button>
                   </div>
-                  {userCredentials?.encryptedApiKey && (
+                  {workspace.apiKey && (
                     <p className="text-xs text-success flex items-center gap-1.5">
                       <span>✓</span>
-                      API key is configured and encrypted
+                      API key is configured for this network
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Your API key is encrypted and stored securely on your device. It never leaves your device except when making requests to OpenAI.
+                    The API key is stored in the encrypted network file and will be available when you load this file.
                   </p>
                 </div>
 
@@ -446,34 +452,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         toast.error('Please enter an API key')
                         return
                       }
-                      if (!userCredentials) {
-                        toast.error('User credentials not found')
-                        return
-                      }
 
                       try {
                         setIsLoadingApiKey(true)
-                        console.log('[SettingsDialog] Encrypting API key...')
+                        console.log('[SettingsDialog] Saving API key to workspace...')
                         
-                        const { encrypted, salt, iv } = await encryptApiKey(apiKey)
-                        console.log('[SettingsDialog] API key encrypted successfully')
+                        setWorkspace((current) => ({
+                          ...current,
+                          apiKey: apiKey.trim()
+                        }))
                         
-                        const updatedCredentials: UserCredentials = {
-                          ...userCredentials,
-                          encryptedApiKey: encrypted,
-                          apiKeySalt: salt,
-                          apiKeyIv: iv
-                        }
-                        
-                        console.log('[SettingsDialog] Saving encrypted API key to storage...')
-                        await storage.set('user-credentials', updatedCredentials)
-                        console.log('[SettingsDialog] API key saved to storage successfully')
-                        
-                        setUserCredentials(updatedCredentials)
                         setApiKey('')
                         
-                        console.log('[SettingsDialog] API key configuration complete')
-                        toast.success('API key saved and encrypted successfully!')
+                        console.log('[SettingsDialog] API key saved to workspace')
+                        toast.success('API key saved to network file!')
                       } catch (error) {
                         console.error('[SettingsDialog] Error saving API key:', error)
                         toast.error('Failed to save API key')
@@ -484,10 +476,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     disabled={isLoadingApiKey || !apiKey.trim()}
                     className="flex-1"
                   >
-                    {isLoadingApiKey ? 'Saving...' : userCredentials?.encryptedApiKey ? 'Update API Key' : 'Save API Key'}
+                    {isLoadingApiKey ? 'Saving...' : workspace.apiKey ? 'Update API Key' : 'Save API Key'}
                   </Button>
                   
-                  {userCredentials?.encryptedApiKey && (
+                  {workspace.apiKey && (
                     <>
                       <Button
                         variant="outline"
@@ -496,16 +488,15 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                             setIsLoadingApiKey(true)
                             console.log('[SettingsDialog] Testing API key...')
                             
-                            const testKey = await decryptApiKey(
-                              userCredentials.encryptedApiKey!,
-                              userCredentials.apiKeySalt!,
-                              userCredentials.apiKeyIv!
-                            )
+                            if (!workspace.apiKey) {
+                              toast.error('No API key configured')
+                              return
+                            }
                             
                             const response = await fetch('https://api.openai.com/v1/models', {
                               method: 'GET',
                               headers: {
-                                'Authorization': `Bearer ${testKey.trim()}`
+                                'Authorization': `Bearer ${workspace.apiKey.trim()}`
                               }
                             })
                             
@@ -532,16 +523,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         variant="destructive"
                         onClick={async () => {
                           try {
-                            const updatedCredentials: UserCredentials = {
-                              ...userCredentials,
-                              encryptedApiKey: undefined,
-                              apiKeySalt: undefined,
-                              apiKeyIv: undefined
-                            }
-                            await storage.set('user-credentials', updatedCredentials)
-                            setUserCredentials(updatedCredentials)
+                            setWorkspace((current) => ({
+                              ...current,
+                              apiKey: undefined
+                            }))
                             setApiKey('')
-                            toast.success('API key removed')
+                            toast.success('API key removed from network')
                           } catch (error) {
                             console.error('Error removing API key:', error)
                             toast.error('Failed to remove API key')

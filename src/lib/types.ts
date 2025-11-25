@@ -101,6 +101,7 @@ export interface Workspace {
   collapsedBranches?: CollapsedBranch[]
   settings?: WorkspaceSettings
   canvasTransform?: ViewTransform
+  apiKey?: string
   createdAt?: number
   modifiedAt?: number
 }

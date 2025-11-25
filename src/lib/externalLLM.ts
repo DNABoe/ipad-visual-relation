@@ -16,8 +16,10 @@ export function isLLMAvailable(): boolean {
   }
 }
 
-async function callOpenAI(prompt: string): Promise<string> {
-  if (!OPENAI_API_KEY) {
+async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
+  const key = apiKey || OPENAI_API_KEY
+  
+  if (!key) {
     throw new Error('OpenAI API key not configured')
   }
 
@@ -27,7 +29,7 @@ async function callOpenAI(prompt: string): Promise<string> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
+      'Authorization': `Bearer ${key}`
     },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
@@ -149,9 +151,9 @@ Format your response as a professional intelligence brief with clear sections an
       return await callPerplexity(promptText)
     }
     
-    if (provider === 'openai' || (provider === 'auto' && OPENAI_API_KEY && !hasSparkLLM)) {
+    if (params.apiKey || provider === 'openai' || (provider === 'auto' && (OPENAI_API_KEY || params.apiKey) && !hasSparkLLM)) {
       console.log('[externalLLM] Using OpenAI API...')
-      return await callOpenAI(promptText)
+      return await callOpenAI(promptText, params.apiKey)
     }
     
     if (hasSparkLLM) {
