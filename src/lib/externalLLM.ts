@@ -24,12 +24,15 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   }
 
   console.log('[externalLLM] Calling OpenAI API...')
+  console.log('[externalLLM] API key available:', !!key)
+  console.log('[externalLLM] API key length:', key.length)
+  console.log('[externalLLM] API key starts with sk-:', key.startsWith('sk-'))
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
+      'Authorization': `Bearer ${key.trim()}`
     },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
@@ -51,7 +54,9 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     console.error('[externalLLM] OpenAI API error:', errorData)
-    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`)
+    console.error('[externalLLM] Response status:', response.status)
+    console.error('[externalLLM] Response status text:', response.statusText)
+    throw new Error(`OpenAI API error: ${response.status}`)
   }
 
   const data = await response.json()

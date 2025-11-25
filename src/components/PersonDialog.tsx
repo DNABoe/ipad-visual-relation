@@ -470,6 +470,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
     }
 
     console.log('[PersonDialog] Starting investigation...')
+    console.log('[PersonDialog] Workspace API key available:', !!workspace?.apiKey)
+    console.log('[PersonDialog] Workspace API key length:', workspace?.apiKey?.length || 0)
 
     setIsInvestigating(true)
     
@@ -483,6 +485,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       const countryText = country || 'Not specified'
       
       console.log('[PersonDialog] Generating intelligence report...')
+      console.log('[PersonDialog] Passing API key to generator:', !!workspace?.apiKey)
       toast.loading('Analyzing available information...', { id: loadingToast })
       
       const report = await generateIntelligenceReport({

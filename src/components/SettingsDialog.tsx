@@ -56,8 +56,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
   
   useEffect(() => {
-    if (open && workspace.apiKey) {
-      setApiKey('')
+    if (open) {
+      console.log('[SettingsDialog] Dialog opened, workspace.apiKey present:', !!workspace.apiKey)
+      if (workspace.apiKey) {
+        console.log('[SettingsDialog] API key length:', workspace.apiKey.length)
+        setApiKey('')
+      }
     }
   }, [open, workspace.apiKey])
   
@@ -453,9 +457,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         return
                       }
 
+                      if (!apiKey.trim().startsWith('sk-')) {
+                        toast.error('Invalid OpenAI API key format. It should start with "sk-"')
+                        return
+                      }
+
                       try {
                         setIsLoadingApiKey(true)
                         console.log('[SettingsDialog] Saving API key to workspace...')
+                        console.log('[SettingsDialog] API key format valid:', apiKey.trim().startsWith('sk-'))
+                        console.log('[SettingsDialog] API key length:', apiKey.trim().length)
                         
                         setWorkspace((current) => ({
                           ...current,
@@ -465,7 +476,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         setApiKey('')
                         
                         console.log('[SettingsDialog] API key saved to workspace')
-                        toast.success('API key saved to network file!')
+                        toast.success('API key saved to network file! Remember to save your network file to persist this change.')
                       } catch (error) {
                         console.error('[SettingsDialog] Error saving API key:', error)
                         toast.error('Failed to save API key')
