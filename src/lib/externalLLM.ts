@@ -28,38 +28,72 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   console.log('[externalLLM] API key length:', key.length)
   console.log('[externalLLM] API key starts with sk-:', key.startsWith('sk-'))
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const requestBody = {
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a professional intelligence analyst creating detailed intelligence briefs.'
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ],
+    temperature: 0.7,
+    max_tokens: 2000
+  }
+
+  console.log('[externalLLM] Request body:', JSON.stringify(requestBody, null, 2))
+
+  const corsProxyUrl = 'https://corsproxy.io/?'
+  const targetUrl = encodeURIComponent('https://api.openai.com/v1/chat/completions')
+  
+  const response = await fetch(corsProxyUrl + targetUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${key.trim()}`
     },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional intelligence analyst creating detailed intelligence briefs.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000
-    })
+    body: JSON.stringify(requestBody)
   })
 
+  console.log('[externalLLM] Response status:', response.status)
+  console.log('[externalLLM] Response ok:', response.ok)
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    const errorText = await response.text()
+    console.error('[externalLLM] OpenAI API error response:', errorText)
+    
+    let errorData
+    try {
+      errorData = JSON.parse(errorText)
+    } catch {
+      errorData = { message: errorText }
+    }
+    
     console.error('[externalLLM] OpenAI API error:', errorData)
     console.error('[externalLLM] Response status:', response.status)
     console.error('[externalLLM] Response status text:', response.statusText)
-    throw new Error(`OpenAI API error: ${response.status}`)
+    
+    if (response.status === 401) {
+      throw new Error('Invalid API key. Please check your OpenAI API key in Settings.')
+    } else if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please try again later.')
+    } else if (response.status === 500) {
+      throw new Error('OpenAI service error. Please try again later.')
+    }
+    
+    throw new Error(`OpenAI API error: ${response.status} - ${errorData.message || response.statusText}`)
   }
 
   const data = await response.json()
+  console.log('[externalLLM] Response data structure:', {
+    hasChoices: !!data.choices,
+    choicesLength: data.choices?.length,
+    hasFirstChoice: !!data.choices?.[0],
+    hasMessage: !!data.choices?.[0]?.message
+  })
   
   if (!data.choices || !data.choices[0] || !data.choices[0].message) {
     throw new Error('Invalid response from OpenAI API')
@@ -68,18 +102,23 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   return data.choices[0].message.content
 }
 
-async function callPerplexity(prompt: string): Promise<string> {
-  if (!PERPLEXITY_API_KEY) {
+async function callPerplexity(prompt: string, apiKey?: string): Promise<string> {
+  const key = apiKey || PERPLEXITY_API_KEY
+  
+  if (!key) {
     throw new Error('Perplexity API key not configured')
   }
 
   console.log('[externalLLM] Calling Perplexity API...')
 
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+  const corsProxyUrl = 'https://corsproxy.io/?'
+  const targetUrl = encodeURIComponent('https://api.perplexity.ai/chat/completions')
+
+  const response = await fetch(corsProxyUrl + targetUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${PERPLEXITY_API_KEY}`
+      'Authorization': `Bearer ${key.trim()}`
     },
     body: JSON.stringify({
       model: 'llama-3.1-sonar-small-128k-online',
@@ -97,7 +136,13 @@ async function callPerplexity(prompt: string): Promise<string> {
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    const errorText = await response.text()
+    let errorData
+    try {
+      errorData = JSON.parse(errorText)
+    } catch {
+      errorData = { message: errorText }
+    }
     console.error('[externalLLM] Perplexity API error:', errorData)
     throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
   }
@@ -153,7 +198,7 @@ Format your response as a professional intelligence brief with clear sections an
   try {
     if (provider === 'perplexity' || (provider === 'auto' && PERPLEXITY_API_KEY && !hasSparkLLM)) {
       console.log('[externalLLM] Using Perplexity API...')
-      return await callPerplexity(promptText)
+      return await callPerplexity(promptText, params.apiKey)
     }
     
     if (params.apiKey || provider === 'openai' || (provider === 'auto' && (OPENAI_API_KEY || params.apiKey) && !hasSparkLLM)) {

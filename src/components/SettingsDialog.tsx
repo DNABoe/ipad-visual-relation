@@ -504,7 +504,10 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                               return
                             }
                             
-                            const response = await fetch('https://api.openai.com/v1/models', {
+                            const corsProxyUrl = 'https://corsproxy.io/?'
+                            const targetUrl = encodeURIComponent('https://api.openai.com/v1/models')
+                            
+                            const response = await fetch(corsProxyUrl + targetUrl, {
                               method: 'GET',
                               headers: {
                                 'Authorization': `Bearer ${workspace.apiKey.trim()}`
@@ -595,6 +598,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     <span className="text-muted-foreground">Reports saved as attachments to person cards</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-primary text-sm mt-0.5">ℹ️</span>
+                  <span>
+                    <strong className="text-foreground">CORS Proxy:</strong> This application uses corsproxy.io to enable API calls from the browser. 
+                    This is required because browsers block direct calls to external APIs due to CORS security restrictions.
+                  </span>
+                </p>
               </div>
 
               <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
