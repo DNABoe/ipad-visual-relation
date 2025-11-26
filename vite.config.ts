@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [
     react({
       jsxImportSource: 'react',
+      fastRefresh: true,
     }),
     tailwindcss(),
     // DO NOT REMOVE
@@ -26,5 +27,11 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime'],
+    exclude: ['@github/spark']
   },
+  server: {
+    hmr: {
+      overlay: true
+    }
+  }
 });
