@@ -57,9 +57,13 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   
   useEffect(() => {
     if (open) {
-      console.log('[SettingsDialog] Dialog opened, workspace.apiKey present:', !!workspace.apiKey)
+      console.log('[SettingsDialog] Dialog opened')
+      console.log('[SettingsDialog] workspace object:', workspace)
+      console.log('[SettingsDialog] workspace.apiKey present:', !!workspace.apiKey)
+      console.log('[SettingsDialog] workspace.apiKey value:', workspace.apiKey)
       if (workspace.apiKey) {
         console.log('[SettingsDialog] API key length:', workspace.apiKey.length)
+        console.log('[SettingsDialog] API key starts with sk-:', workspace.apiKey.startsWith('sk-'))
         setApiKey('')
       }
     }
@@ -467,16 +471,25 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                         console.log('[SettingsDialog] Saving API key to workspace...')
                         console.log('[SettingsDialog] API key format valid:', apiKey.trim().startsWith('sk-'))
                         console.log('[SettingsDialog] API key length:', apiKey.trim().length)
+                        console.log('[SettingsDialog] Current workspace before update:', workspace)
                         
-                        setWorkspace((current) => ({
-                          ...current,
-                          apiKey: apiKey.trim()
-                        }))
+                        setWorkspace((current) => {
+                          const updated = {
+                            ...current,
+                            apiKey: apiKey.trim()
+                          }
+                          console.log('[SettingsDialog] Updated workspace:', updated)
+                          console.log('[SettingsDialog] Updated workspace.apiKey:', updated.apiKey)
+                          return updated
+                        })
                         
                         setApiKey('')
                         
-                        console.log('[SettingsDialog] API key saved to workspace')
-                        toast.success('API key saved to network file! Remember to save your network file to persist this change.')
+                        console.log('[SettingsDialog] API key saved to workspace successfully')
+                        toast.success(
+                          'API key saved! Now press Ctrl+S or click File > Save to persist this change to your network file.', 
+                          { duration: 5000 }
+                        )
                       } catch (error) {
                         console.error('[SettingsDialog] Error saving API key:', error)
                         toast.error('Failed to save API key')
@@ -606,6 +619,16 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <span>
                     <strong className="text-foreground">CORS Proxy:</strong> This application uses corsproxy.io to enable API calls from the browser. 
                     This is required because browsers block direct calls to external APIs due to CORS security restrictions.
+                  </span>
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
+                <p className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-warning text-sm mt-0.5">⚠️</span>
+                  <span>
+                    <strong className="text-foreground">Important:</strong> After saving your API key, you must save your network file (Ctrl+S or File {'>'} Save) to persist the API key. 
+                    Without saving the file, your API key will be lost when you reload the network.
                   </span>
                 </p>
               </div>

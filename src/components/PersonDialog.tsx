@@ -464,14 +464,22 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       return
     }
 
+    console.log('[PersonDialog] Starting investigation...')
+    console.log('[PersonDialog] Workspace object:', workspace)
+    console.log('[PersonDialog] Workspace API key available:', !!workspace?.apiKey)
+    console.log('[PersonDialog] Workspace API key length:', workspace?.apiKey?.length || 0)
+    console.log('[PersonDialog] Workspace API key value (first 10 chars):', workspace?.apiKey?.substring(0, 10) || 'N/A')
+    console.log('[PersonDialog] isLLMAvailable():', isLLMAvailable())
+
     if (!workspace?.apiKey && !isLLMAvailable()) {
-      toast.error('Please configure an API key in Settings > Investigation tab')
+      toast.error('Please configure an API key in Settings > Investigation tab, then save your network file (Ctrl+S)')
       return
     }
 
-    console.log('[PersonDialog] Starting investigation...')
-    console.log('[PersonDialog] Workspace API key available:', !!workspace?.apiKey)
-    console.log('[PersonDialog] Workspace API key length:', workspace?.apiKey?.length || 0)
+    if (workspace?.apiKey && !workspace.apiKey.startsWith('sk-')) {
+      toast.error('Invalid API key format. OpenAI API keys must start with "sk-". Please update your API key in Settings.')
+      return
+    }
 
     setIsInvestigating(true)
     

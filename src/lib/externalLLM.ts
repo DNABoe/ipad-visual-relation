@@ -19,8 +19,18 @@ export function isLLMAvailable(): boolean {
 async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   const key = apiKey || OPENAI_API_KEY
   
+  console.log('[externalLLM] callOpenAI invoked')
+  console.log('[externalLLM] apiKey parameter provided:', !!apiKey)
+  console.log('[externalLLM] apiKey parameter value (first 10 chars):', apiKey?.substring(0, 10) || 'N/A')
+  console.log('[externalLLM] OPENAI_API_KEY env var present:', !!OPENAI_API_KEY)
+  console.log('[externalLLM] Final key to use present:', !!key)
+  
   if (!key) {
-    throw new Error('OpenAI API key not configured')
+    throw new Error('OpenAI API key not configured. Please add your API key in Settings > Investigation tab.')
+  }
+
+  if (!key.startsWith('sk-')) {
+    throw new Error('Invalid OpenAI API key format. API keys must start with "sk-". Please check your API key in Settings.')
   }
 
   console.log('[externalLLM] Calling OpenAI API...')
@@ -77,7 +87,7 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
     console.error('[externalLLM] Response status text:', response.statusText)
     
     if (response.status === 401) {
-      throw new Error('Invalid API key. Please check your OpenAI API key in Settings.')
+      throw new Error('Invalid API key. Please verify your OpenAI API key in Settings. Make sure you copied the entire key correctly and that it starts with "sk-".')
     } else if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please try again later.')
     } else if (response.status === 500) {
@@ -170,7 +180,10 @@ export async function generateIntelligenceReport(params: {
     name,
     position,
     country,
-    provider
+    provider,
+    hasApiKey: !!params.apiKey,
+    apiKeyLength: params.apiKey?.length || 0,
+    apiKeyPrefix: params.apiKey?.substring(0, 10) || 'N/A'
   })
 
   const positionText = position || 'Not specified'
@@ -194,6 +207,13 @@ Format your response as a professional intelligence brief with clear sections an
   const hasSparkLLM = typeof window !== 'undefined' && 
     !!(window as any).spark && 
     typeof (window as any).spark.llm === 'function'
+  
+  console.log('[externalLLM] Available providers:', {
+    hasSparkLLM,
+    hasProvidedApiKey: !!params.apiKey,
+    hasEnvOpenAI: !!OPENAI_API_KEY,
+    hasEnvPerplexity: !!PERPLEXITY_API_KEY
+  })
 
   try {
     if (provider === 'perplexity' || (provider === 'auto' && PERPLEXITY_API_KEY && !hasSparkLLM)) {
@@ -203,6 +223,7 @@ Format your response as a professional intelligence brief with clear sections an
     
     if (params.apiKey || provider === 'openai' || (provider === 'auto' && (OPENAI_API_KEY || params.apiKey) && !hasSparkLLM)) {
       console.log('[externalLLM] Using OpenAI API...')
+      console.log('[externalLLM] Passing API key to callOpenAI:', !!params.apiKey)
       return await callOpenAI(promptText, params.apiKey)
     }
     
