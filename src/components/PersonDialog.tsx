@@ -483,7 +483,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
 
     setIsInvestigating(true)
     
-    const loadingToast = toast.loading('Generating intelligence report... This may take 30-60 seconds.', {
+    const loadingToast = toast.loading('Generating intelligence report... This may take 30-60 seconds. The app will automatically retry if the CORS proxy times out.', {
       duration: Infinity
     })
 

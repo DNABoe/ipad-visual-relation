@@ -619,6 +619,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <span>
                     <strong className="text-foreground">CORS Proxy:</strong> This application uses corsproxy.io to enable API calls from the browser. 
                     This is required because browsers block direct calls to external APIs due to CORS security restrictions.
+                    If you encounter timeout errors (504), the proxy may be experiencing high traffic - the app will automatically retry up to 3 times.
                   </span>
                 </p>
               </div>

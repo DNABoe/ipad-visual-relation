@@ -16,10 +16,11 @@ export function isLLMAvailable(): boolean {
   }
 }
 
-async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
+async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0): Promise<string> {
   const key = apiKey || OPENAI_API_KEY
+  const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callOpenAI invoked')
+  console.log('[externalLLM] callOpenAI invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ')')
   console.log('[externalLLM] apiKey parameter provided:', !!apiKey)
   console.log('[externalLLM] apiKey parameter value (first 10 chars):', apiKey?.substring(0, 10) || 'N/A')
   console.log('[externalLLM] OPENAI_API_KEY env var present:', !!OPENAI_API_KEY)
@@ -59,57 +60,78 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   const corsProxyUrl = 'https://corsproxy.io/?'
   const targetUrl = encodeURIComponent('https://api.openai.com/v1/chat/completions')
   
-  const response = await fetch(corsProxyUrl + targetUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key.trim()}`
-    },
-    body: JSON.stringify(requestBody)
-  })
+  try {
+    const response = await fetch(corsProxyUrl + targetUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key.trim()}`
+      },
+      body: JSON.stringify(requestBody)
+    })
 
-  console.log('[externalLLM] Response status:', response.status)
-  console.log('[externalLLM] Response ok:', response.ok)
+    console.log('[externalLLM] Response status:', response.status)
+    console.log('[externalLLM] Response ok:', response.ok)
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('[externalLLM] OpenAI API error response:', errorText)
-    
-    let errorData
-    try {
-      errorData = JSON.parse(errorText)
-    } catch {
-      errorData = { message: errorText }
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[externalLLM] OpenAI API error response:', errorText)
+      
+      let errorData
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        errorData = { message: errorText }
+      }
+      
+      console.error('[externalLLM] OpenAI API error:', errorData)
+      console.error('[externalLLM] Response status:', response.status)
+      console.error('[externalLLM] Response status text:', response.statusText)
+      
+      if (response.status === 401) {
+        throw new Error('Invalid API key. Please verify your OpenAI API key in Settings. Make sure you copied the entire key correctly and that it starts with "sk-".')
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.')
+      } else if (response.status === 500) {
+        throw new Error('OpenAI service error. Please try again later.')
+      } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] CORS proxy timeout (${response.status}), retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callOpenAI(prompt, apiKey, retryCount + 1)
+        }
+        throw new Error('CORS proxy timeout after multiple attempts. The proxy service (corsproxy.io) is experiencing issues. Please try again in a few moments.')
+      }
+      
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData.message || response.statusText}`)
     }
+
+    const data = await response.json()
+    console.log('[externalLLM] Response data structure:', {
+      hasChoices: !!data.choices,
+      choicesLength: data.choices?.length,
+      hasFirstChoice: !!data.choices?.[0],
+      hasMessage: !!data.choices?.[0]?.message
+    })
     
-    console.error('[externalLLM] OpenAI API error:', errorData)
-    console.error('[externalLLM] Response status:', response.status)
-    console.error('[externalLLM] Response status text:', response.statusText)
-    
-    if (response.status === 401) {
-      throw new Error('Invalid API key. Please verify your OpenAI API key in Settings. Make sure you copied the entire key correctly and that it starts with "sk-".')
-    } else if (response.status === 429) {
-      throw new Error('Rate limit exceeded. Please try again later.')
-    } else if (response.status === 500) {
-      throw new Error('OpenAI service error. Please try again later.')
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response from OpenAI API')
     }
-    
-    throw new Error(`OpenAI API error: ${response.status} - ${errorData.message || response.statusText}`)
-  }
 
-  const data = await response.json()
-  console.log('[externalLLM] Response data structure:', {
-    hasChoices: !!data.choices,
-    choicesLength: data.choices?.length,
-    hasFirstChoice: !!data.choices?.[0],
-    hasMessage: !!data.choices?.[0]?.message
-  })
-  
-  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-    throw new Error('Invalid response from OpenAI API')
+    return data.choices[0].message.content
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (retryCount < MAX_RETRIES) {
+        const delayMs = Math.pow(2, retryCount) * 2000
+        console.log(`[externalLLM] Network error, retrying in ${delayMs}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delayMs))
+        return callOpenAI(prompt, apiKey, retryCount + 1)
+      }
+      throw new Error('Network error connecting to CORS proxy. Please check your internet connection and try again.')
+    }
+    throw error
   }
-
-  return data.choices[0].message.content
 }
 
 async function callPerplexity(prompt: string, apiKey?: string): Promise<string> {
