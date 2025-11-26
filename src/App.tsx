@@ -32,7 +32,7 @@ function App() {
         console.log('[App] Initialization complete')
       } catch (error) {
         console.error('[App] Failed to initialize:', error)
-        toast.error('Failed to initialize application.')
+        toast.error('Failed to initialize application.', { duration: 4000 })
       } finally {
         setIsLoadingAuth(false)
       }
@@ -47,23 +47,23 @@ function App() {
       const user = await SingleUserAuth.authenticateSingleUser(username, password)
       
       if (!user) {
-        toast.error('Invalid username or password')
+        toast.error('Invalid username or password', { duration: 3000 })
         return false
       }
       
       setCurrentUser(user)
-      toast.success('Welcome back!')
+      toast.success('Welcome back!', { duration: 2000 })
       return true
     } catch (error) {
       console.error('[App] Login error:', error)
-      toast.error('Login failed')
+      toast.error('Login failed', { duration: 3000 })
       return false
     }
   }, [])
 
   const handleLoad = useCallback(async (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     if (!currentUser) {
-      toast.error('User session not found. Please refresh the page.')
+      toast.error('User session not found. Please refresh the page.', { duration: 4000 })
       return
     }
 
@@ -99,7 +99,7 @@ function App() {
     setFileName('')
     setPassword('')
     setShowFileManager(true)
-    toast.success('Logged out successfully')
+    toast.success('Logged out successfully', { duration: 2000 })
   }, [])
 
   if (isLoadingAuth) {

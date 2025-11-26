@@ -57,17 +57,17 @@ export function FileManager({ onLoad }: FileManagerProps) {
     const trimmedFileName = newFileName.trim() || 'my-network'
 
     if (!newPassword) {
-      toast.error('Please enter a password')
+      toast.error('Please enter a password', { duration: 3000 })
       return
     }
 
     if (newPassword !== newPasswordConfirm) {
-      toast.error('Passwords do not match')
+      toast.error('Passwords do not match', { duration: 3000 })
       return
     }
 
     if (newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters')
+      toast.error('Password must be at least 8 characters', { duration: 3000 })
       return
     }
 
@@ -78,7 +78,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       
       if (!currentUser) {
         console.error('[FileManager] No current user found')
-        toast.error('User session not found. Please refresh the page.')
+        toast.error('User session not found. Please refresh the page.', { duration: 4000 })
         return
       }
 
@@ -128,22 +128,22 @@ export function FileManager({ onLoad }: FileManagerProps) {
         downloadUrl: url,
       })
 
-      toast.success('Network created successfully!')
+      toast.success('Network created successfully!', { duration: 2500 })
     } catch (error) {
       console.error('[FileManager] Error creating network:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create network'
-      toast.error(`Failed to create network: ${errorMessage}`)
+      toast.error(`Failed to create network: ${errorMessage}`, { duration: 5000 })
     }
   }
 
   const handleLoadNetwork = async () => {
     if (!loadingFile) {
-      toast.error('Please select a file')
+      toast.error('Please select a file', { duration: 3000 })
       return
     }
 
     if (!loadPassword) {
-      toast.error('Please enter a password')
+      toast.error('Please enter a password', { duration: 3000 })
       return
     }
 
@@ -162,16 +162,16 @@ export function FileManager({ onLoad }: FileManagerProps) {
       }
 
       onLoad(workspace, loadingFile.name, loadPassword)
-      toast.success('Network loaded successfully!')
+      toast.success('Network loaded successfully!', { duration: 2500 })
     } catch (error) {
-      toast.error('Failed to load network. Check your password.')
+      toast.error('Failed to load network. Check your password.', { duration: 4000 })
       console.error(error)
     }
   }
 
   const handleDownloadClick = useCallback(() => {
     if (!createdNetwork) return
-    toast.info('Right-click the download link and select "Save Link As..." to save your file')
+    toast.info('Right-click the download link and select "Save Link As..." to save your file', { duration: 4000 })
   }, [createdNetwork])
 
   const handleContinueWithoutDownload = useCallback(() => {

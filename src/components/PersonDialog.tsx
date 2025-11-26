@@ -95,12 +95,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
     const file = e.target.files?.[0]
     if (file) {
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file')
+        toast.error('Please select an image file', { duration: 3000 })
         return
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image file is too large. Maximum size is 10MB.')
+        toast.error('Image file is too large. Maximum size is 10MB.', { duration: 4000 })
         return
       }
 
@@ -109,7 +109,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         const originalDataUrl = reader.result as string
         
         try {
-          toast.info('Processing image...')
+          const processingToast = toast.loading('Processing image...')
           const { resampled } = await resampleImage(originalDataUrl, {
             maxWidth: 600,
             maxHeight: 600,
@@ -118,15 +118,15 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
           })
           
           setPhoto(resampled)
-          toast.success('Image loaded and optimized')
+          toast.success('Image loaded and optimized', { id: processingToast, duration: 2000 })
         } catch (error) {
           console.error('Error resampling image:', error)
           setPhoto(originalDataUrl)
-          toast.warning('Image loaded but could not be optimized')
+          toast.warning('Image loaded but could not be optimized', { duration: 3000 })
         }
       }
       reader.onerror = () => {
-        toast.error('Failed to read image file')
+        toast.error('Failed to read image file', { duration: 3000 })
       }
       reader.readAsDataURL(file)
     }
@@ -137,7 +137,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
     if (files) {
       Array.from(files).forEach(file => {
         if (file.size > 10 * 1024 * 1024) {
-          toast.error(`File ${file.name} is too large. Maximum size is 10MB.`)
+          toast.error(`File ${file.name} is too large. Maximum size is 10MB.`, { duration: 4000 })
           return
         }
         
@@ -158,7 +158,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
             }
             return updated
           })
-          toast.success(`Added ${file.name}`)
+          toast.success(`Added ${file.name}`, { duration: 2000 })
         }
         reader.readAsDataURL(file)
       })
@@ -174,7 +174,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       if (editPerson) {
         const removedAttachment = prev.find(a => a.id === attachmentId)
         if (removedAttachment) {
-          toast.success(`Removed ${removedAttachment.name}`)
+          toast.success(`Removed ${removedAttachment.name}`, { duration: 2000 })
         }
         autoSaveAttachments(updated)
       }
@@ -275,7 +275,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
     } else if (attachment.type.startsWith('image/')) {
       window.open(attachment.data, '_blank')
     } else {
-      toast.info('Preview not available for this file type. Use download instead.')
+      toast.info('Preview not available for this file type. Use download instead.', { duration: 3000 })
     }
   }
 
@@ -460,7 +460,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
 
   const handleInvestigate = async () => {
     if (!name.trim()) {
-      toast.error('Please enter a name first')
+      toast.error('Please enter a name first', { duration: 3000 })
       return
     }
 
@@ -472,20 +472,18 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
     console.log('[PersonDialog] isLLMAvailable():', isLLMAvailable())
 
     if (!workspace?.apiKey && !isLLMAvailable()) {
-      toast.error('Please configure an API key in Settings > Investigation tab, then save your network file (Ctrl+S)')
+      toast.error('Please configure an API key in Settings > Investigation tab, then save your network file (Ctrl+S)', { duration: 5000 })
       return
     }
 
     if (workspace?.apiKey && !workspace.apiKey.startsWith('sk-')) {
-      toast.error('Invalid API key format. OpenAI API keys must start with "sk-". Please update your API key in Settings.')
+      toast.error('Invalid API key format. OpenAI API keys must start with "sk-". Please update your API key in Settings.', { duration: 5000 })
       return
     }
 
     setIsInvestigating(true)
     
-    const loadingToast = toast.loading('Generating intelligence report... This may take 30-60 seconds. The app will automatically retry if the CORS proxy times out.', {
-      duration: Infinity
-    })
+    const loadingToast = toast.loading('Generating intelligence report... This may take 30-60 seconds.')
 
     try {
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
@@ -494,7 +492,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       
       console.log('[PersonDialog] Generating intelligence report...')
       console.log('[PersonDialog] Passing API key to generator:', !!workspace?.apiKey)
-      toast.loading('Analyzing available information...', { id: loadingToast })
       
       const report = await generateIntelligenceReport({
         name: name.trim(),
@@ -507,7 +504,6 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setInvestigationReport(report)
 
       console.log('[PersonDialog] Generating PDF...')
-      toast.loading('Creating PDF document...', { id: loadingToast })
       
       const pdfBlob = await generateInvestigationPDF({
         name: name.trim(),
@@ -534,7 +530,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         }
         
         setAttachments(prev => [...prev, newAttachment])
-        toast.success('Investigation report generated and added to attachments', { id: loadingToast })
+        toast.success('Investigation report generated and added to attachments', { id: loadingToast, duration: 3000 })
       }
       reader.readAsDataURL(pdfBlob)
 
@@ -548,7 +544,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         })
       }
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate investigation report'
-      toast.error(errorMessage, { id: loadingToast })
+      toast.error(errorMessage, { id: loadingToast, duration: 5000 })
     } finally {
       setIsInvestigating(false)
     }
