@@ -32,7 +32,7 @@ function App() {
         console.log('[App] Initialization complete')
       } catch (error) {
         console.error('[App] Failed to initialize:', error)
-        toast.error('Failed to initialize application.', { duration: 4000 })
+        toast.error('Failed to initialize application.', { duration: 3000 })
       } finally {
         setIsLoadingAuth(false)
       }
@@ -63,7 +63,7 @@ function App() {
 
   const handleLoad = useCallback(async (loadedWorkspace: Workspace, loadedFileName: string, loadedPassword: string) => {
     if (!currentUser) {
-      toast.error('User session not found. Please refresh the page.', { duration: 4000 })
+      toast.error('User session not found. Please refresh the page.', { duration: 3000 })
       return
     }
 

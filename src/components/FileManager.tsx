@@ -78,7 +78,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
       
       if (!currentUser) {
         console.error('[FileManager] No current user found')
-        toast.error('User session not found. Please refresh the page.', { duration: 4000 })
+        toast.error('User session not found. Please refresh the page.', { duration: 3000 })
         return
       }
 
@@ -132,7 +132,7 @@ export function FileManager({ onLoad }: FileManagerProps) {
     } catch (error) {
       console.error('[FileManager] Error creating network:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to create network'
-      toast.error(`Failed to create network: ${errorMessage}`, { duration: 5000 })
+      toast.error(`Failed to create network: ${errorMessage}`, { duration: 3500 })
     }
   }
 
@@ -164,14 +164,14 @@ export function FileManager({ onLoad }: FileManagerProps) {
       onLoad(workspace, loadingFile.name, loadPassword)
       toast.success('Network loaded successfully!', { duration: 2500 })
     } catch (error) {
-      toast.error('Failed to load network. Check your password.', { duration: 4000 })
+      toast.error('Failed to load network. Check your password.', { duration: 3000 })
       console.error(error)
     }
   }
 
   const handleDownloadClick = useCallback(() => {
     if (!createdNetwork) return
-    toast.info('Right-click the download link and select "Save Link As..." to save your file', { duration: 4000 })
+    toast.info('Right-click the download link and select "Save Link As..." to save your file', { duration: 3500 })
   }, [createdNetwork])
 
   const handleContinueWithoutDownload = useCallback(() => {
