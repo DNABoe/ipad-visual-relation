@@ -26,8 +26,11 @@ import {
   ChartBar,
   FileText,
   Download,
+  Sparkle,
+  Crosshair,
 } from '@phosphor-icons/react'
 import { generateAnalysisPDF } from '@/lib/analysisReportGenerator'
+import { generateAIInsights } from '@/lib/externalLLM'
 import { toast } from 'sonner'
 
 interface NetworkAnalysisDialogProps {
@@ -70,6 +73,16 @@ interface ConnectionStrength {
 
 export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: NetworkAnalysisDialogProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+  const [aiInsights, setAIInsights] = useState<{
+    insights: string[]
+    centerOfGravity: {
+      person: Person
+      score: number
+      reasoning: string
+    }
+    strategicRecommendations: string[]
+  } | null>(null)
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
 
   const metrics = useMemo((): NetworkMetrics => {
     const totalNodes = workspace.persons.filter(p => !p.hidden).length
@@ -277,6 +290,36 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
     return `bg-group-${color}`
   }
 
+  const handleGenerateAIInsights = async () => {
+    setIsGeneratingAI(true)
+    try {
+      const apiKey = (workspace as any).investigationApiKey || undefined
+      
+      const hasSparkLLM = typeof window !== 'undefined' && (window as any).spark?.llm
+      
+      if (!apiKey && !hasSparkLLM) {
+        toast.error('Please configure an API key in Settings > Investigation to use AI insights', { duration: 4000 })
+        setIsGeneratingAI(false)
+        return
+      }
+
+      const insights = await generateAIInsights({
+        workspace,
+        metrics,
+        topNodes: topConnectedNodes,
+        apiKey
+      })
+      
+      setAIInsights(insights)
+      toast.success('AI insights generated successfully', { duration: 2000 })
+    } catch (error) {
+      console.error('Failed to generate AI insights:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to generate AI insights', { duration: 3000 })
+    } finally {
+      setIsGeneratingAI(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[85vh] p-0">
@@ -307,12 +350,13 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
 
         <Tabs defaultValue="overview" className="flex-1">
           <div className="px-6 pt-4">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="nodes">Key Nodes</TabsTrigger>
               <TabsTrigger value="connections">Connections</TabsTrigger>
               <TabsTrigger value="groups">Groups</TabsTrigger>
               <TabsTrigger value="insights">Insights</TabsTrigger>
+              <TabsTrigger value="ai">AI Analysis</TabsTrigger>
             </TabsList>
           </div>
 
@@ -633,6 +677,160 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="ai" className="mt-4 space-y-4">
+              {!aiInsights ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkle className="h-5 w-5 text-primary" weight="duotone" />
+                      AI-Powered Intelligence Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      Generate deep insights from investigation reports using advanced AI analysis
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <p>AI analysis will provide:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Strategic insights from investigation reports</li>
+                        <li>Network center of gravity identification</li>
+                        <li>Actionable recommendations</li>
+                        <li>Pattern recognition across relationships</li>
+                      </ul>
+                    </div>
+                    
+                    {metrics.nodesWithReports === 0 && (
+                      <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                        <p className="text-sm text-warning-foreground">
+                          <Warning className="h-4 w-4 inline mr-2" />
+                          No investigation reports found. Generate reports for persons to enable AI analysis.
+                        </p>
+                      </div>
+                    )}
+                    
+                    <Button
+                      onClick={handleGenerateAIInsights}
+                      disabled={isGeneratingAI}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Sparkle className="h-5 w-5 mr-2" weight="duotone" />
+                      {isGeneratingAI ? 'Analyzing Network...' : 'Generate AI Insights'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Crosshair className="h-5 w-5 text-primary" weight="duotone" />
+                        Network Center of Gravity
+                      </CardTitle>
+                      <CardDescription>
+                        The most strategically critical person in the network
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-start gap-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                        {aiInsights.centerOfGravity.person.photo && (
+                          <div className="w-16 h-16 rounded-full overflow-hidden bg-secondary flex-shrink-0">
+                            <img
+                              src={aiInsights.centerOfGravity.person.photo}
+                              alt={aiInsights.centerOfGravity.person.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-bold text-lg">{aiInsights.centerOfGravity.person.name}</h3>
+                            <Badge variant="outline" className="bg-primary/10">
+                              Criticality: {aiInsights.centerOfGravity.score}%
+                            </Badge>
+                          </div>
+                          {aiInsights.centerOfGravity.person.position && (
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {aiInsights.centerOfGravity.person.position}
+                            </p>
+                          )}
+                          <p className="text-sm leading-relaxed">
+                            {aiInsights.centerOfGravity.reasoning}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkle className="h-5 w-5 text-primary" weight="duotone" />
+                        AI-Generated Insights
+                      </CardTitle>
+                      <CardDescription>
+                        Strategic intelligence derived from network analysis
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {aiInsights.insights.map((insight, index) => (
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Sparkle className="h-3 w-3 text-primary" weight="fill" />
+                            </div>
+                            <p className="text-sm flex-1">{insight}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-primary" weight="duotone" />
+                        Strategic Recommendations
+                      </CardTitle>
+                      <CardDescription>
+                        Actionable next steps based on network analysis
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {aiInsights.strategicRecommendations.map((rec, index) => (
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <div className="w-2 h-2 rounded-full bg-success" />
+                            </div>
+                            <p className="text-sm flex-1">{rec}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleGenerateAIInsights}
+                      disabled={isGeneratingAI}
+                      variant="outline"
+                    >
+                      <Sparkle className="h-4 w-4 mr-2" />
+                      {isGeneratingAI ? 'Re-analyzing...' : 'Regenerate Analysis'}
+                    </Button>
+                  </div>
+                </>
+              )}
             </TabsContent>
           </ScrollArea>
         </Tabs>

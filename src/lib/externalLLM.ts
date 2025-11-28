@@ -351,3 +351,202 @@ Individuals in this role typically interact with:
 
 **Recommendation:** To access enhanced intelligence capabilities, deploy this application in the Spark environment where AI-powered analysis is available.`
 }
+
+export async function generateAIInsights(params: {
+  workspace: any
+  metrics: any
+  topNodes: any[]
+  apiKey?: string
+}): Promise<{
+  insights: string[]
+  centerOfGravity: {
+    person: any
+    score: number
+    reasoning: string
+  }
+  strategicRecommendations: string[]
+}> {
+  const { workspace, metrics, topNodes, apiKey } = params
+
+  console.log('[externalLLM] Generating AI-powered network insights...')
+
+  const personsWithReports = workspace.persons.filter((p: any) => 
+    !p.hidden && 
+    p.attachments && 
+    p.attachments.length > 0 && 
+    p.attachments.some((att: any) => att.name.startsWith('Investigation_') && att.type === 'application/pdf')
+  )
+
+  const reportSummaries = personsWithReports.map((p: any) => {
+    const report = p.attachments?.find((att: any) => 
+      att.name.startsWith('Investigation_') && att.type === 'application/pdf'
+    )
+    return {
+      name: p.name,
+      position: p.position,
+      score: p.score,
+      frameColor: p.frameColor,
+      advocate: p.advocate,
+      hasReport: !!report,
+      connections: workspace.connections.filter((c: any) => 
+        c.fromPersonId === p.id || c.toPersonId === p.id
+      ).length
+    }
+  })
+
+  const networkSummary = {
+    totalNodes: metrics.totalNodes,
+    totalConnections: metrics.totalConnections,
+    avgConnections: metrics.avgConnectionsPerNode,
+    isolatedNodes: metrics.isolatedNodes,
+    highValueNodes: metrics.highValueNodes,
+    advocateNodes: metrics.advocateNodes,
+    nodesWithReports: metrics.nodesWithReports,
+    topConnectedNodes: topNodes.slice(0, 5).map((n: any) => ({
+      name: n.person.name,
+      position: n.person.position,
+      connections: n.connectionCount,
+      strength: n.connectionStrength,
+      score: n.person.score,
+      advocate: n.person.advocate
+    })),
+    groups: workspace.groups.map((g: any) => ({
+      name: g.name,
+      memberCount: workspace.persons.filter((p: any) => !p.hidden && p.groupId === g.id).length
+    })),
+    reportedPersons: reportSummaries
+  }
+
+  const promptText = `You are an expert intelligence analyst. Analyze the following relationship network data and provide strategic insights.
+
+NETWORK SUMMARY:
+${JSON.stringify(networkSummary, null, 2)}
+
+Please provide a comprehensive analysis in the following JSON format:
+{
+  "insights": [
+    "String insight 1 - key pattern or finding",
+    "String insight 2 - strategic observation",
+    "String insight 3 - opportunity or risk"
+  ],
+  "centerOfGravity": {
+    "personName": "Name of the most critical node",
+    "score": 95,
+    "reasoning": "Detailed explanation of why this person is the center of gravity - considering connections, influence, position, and strategic importance"
+  },
+  "strategicRecommendations": [
+    "Actionable recommendation 1",
+    "Actionable recommendation 2",
+    "Actionable recommendation 3"
+  ]
+}
+
+The "center of gravity" is the single most critical person in the network who:
+- Has the most strategic influence (not just most connections)
+- Serves as a key bridge or hub
+- Has high-value position and relationships
+- Represents the highest leverage point for influence
+
+Consider:
+1. Connection patterns and network topology
+2. Person scores (1-10, where 10 is most important)
+3. Advocate status (people who actively promote messages)
+4. Position and role importance
+5. Investigation report availability
+6. Group memberships and inter-group connections
+
+Provide 5-7 key insights, identify the true center of gravity, and give 3-5 strategic recommendations.`
+
+  try {
+    const hasSparkLLM = typeof window !== 'undefined' && 
+      !!(window as any).spark && 
+      typeof (window as any).spark.llm === 'function'
+    
+    let responseText: string
+
+    if (apiKey || OPENAI_API_KEY) {
+      console.log('[externalLLM] Using OpenAI for AI insights...')
+      const response = await callOpenAI(promptText, apiKey, 0)
+      responseText = response
+    } else if (hasSparkLLM) {
+      console.log('[externalLLM] Using Spark LLM for AI insights...')
+      const prompt = (window.spark.llmPrompt as any)`${promptText}`
+      responseText = await window.spark.llm(prompt, 'gpt-4o-mini', true)
+    } else {
+      console.log('[externalLLM] No AI available, generating static insights')
+      return generateStaticInsights(workspace, metrics, topNodes)
+    }
+
+    try {
+      const parsed = JSON.parse(responseText)
+      
+      const centerPerson = workspace.persons.find((p: any) => 
+        p.name === parsed.centerOfGravity?.personName
+      ) || topNodes[0]?.person
+
+      return {
+        insights: parsed.insights || [],
+        centerOfGravity: {
+          person: centerPerson,
+          score: parsed.centerOfGravity?.score || 0,
+          reasoning: parsed.centerOfGravity?.reasoning || 'Most connected node in the network'
+        },
+        strategicRecommendations: parsed.strategicRecommendations || []
+      }
+    } catch (parseError) {
+      console.error('[externalLLM] Failed to parse AI response:', parseError)
+      return generateStaticInsights(workspace, metrics, topNodes)
+    }
+
+  } catch (error) {
+    console.error('[externalLLM] Error generating AI insights:', error)
+    throw new Error('Failed to generate AI insights. Please check your API key and try again.')
+  }
+}
+
+function generateStaticInsights(workspace: any, metrics: any, topNodes: any[]) {
+  const insights: string[] = []
+  
+  if (metrics.isolatedNodes > 0) {
+    insights.push(`Network fragmentation detected: ${metrics.isolatedNodes} isolated nodes may represent untapped opportunities or information silos`)
+  }
+  
+  if (metrics.avgConnectionsPerNode < 2) {
+    insights.push('Sparse network structure indicates potential for growth in relationship development')
+  } else if (metrics.avgConnectionsPerNode > 5) {
+    insights.push('Dense network structure suggests strong interconnectivity and information flow')
+  }
+  
+  const advocateRatio = metrics.advocateNodes / metrics.totalNodes
+  if (advocateRatio > 0.3) {
+    insights.push(`High advocate concentration (${Math.round(advocateRatio * 100)}%) presents significant influence multiplication opportunities`)
+  }
+  
+  const reportCoverage = metrics.nodesWithReports / metrics.totalNodes
+  if (reportCoverage < 0.5) {
+    insights.push('Intelligence gaps exist - less than half of network nodes have investigation reports')
+  } else if (reportCoverage > 0.8) {
+    insights.push(`Excellent intelligence coverage at ${Math.round(reportCoverage * 100)}% enables comprehensive strategic analysis`)
+  }
+  
+  if (workspace.groups.length > 0) {
+    insights.push(`Network organized into ${workspace.groups.length} distinct groups, enabling targeted engagement strategies`)
+  }
+
+  const centerPerson = topNodes[0]?.person || workspace.persons.filter((p: any) => !p.hidden)[0]
+  
+  return {
+    insights,
+    centerOfGravity: {
+      person: centerPerson,
+      score: 75,
+      reasoning: `${centerPerson?.name} identified as network center of gravity based on ${topNodes[0]?.connectionCount || 0} connections and strategic position. This individual serves as a critical hub in the relationship network.`
+    },
+    strategicRecommendations: [
+      'Focus engagement efforts on high-connectivity nodes to maximize network reach',
+      'Develop intelligence reports for nodes currently lacking investigation data',
+      'Monitor isolated nodes for integration opportunities',
+      'Leverage advocate network for information dissemination'
+    ]
+  }
+}

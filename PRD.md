@@ -293,6 +293,41 @@ RelEye uses a hybrid storage model that balances security and usability. **All f
 - **Progression**: Import → Select JSON file → Parse and restore workspace → All data loaded
 - **Success criteria**: Unencrypted JSON import works for backward compatibility; users are reminded to save as encrypted file
 
+### AI-Powered Network Insights
+- **Functionality**: Advanced AI analysis of the network using investigation reports to generate strategic insights and identify the network's "center of gravity"
+- **Purpose**: Leverage AI to analyze investigation reports and provide intelligence analysts with deep strategic insights, patterns, and actionable recommendations based on the entire network's data
+- **Trigger**: Open Network Analysis dialog → Navigate to "AI Analysis" tab → Click "Generate AI Insights"
+- **Progression**: User clicks button → AI analyzes network structure, investigation reports, connections, and person attributes → Generates insights, identifies center of gravity, and provides strategic recommendations → Results displayed in organized cards
+- **Requirements**:
+  - **API Key**: Requires OpenAI API key configured in Settings > Investigation tab, or Spark LLM in Spark environment
+  - **Investigation Reports**: Works best when persons have investigation reports attached (analyzes report content and metadata)
+  - **Network Data**: Analyzes connections, importance scores, advocate status, frame colors, group memberships, and connection weights
+- **AI Analysis Components**:
+  1. **Center of Gravity Identification**:
+     - Identifies the single most strategically critical person in the network
+     - Considers: connection patterns, importance scores, position influence, advocate status, and investigation report availability
+     - Provides criticality score (0-100%) and detailed reasoning
+     - Displays person photo, name, position, and analysis
+  2. **Strategic Insights** (5-7 key findings):
+     - Network patterns and topology analysis
+     - Influence multiplication opportunities
+     - Intelligence coverage gaps
+     - Risk and opportunity identification
+     - Connection strength patterns
+  3. **Strategic Recommendations** (3-5 actionable items):
+     - High-leverage engagement strategies
+     - Intelligence gathering priorities
+     - Network development opportunities
+     - Risk mitigation suggestions
+- **Success criteria**: 
+  - AI generates analysis within 10-15 seconds
+  - Center of gravity identifies genuinely critical nodes (not just most connected)
+  - Insights are actionable and specific to the network
+  - Works offline using Spark LLM when deployed in Spark environment
+  - Gracefully handles networks with partial or no investigation reports
+  - Users can regenerate analysis to get fresh perspectives
+  - Clear error messages when API key is missing or invalid
+
 ## Edge Case Handling
 
 - **No Search Results**: Show informative toast when no persons match search criteria; allow user to adjust filters
