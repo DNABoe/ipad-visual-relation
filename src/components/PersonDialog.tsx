@@ -63,6 +63,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setAdvocate(editPerson?.advocate || false)
       setNotes(editPerson?.notes || '')
       setAttachments(editPerson?.attachments || [])
+      setCountry('')
+      setInvestigationReport('')
     } else {
       setName('')
       setPosition('')
@@ -75,6 +77,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setAdvocate(false)
       setNotes('')
       setAttachments([])
+      setCountry('')
+      setInvestigationReport('')
     }
   }, [open, editPerson])
 

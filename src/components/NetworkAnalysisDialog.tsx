@@ -86,7 +86,12 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
     const isolatedNodes = workspace.persons.filter(p => !p.hidden && !connectionCounts.has(p.id)).length
     const highValueNodes = workspace.persons.filter(p => !p.hidden && p.score >= 8).length
     const advocateNodes = workspace.persons.filter(p => !p.hidden && p.advocate).length
-    const nodesWithReports = workspace.persons.filter(p => !p.hidden && p.notes && p.notes.length > 100).length
+    const nodesWithReports = workspace.persons.filter(p => 
+      !p.hidden && 
+      p.attachments && 
+      p.attachments.length > 0 && 
+      p.attachments.some(att => att.name.startsWith('Investigation_') && att.type === 'application/pdf')
+    ).length
 
     return {
       totalNodes,
@@ -120,7 +125,11 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
         person,
         connectionCount: connectionCounts.get(person.id) || 0,
         connectionStrength: connectionStrengths.get(person.id) || 0,
-        hasReport: !!(person.notes && person.notes.length > 100),
+        hasReport: !!(
+          person.attachments && 
+          person.attachments.length > 0 && 
+          person.attachments.some(att => att.name.startsWith('Investigation_') && att.type === 'application/pdf')
+        ),
       }))
       .sort((a, b) => {
         if (b.connectionStrength !== a.connectionStrength) {
