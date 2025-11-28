@@ -86,12 +86,24 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
     const isolatedNodes = workspace.persons.filter(p => !p.hidden && !connectionCounts.has(p.id)).length
     const highValueNodes = workspace.persons.filter(p => !p.hidden && p.score >= 8).length
     const advocateNodes = workspace.persons.filter(p => !p.hidden && p.advocate).length
-    const nodesWithReports = workspace.persons.filter(p => 
+    
+    const personsWithReports = workspace.persons.filter(p => 
       !p.hidden && 
       p.attachments && 
       p.attachments.length > 0 && 
       p.attachments.some(att => att.name.startsWith('Investigation_') && att.type === 'application/pdf')
-    ).length
+    )
+    const nodesWithReports = personsWithReports.length
+    
+    console.log('[NetworkAnalysis] Investigation reports check:', {
+      totalNodes,
+      nodesWithReports,
+      personsChecked: workspace.persons.filter(p => !p.hidden).length,
+      personsWithAttachments: workspace.persons.filter(p => !p.hidden && p.attachments && p.attachments.length > 0).length,
+      reportNames: personsWithReports.flatMap(p => 
+        p.attachments?.filter(att => att.name.startsWith('Investigation_')).map(att => att.name) || []
+      )
+    })
 
     return {
       totalNodes,
@@ -207,17 +219,34 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
       insights.push('High concentration of high-value targets detected')
     }
     
-    if (metrics.nodesWithReports < metrics.totalNodes * 0.3) {
-      insights.push('Many nodes lack investigation reports - consider gathering more intelligence')
+    const advocatePercentage = metrics.totalNodes > 0 ? (metrics.advocateNodes / metrics.totalNodes) * 100 : 0
+    if (advocatePercentage > 25) {
+      insights.push(`${Math.round(advocatePercentage)}% of network members are advocates - high influence potential`)
     }
     
-    const largestGroup = groupAnalysis.reduce((max, g) => g.memberCount > max.memberCount ? g : max, groupAnalysis[0])
+    if (metrics.nodesWithReports > 0 && metrics.nodesWithReports === metrics.totalNodes) {
+      insights.push(`Complete intelligence coverage: all ${metrics.totalNodes} persons have investigation reports`)
+    } else if (metrics.nodesWithReports > 0 && metrics.nodesWithReports >= metrics.totalNodes * 0.7) {
+      insights.push(`Strong intelligence coverage: ${metrics.nodesWithReports} of ${metrics.totalNodes} persons have investigation reports`)
+    } else if (metrics.nodesWithReports < metrics.totalNodes * 0.3 && metrics.totalNodes > 0) {
+      insights.push('Limited intelligence coverage - consider gathering more investigation reports')
+    }
+    
+    const largestGroup = groupAnalysis.length > 0 ? groupAnalysis.reduce((max, g) => g.memberCount > max.memberCount ? g : max, groupAnalysis[0]) : null
     if (largestGroup && largestGroup.memberCount > metrics.totalNodes * 0.4) {
       insights.push(`${largestGroup.group.name} dominates the network with ${largestGroup.memberCount} members`)
     }
     
+    const negativeNodes = workspace.persons.filter(p => !p.hidden && p.frameColor === 'red').length
+    const positiveNodes = workspace.persons.filter(p => !p.hidden && p.frameColor === 'green').length
+    if (negativeNodes > positiveNodes && negativeNodes > metrics.totalNodes * 0.4) {
+      insights.push(`High proportion of negative contacts (${negativeNodes}) - consider mitigation strategies`)
+    } else if (positiveNodes > metrics.totalNodes * 0.5) {
+      insights.push(`Strong positive network sentiment with ${positiveNodes} favorable contacts`)
+    }
+    
     return insights
-  }, [metrics, topConnectedNodes, groupAnalysis])
+  }, [metrics, topConnectedNodes, groupAnalysis, workspace.persons])
 
   const handleExportAnalysis = async () => {
     setIsGeneratingPDF(true)
