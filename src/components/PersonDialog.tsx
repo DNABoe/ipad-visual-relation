@@ -43,6 +43,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
   const [notes, setNotes] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [country, setCountry] = useState('')
+  const [organization, setOrganization] = useState('')
+  const [education, setEducation] = useState('')
+  const [specialization, setSpecialization] = useState('')
   const [isInvestigating, setIsInvestigating] = useState(false)
   const [investigationReport, setInvestigationReport] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -64,6 +67,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setNotes(editPerson?.notes || '')
       setAttachments(editPerson?.attachments || [])
       setCountry('')
+      setOrganization('')
+      setEducation('')
+      setSpecialization('')
       setInvestigationReport('')
     } else {
       setName('')
@@ -78,6 +84,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setNotes('')
       setAttachments([])
       setCountry('')
+      setOrganization('')
+      setEducation('')
+      setSpecialization('')
       setInvestigationReport('')
     }
   }, [open, editPerson])
@@ -487,7 +496,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
 
     setIsInvestigating(true)
     
-    const loadingToast = toast.loading('Generating intelligence report... This may take 30-60 seconds.', { duration: Infinity })
+    const loadingToast = toast.loading('Generating detailed intelligence report... This may take 30-60 seconds.', { duration: Infinity })
 
     try {
       const positionLines = position.split('\n').map(line => line.trim()).filter(Boolean)
@@ -501,6 +510,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         name: name.trim(),
         position: positionText || 'Not specified',
         country: countryText,
+        organization: organization || undefined,
+        education: education || undefined,
+        specialization: specialization || undefined,
         llmConfigs: workspace?.llmConfigs || []
       })
       console.log('[PersonDialog] Intelligence report generated successfully')
@@ -534,7 +546,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         }
         
         setAttachments(prev => [...prev, newAttachment])
-        toast.success('Investigation report generated and added to attachments', { id: loadingToast, duration: 2500 })
+        toast.success('Detailed investigation report generated and added to attachments', { id: loadingToast, duration: 2500 })
       }
       reader.readAsDataURL(pdfBlob)
 
@@ -944,25 +956,72 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                     <Detective size={18} />
                     {isLLMAvailable() ? 'AI-Powered Investigation' : 'Investigation Report'}
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mb-2">
                     {isLLMAvailable() 
-                      ? 'Generate a professional intelligence brief based on the person\'s name, position, and country using AI. The report will be automatically saved to attachments.'
+                      ? 'Generate a comprehensive professional intelligence brief with detailed personal and professional analysis. The more information you provide, the more targeted and detailed the report will be.'
                       : 'Generate a professional intelligence brief template. For AI-powered personalized analysis, deploy this application in the Spark environment.'
                     }
+                  </p>
+                  <p className="text-xs text-accent font-medium">
+                    💡 Tip: Provide as many details as possible for a more comprehensive analysis
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="investigate-country" className="text-sm font-medium">Country</Label>
+                    <Input
+                      id="investigate-country"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      placeholder="e.g., United States"
+                      className="h-9"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Location context for analysis
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="investigate-organization" className="text-sm font-medium">Organization</Label>
+                    <Input
+                      id="investigate-organization"
+                      value={organization}
+                      onChange={(e) => setOrganization(e.target.value)}
+                      placeholder="e.g., Acme Corporation"
+                      className="h-9"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Current employer or affiliation
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="investigate-education" className="text-sm font-medium">Education Background</Label>
+                  <Input
+                    id="investigate-education"
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
+                    placeholder="e.g., MBA from Harvard Business School, BS in Engineering from MIT"
+                    className="h-9"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Degrees, institutions, certifications
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="investigate-country" className="text-sm font-medium">Country</Label>
+                  <Label htmlFor="investigate-specialization" className="text-sm font-medium">Specialization / Expertise</Label>
                   <Input
-                    id="investigate-country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    placeholder="Enter country (optional)"
+                    id="investigate-specialization"
+                    value={specialization}
+                    onChange={(e) => setSpecialization(e.target.value)}
+                    placeholder="e.g., Digital transformation, Supply chain management, FinTech"
                     className="h-9"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Providing a country helps generate more contextual analysis
+                    Key areas of expertise or focus
                   </p>
                 </div>
 
@@ -976,12 +1035,12 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                     {isInvestigating ? (
                       <>
                         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                        Investigating...
+                        Generating Detailed Report...
                       </>
                     ) : (
                       <>
                         <Detective className="mr-2" size={18} />
-                        Investigate
+                        Generate Intelligence Report
                       </>
                     )}
                   </Button>
@@ -990,6 +1049,9 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                       onClick={() => {
                         setInvestigationReport('')
                         setCountry('')
+                        setOrganization('')
+                        setEducation('')
+                        setSpecialization('')
                       }}
                       variant="outline"
                       size="default"
