@@ -379,26 +379,24 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
             
             const bgPosX = 50 + photoOffsetX
             const bgPosY = 50 + photoOffsetY
+            const bgSize = photoZoom
             
             const aspectRatio = img.width / img.height
             const containerAspect = cardWidth / photoHeight
             
-            let renderWidth = cardWidth
-            let renderHeight = photoHeight
+            let renderWidth: number
+            let renderHeight: number
             
             if (aspectRatio > containerAspect) {
-              renderHeight = photoHeight
-              renderWidth = renderHeight * aspectRatio
-            } else {
-              renderWidth = cardWidth
+              renderWidth = cardWidth * (bgSize / 100)
               renderHeight = renderWidth / aspectRatio
+            } else {
+              renderHeight = photoHeight * (bgSize / 100)
+              renderWidth = renderHeight * aspectRatio
             }
             
-            renderWidth *= (photoZoom / 100)
-            renderHeight *= (photoZoom / 100)
-            
-            const imgX = person.x + (cardWidth * bgPosX / 100) - (renderWidth * (bgPosX / 100))
-            const imgY = person.y + (photoHeight * bgPosY / 100) - (renderHeight * (bgPosY / 100))
+            const imgX = person.x + (cardWidth * (bgPosX / 100)) - (renderWidth * (bgPosX / 100))
+            const imgY = person.y + (photoHeight * (bgPosY / 100)) - (renderHeight * (bgPosY / 100))
             
             ctx.drawImage(img, imgX, imgY, renderWidth, renderHeight)
             ctx.restore()
@@ -646,7 +644,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         
         ctx.save()
         ctx.strokeStyle = frameColor
-        ctx.lineWidth = 8
+        ctx.lineWidth = 3
         ctx.lineJoin = 'round'
         ctx.lineCap = 'round'
         
