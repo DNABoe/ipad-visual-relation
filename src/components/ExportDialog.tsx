@@ -129,42 +129,30 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
           maxY: selectionRect.y + selectionRect.height,
         }
       } else {
-        if (persons.length === 0 && groups.length === 0) {
-          toast.error('Nothing to export')
+        if (!canvasRef.current) {
+          toast.error('Canvas reference not available')
           return null
         }
-        
-        const cardWidth = 200
-        const cardHeight = 280
-        
-        const allX = [
-          ...persons.map(p => p.x),
-          ...persons.map(p => p.x + cardWidth),
-          ...groups.map(g => g.x),
-          ...groups.map(g => g.x + g.width),
-        ]
-        const allY = [
-          ...persons.map(p => p.y),
-          ...persons.map(p => p.y + cardHeight),
-          ...groups.map(g => g.y),
-          ...groups.map(g => g.y + g.height),
-        ]
+
+        const canvasRect = canvasRef.current.getBoundingClientRect()
+        const viewportWidth = canvasRect.width
+        const viewportHeight = canvasRect.height
         
         bounds = {
-          minX: Math.min(...allX) - 15,
-          minY: Math.min(...allY) - 15,
-          maxX: Math.max(...allX) + 15,
-          maxY: Math.max(...allY) + 15,
+          minX: -transform.x / transform.scale,
+          minY: -transform.y / transform.scale,
+          maxX: (-transform.x + viewportWidth) / transform.scale,
+          maxY: (-transform.y + viewportHeight) / transform.scale,
         }
       }
       
       const width = bounds.maxX - bounds.minX
       const height = bounds.maxY - bounds.minY
       
-      const scale = 2
+      const exportScale = 2
       const canvas = document.createElement('canvas')
-      canvas.width = width * scale
-      canvas.height = height * scale
+      canvas.width = width * exportScale
+      canvas.height = height * exportScale
       const ctx = canvas.getContext('2d', { alpha: true })
       
       if (!ctx) {
@@ -172,7 +160,7 @@ export function ExportDialog({ open, onOpenChange, persons, connections, groups,
         return null
       }
       
-      ctx.scale(scale, scale)
+      ctx.scale(exportScale, exportScale)
       
       if (format === 'jpeg') {
         const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--background').trim()
