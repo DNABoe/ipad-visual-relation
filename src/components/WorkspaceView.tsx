@@ -14,6 +14,7 @@ import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog'
 import { CollapseBranchDialog } from './CollapseBranchDialog'
 import { ConnectionDialog } from './ConnectionDialog'
 import { RuntimeStatusBanner } from './RuntimeStatusBanner'
+import { NetworkAnalysisDialog } from './NetworkAnalysisDialog'
 import { 
   ContextMenu, 
   getCanvasMenuItems, 
@@ -56,6 +57,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
   const [searchActive, setSearchActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  const [showNetworkAnalysis, setShowNetworkAnalysis] = useState(false)
   const [canvasKey, setCanvasKey] = useState(0)
   const searchBarRef = useRef<SearchBarRef>(null!)
   const [shortestPathPersonIds, setShortestPathPersonIds] = useState<string[]>([])
@@ -491,6 +493,7 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
         onLogout={onLogout}
         isAdmin={false}
         onShowAdminDashboard={undefined}
+        onShowNetworkAnalysis={() => setShowNetworkAnalysis(true)}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -592,6 +595,12 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
       <KeyboardShortcutsDialog
         open={showKeyboardShortcuts}
         onOpenChange={setShowKeyboardShortcuts}
+      />
+
+      <NetworkAnalysisDialog
+        open={showNetworkAnalysis}
+        onOpenChange={setShowNetworkAnalysis}
+        workspace={controller.workspace}
       />
 
       <CollapseBranchDialog

@@ -41,6 +41,7 @@ import {
   Star,
   SignOut,
   Shield,
+  ChartBar,
 } from '@phosphor-icons/react'
 import type { useWorkspaceController } from '@/hooks/useWorkspaceController'
 import type { SearchCriteria } from '@/lib/search'
@@ -65,6 +66,7 @@ interface WorkspaceToolbarProps {
   onLogout?: () => void
   isAdmin?: boolean
   onShowAdminDashboard?: () => void
+  onShowNetworkAnalysis?: () => void
 }
 
 export function WorkspaceToolbar({
@@ -86,6 +88,7 @@ export function WorkspaceToolbar({
   onLogout,
   isAdmin = false,
   onShowAdminDashboard,
+  onShowNetworkAnalysis,
 }: WorkspaceToolbarProps) {
 
   const downloadFileName = fileName.endsWith('.enc.releye') 
@@ -438,6 +441,17 @@ export function WorkspaceToolbar({
             </TooltipTrigger>
             <TooltipContent>Export Canvas</TooltipContent>
           </Tooltip>
+
+          {onShowNetworkAnalysis && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={onShowNetworkAnalysis} className="hover:bg-toolbar-hover hover:border-primary/50">
+                  <ChartBar size={18} weight="duotone" className="text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Network Analysis</TooltipContent>
+            </Tooltip>
+          )}
 
           <Separator orientation="vertical" className="h-6 bg-border" />
 
