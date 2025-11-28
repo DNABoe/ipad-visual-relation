@@ -72,9 +72,18 @@ export interface Group {
 
 export type UserRole = 'admin' | 'normal'
 
+export type LLMProvider = 'openai' | 'perplexity' | 'claude'
+
+export interface LLMConfig {
+  provider: LLMProvider
+  apiKey: string
+  enabled: boolean
+}
+
 export interface AppSettings {
   showMinimap: boolean
   openaiApiKey?: string
+  llmConfigs?: LLMConfig[]
 }
 
 export interface WorkspaceSettings {
@@ -102,6 +111,7 @@ export interface Workspace {
   settings?: WorkspaceSettings
   canvasTransform?: ViewTransform
   apiKey?: string
+  llmConfigs?: LLMConfig[]
   createdAt?: number
   modifiedAt?: number
 }

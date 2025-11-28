@@ -293,21 +293,25 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
   const handleGenerateAIInsights = async () => {
     setIsGeneratingAI(true)
     try {
-      const apiKey = (workspace as any).investigationApiKey || undefined
+      const llmConfigs = (workspace as any).llmConfigs || []
       
       const hasSparkLLM = typeof window !== 'undefined' && (window as any).spark?.llm
       
-      if (!apiKey && !hasSparkLLM) {
-        toast.error('Please configure an API key in Settings > Investigation to use AI insights', { duration: 4000 })
+      if (llmConfigs.filter((c: any) => c.enabled).length === 0 && !hasSparkLLM) {
+        toast.error('Please configure and enable an AI provider in Settings > Investigation', { duration: 4000 })
         setIsGeneratingAI(false)
         return
       }
+
+      const enabledConfig = llmConfigs.find((c: any) => c.enabled && c.apiKey)
+      const apiKey = enabledConfig?.apiKey
 
       const insights = await generateAIInsights({
         workspace,
         metrics,
         topNodes: topConnectedNodes,
-        apiKey
+        apiKey,
+        llmConfigs
       })
       
       setAIInsights(insights)

@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo, Detective, Key, TrashSimple, Gear, User, Info } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Detective, Key, TrashSimple, Gear, User, Info, Sparkle } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
@@ -406,17 +406,41 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg mb-1">AI Investigation</h3>
                     <p className="text-sm text-muted-foreground">
-                      Configure your OpenAI API key for this network. The key is stored in the encrypted network file.
+                      Configure AI providers for intelligence report generation. Multiple providers can be enabled simultaneously.
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* OpenAI Configuration */}
               <div className="space-y-3 rounded-xl bg-card p-4 border border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#10a37f] to-[#1a7f64]" />
+                    <h4 className="font-semibold text-sm">OpenAI (GPT-4)</h4>
+                  </div>
+                  <Switch
+                    checked={workspace.llmConfigs?.find(c => c.provider === 'openai')?.enabled || false}
+                    onCheckedChange={(checked) => {
+                      const configs = workspace.llmConfigs || []
+                      const existing = configs.find(c => c.provider === 'openai')
+                      
+                      if (existing) {
+                        setWorkspace(current => ({
+                          ...current,
+                          llmConfigs: configs.map(c => 
+                            c.provider === 'openai' ? { ...c, enabled: checked } : c
+                          )
+                        }))
+                      }
+                      toast.success(checked ? 'OpenAI enabled' : 'OpenAI disabled')
+                    }}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="openai-api-key" className="text-sm font-medium flex items-center gap-2">
                     <Key size={16} />
-                    OpenAI API Key
+                    API Key
                   </Label>
                   <div className="relative">
                     <Input
@@ -424,7 +448,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       type={showApiKey ? "text" : "password"}
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={workspace.apiKey ? '••••••••••••••••••••' : 'sk-...'}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'openai')?.apiKey ? '••••••••••••••••••••' : 'sk-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
@@ -442,206 +466,282 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       )}
                     </button>
                   </div>
-                  {workspace.apiKey && (
+                  {workspace.llmConfigs?.find(c => c.provider === 'openai')?.apiKey && (
                     <p className="text-xs text-success flex items-center gap-1.5">
                       <span>✓</span>
-                      API key is configured for this network
+                      API key configured
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    The API key is stored in the encrypted network file and will be available when you load this file.
-                  </p>
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    onClick={async () => {
-                      if (!apiKey.trim()) {
-                        toast.error('Please enter an API key')
-                        return
-                      }
+                <Button
+                  onClick={() => {
+                    if (!apiKey.trim()) {
+                      toast.error('Please enter an API key')
+                      return
+                    }
+                    if (!apiKey.trim().startsWith('sk-')) {
+                      toast.error('Invalid OpenAI API key format. It should start with "sk-"')
+                      return
+                    }
 
-                      if (!apiKey.trim().startsWith('sk-')) {
-                        toast.error('Invalid OpenAI API key format. It should start with "sk-"')
-                        return
-                      }
-
-                      try {
-                        setIsLoadingApiKey(true)
-                        console.log('[SettingsDialog] Saving API key to workspace...')
-                        console.log('[SettingsDialog] API key format valid:', apiKey.trim().startsWith('sk-'))
-                        console.log('[SettingsDialog] API key length:', apiKey.trim().length)
-                        console.log('[SettingsDialog] Current workspace before update:', workspace)
-                        
-                        setWorkspace((current) => {
-                          const updated = {
-                            ...current,
-                            apiKey: apiKey.trim()
-                          }
-                          console.log('[SettingsDialog] Updated workspace:', updated)
-                          console.log('[SettingsDialog] Updated workspace.apiKey:', updated.apiKey)
-                          return updated
-                        })
-                        
-                        setApiKey('')
-                        
-                        console.log('[SettingsDialog] API key saved to workspace successfully')
-                        toast.success(
-                          'API key saved! Now press Ctrl+S or click File > Save to persist this change to your network file.', 
-                          { duration: 5000 }
+                    const configs = workspace.llmConfigs || []
+                    const existing = configs.find(c => c.provider === 'openai')
+                    
+                    if (existing) {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: configs.map(c => 
+                          c.provider === 'openai' ? { ...c, apiKey: apiKey.trim(), enabled: true } : c
                         )
-                      } catch (error) {
-                        console.error('[SettingsDialog] Error saving API key:', error)
-                        toast.error('Failed to save API key')
-                      } finally {
-                        setIsLoadingApiKey(false)
+                      }))
+                    } else {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: [...configs, { provider: 'openai', apiKey: apiKey.trim(), enabled: true }]
+                      }))
+                    }
+                    
+                    setApiKey('')
+                    toast.success('OpenAI API key saved!', { duration: 3000 })
+                  }}
+                  disabled={!apiKey.trim()}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Key size={16} className="mr-2" />
+                  Save OpenAI Key
+                </Button>
+              </div>
+
+              {/* Perplexity Configuration */}
+              <div className="space-y-3 rounded-xl bg-card p-4 border border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#20808d] to-[#1a6b76]" />
+                    <h4 className="font-semibold text-sm">Perplexity AI</h4>
+                  </div>
+                  <Switch
+                    checked={workspace.llmConfigs?.find(c => c.provider === 'perplexity')?.enabled || false}
+                    onCheckedChange={(checked) => {
+                      const configs = workspace.llmConfigs || []
+                      const existing = configs.find(c => c.provider === 'perplexity')
+                      
+                      if (existing) {
+                        setWorkspace(current => ({
+                          ...current,
+                          llmConfigs: configs.map(c => 
+                            c.provider === 'perplexity' ? { ...c, enabled: checked } : c
+                          )
+                        }))
                       }
+                      toast.success(checked ? 'Perplexity enabled' : 'Perplexity disabled')
                     }}
-                    disabled={isLoadingApiKey || !apiKey.trim()}
-                    className="flex-1"
-                  >
-                    {isLoadingApiKey ? 'Saving...' : workspace.apiKey ? 'Update API Key' : 'Save API Key'}
-                  </Button>
-                  
-                  {workspace.apiKey && (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={async () => {
-                          try {
-                            setIsLoadingApiKey(true)
-                            console.log('[SettingsDialog] Testing API key...')
-                            
-                            if (!workspace.apiKey) {
-                              toast.error('No API key configured')
-                              return
-                            }
-                            
-                            const corsProxyUrl = 'https://corsproxy.io/?'
-                            const targetUrl = encodeURIComponent('https://api.openai.com/v1/models')
-                            
-                            const response = await fetch(corsProxyUrl + targetUrl, {
-                              method: 'GET',
-                              headers: {
-                                'Authorization': `Bearer ${workspace.apiKey.trim()}`
-                              }
-                            })
-                            
-                            if (response.ok) {
-                              toast.success('API key is valid and working!')
-                            } else if (response.status === 401) {
-                              toast.error('API key is invalid or expired')
-                            } else {
-                              toast.error(`API test failed: ${response.status}`)
-                            }
-                          } catch (error) {
-                            console.error('[SettingsDialog] Error testing API key:', error)
-                            toast.error('Failed to test API key. Check console for details.')
-                          } finally {
-                            setIsLoadingApiKey(false)
-                          }
-                        }}
-                        disabled={isLoadingApiKey}
-                        className="px-4"
-                      >
-                        Test
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={async () => {
-                          try {
-                            setWorkspace((current) => ({
-                              ...current,
-                              apiKey: undefined
-                            }))
-                            setApiKey('')
-                            toast.success('API key removed from network')
-                          } catch (error) {
-                            console.error('Error removing API key:', error)
-                            toast.error('Failed to remove API key')
-                          }
-                        }}
-                        className="px-4"
-                      >
-                        <TrashSimple size={18} />
-                      </Button>
-                    </>
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="perplexity-api-key" className="text-sm font-medium flex items-center gap-2">
+                    <Key size={16} />
+                    API Key
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="perplexity-api-key"
+                      type={showApiKey ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'perplexity')?.apiKey ? '••••••••••••••••••••' : 'pplx-...'}
+                      className="pr-10 font-mono text-sm"
+                      autoComplete="off"
+                      spellCheck="false"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showApiKey ? (
+                        <Eye size={20} weight="regular" />
+                      ) : (
+                        <EyeSlash size={20} weight="regular" />
+                      )}
+                    </button>
+                  </div>
+                  {workspace.llmConfigs?.find(c => c.provider === 'perplexity')?.apiKey && (
+                    <p className="text-xs text-success flex items-center gap-1.5">
+                      <span>✓</span>
+                      API key configured
+                    </p>
                   )}
                 </div>
+
+                <Button
+                  onClick={() => {
+                    if (!apiKey.trim()) {
+                      toast.error('Please enter an API key')
+                      return
+                    }
+                    if (!apiKey.trim().startsWith('pplx-')) {
+                      toast.error('Invalid Perplexity API key format. It should start with "pplx-"')
+                      return
+                    }
+
+                    const configs = workspace.llmConfigs || []
+                    const existing = configs.find(c => c.provider === 'perplexity')
+                    
+                    if (existing) {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: configs.map(c => 
+                          c.provider === 'perplexity' ? { ...c, apiKey: apiKey.trim(), enabled: true } : c
+                        )
+                      }))
+                    } else {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: [...configs, { provider: 'perplexity', apiKey: apiKey.trim(), enabled: true }]
+                      }))
+                    }
+                    
+                    setApiKey('')
+                    toast.success('Perplexity API key saved!', { duration: 3000 })
+                  }}
+                  disabled={!apiKey.trim()}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Key size={16} className="mr-2" />
+                  Save Perplexity Key
+                </Button>
               </div>
 
-              <div className="rounded-xl bg-card p-4 space-y-3">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <span className="text-accent">ℹ️</span>
-                  How to Get Your API Key
-                </h4>
-                <ol className="space-y-2 text-xs text-muted-foreground pl-4">
-                  <li className="list-decimal">
-                    Visit <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">platform.openai.com/api-keys</a>
-                  </li>
-                  <li className="list-decimal">
-                    Sign in to your OpenAI account (create one if needed)
-                  </li>
-                  <li className="list-decimal">
-                    Click "Create new secret key"
-                  </li>
-                  <li className="list-decimal">
-                    Copy the key, paste it above, and click Save
-                  </li>
-                </ol>
-              </div>
-
-              <div className="rounded-xl bg-card p-4 space-y-3">
-                <h4 className="font-semibold text-sm">Investigation Features</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Generate professional intelligence briefs</span>
+              {/* Claude Configuration */}
+              <div className="space-y-3 rounded-xl bg-card p-4 border border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#cc785c] to-[#b36550]" />
+                    <h4 className="font-semibold text-sm">Claude (Anthropic)</h4>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Contextual analysis based on position and country</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Automatic PDF report generation</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span className="text-muted-foreground">Reports saved as attachments to person cards</span>
-                  </div>
+                  <Switch
+                    checked={workspace.llmConfigs?.find(c => c.provider === 'claude')?.enabled || false}
+                    onCheckedChange={(checked) => {
+                      const configs = workspace.llmConfigs || []
+                      const existing = configs.find(c => c.provider === 'claude')
+                      
+                      if (existing) {
+                        setWorkspace(current => ({
+                          ...current,
+                          llmConfigs: configs.map(c => 
+                            c.provider === 'claude' ? { ...c, enabled: checked } : c
+                          )
+                        }))
+                      }
+                      toast.success(checked ? 'Claude enabled' : 'Claude disabled')
+                    }}
+                  />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="claude-api-key" className="text-sm font-medium flex items-center gap-2">
+                    <Key size={16} />
+                    API Key
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="claude-api-key"
+                      type={showApiKey ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'claude')?.apiKey ? '••••••••••••••••••••' : 'sk-ant-...'}
+                      className="pr-10 font-mono text-sm"
+                      autoComplete="off"
+                      spellCheck="false"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showApiKey ? (
+                        <Eye size={20} weight="regular" />
+                      ) : (
+                        <EyeSlash size={20} weight="regular" />
+                      )}
+                    </button>
+                  </div>
+                  {workspace.llmConfigs?.find(c => c.provider === 'claude')?.apiKey && (
+                    <p className="text-xs text-success flex items-center gap-1.5">
+                      <span>✓</span>
+                      API key configured
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => {
+                    if (!apiKey.trim()) {
+                      toast.error('Please enter an API key')
+                      return
+                    }
+                    if (!apiKey.trim().startsWith('sk-ant-')) {
+                      toast.error('Invalid Claude API key format. It should start with "sk-ant-"')
+                      return
+                    }
+
+                    const configs = workspace.llmConfigs || []
+                    const existing = configs.find(c => c.provider === 'claude')
+                    
+                    if (existing) {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: configs.map(c => 
+                          c.provider === 'claude' ? { ...c, apiKey: apiKey.trim(), enabled: true } : c
+                        )
+                      }))
+                    } else {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: [...configs, { provider: 'claude', apiKey: apiKey.trim(), enabled: true }]
+                      }))
+                    }
+                    
+                    setApiKey('')
+                    toast.success('Claude API key saved!', { duration: 3000 })
+                  }}
+                  disabled={!apiKey.trim()}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Key size={16} className="mr-2" />
+                  Save Claude Key
+                </Button>
               </div>
 
-              <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
-                <p className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-primary text-sm mt-0.5">ℹ️</span>
-                  <span>
-                    <strong className="text-foreground">CORS Proxy:</strong> This application uses corsproxy.io to enable API calls from the browser. 
-                    This is required because browsers block direct calls to external APIs due to CORS security restrictions.
-                    If you encounter timeout errors (504), the proxy may be experiencing high traffic - the app will automatically retry up to 3 times.
-                  </span>
-                </p>
-              </div>
-
-              <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
-                <p className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-warning text-sm mt-0.5">⚠️</span>
-                  <span>
-                    <strong className="text-foreground">Important:</strong> After saving your API key, you must save your network file (Ctrl+S or File {'>'} Save) to persist the API key. 
-                    Without saving the file, your API key will be lost when you reload the network.
-                  </span>
-                </p>
-              </div>
-
-              <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
-                <p className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-warning text-sm mt-0.5">⚠️</span>
-                  <span>
-                    <strong className="text-foreground">Cost Notice:</strong> Using the OpenAI API incurs costs based on your usage. 
-                    The investigation feature uses the GPT-4o-mini model. Check your OpenAI account for pricing details.
-                  </span>
-                </p>
+              {/* Status Summary */}
+              <div className="rounded-xl bg-muted/50 p-4 border border-border/50">
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Sparkle size={16} className="text-primary" />
+                  Active Providers
+                </h4>
+                <div className="space-y-2 text-xs">
+                  {workspace.llmConfigs?.filter(c => c.enabled).length === 0 ? (
+                    <p className="text-muted-foreground italic">No providers enabled. Add an API key above to get started.</p>
+                  ) : (
+                    workspace.llmConfigs?.filter(c => c.enabled).map(config => (
+                      <div key={config.provider} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                        <span className="capitalize font-medium">{config.provider}</span>
+                        <span className="text-muted-foreground">• Enabled</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {(workspace.llmConfigs?.filter(c => c.enabled).length || 0) > 0 && (
+                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
+                    When multiple providers are enabled, the system will use them in priority order: Claude → Perplexity → OpenAI
+                  </p>
+                )}
               </div>
             </div>
           </TabsContent>
