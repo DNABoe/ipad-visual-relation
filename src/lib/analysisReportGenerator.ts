@@ -32,12 +32,23 @@ interface GroupAnalysis {
   externalConnections: number
 }
 
+interface AIInsights {
+  insights: string[]
+  centerOfGravity: {
+    person: Person
+    score: number
+    reasoning: string
+  }
+  strategicRecommendations: string[]
+}
+
 interface AnalysisData {
   metrics: NetworkMetrics
   topConnectedNodes: NodeRanking[]
   strongestConnections: ConnectionStrength[]
   groupAnalysis: GroupAnalysis[]
   keyInsights: string[]
+  aiInsights?: AIInsights
 }
 
 function generateRelEyeLogo(doc: any, x: number, y: number, size: number) {
@@ -396,6 +407,127 @@ export async function generateAnalysisPDF(
         
         yPosition += insightLines.length * 5 + 3
       })
+    }
+
+    if (analysis.aiInsights) {
+      if (yPosition > pageHeight - 60) {
+        doc.addPage()
+        yPosition = margin
+      }
+
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(25, 30, 45)
+      doc.text('AI-POWERED ANALYSIS', margin, yPosition)
+      
+      yPosition += 8
+      doc.setDrawColor(102, 178, 191)
+      doc.setLineWidth(0.5)
+      doc.line(margin, yPosition, pageWidth - margin, yPosition)
+      
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(25, 30, 45)
+      doc.text('Network Center of Gravity', margin + 5, yPosition)
+      
+      yPosition += 7
+
+      doc.setFillColor(240, 250, 255)
+      const cogBoxHeight = 25
+      doc.rect(margin + 5, yPosition - 3, contentWidth - 10, cogBoxHeight, 'F')
+      doc.setDrawColor(102, 178, 191)
+      doc.setLineWidth(0.3)
+      doc.rect(margin + 5, yPosition - 3, contentWidth - 10, cogBoxHeight)
+
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(25, 30, 45)
+      doc.text(analysis.aiInsights.centerOfGravity.person.name, margin + 8, yPosition + 3)
+      
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(102, 178, 191)
+      doc.text(`Criticality Score: ${analysis.aiInsights.centerOfGravity.score}%`, pageWidth - margin - 35, yPosition + 3)
+      
+      if (analysis.aiInsights.centerOfGravity.person.position) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 110, 120)
+        doc.text(analysis.aiInsights.centerOfGravity.person.position, margin + 8, yPosition + 8)
+      }
+      
+      doc.setFontSize(8)
+      doc.setTextColor(60, 70, 80)
+      const reasoningLines = doc.splitTextToSize(analysis.aiInsights.centerOfGravity.reasoning, contentWidth - 20)
+      doc.text(reasoningLines, margin + 8, yPosition + (analysis.aiInsights.centerOfGravity.person.position ? 13 : 8))
+      
+      yPosition += cogBoxHeight + 10
+
+      if (yPosition > pageHeight - 60) {
+        doc.addPage()
+        yPosition = margin
+      }
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(25, 30, 45)
+      doc.text('AI-Generated Strategic Insights', margin + 5, yPosition)
+      
+      yPosition += 7
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      
+      analysis.aiInsights.insights.forEach((insight, index) => {
+        if (yPosition > pageHeight - 20) {
+          doc.addPage()
+          yPosition = margin
+        }
+
+        doc.setTextColor(102, 178, 191)
+        doc.text('✦', margin + 8, yPosition)
+        
+        doc.setTextColor(60, 70, 80)
+        const insightLines = doc.splitTextToSize(insight, contentWidth - 15)
+        doc.text(insightLines, margin + 13, yPosition)
+        
+        yPosition += insightLines.length * 5 + 3
+      })
+
+      yPosition += 5
+
+      if (yPosition > pageHeight - 60) {
+        doc.addPage()
+        yPosition = margin
+      }
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(25, 30, 45)
+      doc.text('Strategic Recommendations', margin + 5, yPosition)
+      
+      yPosition += 7
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      
+      analysis.aiInsights.strategicRecommendations.forEach((rec, index) => {
+        if (yPosition > pageHeight - 20) {
+          doc.addPage()
+          yPosition = margin
+        }
+
+        doc.setTextColor(102, 178, 191)
+        doc.text(`${index + 1}.`, margin + 8, yPosition)
+        
+        doc.setTextColor(60, 70, 80)
+        const recLines = doc.splitTextToSize(rec, contentWidth - 15)
+        doc.text(recLines, margin + 13, yPosition)
+        
+        yPosition += recLines.length * 5 + 3
+      })
+
+      yPosition += 5
     }
 
     yPosition = pageHeight - 15

@@ -270,6 +270,7 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
         strongestConnections,
         groupAnalysis,
         keyInsights,
+        aiInsights: aiInsights || undefined,
       })
       toast.success('Analysis report exported successfully', { duration: 2000 })
     } catch (error) {
