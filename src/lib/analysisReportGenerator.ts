@@ -236,40 +236,54 @@ export async function generateAnalysisPDF(
     
     doc.setFontSize(9)
     top5.forEach((ranking, index) => {
-      if (yPosition > pageHeight - 25) {
+      if (yPosition > pageHeight - 30) {
         doc.addPage()
         yPosition = margin
       }
 
+      const rowHeight = 22
       doc.setFillColor(245, 247, 250)
-      doc.rect(margin, yPosition - 3, contentWidth, 18, 'F')
+      doc.rect(margin, yPosition, contentWidth, rowHeight, 'F')
+      
+      doc.setDrawColor(220, 225, 230)
+      doc.setLineWidth(0.1)
+      doc.rect(margin, yPosition, contentWidth, rowHeight)
+      
+      let innerY = yPosition + 5
       
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(102, 178, 191)
-      doc.text(`${index + 1}.`, margin + 3, yPosition + 3)
+      doc.text(`${index + 1}.`, margin + 3, innerY)
       
       doc.setTextColor(25, 30, 45)
-      doc.text(ranking.person.name, margin + 10, yPosition + 3)
+      doc.text(ranking.person.name, margin + 10, innerY)
+      
+      innerY += 5
       
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 110, 120)
       if (ranking.person.position) {
-        const posText = doc.splitTextToSize(ranking.person.position, contentWidth - 20)
-        doc.text(posText[0], margin + 10, yPosition + 8)
+        const maxPosWidth = contentWidth - 15
+        const posText = doc.splitTextToSize(ranking.person.position, maxPosWidth)
+        doc.text(posText[0], margin + 10, innerY)
       }
+      
+      innerY += 5
       
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(60, 70, 80)
-      doc.text(`${ranking.connectionCount} connections`, margin + 10, yPosition + 13)
-      doc.text(`Strength: ${ranking.connectionStrength}`, margin + 60, yPosition + 13)
-      doc.text(`Score: ${ranking.person.score}/10`, margin + 110, yPosition + 13)
+      doc.text(`${ranking.connectionCount} connections`, margin + 10, innerY)
+      doc.text(`Strength: ${ranking.connectionStrength}`, margin + 55, innerY)
+      doc.text(`Score: ${ranking.person.score}/10`, margin + 100, innerY)
       
       if (ranking.hasReport) {
         doc.setTextColor(102, 178, 191)
-        doc.text('✓ Intel Report', pageWidth - margin - 25, yPosition + 13)
+        const reportText = '✓ Intel Report'
+        const reportWidth = doc.getTextWidth(reportText)
+        doc.text(reportText, pageWidth - margin - reportWidth - 3, innerY)
       }
       
-      yPosition += 22
+      yPosition += rowHeight + 2
     })
 
     yPosition += 5
@@ -295,27 +309,23 @@ export async function generateAnalysisPDF(
       doc.setFontSize(9)
       const top5Connections = analysis.strongestConnections.slice(0, 5)
       
-      top5Connections.forEach((conn) => {
+      top5Connections.forEach((conn, idx) => {
         if (yPosition > pageHeight - 20) {
           doc.addPage()
           yPosition = margin
         }
 
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(25, 30, 45)
-        doc.text(`${conn.fromPerson.name}`, margin + 5, yPosition)
+        const connectionText = `${conn.fromPerson.name} ⟷ ${conn.toPerson.name}`
+        const weightBadge = `[${conn.weight.toUpperCase()}]`
         
         doc.setFont('helvetica', 'normal')
+        doc.setTextColor(25, 30, 45)
+        doc.text(connectionText, margin + 5, yPosition)
+        
+        doc.setFont('helvetica', 'bold')
         doc.setTextColor(102, 178, 191)
-        doc.text('⟷', margin + 5 + doc.getTextWidth(conn.fromPerson.name) + 2, yPosition)
-        
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(25, 30, 45)
-        doc.text(`${conn.toPerson.name}`, margin + 5 + doc.getTextWidth(conn.fromPerson.name) + 8, yPosition)
-        
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(100, 110, 120)
-        doc.text(`[${conn.weight.toUpperCase()}]`, pageWidth - margin - 20, yPosition, { align: 'right' })
+        const weightWidth = doc.getTextWidth(weightBadge)
+        doc.text(weightBadge, pageWidth - margin - weightWidth - 3, yPosition)
         
         yPosition += 7
       })
@@ -348,24 +358,32 @@ export async function generateAnalysisPDF(
 
       doc.setFontSize(9)
       analysis.groupAnalysis.forEach((group) => {
-        if (yPosition > pageHeight - 20) {
+        if (yPosition > pageHeight - 25) {
           doc.addPage()
           yPosition = margin
         }
 
+        const groupRowHeight = 14
+        doc.setFillColor(250, 252, 254)
+        doc.rect(margin, yPosition, contentWidth, groupRowHeight, 'F')
+        
+        doc.setDrawColor(220, 225, 230)
+        doc.setLineWidth(0.1)
+        doc.rect(margin, yPosition, contentWidth, groupRowHeight)
+
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(25, 30, 45)
-        doc.text(group.group.name, margin + 5, yPosition)
+        doc.text(group.group.name, margin + 5, yPosition + 5)
         
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(100, 110, 120)
         doc.text(
           `${group.memberCount} members | ${group.internalConnections} internal | ${group.externalConnections} external`,
           margin + 5,
-          yPosition + 5
+          yPosition + 10
         )
         
-        yPosition += 12
+        yPosition += groupRowHeight + 2
       })
 
       yPosition += 5
@@ -430,36 +448,48 @@ export async function generateAnalysisPDF(
       doc.setFontSize(12)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(25, 30, 45)
-      doc.text('Network Center of Gravity', margin + 5, yPosition)
+      doc.text('Network Center of Gravity', margin, yPosition)
       
-      yPosition += 7
+      yPosition += 8
 
+      const boxPadding = 5
+      const boxX = margin
+      const boxWidth = contentWidth
+      const cogBoxHeight = analysis.aiInsights.centerOfGravity.person.position ? 30 : 25
+      
       doc.setFillColor(240, 250, 255)
-      const cogBoxHeight = 25
-      doc.rect(margin + 5, yPosition - 3, contentWidth - 10, cogBoxHeight, 'F')
+      doc.rect(boxX, yPosition, boxWidth, cogBoxHeight, 'F')
       doc.setDrawColor(102, 178, 191)
       doc.setLineWidth(0.3)
-      doc.rect(margin + 5, yPosition - 3, contentWidth - 10, cogBoxHeight)
+      doc.rect(boxX, yPosition, boxWidth, cogBoxHeight)
+
+      let innerY = yPosition + boxPadding + 3
 
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(25, 30, 45)
-      doc.text(analysis.aiInsights.centerOfGravity.person.name, margin + 8, yPosition + 3)
+      doc.text(analysis.aiInsights.centerOfGravity.person.name, boxX + boxPadding, innerY)
       
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(102, 178, 191)
-      doc.text(`Criticality Score: ${analysis.aiInsights.centerOfGravity.score}%`, pageWidth - margin - 35, yPosition + 3)
+      doc.setFontSize(9)
+      const scoreText = `Criticality Score: ${analysis.aiInsights.centerOfGravity.score}%`
+      const scoreWidth = doc.getTextWidth(scoreText)
+      doc.text(scoreText, boxX + boxWidth - boxPadding - scoreWidth, innerY)
+      
+      innerY += 5
       
       if (analysis.aiInsights.centerOfGravity.person.position) {
         doc.setFontSize(8)
         doc.setTextColor(100, 110, 120)
-        doc.text(analysis.aiInsights.centerOfGravity.person.position, margin + 8, yPosition + 8)
+        doc.text(analysis.aiInsights.centerOfGravity.person.position, boxX + boxPadding, innerY)
+        innerY += 5
       }
       
       doc.setFontSize(8)
       doc.setTextColor(60, 70, 80)
-      const reasoningLines = doc.splitTextToSize(analysis.aiInsights.centerOfGravity.reasoning, contentWidth - 20)
-      doc.text(reasoningLines, margin + 8, yPosition + (analysis.aiInsights.centerOfGravity.person.position ? 13 : 8))
+      const reasoningLines = doc.splitTextToSize(analysis.aiInsights.centerOfGravity.reasoning, boxWidth - (boxPadding * 2))
+      doc.text(reasoningLines, boxX + boxPadding, innerY)
       
       yPosition += cogBoxHeight + 10
 
@@ -471,9 +501,9 @@ export async function generateAnalysisPDF(
       doc.setFontSize(12)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(25, 30, 45)
-      doc.text('AI-Generated Strategic Insights', margin + 5, yPosition)
+      doc.text('AI-Generated Strategic Insights', margin, yPosition)
       
-      yPosition += 7
+      yPosition += 8
 
       doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
@@ -485,11 +515,11 @@ export async function generateAnalysisPDF(
         }
 
         doc.setTextColor(102, 178, 191)
-        doc.text('✦', margin + 8, yPosition)
+        doc.text('•', margin + 3, yPosition)
         
         doc.setTextColor(60, 70, 80)
-        const insightLines = doc.splitTextToSize(insight, contentWidth - 15)
-        doc.text(insightLines, margin + 13, yPosition)
+        const insightLines = doc.splitTextToSize(insight, contentWidth - 10)
+        doc.text(insightLines, margin + 8, yPosition)
         
         yPosition += insightLines.length * 5 + 3
       })
@@ -504,9 +534,9 @@ export async function generateAnalysisPDF(
       doc.setFontSize(12)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(25, 30, 45)
-      doc.text('Strategic Recommendations', margin + 5, yPosition)
+      doc.text('Strategic Recommendations', margin, yPosition)
       
-      yPosition += 7
+      yPosition += 8
 
       doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
@@ -518,11 +548,11 @@ export async function generateAnalysisPDF(
         }
 
         doc.setTextColor(102, 178, 191)
-        doc.text(`${index + 1}.`, margin + 8, yPosition)
+        doc.text(`${index + 1}.`, margin + 3, yPosition)
         
         doc.setTextColor(60, 70, 80)
-        const recLines = doc.splitTextToSize(rec, contentWidth - 15)
-        doc.text(recLines, margin + 13, yPosition)
+        const recLines = doc.splitTextToSize(rec, contentWidth - 10)
+        doc.text(recLines, margin + 10, yPosition)
         
         yPosition += recLines.length * 5 + 3
       })
