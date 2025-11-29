@@ -19,6 +19,12 @@ import {
   compactNetworkLayout,
   compressLayout
 } from '@/lib/layoutAlgorithms'
+import {
+  alignVertical,
+  alignHorizontal,
+  distributeVertical,
+  distributeHorizontal
+} from '@/lib/arrangeUtils'
 
 export type ContextMenuState = {
   type: 'canvas' | 'person' | 'connection' | 'group'
@@ -842,6 +848,86 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     toast.info('Move mouse to another card to create connection')
   }, [workspaceState.workspace.persons, interaction])
 
+  const handleAlignVertical = useCallback(() => {
+    if (selection.selectedPersons.length < 2) {
+      toast.info('Select at least 2 persons to align')
+      return
+    }
+
+    const selectedPersonsData = workspaceState.workspace.persons.filter(p => 
+      selection.selectedPersons.includes(p.id)
+    )
+
+    const aligned = alignVertical(selectedPersonsData)
+    const updates = new Map<string, Partial<Person>>()
+    aligned.forEach(person => {
+      updates.set(person.id, { x: person.x })
+    })
+
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Cards aligned vertically')
+  }, [selection.selectedPersons, workspaceState])
+
+  const handleAlignHorizontal = useCallback(() => {
+    if (selection.selectedPersons.length < 2) {
+      toast.info('Select at least 2 persons to align')
+      return
+    }
+
+    const selectedPersonsData = workspaceState.workspace.persons.filter(p => 
+      selection.selectedPersons.includes(p.id)
+    )
+
+    const aligned = alignHorizontal(selectedPersonsData)
+    const updates = new Map<string, Partial<Person>>()
+    aligned.forEach(person => {
+      updates.set(person.id, { y: person.y })
+    })
+
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Cards aligned horizontally')
+  }, [selection.selectedPersons, workspaceState])
+
+  const handleDistributeVertical = useCallback(() => {
+    if (selection.selectedPersons.length < 3) {
+      toast.info('Select at least 3 persons to distribute')
+      return
+    }
+
+    const selectedPersonsData = workspaceState.workspace.persons.filter(p => 
+      selection.selectedPersons.includes(p.id)
+    )
+
+    const distributed = distributeVertical(selectedPersonsData)
+    const updates = new Map<string, Partial<Person>>()
+    distributed.forEach(person => {
+      updates.set(person.id, { y: person.y })
+    })
+
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Cards distributed vertically')
+  }, [selection.selectedPersons, workspaceState])
+
+  const handleDistributeHorizontal = useCallback(() => {
+    if (selection.selectedPersons.length < 3) {
+      toast.info('Select at least 3 persons to distribute')
+      return
+    }
+
+    const selectedPersonsData = workspaceState.workspace.persons.filter(p => 
+      selection.selectedPersons.includes(p.id)
+    )
+
+    const distributed = distributeHorizontal(selectedPersonsData)
+    const updates = new Map<string, Partial<Person>>()
+    distributed.forEach(person => {
+      updates.set(person.id, { x: person.x })
+    })
+
+    workspaceState.updatePersonsInBulk(updates)
+    toast.success('Cards distributed horizontally')
+  }, [selection.selectedPersons, workspaceState])
+
   return {
     workspace: workspaceState.workspace,
     selection,
@@ -898,6 +984,10 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       handleRenameGroup,
       handleInfluenceArrange,
       handleStartConnection,
+      handleAlignVertical,
+      handleAlignHorizontal,
+      handleDistributeVertical,
+      handleDistributeHorizontal,
       addPersons,
       updatePersonsScore,
       nudgePersons,

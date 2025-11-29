@@ -667,7 +667,12 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
                     if (controller.contextMenu!.targetId) {
                       controller.handlers.handleInfluenceArrange(controller.contextMenu!.targetId)
                     }
-                  }
+                  },
+                  controller.selection.selectedPersons.length > 1,
+                  () => controller.handlers.handleAlignVertical(),
+                  () => controller.handlers.handleAlignHorizontal(),
+                  () => controller.handlers.handleDistributeVertical(),
+                  () => controller.handlers.handleDistributeHorizontal()
                 )
               : controller.contextMenu.type === 'connection'
               ? getConnectionMenuItems(

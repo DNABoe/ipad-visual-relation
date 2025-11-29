@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   UserPlus,
   ClipboardText,
@@ -13,7 +13,12 @@ import {
   TextAlignCenter,
   Crosshair,
   TreeStructure,
-  Link
+  Link,
+  CaretRight,
+  AlignLeft,
+  AlignCenterVertical,
+  ArrowsOutLineVertical,
+  ArrowsOutLineHorizontal
 } from '@phosphor-icons/react'
 
 export type ContextMenuType = 'canvas' | 'person' | 'connection' | 'group'
@@ -21,9 +26,10 @@ export type ContextMenuType = 'canvas' | 'person' | 'connection' | 'group'
 export interface ContextMenuItem {
   label: string
   icon?: React.ReactNode
-  onClick: () => void
+  onClick?: () => void
   danger?: boolean
   divider?: boolean
+  submenu?: ContextMenuItem[]
 }
 
 interface ContextMenuProps {
@@ -92,24 +98,77 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
           {item.divider ? (
             <div className="h-px bg-border my-1" />
           ) : (
-            <button
-              onClick={() => {
-                item.onClick()
-                onClose()
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left transition-colors ${
-                item.danger
-                  ? 'text-destructive hover:bg-destructive/10'
-                  : 'text-foreground hover:bg-accent/50'
-              }`}
-            >
-              {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
-              <span>{item.label}</span>
-            </button>
+            <MenuItem item={item} onClose={onClose} />
           )}
         </div>
       ))}
     </div>
+  )
+}
+
+function MenuItem({ item, onClose }: { item: ContextMenuItem; onClose: () => void }) {
+  const [showSubmenu, setShowSubmenu] = useState(false)
+  const itemRef = useRef<HTMLButtonElement>(null)
+
+  if (item.submenu) {
+    return (
+      <div
+        className="relative"
+        onMouseEnter={() => setShowSubmenu(true)}
+        onMouseLeave={() => setShowSubmenu(false)}
+      >
+        <button
+          ref={itemRef}
+          className="w-full flex items-center justify-between gap-3 px-3 py-2 text-sm text-left transition-colors text-foreground hover:bg-accent/50"
+        >
+          <div className="flex items-center gap-3">
+            {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+            <span>{item.label}</span>
+          </div>
+          <CaretRight size={16} className="flex-shrink-0" />
+        </button>
+        {showSubmenu && (
+          <div
+            className="absolute left-full top-0 ml-1 min-w-[200px] bg-popover border border-border rounded-lg shadow-lg py-1 z-[10000]"
+          >
+            {item.submenu.map((subItem, subIndex) => (
+              <button
+                key={subIndex}
+                onClick={() => {
+                  subItem.onClick?.()
+                  onClose()
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left transition-colors ${
+                  subItem.danger
+                    ? 'text-destructive hover:bg-destructive/10'
+                    : 'text-foreground hover:bg-accent/50'
+                }`}
+              >
+                {subItem.icon && <span className="flex-shrink-0">{subItem.icon}</span>}
+                <span>{subItem.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => {
+        item.onClick?.()
+        onClose()
+      }}
+      className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left transition-colors ${
+        item.danger
+          ? 'text-destructive hover:bg-destructive/10'
+          : 'text-foreground hover:bg-accent/50'
+      }`}
+    >
+      {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+      <span>{item.label}</span>
+    </button>
   )
 }
 
@@ -148,7 +207,12 @@ export function getPersonMenuItems(
   onEdit: () => void,
   onDelete: () => void,
   onConnect?: () => void,
-  onArrangeToInfluence?: () => void
+  onArrangeToInfluence?: () => void,
+  multipleSelected?: boolean,
+  onAlignVertical?: () => void,
+  onAlignHorizontal?: () => void,
+  onDistributeVertical?: () => void,
+  onDistributeHorizontal?: () => void
 ): ContextMenuItem[] {
   const items: ContextMenuItem[] = [
     {
@@ -163,6 +227,35 @@ export function getPersonMenuItems(
       label: 'Connect',
       icon: <Link size={18} />,
       onClick: onConnect,
+    })
+  }
+  
+  if (multipleSelected && onAlignVertical && onAlignHorizontal && onDistributeVertical && onDistributeHorizontal) {
+    items.push({
+      label: 'Arrange',
+      icon: <AlignCenterVertical size={18} />,
+      submenu: [
+        {
+          label: 'Align vertical',
+          icon: <AlignLeft size={18} />,
+          onClick: onAlignVertical,
+        },
+        {
+          label: 'Align horizontal',
+          icon: <TextAlignCenter size={18} />,
+          onClick: onAlignHorizontal,
+        },
+        {
+          label: 'Distribute vertical',
+          icon: <ArrowsOutLineVertical size={18} />,
+          onClick: onDistributeVertical,
+        },
+        {
+          label: 'Distribute horizontal',
+          icon: <ArrowsOutLineHorizontal size={18} />,
+          onClick: onDistributeHorizontal,
+        },
+      ],
     })
   }
   
