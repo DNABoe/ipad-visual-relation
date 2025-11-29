@@ -71,7 +71,7 @@ function generateRelEyeLogo(doc: any, x: number, y: number, size: number) {
   doc.setDrawColor(102, 178, 191)
   doc.line(centerX - r, centerY, centerX - r + lineLen, centerY)
   doc.line(centerX + r - lineLen, centerY, centerX + r, centerY)
-  doc.line(centerX, centerY - r, centerY)
+  doc.line(centerX, centerY - r, centerX, centerY - r + lineLen)
   doc.line(centerX, centerY + r - lineLen, centerX, centerY + r)
 }
 
