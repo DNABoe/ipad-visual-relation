@@ -418,6 +418,60 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 </div>
               </div>
 
+              {/* Direct API Mode Toggle */}
+              <div className="space-y-3 rounded-xl bg-gradient-to-br from-accent/10 to-primary/10 p-4 border-2 border-accent/30">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-accent/20">
+                    <Broadcast className="w-5 h-5 text-accent" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          Direct API Mode
+                          <span className="text-xs font-normal bg-accent/20 text-accent-foreground px-2 py-0.5 rounded-md">FAST</span>
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Bypass CORS proxies for faster investigation reports
+                        </p>
+                      </div>
+                      <Switch
+                        checked={workspaceSettings.useDirectAPIMode || false}
+                        onCheckedChange={(checked) => {
+                          setWorkspace((current) => ({
+                            ...current,
+                            settings: {
+                              ...DEFAULT_WORKSPACE_SETTINGS,
+                              ...(current.settings || {}),
+                              useDirectAPIMode: checked
+                            }
+                          }))
+                          toast.success(
+                            checked 
+                              ? 'Direct API mode enabled - faster investigations' 
+                              : 'Using CORS proxy mode for compatibility', 
+                            { duration: 3000 }
+                          )
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground bg-card/50 rounded-lg p-2.5 mt-2 space-y-1.5">
+                      <p className="flex items-start gap-2">
+                        <span className="text-success font-semibold mt-0.5">✓</span>
+                        <span><strong>Direct mode:</strong> Fastest - calls API providers directly without intermediary servers</span>
+                      </p>
+                      <p className="flex items-start gap-2">
+                        <span className="text-warning font-semibold mt-0.5">⚠</span>
+                        <span><strong>Proxy mode:</strong> Slower but more compatible - routes through CORS proxy servers</span>
+                      </p>
+                      <p className="text-xs mt-2 text-muted-foreground/80 italic">
+                        Note: Some browsers/networks may block direct API calls. If investigations fail, disable this option.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* OpenAI Configuration */}
               <div className="space-y-3 rounded-xl bg-card p-4 border border-border">
                 <div className="flex items-center justify-between mb-2">

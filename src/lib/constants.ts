@@ -41,4 +41,5 @@ export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
   organicLines: false,
   gridOpacity: 15,
   showGrid: true,
+  useDirectAPIMode: false,
 }

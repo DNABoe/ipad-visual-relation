@@ -790,6 +790,7 @@ export async function generateIntelligenceReport(params: {
     socialMedia: boolean
     approachAnalysis: boolean
   }
+  useDirectMode?: boolean
 }): Promise<string> {
   const { 
     name, 
@@ -806,7 +807,8 @@ export async function generateIntelligenceReport(params: {
       mediaPresence: false,
       socialMedia: false,
       approachAnalysis: false,
-    }
+    },
+    useDirectMode
   } = params
 
   console.log('[externalLLM] Starting intelligence report generation...')
@@ -820,7 +822,8 @@ export async function generateIntelligenceReport(params: {
     provider,
     hasLLMConfigs: llmConfigs.length > 0,
     enabledProviders: llmConfigs.filter(c => c.enabled).map(c => c.provider),
-    investigationSettings
+    investigationSettings,
+    useDirectMode: useDirectMode ?? 'not specified (will use default)'
   })
 
   const positionText = position || 'Not specified'
@@ -1026,7 +1029,7 @@ IMPORTANT: The depth and comprehensiveness of your analysis should match the inv
       const geminiConfig = enabledConfigs.find(c => c.provider === 'gemini')
       if (geminiConfig) {
         console.log('[externalLLM] Using Gemini API...')
-        return await callGemini(promptText, geminiConfig.apiKey)
+        return await callGemini(promptText, geminiConfig.apiKey, useDirectMode)
       }
     }
     
@@ -1034,7 +1037,7 @@ IMPORTANT: The depth and comprehensiveness of your analysis should match the inv
       const claudeConfig = enabledConfigs.find(c => c.provider === 'claude')
       if (claudeConfig) {
         console.log('[externalLLM] Using Claude API...')
-        return await callClaude(promptText, claudeConfig.apiKey)
+        return await callClaude(promptText, claudeConfig.apiKey, useDirectMode)
       }
     }
     
@@ -1042,7 +1045,7 @@ IMPORTANT: The depth and comprehensiveness of your analysis should match the inv
       const perplexityConfig = enabledConfigs.find(c => c.provider === 'perplexity')
       if (perplexityConfig) {
         console.log('[externalLLM] Using Perplexity API...')
-        return await callPerplexity(promptText, perplexityConfig.apiKey)
+        return await callPerplexity(promptText, perplexityConfig.apiKey, useDirectMode)
       }
     }
     
@@ -1050,7 +1053,7 @@ IMPORTANT: The depth and comprehensiveness of your analysis should match the inv
       const openaiConfig = enabledConfigs.find(c => c.provider === 'openai')
       if (openaiConfig) {
         console.log('[externalLLM] Using OpenAI API...')
-        return await callOpenAI(promptText, openaiConfig.apiKey)
+        return await callOpenAI(promptText, openaiConfig.apiKey, useDirectMode)
       }
     }
     

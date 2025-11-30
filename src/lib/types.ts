@@ -101,6 +101,7 @@ export interface WorkspaceSettings {
   organicLines: boolean
   gridOpacity: number
   showGrid: boolean
+  useDirectAPIMode?: boolean
 }
 
 export interface CollapsedBranch {

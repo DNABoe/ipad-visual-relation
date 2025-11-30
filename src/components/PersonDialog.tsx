@@ -25,7 +25,10 @@ interface PersonDialogProps {
   onSave: (person: Person) => void
   onDelete?: (personId: string) => void
   editPerson?: Person
-  workspace?: { llmConfigs?: Array<{ provider: string; apiKey: string; enabled: boolean }> }
+  workspace?: { 
+    llmConfigs?: Array<{ provider: string; apiKey: string; enabled: boolean }>
+    settings?: { useDirectAPIMode?: boolean }
+  }
 }
 
 export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson, workspace }: PersonDialogProps) {
@@ -567,7 +570,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         education: education || undefined,
         specialization: specialization || undefined,
         llmConfigs: workspace?.llmConfigs || [],
-        investigationSettings
+        investigationSettings,
+        useDirectMode: workspace?.settings?.useDirectAPIMode
       })
       console.log('[PersonDialog] Intelligence report generated successfully')
       
