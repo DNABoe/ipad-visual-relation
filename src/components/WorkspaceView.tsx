@@ -644,8 +644,8 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
               ? getCanvasMenuItems(
                   () => controller.handlers.handleAddPersonAt(controller.contextMenu!.canvasX!, controller.contextMenu!.canvasY!),
                   () => controller.handlers.handlePaste(controller.contextMenu!.canvasX, controller.contextMenu!.canvasY),
-                  controller.handlers.handleSelectAll,
-                  !!controller.copiedData && controller.copiedData.persons.length > 0
+                  !!controller.copiedData && controller.copiedData.persons.length > 0,
+                  controller.handlers.handleSelectAll
                 )
               : controller.contextMenu.type === 'person'
               ? getPersonMenuItems(
@@ -663,16 +663,17 @@ export function WorkspaceView({ workspace, fileName, password, onNewNetwork, onL
                       controller.handlers.handleStartConnection(controller.contextMenu!.targetId)
                     }
                   },
-                  () => {
-                    if (controller.contextMenu!.targetId) {
-                      controller.handlers.handleInfluenceArrange(controller.contextMenu!.targetId)
-                    }
-                  },
+                  undefined,
                   controller.selection.selectedPersons.length > 1,
                   () => controller.handlers.handleAlignVertical(),
                   () => controller.handlers.handleAlignHorizontal(),
                   () => controller.handlers.handleDistributeVertical(),
-                  () => controller.handlers.handleDistributeHorizontal()
+                  () => controller.handlers.handleDistributeHorizontal(),
+                  () => {
+                    if (controller.contextMenu!.targetId) {
+                      controller.handlers.handleInfluenceArrange(controller.contextMenu!.targetId)
+                    }
+                  }
                 )
               : controller.contextMenu.type === 'connection'
               ? getConnectionMenuItems(

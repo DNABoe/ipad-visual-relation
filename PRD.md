@@ -293,6 +293,42 @@ RelEye uses a hybrid storage model that balances security and usability. **All f
 - **Progression**: Import → Select JSON file → Parse and restore workspace → All data loaded
 - **Success criteria**: Unencrypted JSON import works for backward compatibility; users are reminded to save as encrypted file
 
+### Person Investigation with Configurable Depth
+- **Functionality**: Generate detailed intelligence reports on individuals using AI with configurable investigation depth and scope
+- **Purpose**: Provide intelligence analysts with comprehensive, customizable background research on network members
+- **Trigger**: Open person dialog → Navigate to "Investigate" tab → Configure investigation settings → Click "Generate Intelligence Report"
+- **Progression**: 
+  - User selects person → Opens investigate tab → Configures investigation scope using checkboxes
+  - **Investigation Scope Options**:
+    1. **Personal Information (Deep Search)**: Comprehensive personal background, biography, and detailed life history
+    2. **Work & CV Analysis**: Detailed employment history, current and past positions, career trajectory
+    3. **Media Presence Analysis**: Deep dive into media appearances, interviews, publications, and public visibility
+    4. **Social Media (SoMe)**: Social media presence, activity patterns, engagement, and digital footprint
+    5. **AI-Powered Approach Strategy**: Strategic recommendations on how to approach this person, topics to discuss, and areas of interest
+  - User optionally fills in additional context fields (Country, Organization, Education, Specialization)
+  - Click "Generate Intelligence Report" → AI analyzes based on selected scopes → Report generated as PDF
+  - PDF automatically added to person's attachments → Report preview shown in dialog
+- **Requirements**:
+  - **API Key**: Requires at least one LLM provider (OpenAI, Perplexity, or Claude) configured in Settings > Investigation tab
+  - **Network File**: API keys are stored encrypted in the network file (tied to file, not user)
+  - **Person Name**: Minimum requirement for investigation
+- **Report Format**:
+  - Professional intelligence report layout with RelEye logo
+  - Profile photo (if available)
+  - Structured sections based on selected investigation scopes
+  - Formal intelligence agency styling
+  - Exported as PDF and auto-attached to person card
+- **Success criteria**: 
+  - Investigation settings persist with person record
+  - Each scope can be independently enabled/disabled
+  - Report depth varies based on selected scopes
+  - Multiple LLM providers can be used (OpenAI, Perplexity, Claude)
+  - API keys encrypted and saved in network file
+  - Report generates within 30-60 seconds
+  - PDF automatically attached to person
+  - Investigation only runs when explicitly triggered (doesn't auto-run)
+  - Clear error messages when API configuration is missing or invalid
+
 ### AI-Powered Network Insights
 - **Functionality**: Advanced AI analysis of the network using investigation reports to generate strategic insights and identify the network's "center of gravity"
 - **Purpose**: Leverage AI to analyze investigation reports and provide intelligence analysts with deep strategic insights, patterns, and actionable recommendations based on the entire network's data
