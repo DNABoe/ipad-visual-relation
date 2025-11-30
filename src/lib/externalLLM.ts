@@ -155,15 +155,21 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
         console.error(`[externalLLM] ${proxy.name} error headers:`, Object.fromEntries(response.headers.entries()))
         
         if (response.status === 401) {
-          throw new Error('Invalid API key. Please verify your OpenAI API key in Settings.')
+          throw new Error('Invalid API key. Please verify your OpenAI API key in Settings > Investigation tab.')
         } else if (response.status === 403) {
-          console.error('[externalLLM] 403 Forbidden - This typically means:')
-          console.error('[externalLLM]   1. The CORS proxy is blocking the request')
-          console.error('[externalLLM]   2. The API key lacks necessary permissions')
-          console.error('[externalLLM]   3. The OpenAI account has billing issues')
-          throw new Error('Access forbidden. The CORS proxy or API rejected the request. Please check: 1) Your API key has billing enabled, 2) Your OpenAI account is in good standing, 3) Try a different CORS proxy.')
+          console.error('[externalLLM] 403 Forbidden - Common causes:')
+          console.error('[externalLLM]   1. API key lacks necessary permissions')
+          console.error('[externalLLM]   2. OpenAI account billing not set up or expired')
+          console.error('[externalLLM]   3. CORS proxy blocking the request')
+          console.error('[externalLLM]   4. API key has insufficient credits')
+          
+          throw new Error('Access forbidden. Please check your API key permissions:\n\n' +
+            '1. Ensure your OpenAI account has billing set up and active credits\n' +
+            '2. Verify the API key has proper permissions (not restricted)\n' +
+            '3. Check that your OpenAI account is in good standing\n' +
+            '4. Your API key may need to be regenerated from OpenAI dashboard')
         } else if (response.status === 429) {
-          throw new Error('Rate limit exceeded. Please try again later.')
+          throw new Error('Rate limit exceeded. Please try again in a few minutes.')
         }
         
         continue
@@ -192,7 +198,16 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
     }
   }
 
-  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
+  throw new Error('Unable to connect to OpenAI API. All CORS proxies failed.\n\n' +
+    'Most common causes:\n' +
+    '• Your OpenAI account needs billing set up with active credits\n' +
+    '• API key permissions are restricted\n' +
+    '• Network firewall blocking API access\n\n' +
+    'Solutions:\n' +
+    '1. Visit platform.openai.com to verify billing is active\n' +
+    '2. Check that your API key has usage permissions\n' +
+    '3. Try regenerating your API key from OpenAI dashboard\n' +
+    '4. Ensure you have sufficient credits in your account')
 }
 
 async function callPerplexity(prompt: string, apiKey?: string): Promise<string> {
@@ -306,7 +321,12 @@ async function callPerplexity(prompt: string, apiKey?: string): Promise<string> 
     }
   }
 
-  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
+  throw new Error('Unable to connect to Perplexity API. All CORS proxies failed.\n\n' +
+    'Please verify:\n' +
+    '• Your Perplexity API key is valid and active\n' +
+    '• Your account has sufficient credits\n' +
+    '• API key format is correct (should start with "pplx-")\n\n' +
+    'Visit perplexity.ai/settings/api to check your API key status.')
 }
 
 async function callClaude(prompt: string, apiKey?: string): Promise<string> {
@@ -419,7 +439,12 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
     }
   }
 
-  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
+  throw new Error('Unable to connect to Claude API. All CORS proxies failed.\n\n' +
+    'Please verify:\n' +
+    '• Your Anthropic API key is valid and active\n' +
+    '• Your account has sufficient credits\n' +
+    '• API key format is correct (should start with "sk-ant-")\n\n' +
+    'Visit console.anthropic.com to check your API key status.')
 }
 
 async function callGemini(prompt: string, apiKey?: string): Promise<string> {
@@ -546,7 +571,12 @@ async function callGemini(prompt: string, apiKey?: string): Promise<string> {
     }
   }
 
-  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
+  throw new Error('Unable to connect to Gemini API. All CORS proxies failed.\n\n' +
+    'Please verify:\n' +
+    '• Your Google AI API key is valid and active\n' +
+    '• API key format is correct (should start with "AIza")\n' +
+    '• Your project has the Gemini API enabled\n\n' +
+    'Visit aistudio.google.com/app/apikey to check your API key status.')
 }
 
 export async function generateIntelligenceReport(params: {
