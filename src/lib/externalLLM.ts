@@ -28,7 +28,7 @@ const API_ENDPOINTS = {
   openai: 'https://api.openai.com/v1/chat/completions',
   perplexity: 'https://api.perplexity.ai/chat/completions',
   claude: 'https://api.anthropic.com/v1/messages',
-  gemini: (apiKey: string) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`
+  gemini: (apiKey: string) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
 }
 
 export function isLLMAvailable(): boolean {
@@ -449,7 +449,7 @@ async function callGemini(prompt: string, apiKey?: string): Promise<string> {
     ],
     generationConfig: {
       temperature: 0.7,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 8000,
     }
   }
 
@@ -517,6 +517,17 @@ async function callGemini(prompt: string, apiKey?: string): Promise<string> {
       
       if (!content) {
         console.error(`[externalLLM] ${proxy.name} returned invalid response format`)
+        console.error(`[externalLLM] ${proxy.name} response data:`, JSON.stringify(data, null, 2))
+        
+        if (data.error) {
+          console.error(`[externalLLM] ${proxy.name} API error:`, data.error)
+          throw new Error(`Gemini API error: ${data.error.message || 'Unknown error'}`)
+        }
+        
+        if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+          throw new Error('Content was blocked by Gemini safety filters. Please try adjusting your investigation parameters.')
+        }
+        
         continue
       }
 

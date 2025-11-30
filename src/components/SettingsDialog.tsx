@@ -62,7 +62,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
   
   useEffect(() => {
-    if (open) {
+    if (!open) {
       setOpenaiApiKey('')
       setPerplexityApiKey('')
       setClaudeApiKey('')
@@ -406,8 +406,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg mb-1">AI Investigation</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Configure AI providers for intelligence report generation. Multiple providers can be enabled simultaneously.
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Configure AI providers for intelligence report generation. Each provider requires its own unique API key.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Multiple providers can be enabled simultaneously. Each API key field is independent and specific to its provider.
                     </p>
                   </div>
                 </div>
@@ -441,7 +444,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 <div className="space-y-2">
                   <Label htmlFor="openai-api-key" className="text-sm font-medium flex items-center gap-2">
                     <Key size={16} />
-                    API Key
+                    OpenAI API Key
                   </Label>
                   <div className="relative">
                     <Input
@@ -449,7 +452,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       type={showOpenAIKey ? "text" : "password"}
                       value={openaiApiKey}
                       onChange={(e) => setOpenaiApiKey(e.target.value)}
-                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'openai')?.apiKey ? '••••••••••••••••••••' : 'sk-...'}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'openai')?.apiKey ? '••••••••••••••••••••' : 'sk-proj-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
@@ -473,6 +476,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       API key configured
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">platform.openai.com</a>
+                  </p>
                 </div>
 
                 <Button
@@ -543,7 +549,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 <div className="space-y-2">
                   <Label htmlFor="perplexity-api-key" className="text-sm font-medium flex items-center gap-2">
                     <Key size={16} />
-                    API Key
+                    Perplexity API Key
                   </Label>
                   <div className="relative">
                     <Input
@@ -575,6 +581,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       API key configured
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Get your API key from <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">perplexity.ai</a>
+                  </p>
                 </div>
 
                 <Button
@@ -645,7 +654,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 <div className="space-y-2">
                   <Label htmlFor="claude-api-key" className="text-sm font-medium flex items-center gap-2">
                     <Key size={16} />
-                    API Key
+                    Claude API Key
                   </Label>
                   <div className="relative">
                     <Input
@@ -653,7 +662,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       type={showClaudeKey ? "text" : "password"}
                       value={claudeApiKey}
                       onChange={(e) => setClaudeApiKey(e.target.value)}
-                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'claude')?.apiKey ? '••••••••••••••••••••' : 'sk-ant-...'}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'claude')?.apiKey ? '••••••••••••••••••••' : 'sk-ant-api03-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
@@ -677,6 +686,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       API key configured
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Get your API key from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">console.anthropic.com</a>
+                  </p>
                 </div>
 
                 <Button
@@ -747,7 +759,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 <div className="space-y-2">
                   <Label htmlFor="gemini-api-key" className="text-sm font-medium flex items-center gap-2">
                     <Key size={16} />
-                    API Key
+                    Gemini API Key
                   </Label>
                   <div className="relative">
                     <Input
@@ -755,7 +767,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       type={showGeminiKey ? "text" : "password"}
                       value={geminiApiKey}
                       onChange={(e) => setGeminiApiKey(e.target.value)}
-                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'gemini')?.apiKey ? '••••••••••••••••••••' : 'AIza...'}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'gemini')?.apiKey ? '••••••••••••••••••••' : 'AIzaSy...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
                       spellCheck="false"
@@ -779,6 +791,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       API key configured
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Get your API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>
+                  </p>
                 </div>
 
                 <Button
