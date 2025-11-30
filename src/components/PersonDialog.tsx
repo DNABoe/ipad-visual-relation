@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Slider } from '@/components/ui/slider'
-import type { Person, FrameColor, Attachment, ActivityLogEntry } from '@/lib/types'
+import type { Person, FrameColor, Attachment, ActivityLogEntry, InvestigationSettings } from '@/lib/types'
 import { generateId, getInitials } from '@/lib/helpers'
 import { FRAME_COLOR_NAMES, FRAME_COLORS } from '@/lib/constants'
 import { Upload, X, Trash, Note, Paperclip, ClockCounterClockwise, DownloadSimple, ArrowsOutCardinal, MagnifyingGlassMinus, MagnifyingGlassPlus, Detective } from '@phosphor-icons/react'
@@ -48,6 +48,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
   const [specialization, setSpecialization] = useState('')
   const [isInvestigating, setIsInvestigating] = useState(false)
   const [investigationReport, setInvestigationReport] = useState<string>('')
+  const [investigationSettings, setInvestigationSettings] = useState<InvestigationSettings>({
+    personalInfo: true,
+    workAndCV: true,
+    mediaPresence: false,
+    socialMedia: false,
+    approachAnalysis: false,
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
   const photoPreviewRef = useRef<HTMLDivElement>(null)
@@ -66,6 +73,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setAdvocate(editPerson?.advocate || false)
       setNotes(editPerson?.notes || '')
       setAttachments(editPerson?.attachments || [])
+      setInvestigationSettings(editPerson?.investigationSettings || {
+        personalInfo: true,
+        workAndCV: true,
+        mediaPresence: false,
+        socialMedia: false,
+        approachAnalysis: false,
+      })
       setCountry('')
       setOrganization('')
       setEducation('')
@@ -83,6 +97,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       setAdvocate(false)
       setNotes('')
       setAttachments([])
+      setInvestigationSettings({
+        personalInfo: true,
+        workAndCV: true,
+        mediaPresence: false,
+        socialMedia: false,
+        approachAnalysis: false,
+      })
       setCountry('')
       setOrganization('')
       setEducation('')
@@ -422,6 +443,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       advocate,
       notes,
       attachments,
+      investigationSettings,
       activityLog: newActivityLog,
       x: editPerson?.x || 100,
       y: editPerson?.y || 100,
@@ -505,6 +527,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       
       console.log('[PersonDialog] Generating intelligence report...')
       console.log('[PersonDialog] Passing API key to generator:', !!workspace?.apiKey)
+      console.log('[PersonDialog] Investigation settings:', investigationSettings)
       
       const report = await generateIntelligenceReport({
         name: name.trim(),
@@ -513,7 +536,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         organization: organization || undefined,
         education: education || undefined,
         specialization: specialization || undefined,
-        llmConfigs: workspace?.llmConfigs || []
+        llmConfigs: workspace?.llmConfigs || [],
+        investigationSettings
       })
       console.log('[PersonDialog] Intelligence report generated successfully')
       
@@ -950,26 +974,139 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
             </TabsContent>
 
             <TabsContent value="investigate" className="mt-4 space-y-4 m-0">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
                   <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Detective size={18} />
-                    {isLLMAvailable() ? 'AI-Powered Investigation' : 'Investigation Report'}
+                    Investigation Settings
                   </h3>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {isLLMAvailable() 
-                      ? 'Generate a comprehensive professional intelligence brief with detailed personal and professional analysis. The more information you provide, the more targeted and detailed the report will be.'
-                      : 'Generate a professional intelligence brief template. For AI-powered personalized analysis, deploy this application in the Spark environment.'
-                    }
-                  </p>
-                  <p className="text-xs text-accent font-medium">
-                    💡 Tip: Provide as many details as possible for a more comprehensive analysis
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Configure the depth and scope of the investigation report. Select the areas you want to include in the analysis.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Investigation Scope</Label>
+                  <p className="text-xs text-muted-foreground -mt-2 mb-2">
+                    Select which areas to investigate in depth
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-3 rounded-lg border border-border bg-card p-3 hover:bg-muted/50 transition-colors">
+                      <Checkbox
+                        id="investigate-personal"
+                        checked={investigationSettings.personalInfo}
+                        onCheckedChange={(checked) => 
+                          setInvestigationSettings(prev => ({ ...prev, personalInfo: !!checked }))
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor="investigate-personal" 
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          Personal Information (Deep Search)
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Comprehensive personal background, biography, and detailed life history
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3 rounded-lg border border-border bg-card p-3 hover:bg-muted/50 transition-colors">
+                      <Checkbox
+                        id="investigate-work"
+                        checked={investigationSettings.workAndCV}
+                        onCheckedChange={(checked) => 
+                          setInvestigationSettings(prev => ({ ...prev, workAndCV: !!checked }))
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor="investigate-work" 
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          Work & CV Analysis
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Detailed employment history, current and past positions, career trajectory
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3 rounded-lg border border-border bg-card p-3 hover:bg-muted/50 transition-colors">
+                      <Checkbox
+                        id="investigate-media"
+                        checked={investigationSettings.mediaPresence}
+                        onCheckedChange={(checked) => 
+                          setInvestigationSettings(prev => ({ ...prev, mediaPresence: !!checked }))
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor="investigate-media" 
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          Media Presence Analysis
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Deep dive into media appearances, interviews, publications, and public visibility
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3 rounded-lg border border-border bg-card p-3 hover:bg-muted/50 transition-colors">
+                      <Checkbox
+                        id="investigate-social"
+                        checked={investigationSettings.socialMedia}
+                        onCheckedChange={(checked) => 
+                          setInvestigationSettings(prev => ({ ...prev, socialMedia: !!checked }))
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor="investigate-social" 
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          Social Media (SoMe)
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Social media presence, activity patterns, engagement, and digital footprint
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3 rounded-lg border border-border bg-card p-3 hover:bg-muted/50 transition-colors">
+                      <Checkbox
+                        id="investigate-approach"
+                        checked={investigationSettings.approachAnalysis}
+                        onCheckedChange={(checked) => 
+                          setInvestigationSettings(prev => ({ ...prev, approachAnalysis: !!checked }))
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor="investigate-approach" 
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          AI-Powered Approach Strategy
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Strategic recommendations on how to approach this person, topics to discuss, and areas of interest
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="investigate-country" className="text-sm font-medium">Country</Label>
+                    <Label htmlFor="investigate-country" className="text-sm font-medium">Country (Optional)</Label>
                     <Input
                       id="investigate-country"
                       value={country}
@@ -977,13 +1114,10 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                       placeholder="e.g., United States"
                       className="h-9"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Location context for analysis
-                    </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="investigate-organization" className="text-sm font-medium">Organization</Label>
+                    <Label htmlFor="investigate-organization" className="text-sm font-medium">Organization (Optional)</Label>
                     <Input
                       id="investigate-organization"
                       value={organization}
@@ -991,41 +1125,32 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                       placeholder="e.g., Acme Corporation"
                       className="h-9"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Current employer or affiliation
-                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="investigate-education" className="text-sm font-medium">Education Background</Label>
+                  <Label htmlFor="investigate-education" className="text-sm font-medium">Education (Optional)</Label>
                   <Input
                     id="investigate-education"
                     value={education}
                     onChange={(e) => setEducation(e.target.value)}
-                    placeholder="e.g., MBA from Harvard Business School, BS in Engineering from MIT"
+                    placeholder="e.g., MBA from Harvard Business School"
                     className="h-9"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Degrees, institutions, certifications
-                  </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="investigate-specialization" className="text-sm font-medium">Specialization / Expertise</Label>
+                  <Label htmlFor="investigate-specialization" className="text-sm font-medium">Specialization (Optional)</Label>
                   <Input
                     id="investigate-specialization"
                     value={specialization}
                     onChange={(e) => setSpecialization(e.target.value)}
-                    placeholder="e.g., Digital transformation, Supply chain management, FinTech"
+                    placeholder="e.g., Digital transformation, FinTech"
                     className="h-9"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Key areas of expertise or focus
-                  </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-2">
                   <Button
                     onClick={handleInvestigate}
                     disabled={isInvestigating || !name.trim()}
@@ -1035,7 +1160,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                     {isInvestigating ? (
                       <>
                         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                        Generating Detailed Report...
+                        Generating Report...
                       </>
                     ) : (
                       <>
@@ -1065,7 +1190,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
                 {investigationReport && (
                   <div className="space-y-2 mt-4 p-4 rounded-lg bg-card border border-border">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium">Investigation Report Preview</Label>
+                      <Label className="text-sm font-medium">Report Preview</Label>
                       <p className="text-xs text-success">✓ Added to attachments</p>
                     </div>
                     <ScrollArea className="h-64 rounded-md border border-border p-3">

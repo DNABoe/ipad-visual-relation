@@ -429,8 +429,31 @@ export async function generateIntelligenceReport(params: {
   specialization?: string
   llmConfigs?: Array<{ provider: string; apiKey: string; enabled: boolean }>
   provider?: 'openai' | 'perplexity' | 'claude' | 'auto'
+  investigationSettings?: {
+    personalInfo: boolean
+    workAndCV: boolean
+    mediaPresence: boolean
+    socialMedia: boolean
+    approachAnalysis: boolean
+  }
 }): Promise<string> {
-  const { name, position, country, organization, education, specialization, provider = 'auto', llmConfigs = [] } = params
+  const { 
+    name, 
+    position, 
+    country, 
+    organization, 
+    education, 
+    specialization, 
+    provider = 'auto', 
+    llmConfigs = [],
+    investigationSettings = {
+      personalInfo: true,
+      workAndCV: true,
+      mediaPresence: false,
+      socialMedia: false,
+      approachAnalysis: false,
+    }
+  } = params
 
   console.log('[externalLLM] Starting intelligence report generation...')
   console.log('[externalLLM] Parameters:', {
@@ -442,7 +465,8 @@ export async function generateIntelligenceReport(params: {
     specialization,
     provider,
     hasLLMConfigs: llmConfigs.length > 0,
-    enabledProviders: llmConfigs.filter(c => c.enabled).map(c => c.provider)
+    enabledProviders: llmConfigs.filter(c => c.enabled).map(c => c.provider),
+    investigationSettings
   })
 
   const positionText = position || 'Not specified'
@@ -451,7 +475,7 @@ export async function generateIntelligenceReport(params: {
   const educationText = education || 'Not specified'
   const specializationText = specialization || 'Not specified'
   
-  const promptText = `You are a professional intelligence analyst. Create a comprehensive professional intelligence profile for the following person:
+  let sectionsToInclude = `You are a professional intelligence analyst. Create a comprehensive professional intelligence profile for the following person:
 
 Name: ${name}
 Position: ${positionText}
@@ -461,8 +485,11 @@ Education: ${educationText}
 Specialization/Expertise: ${specializationText}
 
 Please provide a detailed analysis with the following sections:
+`
 
-1. PERSONAL PROFILE
+  if (investigationSettings.personalInfo) {
+    sectionsToInclude += `
+1. PERSONAL PROFILE (DEEP SEARCH)
    - Full name and current role
    - Age or approximate age range (if publicly available)
    - Nationality and place of birth (if known)
@@ -474,23 +501,116 @@ Please provide a detailed analysis with the following sections:
    - Professional certifications and qualifications
    - Key personal characteristics and communication style
    - Personal interests, hobbies, or public activities
-   - Social media presence and public persona
-   - Public speaking engagements or media appearances
+   - Personal values and belief systems (if publicly stated)
+   - Life history and significant life events
+   - Personal achievements outside of work
+   - Community involvement and charitable activities
+   - Personal brand and reputation
+   - Any public controversies or noteworthy incidents
+`
+  }
 
-2. PROFESSIONAL BACKGROUND OVERVIEW
-   - Complete career timeline with dates
-   - Current employer/organization and tenure
+  if (investigationSettings.workAndCV) {
+    sectionsToInclude += `
+2. PROFESSIONAL BACKGROUND & CAREER ANALYSIS
+   - Complete career timeline with exact dates
+   - Current employer/organization and exact tenure
    - Current responsibilities and scope of authority
-   - Previous positions and organizations
-   - Career progression and key achievements
+   - Detailed analysis of all previous positions and organizations
+   - Career progression, transitions, and key achievements
    - Industry experience and specializations
-   - Notable projects or initiatives led
+   - Notable projects or initiatives led (with outcomes)
    - Publications, patents, or significant contributions
-   - Professional reputation and credibility
+   - Professional reputation and credibility in the field
    - Awards, honors, or recognition received
    - Board memberships or advisory roles
+   - Professional network and key collaborations
+   - Career gaps or transitions and their significance
+   - Salary range and compensation trends (if publicly available)
+   - Career trajectory analysis and future potential
+`
+  }
 
-3. AREAS OF INFLUENCE AND EXPERTISE
+  if (investigationSettings.mediaPresence) {
+    sectionsToInclude += `
+3. MEDIA PRESENCE & PUBLIC VISIBILITY ANALYSIS
+   - Comprehensive analysis of media appearances
+   - Television, radio, and podcast interviews
+   - Print media coverage (newspapers, magazines)
+   - Online news and digital publications
+   - Speaking engagements at conferences and events
+   - Webinars, virtual summits, and online presentations
+   - Media sentiment analysis (positive, neutral, negative coverage)
+   - Frequency and consistency of media appearances
+   - Key messages and talking points in media
+   - Media relationships and go-to journalists/outlets
+   - Press releases and official statements
+   - Crisis communication and media handling
+   - Thought leadership pieces and opinion articles
+   - Media training and public speaking skills assessment
+   - Comparison to industry peers in media visibility
+   - Trends in media presence over time
+`
+  }
+
+  if (investigationSettings.socialMedia) {
+    sectionsToInclude += `
+4. SOCIAL MEDIA (SoMe) PRESENCE & DIGITAL FOOTPRINT
+   - Detailed analysis of all social media platforms
+   - LinkedIn profile, activity, and engagement metrics
+   - Twitter/X presence, follower count, and influence score
+   - Facebook, Instagram, and other platform presence
+   - Posting frequency and content themes
+   - Engagement rates and audience interaction patterns
+   - Follower demographics and reach analysis
+   - Content strategy and messaging consistency
+   - Influencer status and thought leadership on social media
+   - Network connections and key relationships
+   - Hashtag usage and trending topic participation
+   - Response to comments and community management
+   - Controversies or negative sentiment on social platforms
+   - Personal vs. professional social media separation
+   - Digital reputation and online reviews
+   - Social media activity patterns (times, days, frequency)
+   - Comparison to industry benchmarks
+`
+  }
+
+  if (investigationSettings.approachAnalysis) {
+    sectionsToInclude += `
+5. AI-POWERED APPROACH STRATEGY & ENGAGEMENT RECOMMENDATIONS
+   - Detailed strategic recommendations for approaching this person
+   - Best communication channels and methods
+   - Optimal times and contexts for contact
+   - Topics of interest and passion points
+   - Conversation starters and ice breakers
+   - Shared interests or common ground opportunities
+   - Values alignment and resonance points
+   - Potential concerns or sensitivities to avoid
+   - Decision-making style and preferences
+   - Influence tactics most likely to be effective
+   - Building trust and rapport strategies
+   - Long-term relationship development roadmap
+   - Networking path and mutual connections to leverage
+   - Event or venue suggestions for meeting
+   - Gift ideas or gestures that would be appreciated
+   - Topics to discuss for building credibility
+   - Areas where you can provide value to them
+   - Timing strategy for various engagement types
+   - Red flags and approaches to avoid
+   - Cultural considerations and preferences
+`
+  }
+
+  sectionsToInclude += `
+${investigationSettings.personalInfo || investigationSettings.workAndCV || investigationSettings.mediaPresence || investigationSettings.socialMedia || investigationSettings.approachAnalysis ? '' : `
+1. BASIC PROFILE OVERVIEW
+   - Name and position
+   - Organization and location
+   - Brief professional summary
+`}
+
+6. AREAS OF INFLUENCE AND EXPERTISE
    - Domain-specific expertise and specializations
    - Technical skills and competencies
    - Organizational influence and decision-making power
@@ -499,7 +619,7 @@ Please provide a detailed analysis with the following sections:
    - Areas of innovation or unique contributions
    - Influence on industry trends or standards
 
-4. POTENTIAL NETWORK CONNECTIONS
+7. POTENTIAL NETWORK CONNECTIONS
    - Professional relationships and networks
    - Key colleagues and collaborators
    - Organizational contacts and stakeholders
@@ -510,7 +630,7 @@ Please provide a detailed analysis with the following sections:
    - Social and professional club memberships
    - Alumni networks and connections
 
-5. STRATEGIC IMPORTANCE ASSESSMENT
+8. STRATEGIC IMPORTANCE ASSESSMENT
    - Value to intelligence operations
    - Access to strategic information
    - Level of decision-making authority
@@ -519,7 +639,7 @@ Please provide a detailed analysis with the following sections:
    - Unique access or capabilities
    - Strategic vulnerabilities or pressure points
 
-6. KEY CONSIDERATIONS FOR ENGAGEMENT
+9. KEY CONSIDERATIONS FOR ENGAGEMENT
    - Recommended approach strategies
    - Communication preferences and style
    - Topics of interest and expertise
@@ -529,16 +649,11 @@ Please provide a detailed analysis with the following sections:
    - Potential sensitivities or red lines
    - Optimal timing and context for engagement
 
-7. STRATEGIC RECOMMENDATIONS
-   - Immediate next steps for building relationship
-   - Information gathering opportunities
-   - Potential collaboration areas
-   - Long-term engagement strategy
-   - Recommended messaging and positioning
-   - Key talking points or areas of mutual interest
-   - Potential incentives or value propositions
+Format your response as a professional intelligence brief with clear section headings and detailed, actionable analysis. Be thorough, realistic, and focused on strategic intelligence value. Include specific details where publicly available, and clearly indicate when information is based on typical patterns for similar roles rather than specific facts about this individual. 
 
-Format your response as a professional intelligence brief with clear section headings and detailed, actionable analysis. Be thorough, realistic, and focused on strategic intelligence value. Include specific details where publicly available, and clearly indicate when information is based on typical patterns for similar roles rather than specific facts about this individual.`
+IMPORTANT: The depth and comprehensiveness of your analysis should match the investigation scope selected. For sections marked as DEEP SEARCH or with specific analysis requests, provide significantly more detail, examples, and specific information.`
+
+  const promptText = sectionsToInclude
 
   const hasSparkLLM = typeof window !== 'undefined' && 
     !!(window as any).spark && 

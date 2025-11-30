@@ -18,6 +18,14 @@ export interface ActivityLogEntry {
   details?: string
 }
 
+export interface InvestigationSettings {
+  personalInfo: boolean
+  workAndCV: boolean
+  mediaPresence: boolean
+  socialMedia: boolean
+  approachAnalysis: boolean
+}
+
 export interface Person {
   id: string
   name: string
@@ -39,6 +47,7 @@ export interface Person {
   notes?: string
   attachments?: Attachment[]
   activityLog?: ActivityLogEntry[]
+  investigationSettings?: InvestigationSettings
   createdAt: number
   modifiedAt?: number
 }
