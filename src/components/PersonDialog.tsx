@@ -294,6 +294,40 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
     onSave(updatedPerson)
   }
 
+  const autoSaveInvestigationReport = (updatedAttachments: Attachment[], reportContent: string) => {
+    if (!editPerson) return
+
+    const positionLines = position.split('\n').map(line => line.trim()).slice(0, 3)
+    
+    const activityLog = editPerson.activityLog || []
+    const newActivityLog = [...activityLog]
+    
+    newActivityLog.push(createActivityLogEntry('attachment_added', `Investigation report generated`))
+
+    const updatedPerson: Person = {
+      ...editPerson,
+      name: name.trim() || editPerson.name,
+      position: positionLines[0] || editPerson.position,
+      position2: positionLines[1] || editPerson.position2,
+      position3: positionLines[2] || editPerson.position3,
+      score,
+      frameColor,
+      photo,
+      photoOffsetX,
+      photoOffsetY,
+      photoZoom,
+      advocate,
+      notes,
+      attachments: updatedAttachments,
+      investigationSettings,
+      activityLog: newActivityLog,
+      modifiedAt: Date.now(),
+    }
+
+    onSave(updatedPerson)
+    toast.success('Investigation report saved to person card', { duration: 2000 })
+  }
+
   const handleDownloadAttachment = (attachment: Attachment) => {
     const link = document.createElement('a')
     link.href = attachment.data
@@ -565,7 +599,13 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
           addedAt: timestamp
         }
         
-        setAttachments(prev => [...prev, newAttachment])
+        setAttachments(prev => {
+          const updated = [...prev, newAttachment]
+          if (editPerson) {
+            autoSaveInvestigationReport(updated, report)
+          }
+          return updated
+        })
         toast.success('Detailed investigation report generated and added to attachments', { id: loadingToast, duration: 2500 })
       }
       reader.readAsDataURL(pdfBlob)
