@@ -1,6 +1,14 @@
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
 const PERPLEXITY_API_KEY = import.meta.env.VITE_PERPLEXITY_API_KEY
 
+const CORS_PROXIES = [
+  'https://corsproxy.io/?',
+  'https://api.allorigins.win/raw?url=',
+  'https://cors-anywhere.herokuapp.com/',
+]
+
+const REQUEST_TIMEOUT = 30000
+
 export function isLLMAvailable(): boolean {
   try {
     if (typeof window === 'undefined') {
@@ -16,11 +24,31 @@ export function isLLMAvailable(): boolean {
   }
 }
 
-async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0): Promise<string> {
+async function fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout - the server took too long to respond')
+    }
+    throw error
+  }
+}
+
+async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0, proxyIndex = 0): Promise<string> {
   const key = apiKey || OPENAI_API_KEY
   const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callOpenAI invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ')')
+  console.log('[externalLLM] callOpenAI invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ', proxy ' + (proxyIndex + 1) + '/' + CORS_PROXIES.length + ')')
   console.log('[externalLLM] apiKey parameter provided:', !!apiKey)
   console.log('[externalLLM] apiKey parameter value (first 10 chars):', apiKey?.substring(0, 10) || 'N/A')
   console.log('[externalLLM] OPENAI_API_KEY env var present:', !!OPENAI_API_KEY)
@@ -57,18 +85,21 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0): Prom
 
   console.log('[externalLLM] Request body:', JSON.stringify(requestBody, null, 2))
 
-  const corsProxyUrl = 'https://corsproxy.io/?'
-  const targetUrl = encodeURIComponent('https://api.openai.com/v1/chat/completions')
+  const corsProxy = CORS_PROXIES[proxyIndex]
+  const targetUrl = 'https://api.openai.com/v1/chat/completions'
+  const fullUrl = corsProxy + encodeURIComponent(targetUrl)
+  
+  console.log(`[externalLLM] Using CORS proxy: ${corsProxy}`)
   
   try {
-    const response = await fetch(corsProxyUrl + targetUrl, {
+    const response = await fetchWithTimeout(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${key.trim()}`
       },
       body: JSON.stringify(requestBody)
-    })
+    }, REQUEST_TIMEOUT)
 
     console.log('[externalLLM] Response status:', response.status)
     console.log('[externalLLM] Response ok:', response.ok)
@@ -95,13 +126,17 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0): Prom
       } else if (response.status === 500) {
         throw new Error('OpenAI service error. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} failed with ${response.status}, trying next proxy...`)
+          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
         if (retryCount < MAX_RETRIES) {
           const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] CORS proxy timeout (${response.status}), retrying in ${delayMs}ms...`)
+          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
           await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callOpenAI(prompt, apiKey, retryCount + 1)
+          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
         }
-        throw new Error('CORS proxy timeout after multiple attempts. The proxy service (corsproxy.io) is experiencing issues. Please try again in a few moments.')
+        throw new Error('Network connection issues detected. All CORS proxy services are currently unavailable or blocked by your network. This can happen in restrictive network environments (corporate firewalls, VPNs, or content filters). Please try: 1) Using a different network connection, 2) Disabling VPN if active, 3) Trying again later when proxy services recover.')
       }
       
       throw new Error(`OpenAI API error: ${response.status} - ${errorData.message || response.statusText}`)
@@ -121,24 +156,44 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0): Prom
 
     return data.choices[0].message.content
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      if (retryCount < MAX_RETRIES) {
-        const delayMs = Math.pow(2, retryCount) * 2000
-        console.log(`[externalLLM] Network error, retrying in ${delayMs}ms...`)
-        await new Promise(resolve => setTimeout(resolve, delayMs))
-        return callOpenAI(prompt, apiKey, retryCount + 1)
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} timed out, trying next proxy...`)
+          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies timed out, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Request timeout - all CORS proxy services are not responding. Your network may be blocking these services. Please try: 1) Using a different network, 2) Disabling VPN/proxy, 3) Trying again later.')
       }
-      throw new Error('Network error connecting to CORS proxy. Please check your internet connection and try again.')
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] Network error with ${corsProxy}, trying next proxy...`)
+          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Network error - unable to connect through any CORS proxy service. Your network environment may be restricting external API calls. This commonly occurs with: corporate firewalls, VPNs, proxy servers, or content filtering. Please try a different network connection or contact your network administrator.')
+      }
     }
     throw error
   }
 }
 
-async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0): Promise<string> {
+async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0, proxyIndex = 0): Promise<string> {
   const key = apiKey || PERPLEXITY_API_KEY
   const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callPerplexity invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ')')
+  console.log('[externalLLM] callPerplexity invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ', proxy ' + (proxyIndex + 1) + '/' + CORS_PROXIES.length + ')')
   
   if (!key) {
     throw new Error('Perplexity API key not configured. Please add your API key in Settings.')
@@ -150,11 +205,14 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0): 
 
   console.log('[externalLLM] Calling Perplexity API...')
 
-  const corsProxyUrl = 'https://corsproxy.io/?'
-  const targetUrl = encodeURIComponent('https://api.perplexity.ai/chat/completions')
+  const corsProxy = CORS_PROXIES[proxyIndex]
+  const targetUrl = 'https://api.perplexity.ai/chat/completions'
+  const fullUrl = corsProxy + encodeURIComponent(targetUrl)
+
+  console.log(`[externalLLM] Using CORS proxy: ${corsProxy}`)
 
   try {
-    const response = await fetch(corsProxyUrl + targetUrl, {
+    const response = await fetchWithTimeout(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -173,7 +231,7 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0): 
           }
         ]
       })
-    })
+    }, REQUEST_TIMEOUT)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -190,13 +248,17 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0): 
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} failed with ${response.status}, trying next proxy...`)
+          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
         if (retryCount < MAX_RETRIES) {
           const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] CORS proxy timeout (${response.status}), retrying in ${delayMs}ms...`)
+          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
           await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callPerplexity(prompt, apiKey, retryCount + 1)
+          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
         }
-        throw new Error('CORS proxy timeout after multiple attempts. Please try again in a few moments.')
+        throw new Error('Network connection issues detected. All CORS proxy services are currently unavailable or blocked by your network. This can happen in restrictive network environments (corporate firewalls, VPNs, or content filters). Please try: 1) Using a different network connection, 2) Disabling VPN if active, 3) Trying again later when proxy services recover.')
       }
       
       throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
@@ -210,25 +272,45 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0): 
 
     return data.choices[0].message.content
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      if (retryCount < MAX_RETRIES) {
-        const delayMs = Math.pow(2, retryCount) * 2000
-        console.log(`[externalLLM] Network error, retrying in ${delayMs}ms...`)
-        await new Promise(resolve => setTimeout(resolve, delayMs))
-        return callPerplexity(prompt, apiKey, retryCount + 1)
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} timed out, trying next proxy...`)
+          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies timed out, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Request timeout - all CORS proxy services are not responding. Your network may be blocking these services. Please try: 1) Using a different network, 2) Disabling VPN/proxy, 3) Trying again later.')
       }
-      throw new Error('Network error connecting to CORS proxy. Please check your internet connection.')
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] Network error with ${corsProxy}, trying next proxy...`)
+          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Network error - unable to connect through any CORS proxy service. Your network environment may be restricting external API calls. This commonly occurs with: corporate firewalls, VPNs, proxy servers, or content filtering. Please try a different network connection or contact your network administrator.')
+      }
     }
     throw error
   }
 }
 
-async function callClaude(prompt: string, apiKey?: string, retryCount = 0): Promise<string> {
+async function callClaude(prompt: string, apiKey?: string, retryCount = 0, proxyIndex = 0): Promise<string> {
   const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY
   const key = apiKey || CLAUDE_API_KEY
   const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callClaude invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ')')
+  console.log('[externalLLM] callClaude invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ', proxy ' + (proxyIndex + 1) + '/' + CORS_PROXIES.length + ')')
   
   if (!key) {
     throw new Error('Claude API key not configured. Please add your API key in Settings.')
@@ -240,11 +322,14 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0): Prom
 
   console.log('[externalLLM] Calling Claude API...')
 
-  const corsProxyUrl = 'https://corsproxy.io/?'
-  const targetUrl = encodeURIComponent('https://api.anthropic.com/v1/messages')
+  const corsProxy = CORS_PROXIES[proxyIndex]
+  const targetUrl = 'https://api.anthropic.com/v1/messages'
+  const fullUrl = corsProxy + encodeURIComponent(targetUrl)
+
+  console.log(`[externalLLM] Using CORS proxy: ${corsProxy}`)
 
   try {
-    const response = await fetch(corsProxyUrl + targetUrl, {
+    const response = await fetchWithTimeout(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -261,7 +346,7 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0): Prom
           }
         ]
       })
-    })
+    }, REQUEST_TIMEOUT)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -278,13 +363,17 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0): Prom
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} failed with ${response.status}, trying next proxy...`)
+          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
         if (retryCount < MAX_RETRIES) {
           const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] CORS proxy timeout (${response.status}), retrying in ${delayMs}ms...`)
+          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
           await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callClaude(prompt, apiKey, retryCount + 1)
+          return callClaude(prompt, apiKey, retryCount + 1, 0)
         }
-        throw new Error('CORS proxy timeout after multiple attempts. Please try again in a few moments.')
+        throw new Error('Network connection issues detected. All CORS proxy services are currently unavailable or blocked by your network. This can happen in restrictive network environments (corporate firewalls, VPNs, or content filters). Please try: 1) Using a different network connection, 2) Disabling VPN if active, 3) Trying again later when proxy services recover.')
       }
       
       throw new Error(`Claude API error: ${response.status} ${response.statusText}`)
@@ -298,14 +387,34 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0): Prom
 
     return data.content[0].text
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      if (retryCount < MAX_RETRIES) {
-        const delayMs = Math.pow(2, retryCount) * 2000
-        console.log(`[externalLLM] Network error, retrying in ${delayMs}ms...`)
-        await new Promise(resolve => setTimeout(resolve, delayMs))
-        return callClaude(prompt, apiKey, retryCount + 1)
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} timed out, trying next proxy...`)
+          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies timed out, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callClaude(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Request timeout - all CORS proxy services are not responding. Your network may be blocking these services. Please try: 1) Using a different network, 2) Disabling VPN/proxy, 3) Trying again later.')
       }
-      throw new Error('Network error connecting to CORS proxy. Please check your internet connection.')
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] Network error with ${corsProxy}, trying next proxy...`)
+          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callClaude(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Network error - unable to connect through any CORS proxy service. Your network environment may be restricting external API calls. This commonly occurs with: corporate firewalls, VPNs, proxy servers, or content filtering. Please try a different network connection or contact your network administrator.')
+      }
     }
     throw error
   }
@@ -1055,7 +1164,7 @@ Provide 5-7 key insights, identify the true center of gravity with detailed reas
       const claudeConfig = enabledConfigs.find(c => c.provider === 'claude')
       if (claudeConfig) {
         console.log('[externalLLM] Using Claude for AI insights...')
-        responseText = await callClaude(promptText, claudeConfig.apiKey, 0)
+        responseText = await callClaude(promptText, claudeConfig.apiKey, 0, 0)
       } else {
         throw new Error('Claude selected but no API key found')
       }
@@ -1063,7 +1172,7 @@ Provide 5-7 key insights, identify the true center of gravity with detailed reas
       const perplexityConfig = enabledConfigs.find(c => c.provider === 'perplexity')
       if (perplexityConfig) {
         console.log('[externalLLM] Using Perplexity for AI insights...')
-        responseText = await callPerplexity(promptText, perplexityConfig.apiKey, 0)
+        responseText = await callPerplexity(promptText, perplexityConfig.apiKey, 0, 0)
       } else {
         throw new Error('Perplexity selected but no API key found')
       }
@@ -1071,7 +1180,7 @@ Provide 5-7 key insights, identify the true center of gravity with detailed reas
       const openaiConfig = enabledConfigs.find(c => c.provider === 'openai')
       const key = apiKey || openaiConfig?.apiKey
       console.log('[externalLLM] Using OpenAI for AI insights...')
-      responseText = await callOpenAI(promptText, key, 0)
+      responseText = await callOpenAI(promptText, key, 0, 0)
     } else if (hasSparkLLM) {
       console.log('[externalLLM] Using Spark LLM for AI insights...')
       const prompt = (window.spark.llmPrompt as any)`${promptText}`
