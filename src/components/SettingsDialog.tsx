@@ -13,10 +13,11 @@ import { toast } from 'sonner'
 import type { Workspace, AppSettings } from '@/lib/types'
 import { APP_VERSION } from '@/lib/version'
 import { Logo } from '@/components/Logo'
-import { Eye, EyeSlash, SignOut, WindowsLogo, Detective, Key, TrashSimple, Gear, User, Info, Sparkle } from '@phosphor-icons/react'
+import { Eye, EyeSlash, SignOut, WindowsLogo, Detective, Key, TrashSimple, Gear, User, Info, Sparkle, Broadcast } from '@phosphor-icons/react'
 import { DEFAULT_APP_SETTINGS, DEFAULT_WORKSPACE_SETTINGS } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { FileIconDialog } from '@/components/FileIconDialog'
+import { CORSProxyConfig } from '@/components/CORSProxyConfig'
 import { storage } from '@/lib/storage'
 import { isPasswordChangeAllowed } from '@/lib/singleUserAuth'
 
@@ -57,6 +58,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [logoClicks, setLogoClicks] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showFileIconDialog, setShowFileIconDialog] = useState(false)
+  const [showCORSProxyDialog, setShowCORSProxyDialog] = useState(false)
 
   const passwordChangeEnabled = isPasswordChangeAllowed()
   const workspaceSettings = workspace.settings || DEFAULT_WORKSPACE_SETTINGS
@@ -861,6 +863,30 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   </p>
                 )}
               </div>
+
+              {/* CORS Proxy Configuration */}
+              <div className="rounded-xl bg-card p-4 border border-border">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="p-2 rounded-lg bg-accent/10">
+                    <Broadcast className="w-5 h-5 text-accent" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm mb-1">API Connection Settings</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Configure how RelEye connects to AI providers. Use direct API mode or select CORS proxy options for browser compatibility.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowCORSProxyDialog(true)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  <Broadcast size={16} className="mr-2" />
+                  Configure API Connection
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
@@ -1228,6 +1254,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
         </DialogFooter>
       </DialogContent>
       <FileIconDialog open={showFileIconDialog} onOpenChange={setShowFileIconDialog} />
+      <CORSProxyConfig open={showCORSProxyDialog} onOpenChange={setShowCORSProxyDialog} />
     </Dialog>
   )
 }

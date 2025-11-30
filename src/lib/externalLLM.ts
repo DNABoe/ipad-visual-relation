@@ -8,27 +8,80 @@ const CORS_PROXIES = [
   {
     name: 'AllOrigins',
     url: (targetUrl: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-    type: 'prepend' as const
+    type: 'prepend' as const,
+    enabled: true
   },
   {
     name: 'CORSProxy.io',
     url: (targetUrl: string) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-    type: 'prepend' as const
+    type: 'prepend' as const,
+    enabled: true
   },
   {
-    name: 'CORS Anywhere',
-    url: (targetUrl: string) => `https://cors-anywhere.herokuapp.com/${targetUrl}`,
-    type: 'prepend' as const
+    name: 'CORS.SH',
+    url: (targetUrl: string) => `https://cors.sh/${targetUrl}`,
+    type: 'prepend' as const,
+    enabled: true
+  },
+  {
+    name: 'ThingProxy',
+    url: (targetUrl: string) => `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
+    type: 'prepend' as const,
+    enabled: true
+  },
+  {
+    name: 'Proxy6.dev',
+    url: (targetUrl: string) => `https://proxy6.dev/api/proxy?url=${encodeURIComponent(targetUrl)}`,
+    type: 'prepend' as const,
+    enabled: false
   }
 ]
 
 const CUSTOM_PROXY_URL = import.meta.env.VITE_PROXY_URL
+const DIRECT_API_MODE = import.meta.env.VITE_DIRECT_API_MODE === 'true'
 
 const API_ENDPOINTS = {
   openai: 'https://api.openai.com/v1/chat/completions',
   perplexity: 'https://api.perplexity.ai/chat/completions',
   claude: 'https://api.anthropic.com/v1/messages',
   gemini: (apiKey: string) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+}
+
+async function callDirectAPI(
+  url: string,
+  options: RequestInit,
+  provider: string
+): Promise<Response> {
+  console.log(`[externalLLM] Attempting direct API call to ${provider}...`)
+  
+  try {
+    const response = await fetchWithTimeout(url, options, REQUEST_TIMEOUT)
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`[externalLLM] Direct ${provider} API error:`, errorText)
+      
+      if (response.status === 401) {
+        throw new Error(`Invalid ${provider} API key. Please verify your API key in Settings.`)
+      } else if (response.status === 403) {
+        throw new Error(`Access forbidden for ${provider} API. Check your API key permissions and billing status.`)
+      } else if (response.status === 429) {
+        throw new Error(`Rate limit exceeded for ${provider}. Please try again later.`)
+      }
+      
+      throw new Error(`${provider} API request failed with status ${response.status}`)
+    }
+    
+    console.log(`[externalLLM] ✓ Direct ${provider} API call successful`)
+    return response
+    
+  } catch (error) {
+    if (error instanceof Error && error.name === 'TypeError' && error.message.includes('CORS')) {
+      console.error(`[externalLLM] CORS error with direct ${provider} API - falling back to proxy mode`)
+      throw new Error(`CORS_ERROR`)
+    }
+    throw error
+  }
 }
 
 export function isLLMAvailable(): boolean {
@@ -66,13 +119,15 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout: numb
   }
 }
 
-async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
+async function callOpenAI(prompt: string, apiKey?: string, useDirectMode?: boolean): Promise<string> {
   const key = apiKey || OPENAI_API_KEY
+  const directMode = useDirectMode ?? DIRECT_API_MODE
   
   console.log('[externalLLM] callOpenAI invoked')
   console.log('[externalLLM] apiKey parameter provided:', !!apiKey)
   console.log('[externalLLM] OPENAI_API_KEY env var present:', !!OPENAI_API_KEY)
   console.log('[externalLLM] Final key to use present:', !!key)
+  console.log('[externalLLM] Direct API mode:', directMode)
   
   if (!key) {
     throw new Error('OpenAI API key not configured. Please add your API key in Settings > Investigation tab.')
@@ -81,8 +136,6 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   if (!key.startsWith('sk-')) {
     throw new Error('Invalid OpenAI API key format. API keys must start with "sk-". Please check your API key in Settings.')
   }
-
-  console.log('[externalLLM] Calling OpenAI API via CORS proxies...')
 
   const requestBody = {
     model: 'gpt-4o-mini',
@@ -101,6 +154,38 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   }
 
   console.log('[externalLLM] Request prepared')
+
+  if (directMode) {
+    try {
+      const response = await callDirectAPI(
+        API_ENDPOINTS.openai,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key.trim()}`
+          },
+          body: JSON.stringify(requestBody)
+        },
+        'OpenAI'
+      )
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content
+      
+      if (!content) {
+        throw new Error('Invalid response format from OpenAI API')
+      }
+
+      return content
+    } catch (error) {
+      if (error instanceof Error && error.message === 'CORS_ERROR') {
+        console.log('[externalLLM] Direct mode failed due to CORS, falling back to proxy mode')
+      } else {
+        throw error
+      }
+    }
+  }
 
   if (CUSTOM_PROXY_URL) {
     console.log('[externalLLM] Attempting custom proxy first:', CUSTOM_PROXY_URL)
@@ -130,7 +215,9 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
     }
   }
 
-  for (const proxy of CORS_PROXIES) {
+  const enabledProxies = CORS_PROXIES.filter(p => p.enabled)
+  
+  for (const proxy of enabledProxies) {
     try {
       console.log(`[externalLLM] Attempting ${proxy.name}...`)
       
@@ -210,10 +297,12 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
     '4. Ensure you have sufficient credits in your account')
 }
 
-async function callPerplexity(prompt: string, apiKey?: string): Promise<string> {
+async function callPerplexity(prompt: string, apiKey?: string, useDirectMode?: boolean): Promise<string> {
   const key = apiKey || PERPLEXITY_API_KEY
+  const directMode = useDirectMode ?? DIRECT_API_MODE
   
   console.log('[externalLLM] callPerplexity invoked')
+  console.log('[externalLLM] Direct API mode:', directMode)
   
   if (!key) {
     throw new Error('Perplexity API key not configured. Please add your API key in Settings.')
@@ -222,8 +311,6 @@ async function callPerplexity(prompt: string, apiKey?: string): Promise<string> 
   if (!key.startsWith('pplx-')) {
     throw new Error('Invalid Perplexity API key format. API keys must start with "pplx-".')
   }
-
-  console.log('[externalLLM] Calling Perplexity API via CORS proxies...')
 
   const requestBody = {
     model: 'llama-3.1-sonar-small-128k-online',
@@ -237,6 +324,38 @@ async function callPerplexity(prompt: string, apiKey?: string): Promise<string> 
         content: prompt
       }
     ]
+  }
+
+  if (directMode) {
+    try {
+      const response = await callDirectAPI(
+        API_ENDPOINTS.perplexity,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key.trim()}`
+          },
+          body: JSON.stringify(requestBody)
+        },
+        'Perplexity'
+      )
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content
+      
+      if (!content) {
+        throw new Error('Invalid response format from Perplexity API')
+      }
+
+      return content
+    } catch (error) {
+      if (error instanceof Error && error.message === 'CORS_ERROR') {
+        console.log('[externalLLM] Direct mode failed due to CORS, falling back to proxy mode')
+      } else {
+        throw error
+      }
+    }
   }
 
   if (CUSTOM_PROXY_URL) {
@@ -267,7 +386,9 @@ async function callPerplexity(prompt: string, apiKey?: string): Promise<string> 
     }
   }
 
-  for (const proxy of CORS_PROXIES) {
+  const enabledProxies = CORS_PROXIES.filter(p => p.enabled)
+
+  for (const proxy of enabledProxies) {
     try {
       console.log(`[externalLLM] Attempting ${proxy.name}...`)
       
@@ -329,11 +450,13 @@ async function callPerplexity(prompt: string, apiKey?: string): Promise<string> 
     'Visit perplexity.ai/settings/api to check your API key status.')
 }
 
-async function callClaude(prompt: string, apiKey?: string): Promise<string> {
+async function callClaude(prompt: string, apiKey?: string, useDirectMode?: boolean): Promise<string> {
   const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY
   const key = apiKey || CLAUDE_API_KEY
+  const directMode = useDirectMode ?? DIRECT_API_MODE
   
   console.log('[externalLLM] callClaude invoked')
+  console.log('[externalLLM] Direct API mode:', directMode)
   
   if (!key) {
     throw new Error('Claude API key not configured. Please add your API key in Settings.')
@@ -342,8 +465,6 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
   if (!key.startsWith('sk-ant-')) {
     throw new Error('Invalid Claude API key format. API keys must start with "sk-ant-".')
   }
-
-  console.log('[externalLLM] Calling Claude API via CORS proxies...')
 
   const requestBody = {
     model: 'claude-3-5-sonnet-20241022',
@@ -354,6 +475,39 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
         content: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
       }
     ]
+  }
+
+  if (directMode) {
+    try {
+      const response = await callDirectAPI(
+        API_ENDPOINTS.claude,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key.trim(),
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify(requestBody)
+        },
+        'Claude'
+      )
+
+      const data = await response.json()
+      const content = data.content?.[0]?.text
+      
+      if (!content) {
+        throw new Error('Invalid response format from Claude API')
+      }
+
+      return content
+    } catch (error) {
+      if (error instanceof Error && error.message === 'CORS_ERROR') {
+        console.log('[externalLLM] Direct mode failed due to CORS, falling back to proxy mode')
+      } else {
+        throw error
+      }
+    }
   }
 
   if (CUSTOM_PROXY_URL) {
@@ -384,7 +538,9 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
     }
   }
 
-  for (const proxy of CORS_PROXIES) {
+  const enabledProxies = CORS_PROXIES.filter(p => p.enabled)
+
+  for (const proxy of enabledProxies) {
     try {
       console.log(`[externalLLM] Attempting ${proxy.name}...`)
       
@@ -447,10 +603,12 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
     'Visit console.anthropic.com to check your API key status.')
 }
 
-async function callGemini(prompt: string, apiKey?: string): Promise<string> {
+async function callGemini(prompt: string, apiKey?: string, useDirectMode?: boolean): Promise<string> {
   const key = apiKey || GEMINI_API_KEY
+  const directMode = useDirectMode ?? DIRECT_API_MODE
   
   console.log('[externalLLM] callGemini invoked')
+  console.log('[externalLLM] Direct API mode:', directMode)
   
   if (!key) {
     throw new Error('Gemini API key not configured. Please add your API key in Settings.')
@@ -459,8 +617,6 @@ async function callGemini(prompt: string, apiKey?: string): Promise<string> {
   if (!key.startsWith('AIza')) {
     throw new Error('Invalid Gemini API key format. API keys must start with "AIza".')
   }
-
-  console.log('[externalLLM] Calling Gemini API via CORS proxies...')
 
   const requestBody = {
     contents: [
@@ -479,6 +635,43 @@ async function callGemini(prompt: string, apiKey?: string): Promise<string> {
   }
 
   const targetUrl = typeof API_ENDPOINTS.gemini === 'function' ? API_ENDPOINTS.gemini(key.trim()) : ''
+
+  if (directMode) {
+    try {
+      const response = await callDirectAPI(
+        targetUrl,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        },
+        'Gemini'
+      )
+
+      const data = await response.json()
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+      
+      if (!content) {
+        if (data.error) {
+          throw new Error(`Gemini API error: ${data.error.message || 'Unknown error'}`)
+        }
+        if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+          throw new Error('Content was blocked by Gemini safety filters. Please try adjusting your investigation parameters.')
+        }
+        throw new Error('Invalid response format from Gemini API')
+      }
+
+      return content
+    } catch (error) {
+      if (error instanceof Error && error.message === 'CORS_ERROR') {
+        console.log('[externalLLM] Direct mode failed due to CORS, falling back to proxy mode')
+      } else {
+        throw error
+      }
+    }
+  }
 
   if (CUSTOM_PROXY_URL) {
     console.log('[externalLLM] Attempting custom proxy first:', CUSTOM_PROXY_URL)
@@ -508,7 +701,9 @@ async function callGemini(prompt: string, apiKey?: string): Promise<string> {
     }
   }
 
-  for (const proxy of CORS_PROXIES) {
+  const enabledProxies = CORS_PROXIES.filter(p => p.enabled)
+
+  for (const proxy of enabledProxies) {
     try {
       console.log(`[externalLLM] Attempting ${proxy.name}...`)
       
