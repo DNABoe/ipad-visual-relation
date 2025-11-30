@@ -1,13 +1,9 @@
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
 const PERPLEXITY_API_KEY = import.meta.env.VITE_PERPLEXITY_API_KEY
 
-const CORS_PROXIES = [
-  'https://corsproxy.io/?',
-  'https://api.allorigins.win/raw?url=',
-  'https://cors-anywhere.herokuapp.com/',
-]
+const REQUEST_TIMEOUT = 60000
 
-const REQUEST_TIMEOUT = 30000
+const PROXY_URL = import.meta.env.VITE_PROXY_URL || '/api/proxy'
 
 export function isLLMAvailable(): boolean {
   try {
@@ -44,13 +40,11 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout: numb
   }
 }
 
-async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0, proxyIndex = 0): Promise<string> {
+async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
   const key = apiKey || OPENAI_API_KEY
-  const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callOpenAI invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ', proxy ' + (proxyIndex + 1) + '/' + CORS_PROXIES.length + ')')
+  console.log('[externalLLM] callOpenAI invoked')
   console.log('[externalLLM] apiKey parameter provided:', !!apiKey)
-  console.log('[externalLLM] apiKey parameter value (first 10 chars):', apiKey?.substring(0, 10) || 'N/A')
   console.log('[externalLLM] OPENAI_API_KEY env var present:', !!OPENAI_API_KEY)
   console.log('[externalLLM] Final key to use present:', !!key)
   
@@ -62,10 +56,7 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0, proxy
     throw new Error('Invalid OpenAI API key format. API keys must start with "sk-". Please check your API key in Settings.')
   }
 
-  console.log('[externalLLM] Calling OpenAI API...')
-  console.log('[externalLLM] API key available:', !!key)
-  console.log('[externalLLM] API key length:', key.length)
-  console.log('[externalLLM] API key starts with sk-:', key.startsWith('sk-'))
+  console.log('[externalLLM] Calling OpenAI API via proxy...')
 
   const requestBody = {
     model: 'gpt-4o-mini',
@@ -83,22 +74,19 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0, proxy
     max_tokens: 2000
   }
 
-  console.log('[externalLLM] Request body:', JSON.stringify(requestBody, null, 2))
+  console.log('[externalLLM] Request prepared')
 
-  const corsProxy = CORS_PROXIES[proxyIndex]
-  const targetUrl = 'https://api.openai.com/v1/chat/completions'
-  const fullUrl = corsProxy + encodeURIComponent(targetUrl)
-  
-  console.log(`[externalLLM] Using CORS proxy: ${corsProxy}`)
-  
   try {
-    const response = await fetchWithTimeout(fullUrl, {
+    const response = await fetchWithTimeout(PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key.trim()}`
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        provider: 'openai',
+        apiKey: key.trim(),
+        payload: requestBody
+      })
     }, REQUEST_TIMEOUT)
 
     console.log('[externalLLM] Response status:', response.status)
@@ -116,96 +104,52 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0, proxy
       }
       
       console.error('[externalLLM] OpenAI API error:', errorData)
-      console.error('[externalLLM] Response status:', response.status)
-      console.error('[externalLLM] Response status text:', response.statusText)
       
       if (response.status === 401) {
-        throw new Error('Invalid API key. Please verify your OpenAI API key in Settings. Make sure you copied the entire key correctly and that it starts with "sk-".')
+        throw new Error('Invalid API key. Please verify your OpenAI API key in Settings.')
       } else if (response.status === 403) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} blocked request (403), trying next proxy...`)
-          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies blocked, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Access forbidden (403) - All CORS proxy services are currently blocking API requests. This often happens when proxy services detect and block OpenAI API traffic, or your network/ISP is filtering requests. Try: 1) Using a different network (mobile hotspot), 2) Disabling VPN/proxy, 3) Trying again later. Consider using the Spark runtime\'s built-in LLM if available.')
+        throw new Error('Access forbidden. Please check your API key permissions.')
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 500) {
         throw new Error('OpenAI service error. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} failed with ${response.status}, trying next proxy...`)
-          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Network connection issues detected. All CORS proxy services are currently unavailable or blocked by your network. This can happen in restrictive network environments (corporate firewalls, VPNs, or content filters). Please try: 1) Using a different network connection, 2) Disabling VPN if active, 3) Trying again later when proxy services recover.')
+        throw new Error('Network error. The proxy service is currently unavailable. Please try again later.')
       }
       
       throw new Error(`OpenAI API error: ${response.status} - ${errorData.message || response.statusText}`)
     }
 
     const data = await response.json()
-    console.log('[externalLLM] Response data structure:', {
-      hasChoices: !!data.choices,
-      choicesLength: data.choices?.length,
-      hasFirstChoice: !!data.choices?.[0],
-      hasMessage: !!data.choices?.[0]?.message
-    })
+    console.log('[externalLLM] Response received successfully')
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid response from OpenAI API')
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    
+    if (!data.content) {
+      throw new Error('Invalid response from proxy')
     }
 
-    return data.choices[0].message.content
+    return data.content
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} timed out, trying next proxy...`)
-          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies timed out, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Request timeout - all CORS proxy services are not responding. Your network may be blocking these services. Please try: 1) Using a different network, 2) Disabling VPN/proxy, 3) Trying again later.')
+        throw new Error('Request timeout. The API is not responding. Please try again later.')
       }
       
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] Network error with ${corsProxy}, trying next proxy...`)
-          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Network error - unable to connect through any CORS proxy service. Your network environment may be restricting external API calls. This commonly occurs with: corporate firewalls, VPNs, proxy servers, or content filtering. Please try a different network connection or contact your network administrator.')
+        throw new Error('Network error. Unable to connect to the proxy service. Please check your network connection.')
       }
     }
     throw error
   }
 }
 
-async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0, proxyIndex = 0): Promise<string> {
+async function callPerplexity(prompt: string, apiKey?: string): Promise<string> {
   const key = apiKey || PERPLEXITY_API_KEY
-  const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callPerplexity invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ', proxy ' + (proxyIndex + 1) + '/' + CORS_PROXIES.length + ')')
+  console.log('[externalLLM] callPerplexity invoked')
   
   if (!key) {
     throw new Error('Perplexity API key not configured. Please add your API key in Settings.')
@@ -215,33 +159,30 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0, p
     throw new Error('Invalid Perplexity API key format. API keys must start with "pplx-".')
   }
 
-  console.log('[externalLLM] Calling Perplexity API...')
-
-  const corsProxy = CORS_PROXIES[proxyIndex]
-  const targetUrl = 'https://api.perplexity.ai/chat/completions'
-  const fullUrl = corsProxy + encodeURIComponent(targetUrl)
-
-  console.log(`[externalLLM] Using CORS proxy: ${corsProxy}`)
+  console.log('[externalLLM] Calling Perplexity API via proxy...')
 
   try {
-    const response = await fetchWithTimeout(fullUrl, {
+    const response = await fetchWithTimeout(PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key.trim()}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional intelligence analyst creating detailed intelligence briefs based on current, up-to-date information.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
+        provider: 'perplexity',
+        apiKey: key.trim(),
+        payload: {
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional intelligence analyst creating detailed intelligence briefs based on current, up-to-date information.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ]
+        }
       })
     }, REQUEST_TIMEOUT)
 
@@ -258,31 +199,11 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0, p
       if (response.status === 401) {
         throw new Error('Invalid Perplexity API key. Please verify your API key in Settings.')
       } else if (response.status === 403) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} blocked request (403), trying next proxy...`)
-          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies blocked, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Access forbidden (403) - All CORS proxy services are currently blocking API requests. This often happens when proxy services detect and block Perplexity API traffic, or your network/ISP is filtering requests. Try: 1) Using a different network (mobile hotspot), 2) Disabling VPN/proxy, 3) Trying again later.')
+        throw new Error('Access forbidden. Please check your API key permissions.')
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} failed with ${response.status}, trying next proxy...`)
-          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Network connection issues detected. All CORS proxy services are currently unavailable or blocked by your network. This can happen in restrictive network environments (corporate firewalls, VPNs, or content filters). Please try: 1) Using a different network connection, 2) Disabling VPN if active, 3) Trying again later when proxy services recover.')
+        throw new Error('Network error. The proxy service is currently unavailable. Please try again later.')
       }
       
       throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
@@ -290,51 +211,34 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0, p
 
     const data = await response.json()
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid response from Perplexity API')
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    
+    if (!data.content) {
+      throw new Error('Invalid response from proxy')
     }
 
-    return data.choices[0].message.content
+    return data.content
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} timed out, trying next proxy...`)
-          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies timed out, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Request timeout - all CORS proxy services are not responding. Your network may be blocking these services. Please try: 1) Using a different network, 2) Disabling VPN/proxy, 3) Trying again later.')
+        throw new Error('Request timeout. The API is not responding. Please try again later.')
       }
       
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] Network error with ${corsProxy}, trying next proxy...`)
-          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Network error - unable to connect through any CORS proxy service. Your network environment may be restricting external API calls. This commonly occurs with: corporate firewalls, VPNs, proxy servers, or content filtering. Please try a different network connection or contact your network administrator.')
+        throw new Error('Network error. Unable to connect to the proxy service. Please check your network connection.')
       }
     }
     throw error
   }
 }
 
-async function callClaude(prompt: string, apiKey?: string, retryCount = 0, proxyIndex = 0): Promise<string> {
+async function callClaude(prompt: string, apiKey?: string): Promise<string> {
   const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY
   const key = apiKey || CLAUDE_API_KEY
-  const MAX_RETRIES = 2
   
-  console.log('[externalLLM] callClaude invoked (attempt ' + (retryCount + 1) + '/' + (MAX_RETRIES + 1) + ', proxy ' + (proxyIndex + 1) + '/' + CORS_PROXIES.length + ')')
+  console.log('[externalLLM] callClaude invoked')
   
   if (!key) {
     throw new Error('Claude API key not configured. Please add your API key in Settings.')
@@ -344,31 +248,27 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0, proxy
     throw new Error('Invalid Claude API key format. API keys must start with "sk-ant-".')
   }
 
-  console.log('[externalLLM] Calling Claude API...')
-
-  const corsProxy = CORS_PROXIES[proxyIndex]
-  const targetUrl = 'https://api.anthropic.com/v1/messages'
-  const fullUrl = corsProxy + encodeURIComponent(targetUrl)
-
-  console.log(`[externalLLM] Using CORS proxy: ${corsProxy}`)
+  console.log('[externalLLM] Calling Claude API via proxy...')
 
   try {
-    const response = await fetchWithTimeout(fullUrl, {
+    const response = await fetchWithTimeout(PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': key.trim(),
-        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 2048,
-        messages: [
-          {
-            role: 'user',
-            content: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
-          }
-        ]
+        provider: 'claude',
+        apiKey: key.trim(),
+        payload: {
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 2048,
+          messages: [
+            {
+              role: 'user',
+              content: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
+            }
+          ]
+        }
       })
     }, REQUEST_TIMEOUT)
 
@@ -385,31 +285,11 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0, proxy
       if (response.status === 401) {
         throw new Error('Invalid Claude API key. Please verify your API key in Settings.')
       } else if (response.status === 403) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} blocked request (403), trying next proxy...`)
-          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies blocked, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callClaude(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Access forbidden (403) - All CORS proxy services are currently blocking API requests. This often happens when proxy services detect and block Claude API traffic, or your network/ISP is filtering requests. Try: 1) Using a different network (mobile hotspot), 2) Disabling VPN/proxy, 3) Trying again later.')
+        throw new Error('Access forbidden. Please check your API key permissions.')
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} failed with ${response.status}, trying next proxy...`)
-          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callClaude(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Network connection issues detected. All CORS proxy services are currently unavailable or blocked by your network. This can happen in restrictive network environments (corporate firewalls, VPNs, or content filters). Please try: 1) Using a different network connection, 2) Disabling VPN if active, 3) Trying again later when proxy services recover.')
+        throw new Error('Network error. The proxy service is currently unavailable. Please try again later.')
       }
       
       throw new Error(`Claude API error: ${response.status} ${response.statusText}`)
@@ -417,39 +297,23 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0, proxy
 
     const data = await response.json()
     
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      throw new Error('Invalid response from Claude API')
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    
+    if (!data.content) {
+      throw new Error('Invalid response from proxy')
     }
 
-    return data.content[0].text
+    return data.content
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] CORS proxy ${corsProxy} timed out, trying next proxy...`)
-          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies timed out, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callClaude(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Request timeout - all CORS proxy services are not responding. Your network may be blocking these services. Please try: 1) Using a different network, 2) Disabling VPN/proxy, 3) Trying again later.')
+        throw new Error('Request timeout. The API is not responding. Please try again later.')
       }
       
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        if (proxyIndex < CORS_PROXIES.length - 1) {
-          console.log(`[externalLLM] Network error with ${corsProxy}, trying next proxy...`)
-          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
-        }
-        if (retryCount < MAX_RETRIES) {
-          const delayMs = Math.pow(2, retryCount) * 2000
-          console.log(`[externalLLM] All proxies failed, retrying in ${delayMs}ms...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
-          return callClaude(prompt, apiKey, retryCount + 1, 0)
-        }
-        throw new Error('Network error - unable to connect through any CORS proxy service. Your network environment may be restricting external API calls. This commonly occurs with: corporate firewalls, VPNs, proxy servers, or content filtering. Please try a different network connection or contact your network administrator.')
+        throw new Error('Network error. Unable to connect to the proxy service. Please check your network connection.')
       }
     }
     throw error
@@ -770,410 +634,11 @@ function generateStaticReport(params: {
 
 ---
 
-## 1. PERSONAL PROFILE
+## ANALYST NOTE
 
-**Full Name:** ${name}
+This intelligence brief has been generated using standard template analysis based on position and professional context. For enhanced, AI-powered personalized analysis with real-time research capabilities, configure an LLM provider API key (OpenAI, Perplexity, or Claude) in Settings > Investigation tab.
 
-**Current Role:** ${positionText}${countryText !== 'Not specified' ? `\n**Location/Country:** ${countryText}` : ''}
-
-**Age/Demographic Information:**
-Information not publicly available. For enhanced intelligence reports with real-time research capabilities, configure an LLM provider API key in Settings.
-
-**Personal Background:**
-${name} serves in the capacity of ${positionText}, a position requiring significant professional expertise and leadership capability.
-
-**Educational Background:** (Typical for this position)
-- Advanced degree (Master's or MBA) from recognized institution
-- Undergraduate degree in relevant field
-- Continuing professional education and certifications
-- Industry-specific training and qualifications
-
-**Languages:**
-Typically fluent in local language(s) and business English. Additional languages dependent on region and industry exposure.
-
-**Personal Characteristics:** (Based on typical profile for this position)
-- Strong communication and interpersonal skills
-- Strategic thinking and analytical capabilities
-- Results-oriented with attention to operational excellence
-- Professional demeanor aligned with organizational culture
-- Leadership presence and influence capabilities
-
-**Public Presence:**
-- Professional networking activity (LinkedIn, industry platforms)
-- Potential participation in industry conferences
-- May contribute to industry publications or forums
-- Public speaking engagements at professional events
-
-**Personal Interests:** (Common for this professional level)
-- Professional development and industry trends
-- Networking and relationship building
-- May participate in business associations or clubs
-- Potential involvement in mentoring or advisory roles
-
----
-
-## 2. PROFESSIONAL BACKGROUND OVERVIEW
-
-**Current Position and Organization:**
-- Position: ${positionText}
-- Organization: Information available with AI-enhanced research
-- Tenure: Typical senior-level tenure ranges from 2-5+ years
-- Reporting structure and span of control varies by organization size
-
-**Current Responsibilities:**
-Individuals in the role of ${positionText} typically have:
-- Strategic oversight and operational leadership
-- Decision-making authority on key initiatives
-- Team management and organizational development
-- Budget and resource allocation responsibilities
-- Stakeholder relationship management
-- Cross-functional coordination and collaboration
-
-**Career Timeline and Progression:**
-Professionals at this level generally have:
-- 10-20+ years of progressive industry experience
-- Track record of increasing responsibility and scope
-- Multiple positions of increasing seniority
-- Demonstrated expertise in specialized areas
-- History of measurable achievements and impact
-- Professional certifications and continuous development
-- Possible cross-industry or international experience
-
-**Industry Expertise and Specializations:**
-- Deep understanding of sector dynamics and trends
-- Technical proficiency in relevant domains
-- Regulatory and compliance knowledge
-- Best practices and industry standards awareness
-- Specialized knowledge areas specific to role
-
-**Notable Achievements:** (Typical for this level)
-- Successfully led major initiatives or transformations
-- Contributed to organizational growth and performance
-- Developed teams and talent pipelines
-- Established strategic partnerships or relationships
-- Potential industry recognition or awards
-
-**Publications and Thought Leadership:**
-May include industry articles, conference presentations, or participation in professional forums relevant to their domain.
-
----
-
-## 3. AREAS OF INFLUENCE AND EXPERTISE
-
-**Organizational Influence:**
-- Direct authority over strategic decisions and resource allocation
-- Influence on organizational direction and priorities
-- Leadership in change management and transformation initiatives
-- Input on investment and strategic planning decisions
-- Voice in executive-level discussions and planning
-- Potential board-level interaction or reporting
-
-**Domain Expertise and Technical Competencies:**
-- Strategic planning and execution capabilities
-- Financial acumen and business strategy
-- Operational excellence and process optimization
-- Industry-specific technical knowledge
-- Risk management and governance
-- Innovation and digital transformation awareness
-
-**Professional Standing and Reputation:**
-- Recognized expertise within their field and organization
-- Professional network spanning industry and beyond
-- Potential thought leadership and public presence
-- Involvement in industry associations and forums
-- Peer recognition and professional credibility
-- May serve as advisor or mentor to others
-
-**Decision-Making Authority:**
-- Budget approval and resource allocation
-- Strategic initiative prioritization
-- Hiring and organizational structure decisions
-- Vendor and partnership selections
-- Policy and process development
-- Performance management and evaluation
-
-**Sphere of Influence:**
-- Internal: Teams, departments, cross-functional groups
-- External: Industry peers, partners, clients, stakeholders
-- Potential regulatory or policy influence
-- Market or competitive positioning impact
-
----
-
-## 4. POTENTIAL NETWORK CONNECTIONS
-
-**Internal Organizational Network:**
-- Executive leadership team and C-suite executives
-- Cross-functional department heads and peers
-- Direct reports and extended team members
-- Board members and advisors (if applicable)
-- Internal stakeholders across business units
-- Strategic initiative team members
-
-**External Professional Network:**
-- Industry peers and counterparts at other organizations
-- Strategic partners and key suppliers
-- Client or customer leadership contacts
-- Competitor contacts from industry events
-- Professional association members and leaders
-- Former colleagues now in positions of influence
-
-**Strategic Relationships:**
-- Key clients or major customers
-- Investment partners or financial stakeholders
-- Technology and innovation partners
-- Academic and research institution contacts
-- Industry analysts and consultants
-- Media and communications professionals
-- Regulatory or government contacts (if relevant)
-
-**Alumni and Educational Networks:**
-- University and business school alumni
-- Professional certification program contacts
-- Executive education program peers
-- Academic mentors or advisors
-
-**Professional and Social Organizations:**
-- Industry association memberships
-- Professional certification bodies
-- Business clubs and networking groups
-- Chambers of commerce or trade organizations
-- Advisory boards or committees
-- Charitable or community organization involvement
-
----
-
-## 5. STRATEGIC IMPORTANCE ASSESSMENT
-
-**Intelligence Value:** MODERATE TO HIGH
-
-**Access to Strategic Information:**
-- Senior-level position indicates access to strategic plans and confidential information
-- Visibility into organizational direction and future initiatives
-- Knowledge of financial performance and projections
-- Awareness of competitive landscape and market intelligence
-- Insight into industry trends and regulatory developments
-- Understanding of key partnerships and relationships
-- Access to sensitive operational data and metrics
-
-**Decision-Making Influence:**
-- Direct authority on key organizational matters
-- Input on strategic direction and priorities
-- Influence over resource allocation and investments
-- Impact on personnel and organizational structure
-- Voice in policy and governance decisions
-
-**Network Access and Connectivity:**
-- Well-positioned within professional and industry circles
-- Bridge between organizational levels and external stakeholders
-- Access to other high-value contacts and decision-makers
-- Potential conduit for information flow and influence
-- Connections to multiple spheres (business, government, academic)
-
-**Strategic Value Points:**
-- Position provides leverage point for organizational influence
-- Network enables access to wider intelligence targets
-- Role offers insights into industry dynamics
-- Potential as long-term intelligence asset
-- Access to non-public strategic information
-- Influence on decisions affecting broader stakeholder groups
-
-**Risk and Sensitivity Assessment:**
-- May have access to commercially sensitive information
-- Position involves fiduciary responsibilities
-- Bound by confidentiality and non-disclosure agreements
-- Reputation risk considerations
-- Professional and ethical constraints on information sharing
-
----
-
-## 6. KEY CONSIDERATIONS FOR ENGAGEMENT
-
-**Recommended Approach Strategy:**
-
-**Initial Contact Phase:**
-- Professional and respectful introduction through appropriate channels
-- Clear value proposition demonstrating mutual benefit
-- Credible professional context and legitimate business rationale
-- Respect for time constraints and professional priorities
-- Use of warm introduction through mutual contacts when possible
-- Alignment with their professional interests and objectives
-
-**Communication Preferences:** (Typical for this role)
-- Concise, results-oriented communication style
-- Data-driven and strategic discussions preferred
-- Scheduled meetings with clear agendas and objectives
-- Professional channels (corporate email, formal meetings)
-- Response to time-sensitive matters may be delegated
-- Values preparation and substance over casual interaction
-
-**Topics of Interest and Engagement Points:**
-- Industry trends and future outlook
-- Strategic challenges and competitive dynamics
-- Innovation and emerging technologies
-- Professional development and thought leadership
-- Market dynamics and regulatory changes
-- Operational excellence and best practices
-- Strategic partnerships and collaboration opportunities
-- Organizational transformation and change management
-
-**Optimal Engagement Opportunities:**
-- Industry conferences and professional events
-- Executive forums and leadership summits
-- Thought leadership panels and speaking engagements
-- Professional association activities and meetings
-- Strategic workshops or roundtable discussions
-- Targeted networking events
-- Collaborative projects with clear business value
-
-**Motivations and Drivers:** (Common for this profile)
-- Professional advancement and recognition
-- Organizational success and performance
-- Industry leadership and influence
-- Innovation and competitive advantage
-- Relationship building and networking
-- Learning and professional development
-
-**Risk Factors and Sensitivities:**
-- Time sensitivity and competing priorities
-- Organizational constraints and confidentiality obligations
-- Professional reputation and ethics considerations
-- Conflict of interest or competitive sensitivities
-- Regulatory or legal compliance requirements
-- Personal privacy and discretion preferences
-- Limited availability due to travel and commitments
-
-**Potential Vulnerabilities or Pressure Points:**
-- Performance metrics and organizational targets
-- Industry disruption or competitive pressures
-- Regulatory changes affecting operations
-- Resource constraints or budget limitations
-- Succession planning or career progression concerns
-- Stakeholder expectations and demands
-
----
-
-## 7. STRATEGIC RECOMMENDATIONS
-
-**Immediate Actions (Week 1-2):**
-
-1. **Research and Intelligence Gathering**
-   - Conduct comprehensive open-source intelligence (OSINT) gathering
-   - Review LinkedIn profile, company website, and professional history
-   - Search for recent interviews, articles, or public statements
-   - Identify mutual connections or professional links
-   - Research current organizational priorities and recent developments
-   - Review industry news affecting their organization
-   - Compile dossier of publicly available information
-
-2. **Network Mapping and Analysis**
-   - Map their professional network and key relationships
-   - Identify potential introduction pathways
-   - Analyze organizational structure and reporting lines
-   - Identify colleagues or contacts who may provide insights
-   - Research their educational background and alumni networks
-
-3. **Initial Outreach Preparation**
-   - Develop compelling value proposition aligned with their interests
-   - Prepare professional communication materials
-   - Identify appropriate introduction channel (direct, referral, event)
-   - Time outreach to align with professional calendar and industry events
-   - Draft initial contact message emphasizing mutual value
-
-**Short-Term Engagement (Month 1-3):**
-
-4. **Relationship Initiation**
-   - Execute initial contact through optimal channel
-   - Focus communication on specific mutual interests or opportunities
-   - Establish credibility through expertise and professionalism
-   - Propose low-commitment initial engagement (coffee, brief call)
-   - Follow up professionally and consistently
-
-5. **Information Development**
-   - Conduct ongoing open-source monitoring
-   - Track professional activities and public statements
-   - Monitor organizational news and developments
-   - Attend industry events where they may be present
-   - Gather intelligence on priorities and challenges
-
-6. **Relationship Building**
-   - Provide value through insights, introductions, or expertise
-   - Build trust through consistency and reliability
-   - Respect boundaries and professional constraints
-   - Identify opportunities for meaningful interaction
-   - Develop rapport through shared professional interests
-
-**Medium-Term Strategy (Quarter 2-4):**
-
-7. **Network Expansion**
-   - Map broader relationship network and influence spheres
-   - Identify other high-value contacts accessible through this person
-   - Understand organizational structure and decision-making processes
-   - Build relationships with their colleagues and peers
-   - Develop multi-level organizational access
-
-8. **Strategic Positioning**
-   - Position yourself as valuable professional resource
-   - Demonstrate expertise in areas of interest to them
-   - Provide exclusive insights or access when appropriate
-   - Create opportunities for mutual benefit and collaboration
-   - Establish regular touchpoints and communication rhythm
-
-**Long-Term Objectives (Year 1+):**
-
-9. **Sustained Engagement and Development**
-   - Maintain ongoing professional relationship
-   - Provide consistent value through information, insights, or connections
-   - Develop deeper understanding of motivations and drivers
-   - Build reputation as trusted and reliable contact
-   - Create framework for confidential discussions when appropriate
-
-10. **Strategic Intelligence Cultivation**
-   - Gather insights on industry and organizational trends
-   - Develop understanding of strategic priorities and plans
-   - Identify opportunities for information exchange
-   - Build foundation for long-term intelligence development
-   - Establish position as go-to resource in relevant domains
-
-11. **Influence and Leverage Development**
-   - Identify opportunities to provide strategic value
-   - Position for involvement in key initiatives or decisions
-   - Develop understanding of pressure points and challenges
-   - Create opportunities for deeper collaboration
-   - Build framework for strategic influence operations
-
----
-
-## ASSESSMENT SUMMARY
-
-**Overall Priority:** MEDIUM-HIGH
-
-${name}'s position as ${positionText} represents a valuable potential contact for intelligence operations. The combination of professional standing, organizational influence, and network access creates opportunities for strategic engagement and information gathering.
-
-**Key Success Factors:**
-- Professional, respectful approach
-- Clear value proposition
-- Sustained, consistent engagement
-- Mutual benefit orientation
-- Respect for professional boundaries
-
-**Next Steps:**
-- Complete comprehensive background research
-- Develop detailed engagement strategy
-- Identify optimal introduction pathway
-- Prepare professional outreach materials
-- Monitor for engagement opportunities
-
----
-
-**ANALYST NOTE:** This intelligence brief has been generated using standard template analysis based on position and professional context. For enhanced, AI-powered personalized analysis with real-time research capabilities, configure an LLM provider API key (OpenAI, Perplexity, or Claude) in Settings > Investigation tab.
-
-**For AI-Enhanced Reports:** The investigation feature can leverage advanced language models to generate detailed, context-specific intelligence reports that include:
-- Real-time research and current information
-- Specific organizational and industry analysis
-- Personalized strategic recommendations
-- Enhanced relationship mapping
-- Dynamic risk assessment
+**For AI-Enhanced Reports:** The investigation feature can leverage advanced language models to generate detailed, context-specific intelligence reports.
 
 **To Enable:** Add your preferred LLM provider API key in the Settings menu under the Investigation tab.
 

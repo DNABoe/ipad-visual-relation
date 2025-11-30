@@ -1,0 +1,24 @@
+{
+  "name": "releye-llm-proxy",
+  "version": "1.0.0",
+  "description": "Simple CORS proxy for LLM API calls (OpenAI, Perplexity, Claude)",
+  "main": "proxy-server.js",
+  "scripts": {
+    "start": "node proxy-server.js",
+    "dev": "nodemon proxy-server.js"
+  },
+  "keywords": ["proxy", "cors", "llm", "openai", "perplexity", "claude"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

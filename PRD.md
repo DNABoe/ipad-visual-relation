@@ -2,9 +2,11 @@
 
 A web-based network visualization tool that lets users build and explore visual relationship maps of key persons with draggable nodes, connections, and color-coded groups. All data is stored using GitHub-backed Spark KV storage and browser localStorage with AES-256 encryption for maximum security and privacy.
 
-## ✨ SIMPLIFIED ARCHITECTURE - SINGLE DEPLOYMENT
+## ✨ SIMPLIFIED ARCHITECTURE - FRONTEND + OPTIONAL PROXY
 
-**This application now uses a simplified architecture with NO backend server required!** Simply deploy to GitHub Pages and you're done.
+**This application uses a simplified architecture:**
+- **Frontend**: Static React app deployed via GitHub Pages
+- **LLM Proxy** (optional): Simple Node.js proxy for external AI API calls (OpenAI, Perplexity, Claude)
 
 ## Deployment Information
 
@@ -310,8 +312,14 @@ RelEye uses a hybrid storage model that balances security and usability. **All f
   - PDF automatically added to person's attachments → Report preview shown in dialog
 - **Requirements**:
   - **API Key**: Requires at least one LLM provider (OpenAI, Perplexity, or Claude) configured in Settings > Investigation tab
+  - **Proxy Server**: Requires simple Node.js proxy server to handle CORS for external API calls (see PROXY_DEPLOYMENT_GUIDE.md)
   - **Network File**: API keys are stored encrypted in the network file (tied to file, not user)
   - **Person Name**: Minimum requirement for investigation
+- **Technical Architecture**:
+  - Frontend sends request with provider, API key, and prompt to proxy server at `/api/proxy`
+  - Proxy server forwards request to LLM provider (OpenAI, Perplexity, or Claude)
+  - Response returns through proxy to frontend
+  - No API keys or data stored on proxy server
 - **Report Format**:
   - Professional intelligence report layout with RelEye logo
   - Profile photo (if available)
@@ -324,10 +332,11 @@ RelEye uses a hybrid storage model that balances security and usability. **All f
   - Report depth varies based on selected scopes
   - Multiple LLM providers can be used (OpenAI, Perplexity, Claude)
   - API keys encrypted and saved in network file
-  - Report generates within 30-60 seconds
+  - Report generates within 30-60 seconds via proxy
   - PDF automatically attached to person
   - Investigation only runs when explicitly triggered (doesn't auto-run)
-  - Clear error messages when API configuration is missing or invalid
+  - Clear error messages when API configuration is missing, proxy unavailable, or invalid
+  - Graceful fallback to static reports when proxy is unavailable
 
 ### AI-Powered Network Insights
 - **Functionality**: Advanced AI analysis of the network using investigation reports to generate strategic insights and identify the network's "center of gravity"
