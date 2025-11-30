@@ -3,7 +3,31 @@ const PERPLEXITY_API_KEY = import.meta.env.VITE_PERPLEXITY_API_KEY
 
 const REQUEST_TIMEOUT = 60000
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || '/api/proxy'
+const CORS_PROXIES = [
+  {
+    name: 'AllOrigins',
+    url: (targetUrl: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    type: 'prepend' as const
+  },
+  {
+    name: 'CORSProxy.io',
+    url: (targetUrl: string) => `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+    type: 'prepend' as const
+  },
+  {
+    name: 'CORS Anywhere',
+    url: (targetUrl: string) => `https://cors-anywhere.herokuapp.com/${targetUrl}`,
+    type: 'prepend' as const
+  }
+]
+
+const CUSTOM_PROXY_URL = import.meta.env.VITE_PROXY_URL
+
+const API_ENDPOINTS = {
+  openai: 'https://api.openai.com/v1/chat/completions',
+  perplexity: 'https://api.perplexity.ai/chat/completions',
+  claude: 'https://api.anthropic.com/v1/messages'
+}
 
 export function isLLMAvailable(): boolean {
   try {
@@ -56,7 +80,7 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
     throw new Error('Invalid OpenAI API key format. API keys must start with "sk-". Please check your API key in Settings.')
   }
 
-  console.log('[externalLLM] Calling OpenAI API via proxy...')
+  console.log('[externalLLM] Calling OpenAI API via CORS proxies...')
 
   const requestBody = {
     model: 'gpt-4o-mini',
@@ -76,74 +100,91 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
 
   console.log('[externalLLM] Request prepared')
 
-  try {
-    const response = await fetchWithTimeout(PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        provider: 'openai',
-        apiKey: key.trim(),
-        payload: requestBody
-      })
-    }, REQUEST_TIMEOUT)
+  if (CUSTOM_PROXY_URL) {
+    console.log('[externalLLM] Attempting custom proxy first:', CUSTOM_PROXY_URL)
+    try {
+      const response = await fetchWithTimeout(CUSTOM_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'openai',
+          apiKey: key.trim(),
+          payload: requestBody
+        })
+      }, REQUEST_TIMEOUT)
 
-    console.log('[externalLLM] Response status:', response.status)
-    console.log('[externalLLM] Response ok:', response.ok)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[externalLLM] OpenAI API error response:', errorText)
-      
-      let errorData
-      try {
-        errorData = JSON.parse(errorText)
-      } catch {
-        errorData = { message: errorText }
+      if (response.ok) {
+        const data = await response.json()
+        if (data.content) {
+          console.log('[externalLLM] Success via custom proxy')
+          return data.content
+        }
       }
-      
-      console.error('[externalLLM] OpenAI API error:', errorData)
-      
-      if (response.status === 401) {
-        throw new Error('Invalid API key. Please verify your OpenAI API key in Settings.')
-      } else if (response.status === 403) {
-        throw new Error('Access forbidden. Please check your API key permissions.')
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.')
-      } else if (response.status === 500) {
-        throw new Error('OpenAI service error. Please try again later.')
-      } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-        throw new Error('Network error. The proxy service is currently unavailable. Please try again later.')
-      }
-      
-      throw new Error(`OpenAI API error: ${response.status} - ${errorData.message || response.statusText}`)
+      console.log('[externalLLM] Custom proxy failed, trying public CORS proxies...')
+    } catch (error) {
+      console.log('[externalLLM] Custom proxy error, trying public CORS proxies...', error)
     }
-
-    const data = await response.json()
-    console.log('[externalLLM] Response received successfully')
-    
-    if (data.error) {
-      throw new Error(data.error)
-    }
-    
-    if (!data.content) {
-      throw new Error('Invalid response from proxy')
-    }
-
-    return data.content
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        throw new Error('Request timeout. The API is not responding. Please try again later.')
-      }
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error. Unable to connect to the proxy service. Please check your network connection.')
-      }
-    }
-    throw error
   }
+
+  for (const proxy of CORS_PROXIES) {
+    try {
+      console.log(`[externalLLM] Attempting ${proxy.name}...`)
+      
+      const targetUrl = API_ENDPOINTS.openai
+      const proxyUrl = proxy.url(targetUrl)
+      
+      const response = await fetchWithTimeout(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key.trim()}`
+        },
+        body: JSON.stringify(requestBody)
+      }, REQUEST_TIMEOUT)
+
+      console.log(`[externalLLM] ${proxy.name} response status:`, response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`[externalLLM] ${proxy.name} error response:`, errorText)
+        
+        if (response.status === 401) {
+          throw new Error('Invalid API key. Please verify your OpenAI API key in Settings.')
+        } else if (response.status === 403) {
+          throw new Error('Access forbidden. Please check your API key permissions.')
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.')
+        }
+        
+        continue
+      }
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content
+      
+      if (!content) {
+        console.error(`[externalLLM] ${proxy.name} returned invalid response format`)
+        continue
+      }
+
+      console.log(`[externalLLM] ✓ Success via ${proxy.name}`)
+      return content
+      
+    } catch (error) {
+      console.error(`[externalLLM] ${proxy.name} failed:`, error)
+      if (error instanceof Error && 
+          (error.message.includes('Invalid API key') || 
+           error.message.includes('Access forbidden') ||
+           error.message.includes('Rate limit'))) {
+        throw error
+      }
+      continue
+    }
+  }
+
+  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
 }
 
 async function callPerplexity(prompt: string, apiKey?: string): Promise<string> {
@@ -159,79 +200,105 @@ async function callPerplexity(prompt: string, apiKey?: string): Promise<string> 
     throw new Error('Invalid Perplexity API key format. API keys must start with "pplx-".')
   }
 
-  console.log('[externalLLM] Calling Perplexity API via proxy...')
+  console.log('[externalLLM] Calling Perplexity API via CORS proxies...')
 
-  try {
-    const response = await fetchWithTimeout(PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+  const requestBody = {
+    model: 'llama-3.1-sonar-small-128k-online',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a professional intelligence analyst creating detailed intelligence briefs based on current, up-to-date information.'
       },
-      body: JSON.stringify({
-        provider: 'perplexity',
-        apiKey: key.trim(),
-        payload: {
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a professional intelligence analyst creating detailed intelligence briefs based on current, up-to-date information.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ]
-        }
-      })
-    }, REQUEST_TIMEOUT)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      let errorData
-      try {
-        errorData = JSON.parse(errorText)
-      } catch {
-        errorData = { message: errorText }
+      {
+        role: 'user',
+        content: prompt
       }
-      console.error('[externalLLM] Perplexity API error:', errorData)
-      
-      if (response.status === 401) {
-        throw new Error('Invalid Perplexity API key. Please verify your API key in Settings.')
-      } else if (response.status === 403) {
-        throw new Error('Access forbidden. Please check your API key permissions.')
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.')
-      } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-        throw new Error('Network error. The proxy service is currently unavailable. Please try again later.')
-      }
-      
-      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    
-    if (data.error) {
-      throw new Error(data.error)
-    }
-    
-    if (!data.content) {
-      throw new Error('Invalid response from proxy')
-    }
-
-    return data.content
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        throw new Error('Request timeout. The API is not responding. Please try again later.')
-      }
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error. Unable to connect to the proxy service. Please check your network connection.')
-      }
-    }
-    throw error
+    ]
   }
+
+  if (CUSTOM_PROXY_URL) {
+    console.log('[externalLLM] Attempting custom proxy first:', CUSTOM_PROXY_URL)
+    try {
+      const response = await fetchWithTimeout(CUSTOM_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'perplexity',
+          apiKey: key.trim(),
+          payload: requestBody
+        })
+      }, REQUEST_TIMEOUT)
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.content) {
+          console.log('[externalLLM] Success via custom proxy')
+          return data.content
+        }
+      }
+      console.log('[externalLLM] Custom proxy failed, trying public CORS proxies...')
+    } catch (error) {
+      console.log('[externalLLM] Custom proxy error, trying public CORS proxies...', error)
+    }
+  }
+
+  for (const proxy of CORS_PROXIES) {
+    try {
+      console.log(`[externalLLM] Attempting ${proxy.name}...`)
+      
+      const targetUrl = API_ENDPOINTS.perplexity
+      const proxyUrl = proxy.url(targetUrl)
+      
+      const response = await fetchWithTimeout(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key.trim()}`
+        },
+        body: JSON.stringify(requestBody)
+      }, REQUEST_TIMEOUT)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`[externalLLM] ${proxy.name} error response:`, errorText)
+        
+        if (response.status === 401) {
+          throw new Error('Invalid Perplexity API key. Please verify your API key in Settings.')
+        } else if (response.status === 403) {
+          throw new Error('Access forbidden. Please check your API key permissions.')
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.')
+        }
+        
+        continue
+      }
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content
+      
+      if (!content) {
+        console.error(`[externalLLM] ${proxy.name} returned invalid response format`)
+        continue
+      }
+
+      console.log(`[externalLLM] ✓ Success via ${proxy.name}`)
+      return content
+      
+    } catch (error) {
+      console.error(`[externalLLM] ${proxy.name} failed:`, error)
+      if (error instanceof Error && 
+          (error.message.includes('Invalid') || 
+           error.message.includes('Access forbidden') ||
+           error.message.includes('Rate limit'))) {
+        throw error
+      }
+      continue
+    }
+  }
+
+  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
 }
 
 async function callClaude(prompt: string, apiKey?: string): Promise<string> {
@@ -248,76 +315,103 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
     throw new Error('Invalid Claude API key format. API keys must start with "sk-ant-".')
   }
 
-  console.log('[externalLLM] Calling Claude API via proxy...')
+  console.log('[externalLLM] Calling Claude API via CORS proxies...')
 
-  try {
-    const response = await fetchWithTimeout(PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        provider: 'claude',
-        apiKey: key.trim(),
-        payload: {
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 2048,
-          messages: [
-            {
-              role: 'user',
-              content: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
-            }
-          ]
-        }
-      })
-    }, REQUEST_TIMEOUT)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      let errorData
-      try {
-        errorData = JSON.parse(errorText)
-      } catch {
-        errorData = { message: errorText }
+  const requestBody = {
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 2048,
+    messages: [
+      {
+        role: 'user',
+        content: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
       }
-      console.error('[externalLLM] Claude API error:', errorData)
-      
-      if (response.status === 401) {
-        throw new Error('Invalid Claude API key. Please verify your API key in Settings.')
-      } else if (response.status === 403) {
-        throw new Error('Access forbidden. Please check your API key permissions.')
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.')
-      } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-        throw new Error('Network error. The proxy service is currently unavailable. Please try again later.')
-      }
-      
-      throw new Error(`Claude API error: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    
-    if (data.error) {
-      throw new Error(data.error)
-    }
-    
-    if (!data.content) {
-      throw new Error('Invalid response from proxy')
-    }
-
-    return data.content
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        throw new Error('Request timeout. The API is not responding. Please try again later.')
-      }
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error. Unable to connect to the proxy service. Please check your network connection.')
-      }
-    }
-    throw error
+    ]
   }
+
+  if (CUSTOM_PROXY_URL) {
+    console.log('[externalLLM] Attempting custom proxy first:', CUSTOM_PROXY_URL)
+    try {
+      const response = await fetchWithTimeout(CUSTOM_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'claude',
+          apiKey: key.trim(),
+          payload: requestBody
+        })
+      }, REQUEST_TIMEOUT)
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.content) {
+          console.log('[externalLLM] Success via custom proxy')
+          return data.content
+        }
+      }
+      console.log('[externalLLM] Custom proxy failed, trying public CORS proxies...')
+    } catch (error) {
+      console.log('[externalLLM] Custom proxy error, trying public CORS proxies...', error)
+    }
+  }
+
+  for (const proxy of CORS_PROXIES) {
+    try {
+      console.log(`[externalLLM] Attempting ${proxy.name}...`)
+      
+      const targetUrl = API_ENDPOINTS.claude
+      const proxyUrl = proxy.url(targetUrl)
+      
+      const response = await fetchWithTimeout(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key.trim(),
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(requestBody)
+      }, REQUEST_TIMEOUT)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`[externalLLM] ${proxy.name} error response:`, errorText)
+        
+        if (response.status === 401) {
+          throw new Error('Invalid Claude API key. Please verify your API key in Settings.')
+        } else if (response.status === 403) {
+          throw new Error('Access forbidden. Please check your API key permissions.')
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.')
+        }
+        
+        continue
+      }
+
+      const data = await response.json()
+      const content = data.content?.[0]?.text
+      
+      if (!content) {
+        console.error(`[externalLLM] ${proxy.name} returned invalid response format`)
+        continue
+      }
+
+      console.log(`[externalLLM] ✓ Success via ${proxy.name}`)
+      return content
+      
+    } catch (error) {
+      console.error(`[externalLLM] ${proxy.name} failed:`, error)
+      if (error instanceof Error && 
+          (error.message.includes('Invalid') || 
+           error.message.includes('Access forbidden') ||
+           error.message.includes('Rate limit'))) {
+        throw error
+      }
+      continue
+    }
+  }
+
+  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
 }
 
 export async function generateIntelligenceReport(params: {
