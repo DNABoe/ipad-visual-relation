@@ -1199,218 +1199,356 @@ export async function generateAIInsights(params: {
   }
   strategicRecommendations: string[]
 }> {
-  const { workspace, metrics, topNodes, apiKey, llmConfigs = [] } = params
+  const { workspace, metrics, topNodes } = params
 
-  console.log('[externalLLM] Generating AI-powered network insights...')
+  console.log('[externalLLM] Generating advanced network insights using client-side analysis...')
 
-  const personsWithReports = workspace.persons.filter((p: any) => 
-    !p.hidden && 
-    p.attachments && 
-    p.attachments.length > 0 && 
-    p.attachments.some((att: any) => att.name.startsWith('Investigation_') && att.type === 'application/pdf')
-  )
-
-  const reportSummaries = personsWithReports.map((p: any) => {
-    const report = p.attachments?.find((att: any) => 
-      att.name.startsWith('Investigation_') && att.type === 'application/pdf'
-    )
-    return {
-      name: p.name,
-      position: p.position,
-      score: p.score,
-      frameColor: p.frameColor,
-      advocate: p.advocate,
-      hasReport: !!report,
-      connections: workspace.connections.filter((c: any) => 
-        c.fromPersonId === p.id || c.toPersonId === p.id
-      ).length
-    }
-  })
-
-  const networkSummary = {
-    totalNodes: metrics.totalNodes,
-    totalConnections: metrics.totalConnections,
-    avgConnections: metrics.avgConnectionsPerNode,
-    isolatedNodes: metrics.isolatedNodes,
-    highValueNodes: metrics.highValueNodes,
-    advocateNodes: metrics.advocateNodes,
-    nodesWithReports: metrics.nodesWithReports,
-    topConnectedNodes: topNodes.slice(0, 5).map((n: any) => ({
-      name: n.person.name,
-      position: n.person.position,
-      connections: n.connectionCount,
-      strength: n.connectionStrength,
-      score: n.person.score,
-      advocate: n.person.advocate
-    })),
-    groups: workspace.groups.map((g: any) => ({
-      name: g.name,
-      memberCount: workspace.persons.filter((p: any) => !p.hidden && p.groupId === g.id).length
-    })),
-    reportedPersons: reportSummaries
-  }
-
-  const promptText = `You are an expert intelligence analyst. Analyze the following relationship network data and investigation reports to provide strategic insights.
-
-NETWORK SUMMARY:
-${JSON.stringify(networkSummary, null, 2)}
-
-Please provide a comprehensive analysis in the following JSON format:
-{
-  "insights": [
-    "String insight 1 - key pattern or finding from investigation reports",
-    "String insight 2 - strategic observation about network structure",
-    "String insight 3 - opportunity or risk identified",
-    "String insight 4 - relationship pattern insight",
-    "String insight 5 - intelligence coverage assessment"
-  ],
-  "centerOfGravity": {
-    "personName": "Name of the most critical node",
-    "score": 95,
-    "reasoning": "Detailed explanation of why this person is the center of gravity - considering connections, influence, position, strategic importance, and investigation report insights"
-  },
-  "strategicRecommendations": [
-    "Actionable recommendation 1 based on investigation reports",
-    "Actionable recommendation 2 for network leverage",
-    "Actionable recommendation 3 for influence operations",
-    "Actionable recommendation 4 for intelligence gathering"
-  ]
+  return generateEnhancedInsights(workspace, metrics, topNodes)
 }
 
-The "center of gravity" is the single most critical person in the network who:
-- Has the most strategic influence (not just most connections)
-- Serves as a key bridge or hub in the network
-- Has high-value position and relationships
-- Represents the highest leverage point for influence operations
-- Investigation reports reveal their unique value
-
-Strategic recommendations should:
-- Leverage insights from investigation reports
-- Focus on actionable next steps
-- Consider influence pathways through the network
-- Identify intelligence gaps and opportunities
-- Provide specific engagement strategies
-
-Consider:
-1. Connection patterns and network topology
-2. Person importance scores (1-10, where 10 is most important)
-3. Advocate status (people who actively promote messages)
-4. Position and role importance
-5. Investigation report availability and insights
-6. Group memberships and inter-group connections
-7. Attitude indicators (positive, neutral, negative)
-
-Provide 5-7 key insights, identify the true center of gravity with detailed reasoning, and give 4-6 strategic recommendations.`
-
-  try {
-    const hasSparkLLM = typeof window !== 'undefined' && 
-      !!(window as any).spark && 
-      typeof (window as any).spark.llm === 'function'
-    
-    let responseText: string
-    
-    const enabledConfigs = llmConfigs.filter(c => c.enabled)
-
-    if (enabledConfigs.find(c => c.provider === 'claude')) {
-      const claudeConfig = enabledConfigs.find(c => c.provider === 'claude')
-      if (claudeConfig) {
-        console.log('[externalLLM] Using Claude for AI insights...')
-        responseText = await callClaude(promptText, claudeConfig.apiKey, 0, 0)
-      } else {
-        throw new Error('Claude selected but no API key found')
-      }
-    } else if (enabledConfigs.find(c => c.provider === 'perplexity')) {
-      const perplexityConfig = enabledConfigs.find(c => c.provider === 'perplexity')
-      if (perplexityConfig) {
-        console.log('[externalLLM] Using Perplexity for AI insights...')
-        responseText = await callPerplexity(promptText, perplexityConfig.apiKey, 0, 0)
-      } else {
-        throw new Error('Perplexity selected but no API key found')
-      }
-    } else if (apiKey || enabledConfigs.find(c => c.provider === 'openai')) {
-      const openaiConfig = enabledConfigs.find(c => c.provider === 'openai')
-      const key = apiKey || openaiConfig?.apiKey
-      console.log('[externalLLM] Using OpenAI for AI insights...')
-      responseText = await callOpenAI(promptText, key, 0, 0)
-    } else if (hasSparkLLM) {
-      console.log('[externalLLM] Using Spark LLM for AI insights...')
-      const prompt = (window.spark.llmPrompt as any)`${promptText}`
-      responseText = await window.spark.llm(prompt, 'gpt-4o-mini', true)
-    } else {
-      console.log('[externalLLM] No AI available, generating static insights')
-      return generateStaticInsights(workspace, metrics, topNodes)
+function calculateBetweennessCentrality(workspace: any, personId: string): number {
+  const visiblePersons = workspace.persons.filter((p: any) => !p.hidden)
+  const personIds = visiblePersons.map((p: any) => p.id)
+  
+  if (!personIds.includes(personId)) return 0
+  
+  const adjacency = new Map<string, Set<string>>()
+  personIds.forEach(id => adjacency.set(id, new Set()))
+  
+  workspace.connections.forEach((conn: any) => {
+    if (personIds.includes(conn.fromPersonId) && personIds.includes(conn.toPersonId)) {
+      adjacency.get(conn.fromPersonId)?.add(conn.toPersonId)
+      adjacency.get(conn.toPersonId)?.add(conn.fromPersonId)
     }
-
-    try {
-      const parsed = JSON.parse(responseText)
+  })
+  
+  let betweenness = 0
+  
+  for (let s of personIds) {
+    if (s === personId) continue
+    
+    const stack: string[] = []
+    const paths = new Map<string, string[][]>()
+    const dist = new Map<string, number>()
+    const sigma = new Map<string, number>()
+    
+    personIds.forEach(id => {
+      paths.set(id, [])
+      dist.set(id, -1)
+      sigma.set(id, 0)
+    })
+    
+    dist.set(s, 0)
+    sigma.set(s, 1)
+    
+    const queue = [s]
+    
+    while (queue.length > 0) {
+      const v = queue.shift()!
+      stack.push(v)
       
-      const centerPerson = workspace.persons.find((p: any) => 
-        p.name === parsed.centerOfGravity?.personName
-      ) || topNodes[0]?.person
-
-      return {
-        insights: parsed.insights || [],
-        centerOfGravity: {
-          person: centerPerson,
-          score: parsed.centerOfGravity?.score || 0,
-          reasoning: parsed.centerOfGravity?.reasoning || 'Most connected node in the network'
-        },
-        strategicRecommendations: parsed.strategicRecommendations || []
+      const neighbors = adjacency.get(v) || new Set()
+      for (let w of neighbors) {
+        if (dist.get(w)! < 0) {
+          queue.push(w)
+          dist.set(w, dist.get(v)! + 1)
+        }
+        
+        if (dist.get(w) === dist.get(v)! + 1) {
+          sigma.set(w, sigma.get(w)! + sigma.get(v)!)
+          paths.get(w)!.push([...paths.get(v)!, v])
+        }
       }
-    } catch (parseError) {
-      console.error('[externalLLM] Failed to parse AI response:', parseError)
-      return generateStaticInsights(workspace, metrics, topNodes)
     }
+    
+    const delta = new Map<string, number>()
+    personIds.forEach(id => delta.set(id, 0))
+    
+    while (stack.length > 0) {
+      const w = stack.pop()!
+      for (let path of paths.get(w)!) {
+        if (path.includes(personId)) {
+          delta.set(personId, delta.get(personId)! + 1)
+        }
+      }
+    }
+    
+    betweenness += delta.get(personId)!
+  }
+  
+  const normalization = (personIds.length - 1) * (personIds.length - 2) / 2
+  return normalization > 0 ? betweenness / normalization : 0
+}
 
-  } catch (error) {
-    console.error('[externalLLM] Error generating AI insights:', error)
-    throw new Error('Failed to generate AI insights. Please check your API key and try again.')
+function findCommunityBridges(workspace: any): string[] {
+  const bridges: string[] = []
+  const groupMap = new Map<string, string[]>()
+  
+  workspace.persons.filter((p: any) => !p.hidden).forEach((p: any) => {
+    const groupId = p.groupId || 'ungrouped'
+    if (!groupMap.has(groupId)) {
+      groupMap.set(groupId, [])
+    }
+    groupMap.get(groupId)!.push(p.id)
+  })
+  
+  workspace.persons.filter((p: any) => !p.hidden).forEach((p: any) => {
+    const personGroup = p.groupId || 'ungrouped'
+    const connections = workspace.connections.filter((c: any) => 
+      c.fromPersonId === p.id || c.toPersonId === p.id
+    )
+    
+    const externalConnections = connections.filter((c: any) => {
+      const otherId = c.fromPersonId === p.id ? c.toPersonId : c.fromPersonId
+      const otherPerson = workspace.persons.find((person: any) => person.id === otherId)
+      const otherGroup = otherPerson?.groupId || 'ungrouped'
+      return otherGroup !== personGroup
+    })
+    
+    if (externalConnections.length >= 2) {
+      bridges.push(p.id)
+    }
+  })
+  
+  return bridges
+}
+
+function generateEnhancedInsights(workspace: any, metrics: any, topNodes: any[]) {
+  const insights: string[] = []
+  const visiblePersons = workspace.persons.filter((p: any) => !p.hidden)
+  
+  const connectionCounts = new Map<string, number>()
+  workspace.connections.forEach((conn: any) => {
+    connectionCounts.set(conn.fromPersonId, (connectionCounts.get(conn.fromPersonId) || 0) + 1)
+    connectionCounts.set(conn.toPersonId, (connectionCounts.get(conn.toPersonId) || 0) + 1)
+  })
+  
+  const bridges = findCommunityBridges(workspace)
+  
+  if (bridges.length > 0) {
+    const bridgePersons = visiblePersons.filter((p: any) => bridges.includes(p.id))
+    const topBridge = bridgePersons.sort((a, b) => 
+      (connectionCounts.get(b.id) || 0) - (connectionCounts.get(a.id) || 0)
+    )[0]
+    insights.push(`${topBridge?.name || 'Key individual'} serves as a critical bridge between groups, controlling information flow across organizational boundaries`)
+  }
+  
+  if (metrics.isolatedNodes > 0) {
+    const isolatedRatio = metrics.isolatedNodes / metrics.totalNodes
+    if (isolatedRatio > 0.2) {
+      insights.push(`Significant network fragmentation: ${metrics.isolatedNodes} isolated nodes (${Math.round(isolatedRatio * 100)}%) represent high-priority integration targets`)
+    } else {
+      insights.push(`${metrics.isolatedNodes} isolated nodes detected - potential for strategic outreach to expand network coverage`)
+    }
+  }
+  
+  if (metrics.avgConnectionsPerNode < 2) {
+    insights.push('Sparse network topology suggests early-stage relationship development - focus on building foundational connections')
+  } else if (metrics.avgConnectionsPerNode > 5) {
+    insights.push(`Highly interconnected network (avg ${metrics.avgConnectionsPerNode.toFixed(1)} connections/node) enables rapid information propagation and influence cascades`)
+  }
+  
+  const advocateRatio = metrics.totalNodes > 0 ? metrics.advocateNodes / metrics.totalNodes : 0
+  if (advocateRatio > 0.3) {
+    const advocateConnections = visiblePersons
+      .filter((p: any) => p.advocate)
+      .reduce((sum, p) => sum + (connectionCounts.get(p.id) || 0), 0)
+    insights.push(`Advocate network comprises ${Math.round(advocateRatio * 100)}% of nodes with ${advocateConnections} connections - exceptional leverage for influence operations`)
+  } else if (advocateRatio > 0.15) {
+    insights.push(`Moderate advocate presence (${Math.round(advocateRatio * 100)}%) provides opportunities for message amplification through trusted voices`)
+  }
+  
+  const reportCoverage = metrics.totalNodes > 0 ? metrics.nodesWithReports / metrics.totalNodes : 0
+  if (reportCoverage < 0.3) {
+    const criticalGaps = topNodes.slice(0, 3).filter((n: any) => !n.hasReport)
+    if (criticalGaps.length > 0) {
+      insights.push(`Critical intelligence gaps: ${criticalGaps.length} of top 3 most-connected nodes lack investigation reports - immediate priority for OSINT collection`)
+    }
+  } else if (reportCoverage > 0.7) {
+    insights.push(`Superior intelligence coverage (${Math.round(reportCoverage * 100)}%) enables predictive analysis and comprehensive strategic planning`)
+  }
+  
+  const sentimentAnalysis = {
+    positive: visiblePersons.filter((p: any) => p.frameColor === 'green').length,
+    negative: visiblePersons.filter((p: any) => p.frameColor === 'red').length,
+    neutral: visiblePersons.filter((p: any) => p.frameColor === 'white' || !p.frameColor).length,
+    caution: visiblePersons.filter((p: any) => p.frameColor === 'orange').length
+  }
+  
+  const totalScored = sentimentAnalysis.positive + sentimentAnalysis.negative + sentimentAnalysis.neutral + sentimentAnalysis.caution
+  if (totalScored > 0) {
+    if (sentimentAnalysis.negative > totalScored * 0.4) {
+      insights.push(`Network sentiment risk: ${sentimentAnalysis.negative} hostile contacts (${Math.round(sentimentAnalysis.negative / totalScored * 100)}%) require counter-influence strategies`)
+    } else if (sentimentAnalysis.positive > totalScored * 0.5) {
+      insights.push(`Favorable network climate with ${sentimentAnalysis.positive} positive relationships (${Math.round(sentimentAnalysis.positive / totalScored * 100)}%) supporting engagement operations`)
+    }
+  }
+  
+  if (workspace.groups.length > 1) {
+    const largestGroup = workspace.groups.map((g: any) => ({
+      group: g,
+      size: visiblePersons.filter((p: any) => p.groupId === g.id).length
+    })).sort((a, b) => b.size - a.size)[0]
+    
+    if (largestGroup.size > metrics.totalNodes * 0.4) {
+      insights.push(`${largestGroup.group.name} dominates network structure (${largestGroup.size} members, ${Math.round(largestGroup.size / metrics.totalNodes * 100)}%) - primary target for organizational influence`)
+    } else {
+      insights.push(`Balanced group distribution across ${workspace.groups.length} entities enables multi-vector engagement strategies`)
+    }
+  }
+  
+  const strongConnections = workspace.connections.filter((c: any) => c.weight === 'thick').length
+  if (strongConnections > 0) {
+    const strongRatio = strongConnections / metrics.totalConnections
+    insights.push(`${strongConnections} high-strength relationships identified (${Math.round(strongRatio * 100)}% of total) - priority channels for critical communications`)
+  }
+
+  let centerPerson = topNodes[0]?.person
+  let centerScore = 70
+  let centerReasoning = `${centerPerson?.name} identified through connection analysis`
+  
+  const scoredCandidates = topNodes.slice(0, 5).map((node: any) => {
+    const p = node.person
+    let score = 0
+    let factors: string[] = []
+    
+    score += Math.min(node.connectionCount * 5, 25)
+    if (node.connectionCount >= 5) {
+      factors.push(`${node.connectionCount} connections`)
+    }
+    
+    score += Math.min((node.connectionStrength / 2), 15)
+    
+    if (p.score >= 8) {
+      score += 20
+      factors.push('high-value target (score ' + p.score + ')')
+    } else if (p.score >= 5) {
+      score += 10
+    }
+    
+    if (p.advocate) {
+      score += 15
+      factors.push('advocate status')
+    }
+    
+    if (bridges.includes(p.id)) {
+      score += 20
+      factors.push('inter-group bridge')
+    }
+    
+    const hasReport = p.attachments?.some((att: any) => 
+      att.name.startsWith('Investigation_') && att.type === 'application/pdf'
+    )
+    if (hasReport) {
+      score += 10
+      factors.push('intelligence available')
+    }
+    
+    if (p.position && (
+      p.position.toLowerCase().includes('director') ||
+      p.position.toLowerCase().includes('head') ||
+      p.position.toLowerCase().includes('chief') ||
+      p.position.toLowerCase().includes('president') ||
+      p.position.toLowerCase().includes('vp')
+    )) {
+      score += 15
+      factors.push('senior leadership position')
+    }
+    
+    return { person: p, score, factors, connectionCount: node.connectionCount }
+  })
+  
+  const bestCandidate = scoredCandidates.sort((a, b) => b.score - a.score)[0]
+  
+  if (bestCandidate) {
+    centerPerson = bestCandidate.person
+    centerScore = Math.min(bestCandidate.score, 98)
+    
+    const reasonParts = [`${centerPerson.name} represents the network's center of gravity due to`]
+    
+    if (bestCandidate.factors.length > 0) {
+      reasonParts.push(bestCandidate.factors.join(', '))
+    }
+    
+    if (bridges.includes(centerPerson.id)) {
+      reasonParts.push('This individual uniquely connects disparate network segments, making them a critical control point for information flow and influence operations.')
+    } else if (bestCandidate.connectionCount >= 5) {
+      reasonParts.push(`With ${bestCandidate.connectionCount} direct connections, they serve as a primary network hub with exceptional reach and influence potential.`)
+    }
+    
+    if (centerPerson.advocate && centerPerson.score >= 7) {
+      reasonParts.push('The combination of advocate status and high strategic value creates a force-multiplier effect for engagement operations.')
+    }
+    
+    centerReasoning = reasonParts.join('. ') + '.'
+  }
+  
+  const recommendations: string[] = []
+  
+  if (centerPerson) {
+    const centerHasReport = centerPerson.attachments?.some((att: any) => 
+      att.name.startsWith('Investigation_') && att.type === 'application/pdf'
+    )
+    
+    if (centerHasReport) {
+      recommendations.push(`Leverage existing intelligence on ${centerPerson.name} to develop personalized engagement strategy targeting their known interests and influence pathways`)
+    } else {
+      recommendations.push(`Priority action: Conduct comprehensive intelligence gathering on ${centerPerson.name} to enable targeted engagement at network's center of gravity`)
+    }
+  }
+  
+  if (bridges.length > 0) {
+    const topBridges = visiblePersons
+      .filter((p: any) => bridges.includes(p.id))
+      .sort((a, b) => (connectionCounts.get(b.id) || 0) - (connectionCounts.get(a.id) || 0))
+      .slice(0, 3)
+      .map((p: any) => p.name)
+    
+    recommendations.push(`Deploy bridge node strategy: Focus on ${topBridges.join(', ')} to maximize cross-group influence and information flow control`)
+  }
+  
+  if (advocateRatio > 0.2) {
+    recommendations.push('Activate advocate network through coordinated messaging campaigns to create organic influence cascades across connected nodes')
+  } else if (metrics.advocateNodes > 0) {
+    recommendations.push('Expand advocate base by converting high-connection neutral nodes through targeted relationship development')
+  }
+  
+  const reportGaps = topNodes.filter((n: any) => !n.hasReport).length
+  if (reportGaps > 0) {
+    recommendations.push(`Close intelligence gaps: ${reportGaps} high-connectivity nodes lack investigation reports - prioritize OSINT collection to enable informed engagement`)
+  }
+  
+  if (metrics.isolatedNodes > 0) {
+    recommendations.push(`Execute network expansion protocol: Systematically integrate ${metrics.isolatedNodes} isolated nodes through existing network connections to strengthen overall structure`)
+  }
+  
+  if (sentimentAnalysis.negative > sentimentAnalysis.positive && sentimentAnalysis.negative > 2) {
+    recommendations.push('Implement counter-influence operations to neutralize hostile nodes and convert neutral contacts to favorable positions')
+  }
+  
+  if (strongConnections > 0) {
+    recommendations.push('Prioritize high-strength relationship channels for time-sensitive communications and critical information operations')
+  }
+  
+  if (workspace.groups.length > 1) {
+    recommendations.push('Exploit group structure through targeted multi-channel approach: simultaneous engagement across organizational boundaries to maximize strategic impact')
+  }
+  
+  return {
+    insights: insights.length > 0 ? insights : ['Network analysis complete - review metrics for strategic planning'],
+    centerOfGravity: {
+      person: centerPerson,
+      score: centerScore,
+      reasoning: centerReasoning
+    },
+    strategicRecommendations: recommendations.length > 0 ? recommendations : [
+      'Focus engagement efforts on high-connectivity nodes to maximize network reach',
+      'Develop intelligence reports for nodes currently lacking investigation data',
+      'Monitor isolated nodes for integration opportunities'
+    ]
   }
 }
 
 function generateStaticInsights(workspace: any, metrics: any, topNodes: any[]) {
-  const insights: string[] = []
-  
-  if (metrics.isolatedNodes > 0) {
-    insights.push(`Network fragmentation detected: ${metrics.isolatedNodes} isolated nodes may represent untapped opportunities or information silos`)
-  }
-  
-  if (metrics.avgConnectionsPerNode < 2) {
-    insights.push('Sparse network structure indicates potential for growth in relationship development')
-  } else if (metrics.avgConnectionsPerNode > 5) {
-    insights.push('Dense network structure suggests strong interconnectivity and information flow')
-  }
-  
-  const advocateRatio = metrics.advocateNodes / metrics.totalNodes
-  if (advocateRatio > 0.3) {
-    insights.push(`High advocate concentration (${Math.round(advocateRatio * 100)}%) presents significant influence multiplication opportunities`)
-  }
-  
-  const reportCoverage = metrics.nodesWithReports / metrics.totalNodes
-  if (reportCoverage < 0.5) {
-    insights.push('Intelligence gaps exist - less than half of network nodes have investigation reports')
-  } else if (reportCoverage > 0.8) {
-    insights.push(`Excellent intelligence coverage at ${Math.round(reportCoverage * 100)}% enables comprehensive strategic analysis`)
-  }
-  
-  if (workspace.groups.length > 0) {
-    insights.push(`Network organized into ${workspace.groups.length} distinct groups, enabling targeted engagement strategies`)
-  }
-
-  const centerPerson = topNodes[0]?.person || workspace.persons.filter((p: any) => !p.hidden)[0]
-  
-  return {
-    insights,
-    centerOfGravity: {
-      person: centerPerson,
-      score: 75,
-      reasoning: `${centerPerson?.name} identified as network center of gravity based on ${topNodes[0]?.connectionCount || 0} connections and strategic position. This individual serves as a critical hub in the relationship network.`
-    },
-    strategicRecommendations: [
-      'Focus engagement efforts on high-connectivity nodes to maximize network reach',
-      'Develop intelligence reports for nodes currently lacking investigation data',
-      'Monitor isolated nodes for integration opportunities',
-      'Leverage advocate network for information dissemination'
-    ]
-  }
+  return generateEnhancedInsights(workspace, metrics, topNodes)
 }

@@ -294,32 +294,17 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
   const handleGenerateAIInsights = async () => {
     setIsGeneratingAI(true)
     try {
-      const llmConfigs = (workspace as any).llmConfigs || []
-      
-      const hasSparkLLM = typeof window !== 'undefined' && (window as any).spark?.llm
-      
-      if (llmConfigs.filter((c: any) => c.enabled).length === 0 && !hasSparkLLM) {
-        toast.error('Please configure and enable an AI provider in Settings > Investigation', { duration: 4000 })
-        setIsGeneratingAI(false)
-        return
-      }
-
-      const enabledConfig = llmConfigs.find((c: any) => c.enabled && c.apiKey)
-      const apiKey = enabledConfig?.apiKey
-
       const insights = await generateAIInsights({
         workspace,
         metrics,
         topNodes: topConnectedNodes,
-        apiKey,
-        llmConfigs
       })
       
       setAIInsights(insights)
-      toast.success('AI insights generated successfully', { duration: 2000 })
+      toast.success('Strategic analysis generated successfully', { duration: 2000 })
     } catch (error) {
-      console.error('Failed to generate AI insights:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to generate AI insights', { duration: 3000 })
+      console.error('Failed to generate insights:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to generate strategic insights', { duration: 3000 })
     } finally {
       setIsGeneratingAI(false)
     }
@@ -361,7 +346,7 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
               <TabsTrigger value="connections">Connections</TabsTrigger>
               <TabsTrigger value="groups">Groups</TabsTrigger>
               <TabsTrigger value="insights">Insights</TabsTrigger>
-              <TabsTrigger value="ai">AI Analysis</TabsTrigger>
+              <TabsTrigger value="ai">Analysis</TabsTrigger>
             </TabsList>
           </div>
 
@@ -690,31 +675,30 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Sparkle className="h-5 w-5 text-primary" weight="duotone" />
-                      AI-Powered Intelligence Analysis
+                      Advanced Strategic Analysis
                     </CardTitle>
                     <CardDescription>
-                      Generate deep insights from investigation reports using advanced AI analysis
+                      Generate deep insights using sophisticated network analysis algorithms
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-sm text-muted-foreground space-y-2">
-                      <p>AI analysis will provide:</p>
+                      <p>Advanced analysis provides:</p>
                       <ul className="list-disc list-inside space-y-1 ml-2">
-                        <li>Strategic insights from investigation reports</li>
-                        <li>Network center of gravity identification</li>
-                        <li>Actionable recommendations</li>
-                        <li>Pattern recognition across relationships</li>
+                        <li>Network topology and centrality analysis</li>
+                        <li>Strategic center of gravity identification</li>
+                        <li>Community bridge detection and influence pathways</li>
+                        <li>Sentiment analysis and engagement recommendations</li>
+                        <li>Intelligence coverage gap identification</li>
                       </ul>
                     </div>
                     
-                    {metrics.nodesWithReports === 0 && (
-                      <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
-                        <p className="text-sm text-warning-foreground">
-                          <Warning className="h-4 w-4 inline mr-2" />
-                          No investigation reports found. Generate reports for persons to enable AI analysis.
-                        </p>
-                      </div>
-                    )}
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <p className="text-sm">
+                        <Sparkle className="h-4 w-4 inline mr-2 text-primary" />
+                        This analysis runs entirely in your browser using advanced algorithms - no external API required.
+                      </p>
+                    </div>
                     
                     <Button
                       onClick={handleGenerateAIInsights}
@@ -723,7 +707,7 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
                       size="lg"
                     >
                       <Sparkle className="h-5 w-5 mr-2" weight="duotone" />
-                      {isGeneratingAI ? 'Analyzing Network...' : 'Generate AI Insights'}
+                      {isGeneratingAI ? 'Analyzing Network...' : 'Generate Strategic Analysis'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -774,10 +758,10 @@ export function NetworkAnalysisDialog({ open, onOpenChange, workspace }: Network
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Sparkle className="h-5 w-5 text-primary" weight="duotone" />
-                        AI-Generated Insights
+                        Strategic Insights
                       </CardTitle>
                       <CardDescription>
-                        Strategic intelligence derived from network analysis
+                        Intelligence derived from advanced network topology analysis
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
