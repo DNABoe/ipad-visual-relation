@@ -121,6 +121,18 @@ async function callOpenAI(prompt: string, apiKey?: string, retryCount = 0, proxy
       
       if (response.status === 401) {
         throw new Error('Invalid API key. Please verify your OpenAI API key in Settings. Make sure you copied the entire key correctly and that it starts with "sk-".')
+      } else if (response.status === 403) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} blocked request (403), trying next proxy...`)
+          return callOpenAI(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies blocked, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callOpenAI(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Access forbidden (403) - All CORS proxy services are currently blocking API requests. This often happens when proxy services detect and block OpenAI API traffic, or your network/ISP is filtering requests. Try: 1) Using a different network (mobile hotspot), 2) Disabling VPN/proxy, 3) Trying again later. Consider using the Spark runtime\'s built-in LLM if available.')
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 500) {
@@ -245,6 +257,18 @@ async function callPerplexity(prompt: string, apiKey?: string, retryCount = 0, p
       
       if (response.status === 401) {
         throw new Error('Invalid Perplexity API key. Please verify your API key in Settings.')
+      } else if (response.status === 403) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} blocked request (403), trying next proxy...`)
+          return callPerplexity(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies blocked, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callPerplexity(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Access forbidden (403) - All CORS proxy services are currently blocking API requests. This often happens when proxy services detect and block Perplexity API traffic, or your network/ISP is filtering requests. Try: 1) Using a different network (mobile hotspot), 2) Disabling VPN/proxy, 3) Trying again later.')
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
@@ -360,6 +384,18 @@ async function callClaude(prompt: string, apiKey?: string, retryCount = 0, proxy
       
       if (response.status === 401) {
         throw new Error('Invalid Claude API key. Please verify your API key in Settings.')
+      } else if (response.status === 403) {
+        if (proxyIndex < CORS_PROXIES.length - 1) {
+          console.log(`[externalLLM] CORS proxy ${corsProxy} blocked request (403), trying next proxy...`)
+          return callClaude(prompt, apiKey, retryCount, proxyIndex + 1)
+        }
+        if (retryCount < MAX_RETRIES) {
+          const delayMs = Math.pow(2, retryCount) * 2000
+          console.log(`[externalLLM] All proxies blocked, retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          return callClaude(prompt, apiKey, retryCount + 1, 0)
+        }
+        throw new Error('Access forbidden (403) - All CORS proxy services are currently blocking API requests. This often happens when proxy services detect and block Claude API traffic, or your network/ISP is filtering requests. Try: 1) Using a different network (mobile hotspot), 2) Disabling VPN/proxy, 3) Trying again later.')
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.')
       } else if (response.status === 502 || response.status === 503 || response.status === 504) {
