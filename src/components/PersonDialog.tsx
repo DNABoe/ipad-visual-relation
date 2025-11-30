@@ -25,7 +25,7 @@ interface PersonDialogProps {
   onSave: (person: Person) => void
   onDelete?: (personId: string) => void
   editPerson?: Person
-  workspace?: { apiKey?: string; llmConfigs?: Array<{ provider: string; apiKey: string; enabled: boolean }> }
+  workspace?: { llmConfigs?: Array<{ provider: string; apiKey: string; enabled: boolean }> }
 }
 
 export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson, workspace }: PersonDialogProps) {
@@ -501,18 +501,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
 
     console.log('[PersonDialog] Starting investigation...')
     console.log('[PersonDialog] Workspace object:', workspace)
-    console.log('[PersonDialog] Workspace API key available:', !!workspace?.apiKey)
-    console.log('[PersonDialog] Workspace API key length:', workspace?.apiKey?.length || 0)
-    console.log('[PersonDialog] Workspace API key value (first 10 chars):', workspace?.apiKey?.substring(0, 10) || 'N/A')
+    console.log('[PersonDialog] Workspace llmConfigs:', workspace?.llmConfigs)
+    console.log('[PersonDialog] Enabled LLM configs:', workspace?.llmConfigs?.filter(c => c.enabled))
     console.log('[PersonDialog] isLLMAvailable():', isLLMAvailable())
 
-    if (!workspace?.apiKey && !isLLMAvailable()) {
-      toast.error('Please configure an API key in Settings > Investigation tab, then save your network file (Ctrl+S)', { duration: 4000 })
-      return
-    }
-
-    if (workspace?.apiKey && !workspace.apiKey.startsWith('sk-')) {
-      toast.error('Invalid API key format. OpenAI API keys must start with "sk-". Please update your API key in Settings.', { duration: 4000 })
+    const hasEnabledLLM = workspace?.llmConfigs?.some(c => c.enabled && c.apiKey)
+    
+    if (!hasEnabledLLM && !isLLMAvailable()) {
+      toast.error('Please configure and enable at least one AI provider in Settings > Investigation tab', { duration: 4000 })
       return
     }
 
@@ -526,7 +522,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       const countryText = country || 'Not specified'
       
       console.log('[PersonDialog] Generating intelligence report...')
-      console.log('[PersonDialog] Passing API key to generator:', !!workspace?.apiKey)
+      console.log('[PersonDialog] Using LLM configs:', workspace?.llmConfigs?.map(c => ({ provider: c.provider, enabled: c.enabled, hasKey: !!c.apiKey })))
       console.log('[PersonDialog] Investigation settings:', investigationSettings)
       
       const report = await generateIntelligenceReport({
