@@ -1,5 +1,6 @@
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
 const PERPLEXITY_API_KEY = import.meta.env.VITE_PERPLEXITY_API_KEY
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
 const REQUEST_TIMEOUT = 60000
 
@@ -26,7 +27,8 @@ const CUSTOM_PROXY_URL = import.meta.env.VITE_PROXY_URL
 const API_ENDPOINTS = {
   openai: 'https://api.openai.com/v1/chat/completions',
   perplexity: 'https://api.perplexity.ai/chat/completions',
-  claude: 'https://api.anthropic.com/v1/messages'
+  claude: 'https://api.anthropic.com/v1/messages',
+  gemini: (apiKey: string) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`
 }
 
 export function isLLMAvailable(): boolean {
@@ -36,7 +38,7 @@ export function isLLMAvailable(): boolean {
     }
     const w = window as any
     const hasSparkLLM = !!(w.spark && w.spark.llm && typeof w.spark.llm === 'function')
-    const hasAPIKeys = !!(OPENAI_API_KEY || PERPLEXITY_API_KEY)
+    const hasAPIKeys = !!(OPENAI_API_KEY || PERPLEXITY_API_KEY || GEMINI_API_KEY)
     
     return hasSparkLLM || hasAPIKeys
   } catch {
@@ -149,11 +151,17 @@ async function callOpenAI(prompt: string, apiKey?: string): Promise<string> {
       if (!response.ok) {
         const errorText = await response.text()
         console.error(`[externalLLM] ${proxy.name} error response:`, errorText)
+        console.error(`[externalLLM] ${proxy.name} error status:`, response.status)
+        console.error(`[externalLLM] ${proxy.name} error headers:`, Object.fromEntries(response.headers.entries()))
         
         if (response.status === 401) {
           throw new Error('Invalid API key. Please verify your OpenAI API key in Settings.')
         } else if (response.status === 403) {
-          throw new Error('Access forbidden. Please check your API key permissions.')
+          console.error('[externalLLM] 403 Forbidden - This typically means:')
+          console.error('[externalLLM]   1. The CORS proxy is blocking the request')
+          console.error('[externalLLM]   2. The API key lacks necessary permissions')
+          console.error('[externalLLM]   3. The OpenAI account has billing issues')
+          throw new Error('Access forbidden. The CORS proxy or API rejected the request. Please check: 1) Your API key has billing enabled, 2) Your OpenAI account is in good standing, 3) Try a different CORS proxy.')
         } else if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please try again later.')
         }
@@ -414,6 +422,122 @@ async function callClaude(prompt: string, apiKey?: string): Promise<string> {
   throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
 }
 
+async function callGemini(prompt: string, apiKey?: string): Promise<string> {
+  const key = apiKey || GEMINI_API_KEY
+  
+  console.log('[externalLLM] callGemini invoked')
+  
+  if (!key) {
+    throw new Error('Gemini API key not configured. Please add your API key in Settings.')
+  }
+
+  if (!key.startsWith('AIza')) {
+    throw new Error('Invalid Gemini API key format. API keys must start with "AIza".')
+  }
+
+  console.log('[externalLLM] Calling Gemini API via CORS proxies...')
+
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            text: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2048,
+    }
+  }
+
+  const targetUrl = typeof API_ENDPOINTS.gemini === 'function' ? API_ENDPOINTS.gemini(key.trim()) : ''
+
+  if (CUSTOM_PROXY_URL) {
+    console.log('[externalLLM] Attempting custom proxy first:', CUSTOM_PROXY_URL)
+    try {
+      const response = await fetchWithTimeout(CUSTOM_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'gemini',
+          apiKey: key.trim(),
+          payload: requestBody
+        })
+      }, REQUEST_TIMEOUT)
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.content) {
+          console.log('[externalLLM] Success via custom proxy')
+          return data.content
+        }
+      }
+      console.log('[externalLLM] Custom proxy failed, trying public CORS proxies...')
+    } catch (error) {
+      console.log('[externalLLM] Custom proxy error, trying public CORS proxies...', error)
+    }
+  }
+
+  for (const proxy of CORS_PROXIES) {
+    try {
+      console.log(`[externalLLM] Attempting ${proxy.name}...`)
+      
+      const proxyUrl = proxy.url(targetUrl)
+      
+      const response = await fetchWithTimeout(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      }, REQUEST_TIMEOUT)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`[externalLLM] ${proxy.name} error response:`, errorText)
+        
+        if (response.status === 401 || response.status === 400) {
+          throw new Error('Invalid Gemini API key. Please verify your API key in Settings.')
+        } else if (response.status === 403) {
+          throw new Error('Access forbidden. Please check your API key permissions.')
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.')
+        }
+        
+        continue
+      }
+
+      const data = await response.json()
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+      
+      if (!content) {
+        console.error(`[externalLLM] ${proxy.name} returned invalid response format`)
+        continue
+      }
+
+      console.log(`[externalLLM] ✓ Success via ${proxy.name}`)
+      return content
+      
+    } catch (error) {
+      console.error(`[externalLLM] ${proxy.name} failed:`, error)
+      if (error instanceof Error && 
+          (error.message.includes('Invalid') || 
+           error.message.includes('Access forbidden') ||
+           error.message.includes('Rate limit'))) {
+        throw error
+      }
+      continue
+    }
+  }
+
+  throw new Error('All CORS proxies failed. Please try again later or deploy your own proxy server.')
+}
+
 export async function generateIntelligenceReport(params: {
   name: string
   position: string
@@ -422,7 +546,7 @@ export async function generateIntelligenceReport(params: {
   education?: string
   specialization?: string
   llmConfigs?: Array<{ provider: string; apiKey: string; enabled: boolean }>
-  provider?: 'openai' | 'perplexity' | 'claude' | 'auto'
+  provider?: 'openai' | 'perplexity' | 'claude' | 'gemini' | 'auto'
   investigationSettings?: {
     personalInfo: boolean
     workAndCV: boolean
@@ -662,6 +786,14 @@ IMPORTANT: The depth and comprehensiveness of your analysis should match the inv
   const enabledConfigs = llmConfigs.filter(c => c.enabled)
 
   try {
+    if (provider === 'gemini' || (provider === 'auto' && enabledConfigs.find(c => c.provider === 'gemini'))) {
+      const geminiConfig = enabledConfigs.find(c => c.provider === 'gemini')
+      if (geminiConfig) {
+        console.log('[externalLLM] Using Gemini API...')
+        return await callGemini(promptText, geminiConfig.apiKey)
+      }
+    }
+    
     if (provider === 'claude' || (provider === 'auto' && enabledConfigs.find(c => c.provider === 'claude'))) {
       const claudeConfig = enabledConfigs.find(c => c.provider === 'claude')
       if (claudeConfig) {

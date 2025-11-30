@@ -44,8 +44,14 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [showApiKey, setShowApiKey] = useState(false)
-  const [apiKey, setApiKey] = useState('')
+  const [showOpenAIKey, setShowOpenAIKey] = useState(false)
+  const [showPerplexityKey, setShowPerplexityKey] = useState(false)
+  const [showClaudeKey, setShowClaudeKey] = useState(false)
+  const [showGeminiKey, setShowGeminiKey] = useState(false)
+  const [openaiApiKey, setOpenaiApiKey] = useState('')
+  const [perplexityApiKey, setPerplexityApiKey] = useState('')
+  const [claudeApiKey, setClaudeApiKey] = useState('')
+  const [geminiApiKey, setGeminiApiKey] = useState('')
   const [isLoadingApiKey, setIsLoadingApiKey] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [logoClicks, setLogoClicks] = useState(0)
@@ -57,17 +63,12 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
   
   useEffect(() => {
     if (open) {
-      console.log('[SettingsDialog] Dialog opened')
-      console.log('[SettingsDialog] workspace object:', workspace)
-      console.log('[SettingsDialog] workspace.apiKey present:', !!workspace.apiKey)
-      console.log('[SettingsDialog] workspace.apiKey value:', workspace.apiKey)
-      if (workspace.apiKey) {
-        console.log('[SettingsDialog] API key length:', workspace.apiKey.length)
-        console.log('[SettingsDialog] API key starts with sk-:', workspace.apiKey.startsWith('sk-'))
-        setApiKey('')
-      }
+      setOpenaiApiKey('')
+      setPerplexityApiKey('')
+      setClaudeApiKey('')
+      setGeminiApiKey('')
     }
-  }, [open, workspace.apiKey])
+  }, [open])
   
   useEffect(() => {
     const loadCredentials = async () => {
@@ -445,9 +446,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <div className="relative">
                     <Input
                       id="openai-api-key"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
+                      type={showOpenAIKey ? "text" : "password"}
+                      value={openaiApiKey}
+                      onChange={(e) => setOpenaiApiKey(e.target.value)}
                       placeholder={workspace.llmConfigs?.find(c => c.provider === 'openai')?.apiKey ? '••••••••••••••••••••' : 'sk-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
@@ -455,11 +456,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     />
                     <button
                       type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
+                      onClick={() => setShowOpenAIKey(!showOpenAIKey)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
                     >
-                      {showApiKey ? (
+                      {showOpenAIKey ? (
                         <Eye size={20} weight="regular" />
                       ) : (
                         <EyeSlash size={20} weight="regular" />
@@ -476,11 +477,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
                 <Button
                   onClick={() => {
-                    if (!apiKey.trim()) {
+                    if (!openaiApiKey.trim()) {
                       toast.error('Please enter an API key')
                       return
                     }
-                    if (!apiKey.trim().startsWith('sk-')) {
+                    if (!openaiApiKey.trim().startsWith('sk-')) {
                       toast.error('Invalid OpenAI API key format. It should start with "sk-"')
                       return
                     }
@@ -492,20 +493,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       setWorkspace(current => ({
                         ...current,
                         llmConfigs: configs.map(c => 
-                          c.provider === 'openai' ? { ...c, apiKey: apiKey.trim(), enabled: true } : c
+                          c.provider === 'openai' ? { ...c, apiKey: openaiApiKey.trim(), enabled: true } : c
                         )
                       }))
                     } else {
                       setWorkspace(current => ({
                         ...current,
-                        llmConfigs: [...configs, { provider: 'openai', apiKey: apiKey.trim(), enabled: true }]
+                        llmConfigs: [...configs, { provider: 'openai', apiKey: openaiApiKey.trim(), enabled: true }]
                       }))
                     }
                     
-                    setApiKey('')
+                    setOpenaiApiKey('')
                     toast.success('OpenAI API key saved!', { duration: 3000 })
                   }}
-                  disabled={!apiKey.trim()}
+                  disabled={!openaiApiKey.trim()}
                   size="sm"
                   className="w-full"
                 >
@@ -547,9 +548,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <div className="relative">
                     <Input
                       id="perplexity-api-key"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
+                      type={showPerplexityKey ? "text" : "password"}
+                      value={perplexityApiKey}
+                      onChange={(e) => setPerplexityApiKey(e.target.value)}
                       placeholder={workspace.llmConfigs?.find(c => c.provider === 'perplexity')?.apiKey ? '••••••••••••••••••••' : 'pplx-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
@@ -557,11 +558,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     />
                     <button
                       type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
+                      onClick={() => setShowPerplexityKey(!showPerplexityKey)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
                     >
-                      {showApiKey ? (
+                      {showPerplexityKey ? (
                         <Eye size={20} weight="regular" />
                       ) : (
                         <EyeSlash size={20} weight="regular" />
@@ -578,11 +579,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
                 <Button
                   onClick={() => {
-                    if (!apiKey.trim()) {
+                    if (!perplexityApiKey.trim()) {
                       toast.error('Please enter an API key')
                       return
                     }
-                    if (!apiKey.trim().startsWith('pplx-')) {
+                    if (!perplexityApiKey.trim().startsWith('pplx-')) {
                       toast.error('Invalid Perplexity API key format. It should start with "pplx-"')
                       return
                     }
@@ -594,20 +595,20 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       setWorkspace(current => ({
                         ...current,
                         llmConfigs: configs.map(c => 
-                          c.provider === 'perplexity' ? { ...c, apiKey: apiKey.trim(), enabled: true } : c
+                          c.provider === 'perplexity' ? { ...c, apiKey: perplexityApiKey.trim(), enabled: true } : c
                         )
                       }))
                     } else {
                       setWorkspace(current => ({
                         ...current,
-                        llmConfigs: [...configs, { provider: 'perplexity', apiKey: apiKey.trim(), enabled: true }]
+                        llmConfigs: [...configs, { provider: 'perplexity', apiKey: perplexityApiKey.trim(), enabled: true }]
                       }))
                     }
                     
-                    setApiKey('')
+                    setPerplexityApiKey('')
                     toast.success('Perplexity API key saved!', { duration: 3000 })
                   }}
-                  disabled={!apiKey.trim()}
+                  disabled={!perplexityApiKey.trim()}
                   size="sm"
                   className="w-full"
                 >
@@ -649,9 +650,9 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                   <div className="relative">
                     <Input
                       id="claude-api-key"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
+                      type={showClaudeKey ? "text" : "password"}
+                      value={claudeApiKey}
+                      onChange={(e) => setClaudeApiKey(e.target.value)}
                       placeholder={workspace.llmConfigs?.find(c => c.provider === 'claude')?.apiKey ? '••••••••••••••••••••' : 'sk-ant-...'}
                       className="pr-10 font-mono text-sm"
                       autoComplete="off"
@@ -659,11 +660,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                     />
                     <button
                       type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
+                      onClick={() => setShowClaudeKey(!showClaudeKey)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
                     >
-                      {showApiKey ? (
+                      {showClaudeKey ? (
                         <Eye size={20} weight="regular" />
                       ) : (
                         <EyeSlash size={20} weight="regular" />
@@ -680,11 +681,11 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
 
                 <Button
                   onClick={() => {
-                    if (!apiKey.trim()) {
+                    if (!claudeApiKey.trim()) {
                       toast.error('Please enter an API key')
                       return
                     }
-                    if (!apiKey.trim().startsWith('sk-ant-')) {
+                    if (!claudeApiKey.trim().startsWith('sk-ant-')) {
                       toast.error('Invalid Claude API key format. It should start with "sk-ant-"')
                       return
                     }
@@ -696,25 +697,127 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                       setWorkspace(current => ({
                         ...current,
                         llmConfigs: configs.map(c => 
-                          c.provider === 'claude' ? { ...c, apiKey: apiKey.trim(), enabled: true } : c
+                          c.provider === 'claude' ? { ...c, apiKey: claudeApiKey.trim(), enabled: true } : c
                         )
                       }))
                     } else {
                       setWorkspace(current => ({
                         ...current,
-                        llmConfigs: [...configs, { provider: 'claude', apiKey: apiKey.trim(), enabled: true }]
+                        llmConfigs: [...configs, { provider: 'claude', apiKey: claudeApiKey.trim(), enabled: true }]
                       }))
                     }
                     
-                    setApiKey('')
+                    setClaudeApiKey('')
                     toast.success('Claude API key saved!', { duration: 3000 })
                   }}
-                  disabled={!apiKey.trim()}
+                  disabled={!claudeApiKey.trim()}
                   size="sm"
                   className="w-full"
                 >
                   <Key size={16} className="mr-2" />
                   Save Claude Key
+                </Button>
+              </div>
+
+              {/* Gemini Configuration */}
+              <div className="space-y-3 rounded-xl bg-card p-4 border border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#4285f4] to-[#34a853]" />
+                    <h4 className="font-semibold text-sm">Google Gemini</h4>
+                  </div>
+                  <Switch
+                    checked={workspace.llmConfigs?.find(c => c.provider === 'gemini')?.enabled || false}
+                    onCheckedChange={(checked) => {
+                      const configs = workspace.llmConfigs || []
+                      const existing = configs.find(c => c.provider === 'gemini')
+                      
+                      if (existing) {
+                        setWorkspace(current => ({
+                          ...current,
+                          llmConfigs: configs.map(c => 
+                            c.provider === 'gemini' ? { ...c, enabled: checked } : c
+                          )
+                        }))
+                      }
+                      toast.success(checked ? 'Gemini enabled' : 'Gemini disabled')
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gemini-api-key" className="text-sm font-medium flex items-center gap-2">
+                    <Key size={16} />
+                    API Key
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="gemini-api-key"
+                      type={showGeminiKey ? "text" : "password"}
+                      value={geminiApiKey}
+                      onChange={(e) => setGeminiApiKey(e.target.value)}
+                      placeholder={workspace.llmConfigs?.find(c => c.provider === 'gemini')?.apiKey ? '••••••••••••••••••••' : 'AIza...'}
+                      className="pr-10 font-mono text-sm"
+                      autoComplete="off"
+                      spellCheck="false"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGeminiKey(!showGeminiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showGeminiKey ? (
+                        <Eye size={20} weight="regular" />
+                      ) : (
+                        <EyeSlash size={20} weight="regular" />
+                      )}
+                    </button>
+                  </div>
+                  {workspace.llmConfigs?.find(c => c.provider === 'gemini')?.apiKey && (
+                    <p className="text-xs text-success flex items-center gap-1.5">
+                      <span>✓</span>
+                      API key configured
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => {
+                    if (!geminiApiKey.trim()) {
+                      toast.error('Please enter an API key')
+                      return
+                    }
+                    if (!geminiApiKey.trim().startsWith('AIza')) {
+                      toast.error('Invalid Gemini API key format. It should start with "AIza"')
+                      return
+                    }
+
+                    const configs = workspace.llmConfigs || []
+                    const existing = configs.find(c => c.provider === 'gemini')
+                    
+                    if (existing) {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: configs.map(c => 
+                          c.provider === 'gemini' ? { ...c, apiKey: geminiApiKey.trim(), enabled: true } : c
+                        )
+                      }))
+                    } else {
+                      setWorkspace(current => ({
+                        ...current,
+                        llmConfigs: [...configs, { provider: 'gemini', apiKey: geminiApiKey.trim(), enabled: true }]
+                      }))
+                    }
+                    
+                    setGeminiApiKey('')
+                    toast.success('Gemini API key saved!', { duration: 3000 })
+                  }}
+                  disabled={!geminiApiKey.trim()}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Key size={16} className="mr-2" />
+                  Save Gemini Key
                 </Button>
               </div>
 
@@ -739,7 +842,7 @@ export function SettingsDialog({ open, onOpenChange, workspace, setWorkspace, on
                 </div>
                 {(workspace.llmConfigs?.filter(c => c.enabled).length || 0) > 0 && (
                   <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
-                    When multiple providers are enabled, the system will use them in priority order: Claude → Perplexity → OpenAI
+                    When multiple providers are enabled, the system will use them in priority order: Gemini → Claude → Perplexity → OpenAI
                   </p>
                 )}
               </div>

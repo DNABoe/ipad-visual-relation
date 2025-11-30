@@ -81,7 +81,7 @@ export interface Group {
 
 export type UserRole = 'admin' | 'normal'
 
-export type LLMProvider = 'openai' | 'perplexity' | 'claude'
+export type LLMProvider = 'openai' | 'perplexity' | 'claude' | 'gemini'
 
 export interface LLMConfig {
   provider: LLMProvider
