@@ -484,16 +484,10 @@ export function WorkspaceToolbar({
                     toast.error('Download link not ready')
                     return
                   }
-                  e.preventDefault()
-                  toast.info('Right-click on the Save button and select "Save Link As..." to download')
-                }}
-                onContextMenu={() => {
-                  if (downloadUrl && onMarkAsSaved) {
-                    setTimeout(() => {
-                      onMarkAsSaved()
-                      toast.success('Network saved')
-                    }, 200)
+                  if (onMarkAsSaved) {
+                    onMarkAsSaved()
                   }
+                  toast.success('Network file downloading...')
                 }}
                 className="inline-block"
               >
@@ -510,7 +504,7 @@ export function WorkspaceToolbar({
                 </Button>
               </a>
             </TooltipTrigger>
-            <TooltipContent>Right-click and select "Save Link As..." to download</TooltipContent>
+            <TooltipContent>Save Network (download file)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
