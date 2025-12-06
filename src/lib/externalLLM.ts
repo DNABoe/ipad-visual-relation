@@ -834,7 +834,7 @@ export async function generateIntelligenceReport(params: {
   
   let sectionsToInclude = `You are a professional intelligence analyst. Create a comprehensive professional intelligence profile for the following person.
 
-TARGET PROFILE (from existing intelligence):
+===== TARGET PROFILE (from existing intelligence) =====
 Name: ${name}
 Current Position: ${positionText}
 Organization: ${organizationText}
@@ -842,7 +842,48 @@ Country/Location: ${countryText}
 Education: ${educationText}
 Specialization/Expertise: ${specializationText}
 
-IMPORTANT: Use the above profile information as the foundation for your research. When researching this specific individual, ensure all findings relate directly to "${name}" currently or previously holding the position "${positionText}"${organizationText !== 'Not specified' ? ` at ${organizationText}` : ''}${countryText !== 'Not specified' ? ` in ${countryText}` : ''}. Cross-reference all discovered information against these known facts to ensure accuracy.
+===== CRITICAL RESEARCH REQUIREMENTS =====
+
+**MANDATORY: You MUST actively use and incorporate ALL of the above profile information throughout your entire report.**
+
+Specifically, you are REQUIRED to:
+
+1. **Organization Integration**: Since we know ${name} is ${organizationText !== 'Not specified' ? `associated with ${organizationText}` : 'in a professional role'}, you MUST:
+   - Research their specific role and responsibilities AT ${organizationText !== 'Not specified' ? organizationText : 'their current organization'}
+   - Identify their tenure, achievements, and impact WITHIN this organization
+   - Analyze their position in the organizational hierarchy
+   - Reference this organization context in MULTIPLE sections of your report
+   ${organizationText !== 'Not specified' ? `- If you cannot find information about ${name} at ${organizationText}, explicitly state this and explain why` : ''}
+
+2. **Education Utilization**: Since we know their educational background is ${educationText}, you MUST:
+   - Explicitly discuss how their education (${educationText}) relates to their current position
+   - Identify alumni networks, academic connections, or credentials gained
+   - Connect their educational background to their career trajectory
+   - Reference their education in the context of their expertise and credibility
+   ${educationText !== 'Not specified' ? '- If education is "Not specified", attempt to discover it through research' : `- Verify and expand on ${educationText} with specific institutions, degrees, and dates`}
+
+3. **Specialization Analysis**: Since we know their specialization/expertise is ${specializationText}, you MUST:
+   - Directly analyze their work and contributions in the ${specializationText} domain
+   - Identify how ${specializationText} expertise manifests in their current role
+   - Find publications, projects, or initiatives related to ${specializationText}
+   - Assess their standing and reputation within the ${specializationText} field
+   ${specializationText !== 'Not specified' ? '- If specialization is "Not specified", infer and identify their areas of expertise based on research' : `- Provide evidence of their ${specializationText} expertise through concrete examples`}
+
+4. **Geographic Context**: Since they are located in ${countryText}, you MUST:
+   - Consider cultural, professional, and regional context of ${countryText}
+   - Identify local industry dynamics, networks, and influence in ${countryText}
+   - Reference how being based in ${countryText} affects their work and approach
+   ${countryText !== 'Not specified' ? '- If location is "Not specified", attempt to determine their primary location' : `- Include ${countryText}-specific information in multiple sections`}
+
+5. **Position Deep-Dive**: For their role as ${positionText}, you MUST:
+   - Provide detailed analysis of what ${positionText} typically entails
+   - Identify how ${name} specifically performs this role
+   - Compare their approach to industry standards for ${positionText}
+   - Analyze the strategic importance of the ${positionText} position
+
+**VERIFICATION PRINCIPLE**: All research must be cross-checked to ensure it relates to "${name}" who is ${positionText}${organizationText !== 'Not specified' ? ` at ${organizationText}` : ''}${countryText !== 'Not specified' ? ` in ${countryText}` : ''}${educationText !== 'Not specified' ? ` with education background in ${educationText}` : ''}${specializationText !== 'Not specified' ? ` specializing in ${specializationText}` : ''}. If you find information about a different person with the same name, explicitly note the discrepancy.
+
+**INTEGRATION REQUIREMENT**: The provided profile information (organization, education, specialization, location, position) must appear and be substantively discussed in MULTIPLE sections of your report, not just mentioned once. Each major section should naturally incorporate these known facts.
 
 Please provide a detailed analysis with the following sections:
 `
@@ -1530,12 +1571,23 @@ ${investigationSettings.personalInfo || investigationSettings.workAndCV || inves
 
 ===== CRITICAL INSTRUCTIONS FOR REPORT GENERATION =====
 
+**MANDATORY PROFILE INTEGRATION CHECK**:
+Before you write each section, ask yourself:
+- Have I incorporated ${name}'s known organization (${organizationText})?
+- Have I referenced their education (${educationText})?
+- Have I connected findings to their specialization (${specializationText})?
+- Have I considered their location context (${countryText})?
+- Have I analyzed their specific position (${positionText})?
+
+**If any section fails to incorporate the known profile information where relevant, REVISE IT.**
+
 FORMAT & STYLE:
 - Structure as a professional intelligence brief with clear section headings and hierarchical organization
 - Use bullet points, numbered lists, and tables where appropriate for readability
 - Include specific dates, names, organizations, and verifiable facts wherever possible
 - Clearly distinguish between confirmed facts and reasonable inferences
 - Mark speculative information with phrases like "likely," "appears to," "suggests that"
+- **CRITICAL**: Every major section must reference at least 2-3 elements from the known profile (organization, education, specialization, location, position)
 
 DEPTH REQUIREMENTS BASED ON INVESTIGATION SETTINGS:
 ${investigationSettings.personalInfo ? `
@@ -1618,7 +1670,25 @@ FINAL OUTPUT REQUIREMENTS:
 - Tone: Professional, analytical, intelligence-focused (not marketing or HR language)
 - Perspective: Third-person analytical (not "you should" but "recommended approach is...")
 
-NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}:`
+**MANDATORY PROFILE INFORMATION USAGE VERIFICATION**:
+
+Your report MUST demonstrably incorporate ALL of the following known facts about ${name}:
+
+✓ Organization (${organizationText}): Referenced in at least 3 different sections
+✓ Education (${educationText}): Discussed substantively in at least 2 sections
+✓ Specialization (${specializationText}): Analyzed in depth in at least 2-3 sections
+✓ Location (${countryText}): Considered contextually in at least 2 sections
+✓ Position (${positionText}): Central to analysis in multiple sections
+
+**QUALITY CONTROL**: After generating your report, verify that:
+1. Each known profile element appears multiple times throughout the report
+2. The known organization, education, and specialization are not just mentioned but ANALYZED and CONNECTED to other findings
+3. Geographic and positional context informs your insights and recommendations
+4. Cross-references between sections reinforce the integrated profile
+
+If any known profile element is mentioned fewer than 2 times or not substantively analyzed, your report is INCOMPLETE.
+
+NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLETE integration of all known profile information (Organization: ${organizationText}, Education: ${educationText}, Specialization: ${specializationText}, Location: ${countryText}, Position: ${positionText}):`
 
   const promptText = sectionsToInclude
 
