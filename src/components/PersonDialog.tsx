@@ -22,7 +22,7 @@ import { generateIntelligenceReport, isLLMAvailable } from '@/lib/externalLLM'
 interface PersonDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (person: Person) => void
+  onSave: (person: Person, closeDialog?: boolean) => void
   onDelete?: (personId: string) => void
   editPerson?: Person
   workspace?: { 
@@ -262,7 +262,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       modifiedAt: Date.now(),
     }
 
-    onSave(updatedPerson)
+    onSave(updatedPerson, false)
   }
 
   const autoSaveNotes = () => {
@@ -298,11 +298,14 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       modifiedAt: Date.now(),
     }
 
-    onSave(updatedPerson)
+    onSave(updatedPerson, false)
   }
 
   const autoSaveInvestigationReport = (updatedAttachments: Attachment[], reportContent: string) => {
-    if (!editPerson) return
+    if (!editPerson) {
+      console.log('[PersonDialog] Cannot auto-save investigation - no editPerson')
+      return
+    }
 
     const positionLines = position.split('\n').map(line => line.trim()).slice(0, 3)
     
@@ -332,7 +335,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       modifiedAt: Date.now(),
     }
 
-    onSave(updatedPerson)
+    console.log('[PersonDialog] Auto-saving investigation report for person:', updatedPerson.name)
+    console.log('[PersonDialog] Investigation report length:', reportContent.length)
+    console.log('[PersonDialog] Attachments count:', updatedAttachments.length)
+    
+    onSave(updatedPerson, false)
     toast.success('Investigation report saved to person card', { duration: 2000 })
   }
 
@@ -495,7 +502,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       modifiedAt: Date.now(),
     }
 
-    onSave(person)
+    onSave(person, true)
     onOpenChange(false)
   }
 
@@ -580,6 +587,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         useDirectMode: workspace?.settings?.useDirectAPIMode
       })
       console.log('[PersonDialog] Intelligence report generated successfully')
+      console.log('[PersonDialog] Report content preview:', report.substring(0, 200))
       
       setInvestigationReport(report)
 
@@ -592,13 +600,15 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         report,
         photo
       })
-      console.log('[PersonDialog] PDF generated successfully')
+      console.log('[PersonDialog] PDF generated successfully, size:', pdfBlob.size, 'bytes')
 
       const reader = new FileReader()
       reader.onloadend = () => {
         const pdfDataUrl = reader.result as string
         const timestamp = Date.now()
         const fileName = `Investigation_${name.trim().replace(/\s+/g, '_')}_${new Date(timestamp).toISOString().split('T')[0]}.pdf`
+        
+        console.log('[PersonDialog] PDF converted to data URL, creating attachment...')
         
         const newAttachment: Attachment = {
           id: generateId(),
@@ -609,14 +619,25 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
           addedAt: timestamp
         }
         
+        console.log('[PersonDialog] New attachment created:', fileName)
+        
         setAttachments(prev => {
           const updated = [...prev, newAttachment]
+          console.log('[PersonDialog] Updated attachments array, total:', updated.length)
+          
           if (editPerson) {
+            console.log('[PersonDialog] Calling autoSaveInvestigationReport...')
             autoSaveInvestigationReport(updated, report)
+          } else {
+            console.log('[PersonDialog] Not in edit mode, will save when person is created')
           }
           return updated
         })
         toast.success('Detailed investigation report generated and added to attachments', { id: loadingToast, duration: 2500 })
+      }
+      reader.onerror = (error) => {
+        console.error('[PersonDialog] FileReader error:', error)
+        toast.error('Failed to process PDF file', { id: loadingToast, duration: 3000 })
       }
       reader.readAsDataURL(pdfBlob)
 

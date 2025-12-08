@@ -249,7 +249,7 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
     }
   }, [selection])
 
-  const handleSavePerson = useCallback((person: Person) => {
+  const handleSavePerson = useCallback((person: Person, closeDialog: boolean = true) => {
     if (dialogs.personDialog.editPerson) {
       workspaceState.replacePerson(person)
       toast.success('Person updated')
@@ -257,7 +257,9 @@ export function useWorkspaceController({ initialWorkspace }: UseWorkspaceControl
       workspaceState.addPerson(person)
       toast.success('Person added')
     }
-    dialogs.closePersonDialog()
+    if (closeDialog) {
+      dialogs.closePersonDialog()
+    }
   }, [dialogs.personDialog.editPerson, workspaceState, dialogs])
 
   const handleDeletePerson = useCallback((personId: string) => {
