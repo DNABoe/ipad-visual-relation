@@ -22,7 +22,7 @@ import {
   Shield,
   Eye,
   PencilSimple,
-  Activity,
+  Pulse,
   Crown,
   EnvelopeSimple,
   Link as LinkIcon,

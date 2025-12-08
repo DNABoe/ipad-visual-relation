@@ -602,44 +602,48 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       })
       console.log('[PersonDialog] PDF generated successfully, size:', pdfBlob.size, 'bytes')
 
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const pdfDataUrl = reader.result as string
-        const timestamp = Date.now()
-        const fileName = `Investigation_${name.trim().replace(/\s+/g, '_')}_${new Date(timestamp).toISOString().split('T')[0]}.pdf`
-        
-        console.log('[PersonDialog] PDF converted to data URL, creating attachment...')
-        
-        const newAttachment: Attachment = {
-          id: generateId(),
-          name: fileName,
-          type: 'application/pdf',
-          data: pdfDataUrl,
-          size: pdfBlob.size,
-          addedAt: timestamp
-        }
-        
-        console.log('[PersonDialog] New attachment created:', fileName)
-        
-        setAttachments(prev => {
-          const updated = [...prev, newAttachment]
-          console.log('[PersonDialog] Updated attachments array, total:', updated.length)
+      await new Promise<void>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const pdfDataUrl = reader.result as string
+          const timestamp = Date.now()
+          const fileName = `Investigation_${name.trim().replace(/\s+/g, '_')}_${new Date(timestamp).toISOString().split('T')[0]}.pdf`
           
-          if (editPerson) {
-            console.log('[PersonDialog] Calling autoSaveInvestigationReport...')
-            autoSaveInvestigationReport(updated, report)
-          } else {
-            console.log('[PersonDialog] Not in edit mode, will save when person is created')
+          console.log('[PersonDialog] PDF converted to data URL, creating attachment...')
+          
+          const newAttachment: Attachment = {
+            id: generateId(),
+            name: fileName,
+            type: 'application/pdf',
+            data: pdfDataUrl,
+            size: pdfBlob.size,
+            addedAt: timestamp
           }
-          return updated
-        })
-        toast.success('Detailed investigation report generated and added to attachments', { id: loadingToast, duration: 2500 })
-      }
-      reader.onerror = (error) => {
-        console.error('[PersonDialog] FileReader error:', error)
-        toast.error('Failed to process PDF file', { id: loadingToast, duration: 3000 })
-      }
-      reader.readAsDataURL(pdfBlob)
+          
+          console.log('[PersonDialog] New attachment created:', fileName)
+          
+          setAttachments(prev => {
+            const updated = [...prev, newAttachment]
+            console.log('[PersonDialog] Updated attachments array, total:', updated.length)
+            
+            if (editPerson) {
+              console.log('[PersonDialog] Calling autoSaveInvestigationReport...')
+              autoSaveInvestigationReport(updated, report)
+            } else {
+              console.log('[PersonDialog] Not in edit mode, will save when person is created')
+            }
+            return updated
+          })
+          toast.success('Investigation report saved successfully', { id: loadingToast, duration: 3000 })
+          resolve()
+        }
+        reader.onerror = (error) => {
+          console.error('[PersonDialog] FileReader error:', error)
+          toast.error('Failed to process PDF file', { id: loadingToast, duration: 3000 })
+          reject(error)
+        }
+        reader.readAsDataURL(pdfBlob)
+      })
 
     } catch (error) {
       console.error('[PersonDialog] Investigation error:', error)
