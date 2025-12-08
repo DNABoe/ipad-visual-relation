@@ -48,6 +48,7 @@ export interface Person {
   attachments?: Attachment[]
   activityLog?: ActivityLogEntry[]
   investigationSettings?: InvestigationSettings
+  investigationReport?: string
   createdAt: number
   modifiedAt?: number
 }

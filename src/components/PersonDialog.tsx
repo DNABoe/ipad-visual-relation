@@ -83,11 +83,11 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
         socialMedia: false,
         approachAnalysis: false,
       })
+      setInvestigationReport(editPerson?.investigationReport || '')
       setCountry('')
       setOrganization('')
       setEducation('')
       setSpecialization('')
-      setInvestigationReport('')
     } else {
       setName('')
       setPosition('')
@@ -256,6 +256,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       advocate,
       notes,
       attachments: updatedAttachments,
+      investigationSettings,
+      investigationReport,
       activityLog: newActivityLog,
       modifiedAt: Date.now(),
     }
@@ -290,6 +292,8 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       advocate,
       notes,
       attachments,
+      investigationSettings,
+      investigationReport,
       activityLog: newActivityLog,
       modifiedAt: Date.now(),
     }
@@ -323,6 +327,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       notes,
       attachments: updatedAttachments,
       investigationSettings,
+      investigationReport: reportContent,
       activityLog: newActivityLog,
       modifiedAt: Date.now(),
     }
@@ -481,6 +486,7 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
       notes,
       attachments,
       investigationSettings,
+      investigationReport,
       activityLog: newActivityLog,
       x: editPerson?.x || 100,
       y: editPerson?.y || 100,
