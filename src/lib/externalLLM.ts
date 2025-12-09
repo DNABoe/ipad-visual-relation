@@ -142,7 +142,7 @@ async function callOpenAI(prompt: string, apiKey?: string, useDirectMode?: boole
     messages: [
       {
         role: 'system',
-        content: 'You are a professional intelligence analyst creating detailed intelligence briefs.'
+        content: 'You are an expert intelligence analyst specializing in comprehensive professional and personal profiling. Your reports are thorough, detailed, and actionable. You excel at conducting deep research, cross-referencing multiple sources, and providing specific, concrete intelligence rather than generic statements. You always provide detailed analysis with specific examples, dates, and verifiable facts. Your reports are valued for their depth and strategic insights.'
       },
       {
         role: 'user',
@@ -150,7 +150,7 @@ async function callOpenAI(prompt: string, apiKey?: string, useDirectMode?: boole
       }
     ],
     temperature: 0.7,
-    max_tokens: 2000
+    max_tokens: 4000
   }
 
   console.log('[externalLLM] Request prepared')
@@ -317,7 +317,7 @@ async function callPerplexity(prompt: string, apiKey?: string, useDirectMode?: b
     messages: [
       {
         role: 'system',
-        content: 'You are a professional intelligence analyst creating detailed intelligence briefs based on current, up-to-date information.'
+        content: 'You are an expert intelligence analyst specializing in comprehensive professional and personal profiling. You have access to current, real-time information through web search. Your reports are thorough, detailed, and actionable. You excel at conducting deep research across multiple online sources, cross-referencing information, and providing specific, concrete intelligence with citations. You always provide detailed analysis with specific examples, dates, URLs, and verifiable facts from your research. Your reports are valued for their depth, accuracy, and strategic insights based on the latest available information.'
       },
       {
         role: 'user',
@@ -468,11 +468,11 @@ async function callClaude(prompt: string, apiKey?: string, useDirectMode?: boole
 
   const requestBody = {
     model: 'claude-3-5-sonnet-20241022',
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [
       {
         role: 'user',
-        content: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
+        content: `You are an expert intelligence analyst specializing in comprehensive professional and personal profiling. Your reports are thorough, detailed, and actionable. You excel at conducting deep research, cross-referencing multiple sources, and providing specific, concrete intelligence rather than generic statements. You always provide detailed analysis with specific examples, dates, and verifiable facts. Your reports are valued for their depth and strategic insights.\n\n${prompt}`
       }
     ]
   }
@@ -623,7 +623,7 @@ async function callGemini(prompt: string, apiKey?: string, useDirectMode?: boole
       {
         parts: [
           {
-            text: `You are a professional intelligence analyst creating detailed intelligence briefs.\n\n${prompt}`
+            text: `You are an expert intelligence analyst specializing in comprehensive professional and personal profiling. Your reports are thorough, detailed, and actionable. You excel at conducting deep research, cross-referencing multiple sources, and providing specific, concrete intelligence rather than generic statements. You always provide detailed analysis with specific examples, dates, and verifiable facts. Your reports are valued for their depth and strategic insights.\n\n${prompt}`
           }
         ]
       }
@@ -833,6 +833,15 @@ export async function generateIntelligenceReport(params: {
   const specializationText = specialization || 'Not specified'
   
   let sectionsToInclude = `You are a professional intelligence analyst. Create a comprehensive professional intelligence profile for the following person.
+
+**CRITICAL: Before generating your report, you MUST acknowledge that you will use ALL of the following known facts about ${name}:**
+- **Organization:** ${organizationText}
+- **Education:** ${educationText}
+- **Specialization:** ${specializationText}
+- **Location:** ${countryText}
+- **Position:** ${positionText}
+
+**These facts must appear throughout your report, not just mentioned once. Each major section should naturally reference and build upon these known facts.**
 
 ===== TARGET PROFILE (from existing intelligence) =====
 Name: ${name}
@@ -1688,6 +1697,8 @@ Your report MUST demonstrably incorporate ALL of the following known facts about
 
 If any known profile element is mentioned fewer than 2 times or not substantively analyzed, your report is INCOMPLETE.
 
+**IMPORTANT REMINDER: Your investigation should demonstrate that you have thoroughly researched ${name} who is ${positionText}${organizationText !== 'Not specified' ? ` at ${organizationText}` : ''}${countryText !== 'Not specified' ? ` in ${countryText}` : ''}. Every section should reflect this specific context. Do not provide generic information that could apply to anyone - make it specific to THIS ${name}.**
+
 NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLETE integration of all known profile information (Organization: ${organizationText}, Education: ${educationText}, Specialization: ${specializationText}, Location: ${countryText}, Position: ${positionText}):`
 
   const promptText = sectionsToInclude
@@ -1704,12 +1715,38 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
 
   const enabledConfigs = llmConfigs.filter(c => c.enabled)
 
+  function validateReport(report: string, providerName: string): string {
+    const invalidResponses = [
+      "i'm sorry, but i can't assist",
+      "i cannot assist",
+      "i can't help",
+      "i'm unable to",
+      "i cannot provide",
+      "i don't have access",
+      "i cannot access",
+      "i can't access"
+    ]
+    
+    const lowerReport = report.toLowerCase()
+    const isInvalid = invalidResponses.some(phrase => lowerReport.includes(phrase))
+    
+    if (isInvalid || report.length < 500) {
+      console.warn(`[externalLLM] ${providerName} returned an invalid or incomplete response:`, report.substring(0, 200))
+      throw new Error(`${providerName} declined to generate the report or provided insufficient information. This may be due to content policies or API limitations. Please try:\n\n1. Using a different AI provider in Settings\n2. Adjusting the investigation scope\n3. Providing more context in the person card fields`)
+    }
+    
+    return report
+  }
+
   try {
+    let report: string | null = null
+    
     if (provider === 'gemini' || (provider === 'auto' && enabledConfigs.find(c => c.provider === 'gemini'))) {
       const geminiConfig = enabledConfigs.find(c => c.provider === 'gemini')
       if (geminiConfig) {
         console.log('[externalLLM] Using Gemini API...')
-        return await callGemini(promptText, geminiConfig.apiKey, useDirectMode)
+        report = await callGemini(promptText, geminiConfig.apiKey, useDirectMode)
+        return validateReport(report, 'Gemini')
       }
     }
     
@@ -1717,7 +1754,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       const claudeConfig = enabledConfigs.find(c => c.provider === 'claude')
       if (claudeConfig) {
         console.log('[externalLLM] Using Claude API...')
-        return await callClaude(promptText, claudeConfig.apiKey, useDirectMode)
+        report = await callClaude(promptText, claudeConfig.apiKey, useDirectMode)
+        return validateReport(report, 'Claude')
       }
     }
     
@@ -1725,7 +1763,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       const perplexityConfig = enabledConfigs.find(c => c.provider === 'perplexity')
       if (perplexityConfig) {
         console.log('[externalLLM] Using Perplexity API...')
-        return await callPerplexity(promptText, perplexityConfig.apiKey, useDirectMode)
+        report = await callPerplexity(promptText, perplexityConfig.apiKey, useDirectMode)
+        return validateReport(report, 'Perplexity')
       }
     }
     
@@ -1733,16 +1772,17 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       const openaiConfig = enabledConfigs.find(c => c.provider === 'openai')
       if (openaiConfig) {
         console.log('[externalLLM] Using OpenAI API...')
-        return await callOpenAI(promptText, openaiConfig.apiKey, useDirectMode)
+        report = await callOpenAI(promptText, openaiConfig.apiKey, useDirectMode)
+        return validateReport(report, 'OpenAI')
       }
     }
     
     if (hasSparkLLM) {
       console.log('[externalLLM] Using Spark LLM API...')
       const prompt = (window.spark.llmPrompt as any)`${promptText}`
-      const report = await window.spark.llm(prompt, 'gpt-4o-mini')
+      report = await window.spark.llm(prompt, 'gpt-4o-mini')
       console.log('[externalLLM] Report generated successfully')
-      return report
+      return validateReport(report, 'Spark LLM')
     }
     
     console.log('[externalLLM] No LLM provider available, generating static report')

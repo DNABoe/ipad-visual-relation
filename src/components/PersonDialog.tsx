@@ -344,17 +344,53 @@ export function PersonDialog({ open, onOpenChange, onSave, onDelete, editPerson,
   }
 
   const handleDownloadAttachment = (attachment: Attachment) => {
-    const link = document.createElement('a')
-    link.href = attachment.data
-    link.download = attachment.name
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      const link = document.createElement('a')
+      link.href = attachment.data
+      link.download = attachment.name
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      
+      setTimeout(() => {
+        document.body.removeChild(link)
+      }, 100)
+      
+      toast.success(`Downloading ${attachment.name}`, { duration: 2000 })
+    } catch (error) {
+      console.error('Error downloading attachment:', error)
+      toast.error('Failed to download file. Please try again.', { duration: 3000 })
+    }
   }
 
   const handleViewAttachment = (attachment: Attachment) => {
     if (attachment.type === 'application/pdf') {
-      window.open(attachment.data, '_blank')
+      try {
+        const newWindow = window.open('', '_blank')
+        if (newWindow) {
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${attachment.name}</title>
+              <style>
+                body { margin: 0; padding: 0; overflow: hidden; }
+                iframe { border: none; width: 100vw; height: 100vh; }
+              </style>
+            </head>
+            <body>
+              <iframe src="${attachment.data}" type="application/pdf"></iframe>
+            </body>
+            </html>
+          `)
+          newWindow.document.close()
+        } else {
+          toast.error('Pop-up blocked. Please allow pop-ups to view PDFs.', { duration: 3000 })
+        }
+      } catch (error) {
+        console.error('Error opening PDF:', error)
+        toast.error('Failed to open PDF. Try downloading instead.', { duration: 3000 })
+      }
     } else if (attachment.type.startsWith('image/')) {
       window.open(attachment.data, '_blank')
     } else {
