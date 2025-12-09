@@ -774,6 +774,129 @@ async function callGemini(prompt: string, apiKey?: string, useDirectMode?: boole
     'Visit aistudio.google.com/app/apikey to check your API key status.')
 }
 
+function postProcessReport(rawReport: string, params: {
+  name: string
+  position: string
+  country: string
+  organization?: string
+  education?: string
+  specialization?: string
+}): string {
+  console.log('[externalLLM] Post-processing report for enhanced quality...')
+  
+  let processedReport = rawReport
+  
+  const { name, position, country, organization, education, specialization } = params
+  
+  processedReport = processedReport.replace(/\*\*(.*?)\*\*/g, '$1')
+  processedReport = processedReport.replace(/^#{1,6}\s+/gm, '')
+  
+  const sections = processedReport.split(/\n\n+/)
+  const enhancedSections: string[] = []
+  
+  let currentSection = ''
+  let sectionDepth = 0
+  
+  for (const section of sections) {
+    const trimmed = section.trim()
+    if (!trimmed) continue
+    
+    if (trimmed.match(/^\d+\.\s+[A-Z]/)) {
+      sectionDepth = 1
+      enhancedSections.push(currentSection)
+      currentSection = `\n${trimmed}\n`
+    } else if (trimmed.match(/^[A-Z]\.\s+[A-Z]/)) {
+      sectionDepth = 2
+      currentSection += `\n   ${trimmed}\n`
+    } else {
+      currentSection += `${trimmed}\n`
+    }
+  }
+  enhancedSections.push(currentSection)
+  
+  processedReport = enhancedSections.filter(s => s.trim()).join('\n')
+  
+  const verificationChecks = {
+    hasName: processedReport.toLowerCase().includes(name.toLowerCase()),
+    hasPosition: position !== 'Not specified' && processedReport.toLowerCase().includes(position.toLowerCase()),
+    hasCountry: country !== 'Not specified' && processedReport.toLowerCase().includes(country.toLowerCase()),
+    hasOrganization: organization && organization !== 'Not specified' && processedReport.toLowerCase().includes(organization.toLowerCase()),
+    hasEducation: education && education !== 'Not specified' && processedReport.toLowerCase().includes(education.toLowerCase()),
+    hasSpecialization: specialization && specialization !== 'Not specified' && processedReport.toLowerCase().includes(specialization.toLowerCase())
+  }
+  
+  const missingElements: string[] = []
+  if (!verificationChecks.hasOrganization && organization && organization !== 'Not specified') {
+    missingElements.push(`Organization (${organization})`)
+  }
+  if (!verificationChecks.hasEducation && education && education !== 'Not specified') {
+    missingElements.push(`Education (${education})`)
+  }
+  if (!verificationChecks.hasSpecialization && specialization && specialization !== 'Not specified') {
+    missingElements.push(`Specialization (${specialization})`)
+  }
+  
+  if (missingElements.length > 0) {
+    console.warn('[externalLLM] Report missing key profile elements:', missingElements)
+    
+    let supplementalInfo = '\n\n===== SUPPLEMENTAL PROFILE INFORMATION =====\n\n'
+    supplementalInfo += `The following known information about ${name} should be considered as part of this intelligence profile:\n\n`
+    
+    if (organization && organization !== 'Not specified' && !verificationChecks.hasOrganization) {
+      supplementalInfo += `• Organization: ${organization}\n`
+    }
+    if (education && education !== 'Not specified' && !verificationChecks.hasEducation) {
+      supplementalInfo += `• Education: ${education}\n`
+    }
+    if (specialization && specialization !== 'Not specified' && !verificationChecks.hasSpecialization) {
+      supplementalInfo += `• Specialization: ${specialization}\n`
+    }
+    
+    supplementalInfo += '\n[Note: The above information was not fully integrated into the main report but should be considered when analyzing this profile.]\n'
+    
+    processedReport += supplementalInfo
+  }
+  
+  const executiveSummaryMatch = processedReport.match(/(EXECUTIVE SUMMARY|Executive Summary|SUMMARY)([\s\S]{0,1000}?)(?=\n\n[A-Z0-9]|\n\n===|$)/i)
+  if (executiveSummaryMatch) {
+    const summary = executiveSummaryMatch[0]
+    const summaryHasContext = 
+      (organization && summary.toLowerCase().includes(organization.toLowerCase())) ||
+      (education && summary.toLowerCase().includes(education.toLowerCase())) ||
+      (specialization && summary.toLowerCase().includes(specialization.toLowerCase()))
+    
+    if (!summaryHasContext && (organization || education || specialization)) {
+      let contextAddition = `\n\nProfile Context: ${name} is ${position}${organization && organization !== 'Not specified' ? ` at ${organization}` : ''}${country && country !== 'Not specified' ? ` in ${country}` : ''}. `
+      
+      if (specialization && specialization !== 'Not specified') {
+        contextAddition += `Their area of specialization is ${specialization}. `
+      }
+      if (education && education !== 'Not specified') {
+        contextAddition += `Educational background: ${education}.`
+      }
+      
+      processedReport = processedReport.replace(
+        executiveSummaryMatch[0],
+        executiveSummaryMatch[0] + contextAddition
+      )
+    }
+  }
+  
+  const wordCount = processedReport.split(/\s+/).length
+  const sectionCount = (processedReport.match(/^\d+\.\s+[A-Z]/gm) || []).length
+  const listItemCount = (processedReport.match(/^[\s]*[-•*]\s+/gm) || []).length
+  
+  console.log('[externalLLM] Post-processing complete:', {
+    wordCount,
+    sectionCount,
+    listItemCount,
+    verificationChecks,
+    missingElements: missingElements.length
+  })
+  
+  return processedReport
+}
+
 export async function generateIntelligenceReport(params: {
   name: string
   position: string
@@ -1746,7 +1869,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       if (geminiConfig) {
         console.log('[externalLLM] Using Gemini API...')
         report = await callGemini(promptText, geminiConfig.apiKey, useDirectMode)
-        return validateReport(report, 'Gemini')
+        const validatedReport = validateReport(report, 'Gemini')
+        return postProcessReport(validatedReport, { name, position, country, organization, education, specialization })
       }
     }
     
@@ -1755,7 +1879,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       if (claudeConfig) {
         console.log('[externalLLM] Using Claude API...')
         report = await callClaude(promptText, claudeConfig.apiKey, useDirectMode)
-        return validateReport(report, 'Claude')
+        const validatedReport = validateReport(report, 'Claude')
+        return postProcessReport(validatedReport, { name, position, country, organization, education, specialization })
       }
     }
     
@@ -1764,7 +1889,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       if (perplexityConfig) {
         console.log('[externalLLM] Using Perplexity API...')
         report = await callPerplexity(promptText, perplexityConfig.apiKey, useDirectMode)
-        return validateReport(report, 'Perplexity')
+        const validatedReport = validateReport(report, 'Perplexity')
+        return postProcessReport(validatedReport, { name, position, country, organization, education, specialization })
       }
     }
     
@@ -1773,7 +1899,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       if (openaiConfig) {
         console.log('[externalLLM] Using OpenAI API...')
         report = await callOpenAI(promptText, openaiConfig.apiKey, useDirectMode)
-        return validateReport(report, 'OpenAI')
+        const validatedReport = validateReport(report, 'OpenAI')
+        return postProcessReport(validatedReport, { name, position, country, organization, education, specialization })
       }
     }
     
@@ -1782,7 +1909,8 @@ NOW GENERATE THE COMPREHENSIVE INTELLIGENCE REPORT FOR ${name}, ensuring COMPLET
       const prompt = (window.spark.llmPrompt as any)`${promptText}`
       report = await window.spark.llm(prompt, 'gpt-4o-mini')
       console.log('[externalLLM] Report generated successfully')
-      return validateReport(report, 'Spark LLM')
+      const validatedReport = validateReport(report, 'Spark LLM')
+      return postProcessReport(validatedReport, { name, position, country, organization, education, specialization })
     }
     
     console.log('[externalLLM] No LLM provider available, generating static report')
